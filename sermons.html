@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sermons | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 pb-20 md:pb-0">
+
+<!-- Top Navigation -->
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+    <!-- Banner & Upload Button Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Sermon Audio Library</h1>
+            <p class="text-blue-100 mt-1 text-sm sm:text-base">Listen to inspiring messages and teachings from your church community.</p>
+        </div>
+        <button id="open-upload-modal-btn" onclick="openModal()" class="hidden px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl shadow hover:bg-blue-50 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2">
+            <span>🎙️</span> Upload Sermon
+        </button>
+    </div>
+
+    <!-- Sermons Container -->
+    <div id="sermons-container" class="space-y-4">
+        <div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading sermons...</div>
+    </div>
+</main>
+
+<!-- Upload Sermon Modal -->
+<div id="upload-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900">Upload Sermon Audio</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <form id="upload-sermon-form" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sermon Title</label>
+                <input type="text" id="sermon-title" required placeholder="e.g., Walking in Faith" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Preacher / Speaker</label>
+                <input type="text" id="sermon-preacher" required placeholder="e.g., Pastor John" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Audio File (.mp3)</label>
+                <input type="file" id="sermon-file" accept="audio/*" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm bg-white">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                <button type="submit" id="upload-btn" class="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow text-sm">Upload Sermon</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bottom Mobile Navigation Bar -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3 z-50 text-xs font-medium text-gray-600">
+    <a href="feed.html" class="flex flex-col items-center hover:text-blue-600">Feed</a>
+    <a href="prayer-wall.html" class="flex flex-col items-center hover:text-blue-600">Prayer</a>
+    <a href="testimonies.html" class="flex flex-col items-center hover:text-blue-600">Testimonies</a>
+    <a href="inboxx.html" class="flex flex-col items-center hover:text-blue-600">Inbox</a>
+    <a href="events.html" class="flex flex-col items-center hover:text-blue-600">Events</a>
+    <a href="sermons.html" class="flex flex-col items-center text-blue-600 font-bold">Sermons</a>
+    <a href="profile.html" class="flex flex-col items-center hover:text-blue-600">Profile</a>
+</div>
+
+<script>
+    let currentUserProfile = null;
+
+    async function initApp() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            document.getElementById('sermons-container').innerHTML = '<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Failed to initialize Supabase client.</div>';
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+        
+        currentUserProfile = profile;
+
+        if (profile) {
+            if (profile.role === 'admin' || profile.role === 'super_admin') {
+                const adminLink = document.getElementById('admin-nav-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+                const uploadBtn = document.getElementById('open-upload-modal-btn');
+                if (uploadBtn) uploadBtn.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('upload-sermon-form').addEventListener('submit', handleUploadSermon);
+        loadSermons();
+        initRealtimeSync();
+    }
+
+    function initRealtimeSync() {
+        window.sbClient
+            .channel('sermons-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'sermons' }, () => {
+                loadSermons();
+            })
+            .subscribe();
+    }
+
+    async function loadSermons() {
+        const container = document.getElementById('sermons-container');
+        
+        if (!currentUserProfile || !currentUserProfile.church_id) {
+            container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Your profile is not linked to any church yet.</div>`;
+            return;
+        }
+
+        const { data: sermons, error } = await window.sbClient
+            .from('sermons')
+            .select('*')
+            .eq('church_id', currentUserProfile.church_id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading sermons: ${escapeHtml(error.message)}</div>`;
+            return;
+        }
+
+        if (!sermons || sermons.length === 0) {
+            container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No sermons uploaded yet.</p></div>`;
+            return;
+        }
+
+        container.innerHTML = sermons.map(sermon => `
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4 transition hover:shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">${escapeHtml(sermon.title)}</h3>
+                        <p class="text-sm font-medium text-blue-600 mt-0.5">By ${escapeHtml(sermon.preacher)}</p>
+                    </div>
+                    <span class="text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100 w-fit">${new Date(sermon.created_at).toLocaleDateString()}</span>
+                </div>
+                <div class="pt-2">
+                    <audio controls class="w-full">
+                        <source src="${escapeHtml(sermon.audio_url)}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function handleUploadSermon(e) {
+        e.preventDefault();
+        
+        if (!currentUserProfile || !currentUserProfile.church_id) {
+            alert("Upload blocked: Your user profile is not linked to a church ID yet.");
+            return;
+        }
+
+        const btn = document.getElementById('upload-btn');
+        const file = document.getElementById('sermon-file').files[0];
+        const title = document.getElementById('sermon-title').value.trim();
+        const preacher = document.getElementById('sermon-preacher').value.trim();
+
+        if (!file) return;
+
+        btn.disabled = true;
+        btn.innerText = "Uploading audio file...";
+
+        // 1. Upload to Storage bucket
+        const filePath = `${currentUserProfile.church_id}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await window.sbClient.storage
+            .from('sermons')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            alert("Upload failed: " + uploadError.message);
+            btn.disabled = false;
+            btn.innerText = "Upload Sermon";
+            return;
+        }
+
+        // 2. Get Public Streaming Link
+        const { data: urlData } = window.sbClient.storage.from('sermons').getPublicUrl(filePath);
+
+        // 3. Save Tracking Record to Database Table
+        const { error: dbError } = await window.sbClient.from('sermons').insert([{
+            title: title,
+            preacher: preacher,
+            audio_url: urlData.publicUrl,
+            church_id: currentUserProfile.church_id
+        }]);
+
+        if (dbError) {
+            alert("Database tracking error: " + dbError.message);
+        } else {
+            alert("Sermon uploaded and published successfully!");
+            closeModal();
+            document.getElementById('upload-sermon-form').reset();
+            loadSermons();
+        }
+
+        btn.disabled = false;
+        btn.innerText = "Upload Sermon";
+    }
+
+    function openModal() {
+        document.getElementById('upload-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('upload-modal').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    }
+
+    function logoutUser(e) { 
+        e.preventDefault(); 
+        window.sbClient.auth.signOut(); 
+        window.location.replace('login.html'); 
+    }
+
+    initApp();
+</script>
+</body>
+</html>

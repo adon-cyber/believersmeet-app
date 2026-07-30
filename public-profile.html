@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Profile | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS baseline styles for hidden elements and utility badges */
+        .hidden { display: none !important; }
+        .badge { display: inline-block; vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<nav class="bg-white shadow-md mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="directory.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Directory</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main style="max-width: 600px; margin: 40px auto; padding: 20px;">
+    <div id="profile-container" class="card" style="text-align: center;">
+        Loading profile...
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="block-profile-btn" class="hidden" style="background: none; border: 1px solid var(--error); color: var(--error); padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+            🚫 Block Member
+        </button>
+    </div>
+</main>
+
+<script>
+    let loggedInUser = null;
+    const targetUserId = new URLSearchParams(window.location.search).get('id');
+
+    async function updateNotificationBadge() {
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) return;
+        loggedInUser = user;
+
+        const { count } = await window.sbClient.from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('receiver_id', user.id)
+            .eq('is_read', false);
+        
+        const badge = document.getElementById('msg-badge');
+        if (badge && count > 0) { 
+            badge.innerText = count; 
+            badge.classList.remove('hidden'); 
+        }
+    }
+
+    async function loadPublicProfile() {
+        const container = document.getElementById('profile-container');
+        if (!targetUserId) return container.innerHTML = "<h3>Profile not found</h3>";
+
+        const { data, error } = await window.sbClient.from('profiles').select('*').eq('id', targetUserId).maybeSingle();
+        if (error || !data) return container.innerHTML = "<p>User profile not available.</p>";
+
+        const { data: { user: currentUser } } = await window.sbClient.auth.getUser();
+        const isOwner = currentUser?.id === targetUserId;
+        const avatar = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'User')}`;
+
+        // Append verification badge markup safely right next to the name heading
+        const verifiedBadgeHTML = renderUserBadge(data.verification_type);
+
+        container.innerHTML = `
+            <img src="${avatar}" style="width:120px; height:120px; border-radius:50%; margin-bottom:15px; object-fit: cover;">
+            <h1>${escapeHTML(data.full_name || 'Anonymous Member')} ${verifiedBadgeHTML}</h1>
+            <p><strong>Church:</strong> ${escapeHTML(data.church || 'Not specified')}</p>
+            <p style="white-space: pre-wrap;">${escapeHTML(data.bio || 'This member hasn\'t written a bio yet.')}</p>
+            ${isOwner ? `<a href="edit-profile.html" class="button">Edit Profile</a>` : 
+              currentUser ? `<button class="button" onclick="openMessageModal()">Send Message</button>` : 
+              '<p><small>Login to message</small></p>'}
+            
+            <div id="message-modal" class="hidden" style="margin-top:20px;">
+                <textarea id="message-content" placeholder="Write your message..." style="width:100%; margin-bottom:10px; resize: vertical; min-height: 80px;"></textarea>
+                <button class="button" onclick="sendMessage('${targetUserId}')">Send</button>
+            </div>
+        `;
+
+        // Manage visibility conditions for the defensive Block interface controls
+        const blockBtn = document.getElementById('block-profile-btn');
+        if (blockBtn && currentUser && !isOwner) {
+            blockBtn.classList.remove('hidden');
+        }
+    }
+
+    window.openMessageModal = () => document.getElementById('message-modal').classList.remove('hidden');
+
+    async function sendMessage(receiverId) {
+        const content = document.getElementById('message-content').value.trim();
+        if (!content) return alert("Please type a message.");
+        
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) return alert("Session timed out. Please refresh.");
+
+        const { error } = await window.sbClient.from('messages').insert({ sender_id: user.id, receiver_id: receiverId, content });
+        
+        if (error) alert("Error: " + error.message);
+        else { 
+            alert("Message Sent!"); 
+            document.getElementById('message-content').value = '';
+            document.getElementById('message-modal').classList.add('hidden'); 
+        }
+    }
+
+    function renderUserBadge(verificationType) {
+        if (!verificationType || verificationType === 'none') return '';
+
+        const badges = {
+            'church': '<span class="badge b-church" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:bold; margin-left:6px;">⛪ Church</span>',
+            'pastor': '<span class="badge b-pastor" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:bold; margin-left:6px;">🛡️ Pastor</span>',
+            'leader': '<span class="badge b-leader" style="background:#ecfdf5; color:#047857; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:bold; margin-left:6px;">✨ Leader</span>'
+        };
+
+        return badges[verificationType.toLowerCase()] || '';
+    }
+
+    async function blockUser(idOfTargetToBlock) {
+        if (!loggedInUser || !loggedInUser.id) {
+            alert("Authentication target drop. Please re-authenticate your session.");
+            return;
+        }
+        
+        const { error } = await window.sbClient
+            .from('blocks')
+            .insert([{ blocker_id: loggedInUser.id, blocked_id: idOfTargetToBlock }]);
+
+        if (error) {
+            alert("Could not block user: " + error.message);
+        } else {
+            alert("User has been blocked successfully.");
+            window.location.replace('feed.html'); 
+        }
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    // Event Listener setup for the profile block control
+    document.getElementById('block-profile-btn').addEventListener('click', () => {
+        if (!targetUserId) return;
+        if (confirm("Block this user? Their posts and profile will be completely hidden from you.")) {
+            blockUser(targetUserId);
+        }
+    });
+
+    // Main Init Flow Loop Execution
+    (async () => {
+        let retries = 0;
+        while (!window.sbClient && retries < 20) { 
+            await new Promise(r => setTimeout(r, 200)); 
+            retries++; 
+        }
+        
+        if (!window.sbClient) {
+            console.error("Supabase fail linking initialization hook configuration keys.");
+            return;
+        }
+
+        await updateNotificationBadge();
+        await loadPublicProfile();
+    })();
+</script>
+</body>
+</html>

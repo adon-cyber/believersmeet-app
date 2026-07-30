@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Dashboard | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3 flex-shrink-0 mr-4">
+                    <a href="feed.html" class="text-xl font-bold text-emerald-600 flex items-center">
+                        <span class="mr-2">⛪</span> BelieversMeet
+                    </a>
+                </div>
+                <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                    <a href="church-dashboard.html" class="text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md transition-colors">Church Admin</a>
+                    <a href="settings.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Settings</a>
+                    <button onclick="logout()" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        <div class="mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Church Leadership Dashboard</h1>
+            <p class="text-sm text-gray-600 mt-1">Manage weekly programmes, view congregation members, and update church coordinates.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Add Programme & Update Location -->
+            <div class="space-y-8 lg:col-span-1">
+                <!-- Add New Programme Card -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <span class="mr-2">📅</span> Add New Programme
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Programme Title</label>
+                            <input type="text" id="p-title" placeholder="e.g. Sunday Service" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                            <input type="time" id="p-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea id="p-desc" rows="3" placeholder="Programme description..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                        </div>
+                        <button id="add-btn" onclick="addProgramme()" class="w-full py-2 px-4 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition">Publish Programme</button>
+                    </div>
+                </div>
+
+                <!-- Update Church Location Card -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <span class="mr-2">📍</span> Update Church Location
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                            <input type="text" id="lat" placeholder="e.g. 0.4479" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                            <input type="text" id="lng" placeholder="e.g. 33.2025" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <button onclick="updateLocation()" class="w-full py-2 px-4 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition">Save Coordinates</button>
+                        <button onclick="detectAndSaveLocation()" class="w-full py-2 px-4 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition">Use Current GPS</button>
+                        <p id="gps-status" class="text-xs text-gray-500 text-center mt-2"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Members List & Programmes List -->
+            <div class="space-y-8 lg:col-span-2">
+                <!-- Members in my Church Card -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <span class="mr-2">👥</span> Members in my Church
+                    </h3>
+                    <div id="member-list" class="divide-y divide-gray-200">
+                        <p class="text-gray-500 py-4">Loading members...</p>
+                    </div>
+                </div>
+
+                <!-- Existing Programmes Card -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <span class="mr-2">📋</span> Published Programmes
+                    </h3>
+                    <div id="programme-list" class="divide-y divide-gray-200">
+                        <p class="text-gray-500 py-4">Loading programmes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+        &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
+      </div>
+    </footer>
+
+    <!-- Script Logic -->
+    <script>
+        let currentUserProfile = null;
+        let userChurchId = null;
+
+        async function logout() {
+            await window.sbClient.auth.signOut();
+            window.location.replace('login.html');
+        }
+
+        async function initDashboard() {
+            let attempts = 0;
+            while (!window.sbClient && attempts < 15) {
+                await new Promise(r => setTimeout(r, 200));
+                attempts++;
+            }
+            if (!window.sbClient) {
+                alert("Failed to connect to Supabase.");
+                return;
+            }
+
+            const { data: { user }, error: authError } = await window.sbClient.auth.getUser();
+            if (authError || !user) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            const { data: profile, error: profileError } = await window.sbClient
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (profileError || !profile) {
+                alert("User profile not found.");
+                window.location.replace('feed.html');
+                return;
+            }
+
+            if (profile.role !== 'church' && profile.role !== 'admin' && profile.role !== 'super_admin') {
+                alert("Access Denied: Church Admin role required.");
+                window.location.replace('feed.html');
+                return;
+            }
+
+            currentUserProfile = profile;
+            userChurchId = profile.church_id;
+
+            if (!userChurchId) {
+                alert("No church assigned to this account.");
+                return;
+            }
+
+            // Load Church info/location if exists
+            loadChurchDetails();
+            loadMembers();
+            loadProgrammes();
+        }
+
+        async function loadChurchDetails() {
+            const { data: church } = await window.sbClient.from('churches').select('*').eq('id', userChurchId).maybeSingle();
+            if (church) {
+                if (church.latitude) document.getElementById('lat').value = church.latitude;
+                if (church.longitude) document.getElementById('lng').value = church.longitude;
+            }
+        }
+
+        async function addProgramme() {
+            const btn = document.getElementById('add-btn');
+            const title = document.getElementById('p-title').value.trim();
+            const time = document.getElementById('p-time').value;
+            const desc = document.getElementById('p-desc').value.trim();
+
+            if (!title || !time) {
+                alert("Please fill in Title and Time.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Publishing...";
+
+            const { error } = await window.sbClient.from('programmes').insert({
+                church_id: userChurchId,
+                title,
+                description: desc,
+                start_time: time
+            });
+
+            btn.disabled = false;
+            btn.innerText = "Publish Programme";
+
+            if (error) {
+                alert("Error publishing programme: " + error.message);
+            } else {
+                alert("Programme added successfully!");
+                document.getElementById('p-title').value = '';
+                document.getElementById('p-time').value = '';
+                document.getElementById('p-desc').value = '';
+                loadProgrammes();
+            }
+        }
+
+        async function loadProgrammes() {
+            const container = document.getElementById('programme-list');
+            const { data: programmes, error } = await window.sbClient
+                .from('programmes')
+                .select('*')
+                .eq('church_id', userChurchId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p class="text-red-500 py-3">Error loading programmes: ${escapeHTML(error.message)}</p>`;
+                return;
+            }
+
+            container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => `
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-900">${escapeHTML(p.title)} <span class="text-xs font-normal text-gray-500 ml-2">(${escapeHTML(p.start_time)})</span></h4>
+                        ${p.description ? `<p class="text-xs text-gray-600 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+                    </div>
+                    <button onclick="deleteProgramme('${p.id}')" class="text-sm text-red-600 hover:text-red-800 font-medium ml-4">Delete</button>
+                </div>
+            `).join('') : '<p class="text-gray-500 py-3">No programmes published yet.</p>';
+        }
+
+        async function deleteProgramme(id) {
+            if (!confirm("Are you sure you want to delete this programme?")) return;
+            const { error } = await window.sbClient.from('programmes').delete().eq('id', id);
+            if (error) {
+                alert("Error deleting programme: " + error.message);
+            } else {
+                loadProgrammes();
+            }
+        }
+
+        async function loadMembers() {
+            const container = document.getElementById('member-list');
+            const { data: members, error } = await window.sbClient
+                .from('profiles')
+                .select('id, full_name, role')
+                .eq('church_id', userChurchId);
+
+            if (error) {
+                container.innerHTML = `<p class="text-red-500 py-3">Error loading members: ${escapeHTML(error.message)}</p>`;
+                return;
+            }
+
+            container.innerHTML = members && members.length > 0 ? members.map(m => `
+                <div class="py-3 flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-900">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
+                    <span class="px-2 py-0.5 text-xs rounded bg-emerald-50 text-emerald-700 font-medium">${escapeHTML(m.role || 'member')}</span>
+                </div>
+            `).join('') : '<p class="text-gray-500 py-3">No members joined your church yet.</p>';
+        }
+
+        async function updateLocation() {
+            const lat = document.getElementById('lat').value;
+            const lng = document.getElementById('lng').value;
+
+            if (!lat || !lng) {
+                alert("Please enter both latitude and longitude.");
+                return;
+            }
+
+            const { error } = await window.sbClient.from('churches').update({
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lng)
+            }).eq('id', userChurchId);
+
+            if (error) {
+                alert("Error updating location: " + error.message);
+            } else {
+                alert("Church coordinates updated successfully!");
+            }
+        }
+
+        async function detectAndSaveLocation() {
+            const status = document.getElementById('gps-status');
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+            status.innerText = "Detecting current position...";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                document.getElementById('lat').value = lat;
+                document.getElementById('lng').value = lng;
+
+                const { error } = await window.sbClient.from('churches').update({
+                    latitude: lat,
+                    longitude: lng
+                }).eq('id', userChurchId);
+
+                if (error) {
+                    status.innerText = "Error saving GPS location.";
+                    alert("Error saving GPS location: " + error.message);
+                } else {
+                    status.innerText = `Saved! Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+                }
+            }, (err) => {
+                status.innerText = "Unable to retrieve your location.";
+                alert("Geolocation error: " + err.message);
+            });
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, s => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[s]));
+        }
+
+        initDashboard();
+    </script>
+</body>
+</html>

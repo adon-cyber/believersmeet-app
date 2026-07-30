@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events & Coupons | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .attendee-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #couponCard, #couponCard * {
+                visibility: visible;
+            }
+            #couponCard {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .attendee-photo {
+                border: 3px solid #000000 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 pb-20 md:pb-0">
+
+<!-- Top Navigation -->
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+    <!-- Banner & Action Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Believers Community Events</h1>
+            <p class="text-blue-100 mt-1 text-sm sm:text-base">Discover fellowship gatherings, Bible studies, conferences, and manage your entry coupons.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <button onclick="openCouponModal()" class="px-5 py-2.5 bg-white bg-opacity-20 backdrop-blur text-white font-bold rounded-xl shadow hover:bg-opacity-30 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2 border border-white border-opacity-30">
+                <span>🎟️</span> Find / Download Coupon
+            </button>
+            <button onclick="openEventModal()" id="host-event-btn" class="px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl shadow hover:bg-blue-50 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2">
+                <span>+</span> Host an Event
+            </button>
+        </div>
+    </div>
+
+    <!-- Admin Section: Direct Attendee Registration & Coupon Issuance -->
+    <div id="admin-coupon-section" class="hidden bg-white rounded-2xl border border-blue-200 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span>⚙️</span> Admin: Issue Attendee Registration & Coupon
+            </h2>
+            <span class="text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-lg">Admin Only</span>
+        </div>
+        <form id="admin-register-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Select Event</label>
+                <select id="admin-event-select" required class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                    <option value="">Select Event...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Attendee Name</label>
+                <input type="text" id="admin-attendee-name" required placeholder="Full Name" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Attendee Email</label>
+                <input type="email" id="admin-attendee-email" required placeholder="email@example.com" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Coupon Number</label>
+                <div class="flex gap-2">
+                    <input type="text" id="admin-coupon-number" required placeholder="CPN-XXXX" class="w-full p-3 border border-gray-300 rounded-xl text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button type="button" onclick="generateCouponCode()" class="px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs whitespace-nowrap transition border border-gray-300">Auto-Gen</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Amount Paid ($)</label>
+                <input type="number" step="0.01" id="admin-amount-paid" value="0.00" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Attendee Photo (File or URL)</label>
+                <div class="space-y-2">
+                    <input type="file" id="admin-attendee-photo-file" accept="image/*" class="w-full p-2 border border-gray-300 rounded-xl text-xs bg-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
+                    <input type="url" id="admin-attendee-photo-url" placeholder="Or enter Image URL (https://...)" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+            <div class="flex flex-col justify-end">
+                <label class="flex items-center gap-2 p-3 border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+                    <input type="checkbox" id="admin-free-checkbox" onchange="toggleFreeEvent(this)" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                    <span class="text-sm font-bold text-gray-800">Free Event</span>
+                </label>
+            </div>
+            <div class="col-span-full flex justify-end">
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow text-sm transition">
+                    🎟️ Issue Ticket & Coupon
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="flex overflow-x-auto pb-2 gap-2 no-scrollbar">
+        <button onclick="filterCategory('All', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-blue-600 text-white shadow-sm transition">All</button>
+        <button onclick="filterCategory('Fellowship', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Fellowship</button>
+        <button onclick="filterCategory('Bible Study', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Bible Study</button>
+        <button onclick="filterCategory('Singles Meetup', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Singles Meetup</button>
+        <button onclick="filterCategory('Conference', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Conference</button>
+        <button onclick="filterCategory('Outreach', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Outreach</button>
+    </div>
+
+    <!-- Events Grid -->
+    <div id="events-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading events...</div>
+    </div>
+</main>
+
+<!-- Create Event Modal -->
+<div id="event-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900">Host a Community Event</h3>
+            <button onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <form id="create-event-form" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Event Title</label>
+                <input type="text" id="event-title" required placeholder="e.g. Friday Night Worship & Prayer" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Category</label>
+                <select id="event-category" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm bg-white">
+                    <option value="Fellowship">Fellowship</option>
+                    <option value="Bible Study">Bible Study</option>
+                    <option value="Singles Meetup">Singles Meetup</option>
+                    <option value="Conference">Conference</option>
+                    <option value="Outreach">Outreach</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Date & Time</label>
+                <input type="datetime-local" id="event-date" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Location</label>
+                <input type="text" id="event-location" required placeholder="e.g. Main Sanctuary or Online Zoom" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Event Banner Image (Optional)</label>
+                <input type="file" id="eventImageFile" accept="image/*" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Description</label>
+                <textarea id="event-description" rows="3" placeholder="Share details about what attendees should expect..." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeEventModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow text-sm">Publish Event</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Attendee Coupon Search & Download Modal -->
+<div id="coupon-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2"><span>🎟️</span> Retrieve & Download Ticket Coupon</h3>
+            <button onclick="closeCouponModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Enter Email or Unique Coupon Number</label>
+                <div class="flex gap-2">
+                    <input type="text" id="coupon-search-input" placeholder="e.g. user@example.com or CPN-8924" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button onclick="searchCoupon()" class="px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm whitespace-nowrap transition shadow">Search</button>
+                </div>
+            </div>
+            
+            <div id="coupon-result-container" class="mt-4">
+                <div class="text-center py-8 text-gray-400 text-sm">Enter your email or coupon number above to view your entry card.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Mobile Navigation Bar -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3 z-50 text-xs font-medium text-gray-600">
+    <a href="feed.html" class="flex flex-col items-center hover:text-blue-600">Feed</a>
+    <a href="prayer-wall.html" class="flex flex-col items-center hover:text-blue-600">Prayer</a>
+    <a href="testimonies.html" class="flex flex-col items-center hover:text-blue-600">Testimonies</a>
+    <a href="inboxx.html" class="flex flex-col items-center hover:text-blue-600">Inbox</a>
+    <a href="events.html" class="flex flex-col items-center text-blue-600 font-bold">Events</a>
+    <a href="profile.html" class="flex flex-col items-center hover:text-blue-600">Profile</a>
+</div>
+
+<script>
+    let loggedInUser = null;
+    let currentUserProfile = null;
+    let allEvents = [];
+    let currentCategory = 'All';
+
+    async function initApp() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            document.getElementById('events-container').innerHTML = '<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Failed to initialize Supabase client.</div>';
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+        loggedInUser = user;
+
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+        
+        currentUserProfile = profile;
+
+        if (profile) {
+            if (profile.role === 'admin' || profile.role === 'super_admin') {
+                const adminLink = document.getElementById('admin-nav-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+
+                const adminSection = document.getElementById('admin-coupon-section');
+                if (adminSection) adminSection.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('create-event-form').addEventListener('submit', handleCreateEvent);
+        document.getElementById('admin-register-form').addEventListener('submit', handleAdminRegister);
+
+        loadEvents();
+        loadAdminEventsDropdown();
+        initRealtimeSync();
+    }
+
+    function initRealtimeSync() {
+        window.sbClient
+            .channel('events-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
+                loadEvents();
+                loadAdminEventsDropdown();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => {
+                loadEvents();
+            })
+            .subscribe();
+    }
+
+    async function loadEvents() {
+        const container = document.getElementById('events-container');
+
+        const { data: events, error } = await window.sbClient
+            .from('events')
+            .select('*, event_registrations(*)')
+            .order('event_date', { ascending: true });
+
+        if (error) {
+            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading events: ${escapeHtml(error.message)}</div>`;
+            return;
+        }
+
+        if (!events || events.length === 0) {
+            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No upcoming community events found.</p></div>`;
+            return;
+        }
+
+        allEvents = events;
+        renderFilteredEvents();
+    }
+
+    async function loadAdminEventsDropdown() {
+        const select = document.getElementById('admin-event-select');
+        if (!select) return;
+        const { data: events } = await window.sbClient.from('events').select('id, title, event_date').order('event_date', { ascending: true });
+        if (events) {
+            select.innerHTML = '<option value="">Select Event...</option>' + events.map(e => `<option value="${e.id}">${escapeHtml(e.title)} (${new Date(e.event_date).toLocaleDateString()})</option>`).join('');
+        }
+    }
+
+    function generateCouponCode() {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('admin-coupon-number').value = `CPN-${randomNum}`;
+    }
+
+    function toggleFreeEvent(checkbox) {
+        const amountInput = document.getElementById('admin-amount-paid');
+        if (checkbox.checked) {
+            amountInput.value = '0';
+            amountInput.disabled = true;
+            amountInput.classList.add('bg-gray-100', 'text-gray-400');
+        } else {
+            amountInput.disabled = false;
+            amountInput.classList.remove('bg-gray-100', 'text-gray-400');
+        }
+    }
+
+    async function handleAdminRegister(e) {
+        e.preventDefault();
+        const eventId = document.getElementById('admin-event-select').value;
+        const attendeeName = document.getElementById('admin-attendee-name').value.trim();
+        const attendeeEmail = document.getElementById('admin-attendee-email').value.trim();
+        const couponNumber = document.getElementById('admin-coupon-number').value.trim().toUpperCase();
+        const isFree = document.getElementById('admin-free-checkbox').checked;
+        const amountPaid = isFree ? 0 : parseFloat(document.getElementById('admin-amount-paid').value || 0);
+        
+        const photoFile = document.getElementById('admin-attendee-photo-file').files[0];
+        const photoUrlInput = document.getElementById('admin-attendee-photo-url').value.trim();
+
+        let photoUrl = photoUrlInput || null;
+        if (photoFile) {
+            const filePath = `attendee-photos/${Date.now()}_${photoFile.name}`;
+            const { error: uploadError } = await window.sbClient.storage.from('attendee-photos').upload(filePath, photoFile);
+            if (uploadError) {
+                alert("Attendee photo upload failed: " + uploadError.message);
+                return;
+            }
+            const { data: urlData } = window.sbClient.storage.from('attendee-photos').getPublicUrl(filePath);
+            photoUrl = urlData?.publicUrl || null;
+        }
+
+        const { error } = await window.sbClient.from('event_registrations').insert([{
+            event_id: eventId,
+            profile_id: loggedInUser.id,
+            attendee_name: attendeeName,
+            attendee_email: attendeeEmail,
+            coupon_number: couponNumber,
+            amount_paid: amountPaid,
+            is_free: isFree,
+            photo_url: photoUrl
+        }]);
+
+        if (error) {
+            if (error.code === '23505') alert("Coupon number or registration already exists.");
+            else alert("Error issuing coupon: " + error.message);
+        } else {
+            alert(`Coupon ${couponNumber} issued successfully for ${attendeeName}!`);
+            document.getElementById('admin-register-form').reset();
+            document.getElementById('admin-amount-paid').disabled = false;
+            document.getElementById('admin-amount-paid').classList.remove('bg-gray-100', 'text-gray-400');
+            loadEvents();
+        }
+    }
+
+    function filterCategory(category, btn) {
+        currentCategory = category;
+        document.querySelectorAll('.category-btn').forEach(b => {
+            b.className = "category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition";
+        });
+        btn.className = "category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-blue-600 text-white shadow-sm transition";
+        renderFilteredEvents();
+    }
+
+    function renderFilteredEvents() {
+        const container = document.getElementById('events-container');
+        const filtered = currentCategory === 'All' 
+            ? allEvents 
+            : allEvents.filter(e => (e.category || 'Fellowship') === currentCategory);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No events found in this category.</p></div>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(evt => {
+            const regs = evt.event_registrations || [];
+            const rsvpCount = regs.length;
+            const hasRsvp = regs.some(r => r.profile_id === loggedInUser.id);
+            const category = evt.category || 'Fellowship';
+            const imageUrl = evt.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80';
+            const eventDate = new Date(evt.event_date);
+            const monthStr = eventDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+            const dayStr = eventDate.getDate();
+
+            return `
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between transition hover:shadow-md">
+                    <div>
+                        <div class="relative h-48 bg-gray-100 overflow-hidden">
+                            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(evt.title)}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 left-3 bg-white bg-opacity-90 backdrop-blur rounded-xl px-3 py-1 text-center shadow">
+                                <span class="block text-xs font-bold text-red-500 uppercase">${monthStr}</span>
+                                <span class="block text-lg font-extrabold text-gray-900">${dayStr}</span>
+                            </div>
+                            <span class="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">${escapeHtml(category)}</span>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${escapeHtml(evt.title)}</h3>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span>📅</span>
+                                    <span>${eventDate.toLocaleString()}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>📍</span>
+                                    <span class="truncate">${escapeHtml(evt.location)}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm line-clamp-2">${escapeHtml(evt.description)}</p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 flex items-center justify-between border-t border-gray-100 mt-4 pt-4">
+                        <span class="text-xs font-semibold text-gray-500">👥 ${rsvpCount} ${rsvpCount === 1 ? 'Attendee' : 'Attendees'}</span>
+                        <div class="flex gap-2">
+                            <button onclick="toggleRsvp('${evt.id}', ${hasRsvp})" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}">
+                                ${hasRsvp ? '✓ RSVP' : "RSVP"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function toggleRsvp(eventId, hasRsvp) {
+        if (hasRsvp) {
+            const { error } = await window.sbClient
+                .from('event_registrations')
+                .delete()
+                .eq('event_id', eventId)
+                .eq('profile_id', loggedInUser.id);
+
+            if (error) alert("Error cancelling RSVP: " + error.message);
+            else loadEvents();
+        } else {
+            const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
+            const { error } = await window.sbClient
+                .from('event_registrations')
+                .insert([{ 
+                    event_id: eventId, 
+                    profile_id: loggedInUser.id,
+                    attendee_name: currentUserProfile?.full_name || 'Attendee',
+                    attendee_email: loggedInUser.email,
+                    coupon_number: randomCoupon,
+                    amount_paid: 0.00,
+                    is_free: true
+                }]);
+
+            if (error) {
+                if (error.code === '23505') alert("You have already RSVP'd for this event.");
+                else alert("Error: " + error.message);
+            } else {
+                alert(`RSVP successful! Your entry coupon is ${randomCoupon}`);
+                loadEvents();
+            }
+        }
+    }
+
+    async function searchCoupon() {
+        const query = document.getElementById('coupon-search-input').value.trim();
+        const container = document.getElementById('coupon-result-container');
+        if (!query) {
+            container.innerHTML = '<div class="text-red-500 text-sm text-center py-4">Please enter an email or coupon number.</div>';
+            return;
+        }
+
+        container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">Searching coupon records...</div>';
+
+        const { data, error } = await window.sbClient
+            .from('event_registrations')
+            .select('*, events(*)')
+            .or(`attendee_email.eq.${query},coupon_number.eq.${query}`);
+
+        // Try direct query with exact match or ilike if query has '@'
+        let regList = data;
+        if ((!regList || regList.length === 0) && query.includes('@')) {
+            const { data: dataEmail } = await window.sbClient
+                .from('event_registrations')
+                .select('*, events(*)')
+                .ilike('attendee_email', `%${query}%`);
+            regList = dataEmail;
+        } else if (!regList || regList.length === 0) {
+            const { data: dataCoupon } = await window.sbClient
+                .from('event_registrations')
+                .select('*, events(*)')
+                .ilike('coupon_number', `%${query}%`);
+            regList = dataCoupon;
+        }
+
+        if (error || !regList || regList.length === 0) {
+            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">No ticket or coupon found matching "${escapeHtml(query)}".</div>`;
+            return;
+        }
+
+        container.innerHTML = regList.map(reg => {
+            const evt = reg.events || {};
+            const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'TBD';
+            const isFree = reg.is_free || Number(reg.amount_paid || 0) === 0;
+            const amountDisplay = isFree ? 'FREE' : `$${Number(reg.amount_paid || 0).toFixed(2)}`;
+
+            return `
+                <div id="couponCard" class="bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-4 border border-blue-700 my-4">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500 opacity-20 rounded-full blur-2xl"></div>
+                    <div class="flex justify-between items-start border-b border-blue-700 pb-3">
+                        <div>
+                            <span class="text-xs font-bold tracking-widest text-blue-300 uppercase">Official Entry Pass</span>
+                            <h4 class="text-xl font-extrabold text-white mt-0.5">${escapeHtml(evt.title || 'Community Event')}</h4>
+                        </div>
+                        <span class="px-3 py-1 ${isFree ? 'bg-green-500 text-white' : 'bg-blue-500 bg-opacity-30 text-blue-200'} text-xs font-bold rounded-lg border border-blue-400 border-opacity-30">${escapeHtml(amountDisplay)}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-xs text-blue-300 block">Event Name</span>
+                            <span class="font-bold text-white">${escapeHtml(evt.title || 'Community Event')}</span>
+                        </div>
+                        <div class="flex items-center gap-3 col-span-2 sm:col-span-1">
+                            ${reg.photo_url ? `<img src="${escapeHtml(reg.photo_url)}" alt="Attendee Photo" class="attendee-photo">` : ''}
+                            <div>
+                                <span class="text-xs text-blue-300 block">Attendee Name & Email</span>
+                                <span class="font-bold text-white block">${escapeHtml(reg.attendee_name || currentUserProfile?.full_name || 'Valued Attendee')}</span>
+                                <span class="text-xs text-blue-100 block">${escapeHtml(reg.attendee_email || loggedInUser.email)}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-xs text-blue-300 block">Date & Time</span>
+                            <span class="font-medium text-blue-100">${escapeHtml(eventDate)}</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-blue-300 block">Location</span>
+                            <span class="font-medium text-blue-100">${escapeHtml(evt.location || 'Main Venue')}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white text-gray-900 rounded-xl p-4 flex flex-col items-center justify-center space-y-1 shadow-inner">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Unique Coupon Number</span>
+                        <div class="text-2xl font-mono font-black tracking-widest text-blue-700">${escapeHtml(reg.coupon_number || 'CPN-XXXX')}</div>
+                        <div class="w-full h-8 bg-gray-900 mt-2 rounded flex items-center justify-center font-mono text-white text-xs tracking-[8px] opacity-90 select-none">||| | |||| || | ||||</div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button onclick="window.print()" class="px-5 py-2.5 bg-white text-blue-900 hover:bg-blue-50 font-bold rounded-xl text-sm transition shadow flex items-center gap-2">
+                            <span>🖨️</span> Print / Download Coupon Card
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function handleCreateEvent(e) {
+        e.preventDefault();
+        const title = document.getElementById('event-title').value.trim();
+        const category = document.getElementById('event-category').value;
+        const eventDate = document.getElementById('event-date').value;
+        const location = document.getElementById('event-location').value.trim();
+        const description = document.getElementById('event-description').value.trim();
+        const imageFile = document.getElementById('eventImageFile').files[0];
+
+        let imageUrl = null;
+        if (imageFile) {
+            const filePath = `events/${Date.now()}_${imageFile.name}`;
+            const { error: uploadError } = await window.sbClient.storage.from('events').upload(filePath, imageFile);
+            if (uploadError) {
+                alert("Image upload failed: " + uploadError.message);
+                return;
+            }
+            const { data: urlData } = window.sbClient.storage.from('events').getPublicUrl(filePath);
+            imageUrl = urlData?.publicUrl || null;
+        }
+
+        const { error } = await window.sbClient.from('events').insert([{
+            title,
+            category,
+            event_date: eventDate,
+            location,
+            image_url: imageUrl,
+            description,
+            user_id: loggedInUser.id,
+            church_id: currentUserProfile?.church_id || null
+        }]);
+
+        if (error) {
+            alert("Error creating event: " + error.message);
+        } else {
+            alert("Event published successfully!");
+            closeEventModal();
+            document.getElementById('create-event-form').reset();
+            loadEvents();
+            loadAdminEventsDropdown();
+        }
+    }
+
+    function openEventModal() {
+        document.getElementById('event-modal').classList.remove('hidden');
+    }
+
+    function closeEventModal() {
+        document.getElementById('event-modal').classList.add('hidden');
+    }
+
+    function openCouponModal() {
+        document.getElementById('coupon-modal').classList.remove('hidden');
+    }
+
+    function closeCouponModal() {
+        document.getElementById('coupon-modal').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    }
+
+    function logoutUser(e) { 
+        e.preventDefault(); 
+        window.sbClient.auth.signOut(); 
+        window.location.replace('login.html'); 
+    }
+
+    initApp();
+</script>
+</body>
+</html>

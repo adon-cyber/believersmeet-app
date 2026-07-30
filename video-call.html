@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Video Call | BelieversMeet</title>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #121212;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Main Viewport Container */
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #1a1a1a;
+        }
+
+        /* Remote stream takes up the whole backdrop */
+        .remote-stream {
+            width: 100%;
+            height: 100%;
+            background-color: #242424;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .placeholder-text {
+            color: #a0a0a0;
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Floating Local Preview (Your Camera) */
+        .local-stream {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 180px;
+            height: 240px;
+            background-color: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .local-stream {
+                width: 120px;
+                height: 160px;
+                top: 16px;
+                right: 16px;
+            }
+        }
+
+        /* Controls Overlay Bar */
+        .controls-bar {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 16px;
+            background-color: rgba(30, 30, 30, 0.75);
+            padding: 12px 24px;
+            border-radius: 40px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 20;
+        }
+
+        .control-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.muted {
+            background-color: #ea4335;
+        }
+
+        .leave-btn {
+            background-color: #ea4335;
+        }
+
+        .leave-btn:hover {
+            background-color: #d93025;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="video-container">
+        <div id="remote-player" class="remote-stream">
+            <div class="placeholder-text">Waiting for someone to join...</div>
+        </div>
+
+        <div id="local-player" class="local-stream"></div>
+
+        <div class="controls-bar">
+            <button id="btn-mic" class="control-btn">Mute Mic</button>
+            <button id="btn-cam" class="control-btn">Camera Off</button>
+            <button id="btn-leave" class="control-btn leave-btn">End Call</button>
+        </div>
+    </div>
+
+<script>
+    // 1. Generate a unique, completely numeric user ID for this browser tab session
+    const currentUserId = Math.floor(Math.random() * 1000000) + 1; 
+
+    // 2. Safely read the targeted chat room designation right out of the URL string
+    // Example format: video-call.html?room=believers-room-xyz
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeChannel = urlParams.get("room") || "lobby-room";
+
+    const options = {
+        appId: "32139908ba884fcf8e714de84dc11251", 
+        channel: activeChannel,   
+        token: null // Will be generated dynamically inside startCall()
+    };
+
+    let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+    let localTracks = { videoTrack: null, audioTrack: null };
+    let isMicMuted = false;
+    let isCamMuted = false;
+
+    async function startCall() {
+        try {
+            console.log(`Requesting dynamic token for channel: ${options.channel} with UID: ${currentUserId}`);
+
+            // 3. Request short-lived token generation directly from your deployed Supabase Edge Function
+            const response = await fetch("https://tgwbhvutozgcmnthxhzo.supabase.co/functions/v1/agora-token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    channelName: options.channel, 
+                    uid: currentUserId 
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Edge function authentication failed with status code: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            options.token = data.token; // Inject authorization token directly into runtime options
+
+            // 4. Securely sign into the communication stream utilizing the verified token credentials
+            await client.join(options.appId, options.channel, options.token, currentUserId);
+            console.log("Joined stream room session successfully.");
+
+            // Fetch hardware tracks from browser microphone and camera permissions
+            localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+            localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+
+            // Target the local container and play the preview feed
+            localTracks.videoTrack.play("local-player");
+
+            // Broadcast stream out to the remote user
+            await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
+            console.log("Publishing local tracks successfully!");
+
+        } catch (err) {
+            console.error("Agora Engine Automation Failure:", err);
+            document.getElementById("remote-player").innerHTML = `
+                <div class="placeholder-text" style="color: #ea4335;">
+                    Connection Failed.<br><small style="font-size:0.9rem; opacity:0.7;">${err.message}</small>
+                </div>`;
+        }
+    }
+
+    // Handle incoming stream hooks
+    client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+
+        if (mediaType === "video") {
+            const remoteContainer = document.getElementById("remote-player");
+            remoteContainer.innerHTML = ""; // Wipe the initial greeting placeholder text
+            user.videoTrack.play("remote-player");
+        }
+
+        if (mediaType === "audio") {
+            user.audioTrack.play();
+        }
+    });
+
+    // Handle cleanup if partner hangs up
+    client.on("user-unpublished", (user) => {
+        const remoteContainer = document.getElementById("remote-player");
+        remoteContainer.innerHTML = '<div class="placeholder-text">The other user left the call.</div>';
+    });
+
+    // --- BUTTON CONTROLS LOGIC ---
+    document.getElementById("btn-mic").addEventListener("click", async (e) => {
+        if (!localTracks.audioTrack) return;
+        if (!isMicMuted) {
+            await localTracks.audioTrack.setEnabled(false);
+            isMicMuted = true;
+            e.target.textContent = "Unmute Mic";
+            e.target.classList.add("muted");
+        } else {
+            await localTracks.audioTrack.setEnabled(true);
+            isMicMuted = false;
+            e.target.textContent = "Mute Mic";
+            e.target.classList.remove("muted");
+        }
+    });
+
+    document.getElementById("btn-cam").addEventListener("click", async (e) => {
+        if (!localTracks.videoTrack) return;
+        if (!isCamMuted) {
+            await localTracks.videoTrack.setEnabled(false);
+            isCamMuted = true;
+            e.target.textContent = "Camera On";
+            e.target.classList.add("muted");
+        } else {
+            await localTracks.videoTrack.setEnabled(true);
+            isCamMuted = false;
+            e.target.textContent = "Camera Off";
+            e.target.classList.remove("muted");
+        }
+    });
+
+    document.getElementById("btn-leave").addEventListener("click", async () => {
+        if (localTracks.audioTrack) localTracks.audioTrack.close();
+        if (localTracks.videoTrack) localTracks.videoTrack.close();
+
+        await client.leave();
+        
+        // Send them back to your main application dashboard
+        window.location.replace("feed.html"); 
+    });
+
+    // Boot up video engine initialization on screen load
+    window.onload = () => {
+        startCall();
+    };
+</script>
+</body>
+</html>

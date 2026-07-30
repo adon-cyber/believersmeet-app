@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tithes & Offerings | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+<!-- Navigation Bar -->
+<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<!-- Main Content Area -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
+    
+    <!-- Page Header with Edit Button Container -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white mb-2">Tithes & Offerings</h1>
+            <p class="text-blue-100 text-base">Worship through your giving using the details below.</p>
+        </div>
+        <div id="edit-giving-container" class="hidden">
+            <button onclick="openEditGivingModal()" class="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg shadow transition-all flex items-center gap-2 text-sm">
+                <i class="fas fa-edit"></i> Edit Giving Details
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Notification Toast -->
+    <div id="success-toast" class="hidden fixed top-20 right-5 z-50 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 transition-opacity duration-300">
+        <i class="fas fa-check-circle text-xl"></i>
+        <span id="success-toast-msg" class="font-medium text-sm">Giving settings updated successfully!</span>
+    </div>
+
+    <!-- Welcoming Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 mb-10 text-white shadow-md max-w-4xl mx-auto">
+        <div class="max-w-3xl">
+            <span class="bg-blue-500 bg-opacity-40 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Worship in Generosity</span>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">Worship Through Giving</h1>
+            <p class="text-white text-base sm:text-lg leading-relaxed">
+                "Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver." — 2 Corinthians 9:7
+            </p>
+        </div>
+    </div>
+
+    <!-- Payment Methods Grid Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+
+        <!-- Card 1: Bank Transfer -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+            <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Bank Transfer</h3>
+                    <p class="text-xs text-emerald-700 font-medium">Direct Deposit / Wire</p>
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Bank Name:</span>
+                        <span id="display-bank-name" class="font-semibold text-gray-900 text-right">Equity Bank / Standard Bank</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Account Name:</span>
+                        <span id="display-account-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Ministries</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Account Number:</span>
+                        <div class="flex items-center gap-2">
+                            <span id="bank-acc-num" class="font-mono font-bold text-emerald-700">1002938472910</span>
+                            <button onclick="copyToClipboard(document.getElementById('bank-acc-num').innerText, this)" class="bg-gray-100 hover:bg-emerald-100 text-gray-600 hover:text-emerald-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Account Number">
+                                <i class="fas fa-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 font-medium">Branch:</span>
+                        <span id="display-branch" class="font-semibold text-gray-900 text-right">Main City Branch (Code: 045)</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
+                    <p class="text-xs text-gray-500 text-center">Please use your Full Name or "Tithes" as the transaction reference.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: MTN Mobile Money -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+            <div class="bg-yellow-50 px-6 py-4 border-b border-yellow-100 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-yellow-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">MTN Mobile Money</h3>
+                    <p class="text-xs text-yellow-800 font-medium">Momo Merchant / Till</p>
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Service Type:</span>
+                        <span class="font-semibold text-gray-900 text-right">Buy Goods / Till Number</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Merchant Code:</span>
+                        <div class="flex items-center gap-2">
+                            <span id="mtn-code" class="font-mono font-bold text-yellow-700">889922</span>
+                            <button onclick="copyToClipboard(document.getElementById('mtn-code').innerText, this)" class="bg-gray-100 hover:bg-yellow-100 text-gray-600 hover:text-yellow-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Merchant Code">
+                                <i class="fas fa-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 font-medium">Name:</span>
+                        <span id="display-momo-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Tithes</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 bg-yellow-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
+                    <p class="text-xs text-yellow-800 text-center font-medium">Dial *165*# or use MTN Momo App to complete your mobile offering.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Airtel Money -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+            <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Airtel Money</h3>
+                    <p class="text-xs text-red-700 font-medium">Merchant / Till Code</p>
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Service Type:</span>
+                        <span class="font-semibold text-gray-900 text-right">Merchant Pay</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium">Merchant Code:</span>
+                        <div class="flex items-center gap-2">
+                            <span id="airtel-code" class="font-mono font-bold text-red-600">554433</span>
+                            <button onclick="copyToClipboard(document.getElementById('airtel-code').innerText, this)" class="bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Merchant Code">
+                                <i class="fas fa-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 font-medium">Name:</span>
+                        <span id="display-airtel-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Offerings</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 bg-red-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
+                    <p class="text-xs text-red-700 text-center font-medium">Dial *185# or use Airtel Money App to send your contribution.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Confirm Transfer / Submit Record Section -->
+    <div class="mt-12 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto">
+        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <i class="fas fa-check-circle text-blue-600"></i> Confirm Transfer / Submit Record
+        </h3>
+        <p class="text-gray-600 text-sm leading-relaxed mb-6">
+            Already made your contribution via Bank Transfer or Mobile Money? Submit your transaction details to confirm your record.
+        </p>
+        <form onsubmit="event.preventDefault(); alert('Transfer confirmation submitted successfully!');" class="space-y-4 max-w-xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Payment Method</label>
+                    <select class="w-full text-sm border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option>Bank Transfer</option>
+                        <option>MTN Mobile Money</option>
+                        <option>Airtel Money</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Transaction Ref / ID</label>
+                    <input type="text" placeholder="e.g. TXN123456" class="w-full text-sm border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors shadow-sm w-full sm:w-auto">
+                    Confirm Transfer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Additional Information Section -->
+    <div class="mt-8 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto">
+        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <i class="fas fa-info-circle text-emerald-600"></i> Need Assistance With Giving?
+        </h3>
+        <p class="text-gray-600 text-sm leading-relaxed mb-4">
+            If you encounter any issues with bank transfers or mobile money transactions, or if you would like to receive an annual giving statement for your records, please reach out directly to our finance team or Church administration.
+        </p>
+        <button onclick="contactFinanceTeam()" class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors shadow-sm w-full sm:w-auto">
+            <span>Contact Finance Department</span>
+            <i class="fas fa-arrow-right text-xs ml-2"></i>
+        </button>
+    </div>
+
+</main>
+
+<!-- Tailwind Edit Modal (Hidden by Default) -->
+<div id="edit-giving-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden transform transition-all">
+        <div class="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
+            <h3 class="text-lg font-bold flex items-center gap-2">
+                <i class="fas fa-edit"></i> Edit Giving Details
+            </h3>
+            <button onclick="closeEditGivingModal()" class="text-blue-100 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+        <form id="edit-giving-form" onsubmit="saveGivingSettings(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Bank Name</label>
+                <input type="text" id="input-bank-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Name</label>
+                <input type="text" id="input-account-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Number</label>
+                <input type="text" id="input-account-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Branch</label>
+                <input type="text" id="input-branch" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div class="border-t pt-4">
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">MTN Mobile Money Name</label>
+                <input type="text" id="input-momo-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">MTN Mobile Money Number / Code</label>
+                <input type="text" id="input-momo-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div class="border-t pt-4">
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Airtel Money Name</label>
+                <input type="text" id="input-airtel-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Airtel Money Number / Code</label>
+                <input type="text" id="input-airtel-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onclick="closeEditGivingModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="save-giving-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-sm shadow transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200 mt-auto py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+    &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
+  </div>
+</footer>
+
+<script>
+    let loggedInUser = null;
+    let currentGivingData = null;
+
+    async function initializeGivingPage() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            console.warn("Supabase client not initialized.");
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) {
+            window.location.replace('login.html');
+            return;
+        }
+        loggedInUser = user;
+
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile) {
+            if (profile.role === 'admin' || profile.role === 'super_admin') {
+                const adminLink = document.getElementById('admin-nav-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+            }
+
+            // Role-Based "Edit" Button: check if role is 'admin', 'super_admin', or 'finance'
+            if (['admin', 'super_admin', 'finance'].includes(profile.role)) {
+                const editContainer = document.getElementById('edit-giving-container');
+                if (editContainer) editContainer.classList.remove('hidden');
+            }
+        }
+
+        // Fetch dynamic giving settings from Supabase where id = 1
+        await fetchGivingSettings();
+    }
+
+    async function fetchGivingSettings() {
+        try {
+            const { data, error } = await window.sbClient
+                .from('giving_settings')
+                .select('*')
+                .eq('id', 1)
+                .maybeSingle();
+
+            if (error) {
+                console.warn("Error fetching giving settings:", error.message);
+                return;
+            }
+
+            if (data) {
+                currentGivingData = data;
+                updateGivingUI(data);
+            }
+        } catch (err) {
+            console.error("Exception fetching giving settings:", err);
+        }
+    }
+
+    function updateGivingUI(data) {
+        if (!data) return;
+        
+        document.getElementById('display-bank-name').innerText = data.bank_name || '';
+        document.getElementById('display-account-name').innerText = data.account_name || '';
+        document.getElementById('bank-acc-num').innerText = data.account_number || '';
+        document.getElementById('display-branch').innerText = data.branch || '';
+        
+        document.getElementById('mtn-code').innerText = data.momo_number || '';
+        document.getElementById('display-momo-name').innerText = data.momo_name || '';
+        
+        document.getElementById('airtel-code').innerText = data.airtel_number || '';
+        document.getElementById('display-airtel-name').innerText = data.airtel_name || '';
+    }
+
+    function openEditGivingModal() {
+        if (!currentGivingData) return;
+
+        document.getElementById('input-bank-name').value = currentGivingData.bank_name || '';
+        document.getElementById('input-account-name').value = currentGivingData.account_name || '';
+        document.getElementById('input-account-number').value = currentGivingData.account_number || '';
+        document.getElementById('input-branch').value = currentGivingData.branch || '';
+        document.getElementById('input-momo-name').value = currentGivingData.momo_name || '';
+        document.getElementById('input-momo-number').value = currentGivingData.momo_number || '';
+        document.getElementById('input-airtel-name').value = currentGivingData.airtel_name || '';
+        document.getElementById('input-airtel-number').value = currentGivingData.airtel_number || '';
+
+        document.getElementById('edit-giving-modal').classList.remove('hidden');
+    }
+
+    function closeEditGivingModal() {
+        document.getElementById('edit-giving-modal').classList.add('hidden');
+    }
+
+    async function saveGivingSettings(event) {
+        event.preventDefault();
+
+        const saveBtn = document.getElementById('save-giving-btn');
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+
+        const updatedData = {
+            bank_name: document.getElementById('input-bank-name').value.trim(),
+            account_name: document.getElementById('input-account-name').value.trim(),
+            account_number: document.getElementById('input-account-number').value.trim(),
+            branch: document.getElementById('input-branch').value.trim(),
+            momo_name: document.getElementById('input-momo-name').value.trim(),
+            momo_number: document.getElementById('input-momo-number').value.trim(),
+            airtel_name: document.getElementById('input-airtel-name').value.trim(),
+            airtel_number: document.getElementById('input-airtel-number').value.trim(),
+            updated_at: new Date().toISOString()
+        };
+
+        try {
+            const { error } = await window.sbClient
+                .from('giving_settings')
+                .update(updatedData)
+                .eq('id', 1);
+
+            if (error) {
+                throw error;
+            }
+
+            // Update local cache and UI
+            currentGivingData = { id: 1, ...updatedData };
+            updateGivingUI(currentGivingData);
+
+            // Close modal
+            closeEditGivingModal();
+
+            // Show success notification toast
+            showSuccessToast('Giving settings updated successfully!');
+
+        } catch (err) {
+            console.error("Error saving giving settings:", err);
+            alert("Failed to update giving settings: " + (err.message || err));
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Changes';
+        }
+    }
+
+    function showSuccessToast(message) {
+        const toast = document.getElementById('success-toast');
+        const msgEl = document.getElementById('success-toast-msg');
+        if (msgEl) msgEl.innerText = message;
+        toast.classList.remove('hidden');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 3000);
+    }
+
+    // Required "Copy to Clipboard" Feature Function
+    async function copyToClipboard(text, buttonElement) {
+        try {
+            await navigator.clipboard.writeText(text);
+            
+            // Visual feedback: change button icon/text temporarily for 2 seconds
+            const originalHTML = buttonElement.innerHTML;
+            buttonElement.innerHTML = '<i class="fas fa-check text-emerald-600"></i> <span class="text-xs font-bold text-emerald-600">Copied!</span>';
+            buttonElement.classList.add('bg-emerald-50', 'border', 'border-emerald-200');
+            
+            setTimeout(() => {
+                buttonElement.innerHTML = originalHTML;
+                buttonElement.classList.remove('bg-emerald-50', 'border', 'border-emerald-200');
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            alert('Failed to copy to clipboard.');
+        }
+    }
+
+    async function logoutUser(e) {
+        e.preventDefault();
+        await window.sbClient.auth.signOut();
+        window.location.replace('login.html');
+    }
+
+    // Dynamic Finance Admin Fetching and Direct Routing
+    async function contactFinanceTeam() {
+        try {
+            if (!window.sbClient || !loggedInUser) {
+                throw new Error("User not authenticated or Supabase not initialized");
+            }
+
+            let financeUser = null;
+            
+            const { data: financeProfiles, error: financeError } = await window.sbClient
+                .from('profiles')
+                .select('id, role, full_name, email')
+                .eq('role', 'finance')
+                .limit(1);
+
+            if (!financeError && financeProfiles && financeProfiles.length > 0) {
+                financeUser = financeProfiles[0];
+            } else {
+                const { data: adminProfiles, error: adminError } = await window.sbClient
+                    .from('profiles')
+                    .select('id, role, full_name, email')
+                    .or('role.eq.admin,role.eq.super_admin')
+                    .limit(1);
+
+                if (!adminError && adminProfiles && adminProfiles.length > 0) {
+                    financeUser = adminProfiles[0];
+                }
+            }
+
+            if (!financeUser) {
+                alert("The finance department has not been assigned yet. Please contact system administration.");
+                return;
+            }
+
+            const financeUserId = financeUser.id;
+
+            const { data: existingMessages, error: msgError } = await window.sbClient
+                .from('messages')
+                .select('id')
+                .or(`and(sender_id.eq.${loggedInUser.id},or(receiver_id.eq.${financeUserId},recipient_id.eq.${financeUserId})),and(or(sender_id.eq.${financeUserId},receiver_id.eq.${financeUserId},recipient_id.eq.${financeUserId}),receiver_id.eq.${loggedInUser.id}))`)
+                .limit(1);
+
+            if (msgError) {
+                console.warn("Error checking existing conversation:", msgError.message);
+            }
+
+            if (!existingMessages || existingMessages.length === 0) {
+                const { error: insertError } = await window.sbClient
+                    .from('messages')
+                    .insert([{
+                        sender_id: loggedInUser.id,
+                        receiver_id: financeUserId,
+                        recipient_id: financeUserId,
+                        content: "Hello, I am reaching out regarding church giving and finance inquiries."
+                    }]);
+
+                if (insertError) {
+                    console.warn("Could not auto-create initial message thread:", insertError.message);
+                }
+            }
+
+            window.location.href = `inbox.html?recipient=${financeUserId}`;
+
+        } catch (err) {
+            console.error("Error in contactFinanceTeam:", err);
+            alert("The finance department has not been assigned yet. Please contact system administration.");
+        }
+    }
+
+    initializeGivingPage();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hidden { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col h-screen">
+
+<!-- Global Navigation Bar -->
+<nav class="bg-blue-600 shadow-md flex-shrink-0" style="background-color: #007bff !important;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div id="church-logo-container" class="flex items-center space-x-2">
+                    <img id="church-logo-img" src="" alt="Church Logo" class="w-8 h-8 rounded-full object-cover hidden">
+                    <span id="church-logo-placeholder" class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">BM</span>
+                </div>
+                <a href="feed.html" class="text-xl font-bold text-white flex-shrink-0">BelieversMeet</a>
+            </div>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Chat Container -->
+<main class="flex-grow max-w-4xl w-full mx-auto p-4 flex flex-col h-[calc(100vh-4rem)]">
+    <!-- Chat Header -->
+    <div id="chat-header" class="bg-white shadow rounded-t-lg p-4 flex items-center justify-between border-b">
+        <div class="flex items-center space-x-3">
+            <a href="member-profile.html" id="back-to-profile" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                &larr; Back
+            </a>
+            <div class="flex items-center space-x-3">
+                <img id="target-avatar" src="" alt="" class="w-10 h-10 rounded-full object-cover hidden">
+                <div id="target-avatar-placeholder" class="w-10 h-10 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center font-bold text-sm">?</div>
+                <div>
+                    <h2 id="target-name" class="font-bold text-gray-900 text-base">Loading...</h2>
+                    <p class="text-xs text-gray-500">Direct Message</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message History Container -->
+    <div id="messages-container" class="flex-grow bg-white p-4 overflow-y-auto flex flex-col space-y-3 shadow-inner">
+        <div class="text-center text-gray-400 py-4">Loading messages...</div>
+    </div>
+
+    <!-- Message Input Area -->
+    <div class="bg-white shadow rounded-b-lg p-3 border-t">
+        <form id="message-form" class="flex items-center space-x-2" onsubmit="sendMessage(event)">
+            <input 
+                type="text" 
+                id="message-input" 
+                placeholder="Type a message..." 
+                required 
+                autocomplete="off"
+                class="flex-grow border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+            <button 
+                type="submit" 
+                id="send-btn"
+                class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                style="background-color: #007bff;"
+            >
+                Send
+            </button>
+        </form>
+    </div>
+</main>
+
+<script>
+    let currentUser = null;
+    const targetUserId = new URLSearchParams(window.location.search).get('user');
+    let targetUser = null;
+
+    async function loadChurchLogo() {
+        try {
+            const churchId = localStorage.getItem('church_id');
+            if (!churchId) return;
+            const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
+            if (church && church.logo_url) {
+                const img = document.getElementById('church-logo-img');
+                const placeholder = document.getElementById('church-logo-placeholder');
+                img.src = church.logo_url;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Error loading church logo:", e);
+        }
+    }
+
+    async function initChat() {
+        if (!targetUserId) {
+            document.getElementById('messages-container').innerHTML = `<div class="text-center text-red-500 py-8">Target user ID not specified in URL.</div>`;
+            return;
+        }
+
+        const backLink = document.getElementById('back-to-profile');
+        backLink.href = `member-profile.html?id=${targetUserId}`;
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        currentUser = user;
+
+        if (!currentUser) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        if (currentUser.id === targetUserId) {
+            document.getElementById('messages-container').innerHTML = `<div class="text-center text-gray-500 py-8">You cannot chat with yourself.</div>`;
+            document.getElementById('message-form').style.display = 'none';
+            return;
+        }
+
+        // Fetch target user profile
+        const { data: profile, error } = await window.sbClient.from('profiles').select('*').eq('id', targetUserId).maybeSingle();
+        if (error || !profile) {
+            document.getElementById('target-name').textContent = 'Unknown User';
+            document.getElementById('messages-container').innerHTML = `<div class="text-center text-red-500 py-8">Target user profile could not be found.</div>`;
+            return;
+        }
+
+        targetUser = profile;
+        const nameEl = document.getElementById('target-name');
+        nameEl.innerHTML = `
+            ${escapeHTML(targetUser.full_name || 'Member')} 
+            <span id="presence-badge" class="inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                <span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline
+            </span>
+        `;
+
+        const avatarImg = document.getElementById('target-avatar');
+        const avatarPlaceholder = document.getElementById('target-avatar-placeholder');
+        if (targetUser.avatar_url) {
+            avatarImg.src = targetUser.avatar_url;
+            avatarImg.classList.remove('hidden');
+            avatarPlaceholder.classList.add('hidden');
+        } else {
+            avatarPlaceholder.textContent = (targetUser.full_name || 'U').charAt(0).toUpperCase();
+        }
+
+        await fetchMessages();
+        setupRealtimeSubscription();
+    }
+
+    async function fetchMessages() {
+        const container = document.getElementById('messages-container');
+        try {
+            const { data: messages, error } = await window.sbClient
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${currentUser.id})`)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching messages:", error);
+                container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages.</div>`;
+                return;
+            }
+
+            renderMessages(messages || []);
+        } catch (e) {
+            console.error("Exception fetching messages:", e);
+        }
+    }
+
+    function renderMessages(messages) {
+        const container = document.getElementById('messages-container');
+        if (messages.length === 0) {
+            container.innerHTML = `<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>`;
+            return;
+        }
+
+        container.innerHTML = messages.map(msg => {
+            const isMe = msg.sender_id === currentUser.id;
+            const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                    <div class="max-w-xs sm:max-w-md px-4 py-2 rounded-lg text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-900 rounded-bl-none'}" ${isMe ? 'style="background-color: #007bff;"' : ''}>
+                        ${escapeHTML(msg.content)}
+                    </div>
+                    <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
+                </div>
+            `;
+        }).join('');
+
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const content = input.value.trim();
+        if (!content || !currentUser || !targetUserId) return;
+
+        input.value = '';
+
+        try {
+            const { error } = await window.sbClient
+                .from('messages')
+                .insert([{
+                    sender_id: currentUser.id,
+                    receiver_id: targetUserId,
+                    content: content
+                }]);
+
+            if (error) {
+                alert("Failed to send message: " + error.message);
+            }
+        } catch (e) {
+            console.error("Error sending message:", e);
+        }
+    }
+
+    function setupRealtimeSubscription() {
+        window.sbClient
+            .channel('public:messages')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages'
+            }, payload => {
+                const newMsg = payload.new;
+                // Check if message belongs to this conversation
+                if (
+                    (newMsg.sender_id === currentUser.id && newMsg.receiver_id === targetUserId) ||
+                    (newMsg.sender_id === targetUserId && newMsg.receiver_id === currentUser.id)
+                ) {
+                    fetchMessages();
+                }
+            })
+            .subscribe();
+
+        // Setup presence tracking & channel
+        const presenceChannel = window.sbClient.channel('online-users', {
+            config: {
+                presence: { key: currentUser.id }
+            }
+        });
+
+        presenceChannel.on('presence', { event: 'sync' }, () => {
+            const state = presenceChannel.presenceState();
+            let isOnline = false;
+            for (const key in state) {
+                const presences = state[key];
+                for (const p of presences) {
+                    if (p.user_id === targetUserId) {
+                        isOnline = true;
+                        break;
+                    }
+                }
+                if (isOnline) break;
+            }
+
+            const badge = document.getElementById('presence-badge');
+            if (badge) {
+                if (isOnline) {
+                    badge.className = "inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
+                    badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-green-500 rounded-full inline-block animate-pulse"></span> Online`;
+                } else {
+                    badge.className = "inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800";
+                    badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline`;
+                }
+            }
+        });
+
+        presenceChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await presenceChannel.track({ user_id: currentUser.id, online_at: new Date().toISOString() });
+            }
+        });
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(s) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[s];
+        });
+    }
+
+    async function logoutUser(e) {
+        e.preventDefault();
+        await window.sbClient.auth.signOut();
+        window.location.replace('login.html');
+    }
+
+    (async () => {
+        let retries = 0;
+        while (!window.sbClient && retries < 20) { 
+            await new Promise(r => setTimeout(r, 200)); 
+            retries++; 
+        }
+        
+        if (!window.sbClient) {
+            console.error("Supabase client failed to initialize.");
+            return;
+        }
+
+        await loadChurchLogo();
+        await initChat();
+    })();
+</script>
+</body>
+</html>

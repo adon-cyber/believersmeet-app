@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox & Fellowship | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+
+<!-- Top Navigation -->
+<nav class="bg-white shadow-md z-50 flex-shrink-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 flex-1 flex overflow-hidden">
+        
+        <!-- Sidebar / Contacts List -->
+        <div id="sidebar-container" class="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-gray-50">
+            <div class="p-4 border-b border-gray-200 bg-white font-bold text-gray-800 flex justify-between items-center">
+                <span>Fellow Believers</span>
+                <span class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Direct Messaging</span>
+            </div>
+            <div id="users-directory" class="flex-1 overflow-y-auto divide-y divide-gray-100">
+                <div class="p-6 text-center text-gray-400 text-sm">Loading contacts...</div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chat-area-pane" class="hidden md:flex flex-1 flex-col bg-white">
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">💬</div>
+                <h3 class="text-lg font-bold text-gray-700">Select a fellowship contact</h3>
+                <p class="text-sm text-gray-500 mt-1 max-w-sm">Choose a believer from the directory on the left or launch a group call to start connecting in faith.</p>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Bottom Mobile Navigation Bar -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3 z-50 text-xs font-medium text-gray-600">
+    <a href="feed.html" class="flex flex-col items-center hover:text-blue-600">Feed</a>
+    <a href="prayer-wall.html" class="flex flex-col items-center hover:text-blue-600">Prayer</a>
+    <a href="testimonies.html" class="flex flex-col items-center hover:text-blue-600">Testimonies</a>
+    <a href="inboxx.html" class="flex flex-col items-center text-blue-600 font-bold">Inbox</a>
+    <a href="events.html" class="flex flex-col items-center hover:text-blue-600">Events</a>
+    <a href="groups.html" class="flex flex-col items-center hover:text-blue-600">Groups</a>
+    <a href="profile.html" class="flex flex-col items-center hover:text-blue-600">Profile</a>
+</div>
+
+<script>
+    let loggedInUser = null;
+    let selectedUser = null;
+    let activeChannel = null;
+
+    async function initializeInbox() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            document.getElementById('users-directory').innerHTML = '<div class="p-4 text-center text-red-500 text-sm">Failed to initialize Supabase.</div>';
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+        
+        const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        loggedInUser = { ...user, role: profile?.role };
+
+        if (profile && (profile.role === 'admin' || profile.role === 'super_admin')) {
+            const adminLink = document.getElementById('admin-nav-link');
+            if (adminLink) adminLink.classList.remove('hidden');
+        }
+        
+        loadDirectory();
+    }
+
+    async function loadDirectory() {
+        const { data: blocks } = await window.sbClient.from('blocks')
+            .select('blocked_id, blocker_id')
+            .or(`blocker_id.eq.${loggedInUser.id},blocked_id.eq.${loggedInUser.id}`);
+        
+        const blockedIds = blocks ? blocks.map(b => b.blocker_id === loggedInUser.id ? b.blocked_id : b.blocker_id) : [];
+        const excludedIds = [loggedInUser.id, ...blockedIds];
+
+        let profiles, error;
+        try {
+            const res = await window.sbClient
+                .from('profiles')
+                .select('*, churches!profiles_church_id_fkey(name, id)') 
+                .not('id', 'in', `(${excludedIds.join(',')})`)
+                .order('full_name', { ascending: true });
+            profiles = res.data;
+            error = res.error;
+            if (error) throw error;
+        } catch (err) {
+            console.error("Error loading contacts:", err.message);
+            error = err;
+        }
+
+        const container = document.getElementById('users-directory');
+        if (error) { 
+            console.error("Profile Error:", error);
+            container.innerHTML = '<div class="p-4 text-center text-red-500 text-sm">Error loading contacts.</div>'; 
+            return; 
+        }
+
+        const isAdmin = loggedInUser.role === 'admin' || loggedInUser.role === 'super_admin';
+
+        let groupCallRow = `
+            <div class="p-3.5 hover:bg-amber-50 cursor-pointer transition flex items-center gap-3 bg-amber-50/50 border-b border-amber-100" onclick="launchGroupCall()">
+                <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">👥</div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-bold text-gray-900 truncate">Group Fellowship Call</h4>
+                    <p class="text-xs text-amber-700">Connect via Video & Audio</p>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = groupCallRow + (profiles || []).map(p => {
+            const displayName = escapeHtml(p.full_name || p.email || 'Unknown User');
+            const churchName = p.churches?.name ? p.churches.name : 'Independent / No Church';
+            return `
+            <div class="user-item p-3.5 hover:bg-blue-50/60 cursor-pointer transition flex items-center gap-3 border-b border-gray-100 ${selectedUser && selectedUser.id === p.id ? 'bg-blue-50 border-l-4 border-blue-600 font-semibold' : ''}" id="user-row-${p.id}" onclick='openConversation(${JSON.stringify(p)}, ${JSON.stringify(p.full_name || p.email || 'Unknown User')})'>
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
+                    ${escapeHtml((p.full_name || p.email || 'U').charAt(0).toUpperCase())}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-sm font-bold text-gray-900 truncate">${displayName}</span>
+                        ${p.is_verified ? '<span class="text-blue-500 text-xs" title="Verified Believer">✅</span>' : ''}
+                    </div>
+                    <p class="text-xs text-gray-500 flex items-center gap-1 truncate mt-0.5">
+                        <span>⛪</span> ${escapeHtml(churchName)}
+                    </p>
+                </div>
+                ${isAdmin ? `
+                    <button onclick="event.stopPropagation(); toggleVerification('${p.id}', ${Boolean(p.is_verified)})" 
+                        class="px-2 py-1 text-xs font-bold rounded transition flex-shrink-0 ${p.is_verified ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}">
+                        ${p.is_verified ? 'Unverify' : 'Verify'}
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        }).join('');
+    }
+
+    async function toggleVerification(userId, currentStatus) {
+        const { error } = await window.sbClient
+            .from('profiles')
+            .update({ is_verified: !currentStatus })
+            .eq('id', userId);
+
+        if (error) alert("Error updating status: " + error.message);
+        else loadDirectory();
+    }
+
+    async function openConversation(profile, recipientName) {
+        if (activeChannel) window.sbClient.removeChannel(activeChannel);
+        selectedUser = profile;
+
+        // Highlight selected row in sidebar
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-600'));
+        const activeRow = document.getElementById(`user-row-${selectedUser.id}`);
+        if (activeRow) {
+            activeRow.classList.add('bg-blue-50', 'border-l-4', 'border-blue-600');
+        }
+
+        const pane = document.getElementById('chat-area-pane');
+        pane.classList.remove('hidden');
+        pane.innerHTML = `
+            <!-- Chat Header -->
+            <div class="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        ${escapeHtml(recipientName.charAt(0).toUpperCase())}
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-900">${escapeHtml(recipientName)}</h3>
+                        <p class="text-xs text-green-600 flex items-center gap-1 font-medium"><span>●</span> Online Fellowship</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="start-video-btn" title="Start Video Call" class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="3" ry="3"></rect></svg>
+                    </button>
+                    <button onclick="handleBlockClick()" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition border border-red-200">Block</button>
+                </div>
+            </div>
+
+            <!-- Message History -->
+            <div class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3 bg-gray-50/50" id="msg-history-scroll">
+                <div class="text-center py-4 text-xs text-gray-400">Loading conversation history...</div>
+            </div>
+
+            <!-- Chat Input Form -->
+            <form class="p-4 bg-white border-t border-gray-200 flex gap-2" id="msg-send-form">
+                <input type="text" id="msg-input" placeholder="Type a message to encourage or fellowship..." required class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm transition">
+                <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm">Send</button>
+            </form>
+        `;
+
+        document.getElementById('start-video-btn').addEventListener('click', launchVideoCall);
+        document.getElementById('msg-send-form').addEventListener('submit', outboundMessageSubmit);
+        
+        activeChannel = window.sbClient.channel(`chat-${loggedInUser.id}-${selectedUser.id}`)
+            .on('postgres_changes', { 
+                event: 'INSERT', schema: 'public', table: 'messages',
+                filter: `or(and(sender_id.eq.${loggedInUser.id},or(receiver_id.eq.${selectedUser.id},recipient_id.eq.${selectedUser.id})),and(or(sender_id.eq.${selectedUser.id},receiver_id.eq.${selectedUser.id},recipient_id.eq.${selectedUser.id}),receiver_id.eq.${loggedInUser.id}))`
+            }, payload => {
+                const historyBox = document.getElementById('msg-history-scroll');
+                const m = payload.new;
+                
+                // If it's from the current user and we already optimistically rendered it, avoid duplication if realtime fires instantly
+                if (m.sender_id === loggedInUser.id && historyBox.lastElementChild && historyBox.lastElementChild.dataset.content === m.content) {
+                    return;
+                }
+
+                const isSent = m.sender_id === loggedInUser.id;
+                if (historyBox.querySelector('.text-center')) {
+                    historyBox.innerHTML = '';
+                }
+                historyBox.innerHTML += `
+                    <div class="flex flex-col ${isSent ? 'items-end' : 'items-start'}">
+                        <div class="max-w-md px-4 py-2.5 rounded-2xl text-sm ${isSent ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'}">${escapeHtml(m.content)}</div>
+                    </div>
+                `;
+                historyBox.scrollTop = historyBox.scrollHeight;
+            })
+            .subscribe();
+
+        fetchThreadMessages();
+    }
+
+    async function fetchThreadMessages() {
+        if (!selectedUser || !selectedUser.id) return;
+        let data, error;
+        try {
+            const res = await window.sbClient.from('messages').select('*')
+                .or(`and(sender_id.eq.${loggedInUser.id},or(receiver_id.eq.${selectedUser.id},recipient_id.eq.${selectedUser.id})),and(or(sender_id.eq.${selectedUser.id},receiver_id.eq.${selectedUser.id},recipient_id.eq.${selectedUser.id}),receiver_id.eq.${loggedInUser.id})`)
+                .order('created_at', { ascending: true });
+            data = res.data;
+            error = res.error;
+            if (error) throw error;
+        } catch (err) {
+            console.error("Error loading thread messages:", err.message);
+            error = err;
+        }
+        
+        const historyBox = document.getElementById('msg-history-scroll');
+        if (!data || data.length === 0) {
+            historyBox.innerHTML = `<div class="text-center py-8 text-xs text-gray-400">No messages yet. Send a greeting to start your conversation!</div>`;
+            return;
+        }
+
+        historyBox.innerHTML = (data || []).map(m => {
+            const isSent = m.sender_id === loggedInUser.id;
+            return `
+                <div class="flex flex-col ${isSent ? 'items-end' : 'items-start'}">
+                    <div class="max-w-md px-4 py-2.5 rounded-2xl text-sm ${isSent ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'}">${escapeHtml(m.content)}</div>
+                </div>
+            `;
+        }).join('');
+        historyBox.scrollTop = historyBox.scrollHeight;
+    }
+
+    async function outboundMessageSubmit(e) {
+        e.preventDefault();
+        
+        if (!selectedUser || !selectedUser.id) {
+            alert("Please select a member to message first");
+            return;
+        }
+
+        const input = document.getElementById('msg-input');
+        const messageText = input.value.trim();
+        if (!messageText) return;
+        input.value = '';
+
+        const payload = {
+            sender_id: loggedInUser.id,
+            receiver_id: selectedUser.id,
+            recipient_id: selectedUser.id,
+            content: messageText
+        };
+
+        const { error } = await window.sbClient.from('messages').insert([payload]);
+        if (error) {
+            alert("Error sending message: " + error.message);
+        } else {
+            const historyBox = document.getElementById('msg-history-scroll');
+            if (historyBox.querySelector('.text-center')) {
+                historyBox.innerHTML = '';
+            }
+            historyBox.innerHTML += `
+                <div class="flex flex-col items-end" data-content="${escapeHtml(messageText)}">
+                    <div class="max-w-md px-4 py-2.5 rounded-2xl text-sm bg-blue-600 text-white rounded-br-none shadow-sm">${escapeHtml(messageText)}</div>
+                </div>
+            `;
+            historyBox.scrollTop = historyBox.scrollHeight;
+        }
+    }
+
+    function launchVideoCall() {
+        if (!loggedInUser || !selectedUser || !selectedUser.id) return;
+        const room = [loggedInUser.id.substring(0, 12), selectedUser.id.substring(0, 12)].sort().join("-");
+        window.location.href = `video-call.html?room=${room}`;
+    }
+
+    async function blockUser(targetUserId) {
+        const { error } = await window.sbClient.from('blocks').insert([{ blocker_id: loggedInUser.id, blocked_id: targetUserId }]);
+        if (error) alert("Error: " + error.message);
+        else { alert("User blocked successfully."); window.location.reload(); }
+    }
+
+    function handleBlockClick() { if (selectedUser && selectedUser.id && confirm("Are you sure you want to block this user?")) blockUser(selectedUser.id); }
+    
+    function launchGroupCall() {
+        let room = prompt("Enter Group Call Room Name:", "General-Fellowship");
+        if (room) window.location.href = `video-call.html?room=group-${room.replace(/[^a-zA-Z0-9-_]/g, "")}`;
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    }
+
+    function logoutUser(e) { 
+        e.preventDefault(); 
+        window.sbClient.auth.signOut(); 
+        window.location.replace('login.html'); 
+    }
+
+    initializeInbox();
+</script>
+</body>
+</html>

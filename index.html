@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | BelieversMeet</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+</head>
+<body class="h-full flex flex-col justify-between font-sans text-slate-100 bg-slate-900 antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Navigation Bar -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="BELIEVERS.LOGO.png" alt="Logo" class="h-11 w-auto object-contain transform group-hover:scale-105 transition duration-300">
+                <span class="text-2xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">BelieversMeet</span>
+            </a>
+            <div class="flex items-center space-x-4" id="nav-auth-section">
+                <a href="login.html" class="text-sm font-semibold text-slate-300 hover:text-white transition px-4 py-2">Login</a>
+                <a href="signup.html" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-full shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition duration-300">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Hero & Showcase Section -->
+    <main class="flex-grow">
+        <!-- Hero Section with Background Imagery & Animations -->
+        <div class="relative overflow-hidden pt-16 pb-24 lg:pt-28 lg:pb-36 bg-slate-900">
+            <!-- Decorative Glow Backgrounds -->
+            <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
+            <div class="absolute top-1/3 right-10 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    
+                    <!-- Hero Text Content -->
+                    <div class="lg:col-span-7 text-center lg:text-left space-y-6 animate-fade-in-up">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold tracking-wider uppercase mb-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                            Welcome to the New Community Experience
+                        </div>
+                        <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white leading-[1.1]">
+                            Connect with your <span class="bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">Church Family</span> in Unity
+                        </h1>
+                        <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                            Share daily testimonies, present your prayer requests on the wall, stay updated with church announcements, and build lasting spiritual relationships.
+                        </p>
+                        <div class="pt-4 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+                            <a href="signup.html" class="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl shadow-xl shadow-blue-600/30 transform hover:-translate-y-1 transition duration-300">
+                                Create an Account 🚀
+                            </a>
+                            <a href="login.html" class="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-slate-200 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl shadow-lg hover:shadow-slate-800/50 backdrop-blur transform hover:-translate-y-1 transition duration-300">
+                                Log In 🔑
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Hero Visual / Image Showcase with Float Animation -->
+                    <div class="lg:col-span-5 relative flex justify-center">
+                        <div class="relative w-full max-w-md animate-float">
+                            <!-- Glowing Frame Behind Image -->
+                            <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-xl opacity-40"></div>
+                            
+                            <!-- Image Card Container -->
+                            <div class="relative bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-2xl overflow-hidden">
+                                <img src="meet2.jpg" alt="Believers Meet Fellowship" class="rounded-xl w-full h-80 object-cover transform hover:scale-105 transition duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent flex flex-col justify-end p-6">
+                                    <span class="text-xs uppercase tracking-wider text-blue-400 font-bold mb-1">Global Fellowship</span>
+                                    <h4 class="text-lg font-bold text-white">Growing Stronger Together in Faith</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Join hundreds of believers experiencing community like never before.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid Section -->
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 border-t border-slate-800/60">
+            <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                <h2 class="text-3xl sm:text-4xl font-black text-white">Everything You Need to Stay Connected</h2>
+                <p class="text-slate-400 text-base sm:text-lg">Designed specifically for vibrant churches and spiritual communities.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature Card 1 -->
+                <div class="group relative bg-gradient-to-b from-slate-800/80 to-slate-800/40 rounded-3xl p-8 border border-slate-700/60 hover:border-blue-500/50 shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/25 transition"></div>
+                    <div class="w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-blue-500/30">
+                        📰
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Church Feed</h3>
+                    <p class="text-slate-400 leading-relaxed">Keep track of all upcoming programmes, important announcements, and pinned community updates instantly.</p>
+                </div>
+
+                <!-- Feature Card 2 -->
+                <div class="group relative bg-gradient-to-b from-slate-800/80 to-slate-800/40 rounded-3xl p-8 border border-slate-700/60 hover:border-indigo-500/50 shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/25 transition"></div>
+                    <div class="w-14 h-14 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-indigo-500/30">
+                        🙏
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Prayer Wall</h3>
+                    <p class="text-slate-400 leading-relaxed">Post your prayer needs or stand with fellow brethren by lifting their burdens in faith, love, and continuous prayer.</p>
+                </div>
+
+                <!-- Feature Card 3 -->
+                <div class="group relative bg-gradient-to-b from-slate-800/80 to-slate-800/40 rounded-3xl p-8 border border-slate-700/60 hover:border-emerald-500/50 shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/25 transition"></div>
+                    <div class="w-14 h-14 bg-emerald-600/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-emerald-500/30">
+                        ✨
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Testimonies</h3>
+                    <p class="text-slate-400 leading-relaxed">Read inspiring praise reports and celebrate the wonderful victories and grace happening within our community.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Authentication & Supabase Script -->
+    <script>
+        async function initAuthCheck() {
+            if (!window.sbClient) return;
+            try {
+                const { data: { session } } = await window.sbClient.auth.getSession();
+                if (session) {
+                    window.location.replace('feed.html');
+                } else {
+                    window.sbClient.auth.onAuthStateChange((event, session) => {
+                        if (session) {
+                            window.location.replace('feed.html');
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Auth check error:', err);
+            }
+        }
+        initAuthCheck();
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 border-t border-blue-500 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 text-sm text-blue-100">
+            <p>&copy; 2026 BelieversMeet | All Rights Reserved</p>
+            <p>Built with ❤️ by <strong class="text-white">Adonia Kasango</strong></p>
+            <p class="flex flex-wrap justify-center gap-x-4 gap-y-1">
+                <span>Contact:</span> 
+                <a href="tel:+25777778443" class="hover:text-blue-200 transition font-medium">+257 77 778 443</a> / 
+                <a href="tel:+256751522766" class="hover:text-blue-200 transition font-medium">+256 75 152 766</a> | 
+                <a href="mailto:adoniakasango@gmail.com" class="text-white hover:text-blue-200 hover:underline font-semibold">Contact Developer</a>
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>

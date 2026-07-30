@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile | BelieversMeet</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        .profile-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto; }
+        .upload-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<nav class="bg-white shadow-md mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="directory.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Directory</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main style="max-width: 600px; margin: 20px auto; padding: 0 20px;">
+    <div class="card">
+        <h1>Edit Profile</h1>
+        <img id="avatar-preview" src="https://ui-avatars.com/api/?name=User" class="profile-preview" alt="Avatar">
+        
+        <label>Full Name</label>
+        <input type="text" id="edit-name" style="width: 100%; margin-bottom: 15px;">
+        
+        <label>Church Affiliation</label>
+        <select id="church-select" style="width: 100%; margin-bottom: 15px; padding: 10px;"></select>
+        
+        <label>Bio</label>
+        <textarea id="edit-bio" style="width: 100%; margin-bottom: 15px;" rows="3"></textarea>
+        
+        <button onclick="updateProfile()" id="save-btn" style="width: 100%;">Save All Changes</button>
+        
+        <div class="upload-section">
+            <label>Update Picture:</label>
+            <input type="file" id="image-upload" accept="image/*" style="margin: 10px 0;">
+            <button onclick="uploadProfileImage()" id="upload-btn" style="width: 100%; background: #6c757d;">Upload New Photo</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    async function loadProfile() {
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) return;
+
+        // Load profile data
+        const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).single();
+        if (profile) {
+            document.getElementById('edit-name').value = profile.full_name || '';
+            document.getElementById('edit-bio').value = profile.bio || '';
+            if (profile.avatar_url) document.getElementById('avatar-preview').src = profile.avatar_url;
+            
+            // Load churches and set existing one
+            loadChurches(profile.church_id);
+        }
+    }
+
+    async function loadChurches(selectedId) {
+        const { data: churches } = await window.sbClient.from('churches').select('id, name');
+        const select = document.getElementById('church-select');
+        select.innerHTML = '<option value="">Select a Church</option>';
+        churches.forEach(church => {
+            const opt = document.createElement('option');
+            opt.value = church.id;
+            opt.textContent = church.name;
+            if (church.id === selectedId) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
+
+    async function updateProfile() {
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        await window.sbClient.from('profiles').update({
+            full_name: document.getElementById('edit-name').value,
+            church_id: document.getElementById('church-select').value,
+            bio: document.getElementById('edit-bio').value
+        }).eq('id', user.id);
+        alert('Profile updated!');
+    }
+
+    async function uploadProfileImage() {
+        const file = document.getElementById('image-upload').files[0];
+        if (!file) return alert("Select a file!");
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        
+        const { error } = await window.sbClient.storage.from('avatars').upload(`${user.id}/profile.jpg`, file, { upsert: true });
+        if (error) return alert(error.message);
+        
+        const { data } = window.sbClient.storage.from('avatars').getPublicUrl(`${user.id}/profile.jpg`);
+        await window.sbClient.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id);
+        document.getElementById('avatar-preview').src = data.publicUrl;
+        alert("Picture updated!");
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>

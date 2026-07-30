@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programmes | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 pb-20 md:pb-0">
+
+<!-- Top Navigation -->
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="directory.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Directory</a>
+                <a href="programmes.html" class="text-xs sm:text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">Programmes</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+    <!-- Banner Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Upcoming Programmes</h1>
+            <p class="text-blue-100 mt-1 text-sm sm:text-base">Join our church services, special meetings, and transformative spiritual programmes.</p>
+        </div>
+    </div>
+
+    <!-- Programmes Grid -->
+    <div id="programme-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading programmes...</div>
+    </div>
+</main>
+
+<!-- Bottom Mobile Navigation Bar -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3 z-50 text-xs font-medium text-gray-600">
+    <a href="feed.html" class="flex flex-col items-center hover:text-blue-600">Feed</a>
+    <a href="prayer-wall.html" class="flex flex-col items-center hover:text-blue-600">Prayer</a>
+    <a href="testimonies.html" class="flex flex-col items-center hover:text-blue-600">Testimonies</a>
+    <a href="inboxx.html" class="flex flex-col items-center hover:text-blue-600">Inbox</a>
+    <a href="programmes.html" class="flex flex-col items-center text-blue-600 font-bold">Programmes</a>
+    <a href="profile.html" class="flex flex-col items-center hover:text-blue-600">Profile</a>
+</div>
+
+<script>
+    let loggedInUser = null;
+    let currentUserProfile = null;
+
+    async function initApp() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            document.getElementById('programme-list').innerHTML = '<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Failed to initialize Supabase client.</div>';
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+        loggedInUser = user;
+
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+        
+        currentUserProfile = profile;
+
+        if (profile) {
+            if (profile.role === 'admin' || profile.role === 'super_admin') {
+                const adminLink = document.getElementById('admin-nav-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+            }
+        }
+
+        loadProgrammes();
+        initRealtimeSync();
+    }
+
+    function initRealtimeSync() {
+        window.sbClient
+            .channel('programmes-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'programmes' }, () => {
+                loadProgrammes();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'rsvps' }, () => {
+                loadProgrammes();
+            })
+            .subscribe();
+    }
+
+    async function loadProgrammes() {
+        const list = document.getElementById('programme-list');
+
+        const { data: programmes, error } = await window.sbClient
+            .from('programmes')
+            .select('*, rsvps(user_id)')
+            .order('event_date', { ascending: true });
+
+        if (error) {
+            list.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading programmes: ${escapeHtml(error.message)}</div>`;
+            return;
+        }
+
+        if (!programmes || programmes.length === 0) {
+            list.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No upcoming programmes at this time.</p></div>`;
+            return;
+        }
+
+        list.innerHTML = programmes.map(p => {
+            const rsvps = p.rsvps || [];
+            const rsvpCount = rsvps.length;
+            const hasRsvp = rsvps.some(r => r.user_id === loggedInUser.id);
+            const eventDate = p.event_date ? new Date(p.event_date) : null;
+            const monthStr = eventDate ? eventDate.toLocaleString('default', { month: 'short' }).toUpperCase() : 'TBD';
+            const dayStr = eventDate ? eventDate.getDate() : '--';
+            const imageUrl = p.image_url || 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=600&q=80';
+
+            return `
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between transition hover:shadow-md">
+                    <div>
+                        <div class="relative h-48 bg-gray-100 overflow-hidden">
+                            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 left-3 bg-white bg-opacity-90 backdrop-blur rounded-xl px-3 py-1 text-center shadow">
+                                <span class="block text-xs font-bold text-blue-600 uppercase">${monthStr}</span>
+                                <span class="block text-lg font-extrabold text-gray-900">${dayStr}</span>
+                            </div>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${escapeHtml(p.title)}</h3>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span>📅</span>
+                                    <span>${eventDate ? eventDate.toLocaleString() : 'Date TBD'}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-sm line-clamp-3">${escapeHtml(p.description || '')}</p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 flex items-center justify-between border-t border-gray-100 mt-4 pt-4">
+                        <span class="text-xs font-semibold text-gray-500">👥 ${rsvpCount} ${rsvpCount === 1 ? 'Attendee' : 'Attendees'}</span>
+                        <button onclick="toggleRsvp('${p.id}', ${hasRsvp})" class="px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm ${hasRsvp ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}">
+                            ${hasRsvp ? '✓ RSVPed' : 'RSVP Attending'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function toggleRsvp(programmeId, hasRsvp) {
+        if (hasRsvp) {
+            const { error } = await window.sbClient
+                .from('rsvps')
+                .delete()
+                .eq('programme_id', programmeId)
+                .eq('user_id', loggedInUser.id);
+
+            if (error) alert("Error cancelling RSVP: " + error.message);
+            else loadProgrammes();
+        } else {
+            const { error } = await window.sbClient
+                .from('rsvps')
+                .insert([{ programme_id: programmeId, user_id: loggedInUser.id }]);
+
+            if (error) {
+                if (error.code === '23505') alert("You have already RSVP'd!");
+                else alert("Error confirming RSVP: " + error.message);
+            } else {
+                loadProgrammes();
+            }
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    }
+
+    function logoutUser(e) { 
+        e.preventDefault(); 
+        window.sbClient.auth.signOut(); 
+        window.location.replace('login.html'); 
+    }
+
+    initApp();
+</script>
+</body>
+</html>

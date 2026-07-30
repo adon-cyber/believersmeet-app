@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testimonies & Praise Reports | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+<!-- Navigation Bar -->
+<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+    
+    <!-- Page Header Banner -->
+    <div class="bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-white mb-2">Testimonies of God's Grace</h1>
+        <p class="text-blue-100 text-base">Read how God is moving in our community and share your own story.</p>
+    </div>
+
+    <!-- Share Testimony Section -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span>✨</span> Share Your Story
+        </h3>
+        <form id="testimony-form" class="space-y-4">
+            <div>
+                <label for="testimony-title" class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Testimony Title</label>
+                <input type="text" id="testimony-title" required placeholder="e.g. God provided employment in a miraculous way!" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+            </div>
+            <div>
+                <label for="testimony-content" class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Your Story / Testimony</label>
+                <textarea id="testimony-content" rows="4" required placeholder="Share details of how God moved in your life to encourage the fellowship..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm resize-y"></textarea>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="testimony-private" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label for="testimony-private" class="text-sm text-gray-600 select-none">Keep anonymous / private</label>
+            </div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors shadow-sm">
+                Share Testimony
+            </button>
+        </form>
+    </div>
+
+    <!-- Testimonies Feed Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-900">Community Testimonies</h2>
+    </div>
+
+    <!-- Live Testimonies Feed Grid -->
+    <div id="testimony-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500 shadow-sm md:col-span-2">Loading testimonies...</div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200 mt-auto py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+    &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
+  </div>
+</footer>
+
+<script>
+    let loggedInUser = null;
+
+    async function initializeTestimonies() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            document.getElementById('testimony-list').innerHTML = '<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500 shadow-sm md:col-span-2">Failed to initialize Supabase client.</div>';
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) {
+            window.location.replace('login.html');
+            return;
+        }
+        loggedInUser = user;
+
+            // Check if user is admin
+        const { data: profile, error: profileError } = await window.sbClient
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            console.error("Error fetching profile role:", profileError.message);
+        }
+
+        if (profile && (profile.role === 'admin' || profile.role === 'super_admin')) {
+            const adminLink = document.getElementById('admin-nav-link');
+            if (adminLink) adminLink.classList.remove('hidden');
+        }
+
+        document.getElementById('testimony-form').addEventListener('submit', handleNewTestimony);
+        
+        loadSharedTestimonies();
+        initRealtimeSync();
+    }
+
+    function initRealtimeSync() {
+        window.sbClient
+            .channel('testimonies-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonies' }, () => {
+                loadSharedTestimonies();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'prayer_requests' }, () => {
+                loadSharedTestimonies();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'prayer_responses' }, () => {
+                loadSharedTestimonies();
+            })
+            .subscribe();
+    }
+
+    async function loadSharedTestimonies() {
+        const list = document.getElementById('testimony-list');
+        let testimoniesData = [];
+        
+        // Fetch from 'testimonies' table primarily since it contains the valid title and content schema
+        try {
+            const { data, error } = await window.sbClient
+                .from('testimonies')
+                .select('*, profiles(*)')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Supabase testimonies query error:", error.message);
+            } else if (data) {
+                testimoniesData = data;
+            }
+        } catch (e) {
+            console.error("testimonies query exception:", e);
+        }
+
+        // Also fallback or check prayer_requests if needed, but select only valid columns
+        try {
+            const { data, error } = await window.sbClient
+                .from('prayer_requests')
+                .select('*, profiles(*), prayer_responses(*, profiles(*))')
+                .eq('is_testimony', true)
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                const existingIds = new Set(testimoniesData.map(t => t.id));
+                data.forEach(pt => {
+                    if (!existingIds.has(pt.id)) {
+                        testimoniesData.push({
+                            ...pt,
+                            title: pt.title || 'Praise Report'
+                        });
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("prayer_requests testimony query exception:", e);
+        }
+
+        // Sort combined by created_at descending
+        if (testimoniesData && testimoniesData.length > 0) {
+            testimoniesData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        if (!testimoniesData || testimoniesData.length === 0) {
+            list.innerHTML = `
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center text-gray-500 space-y-2 md:col-span-2">
+                    <p class="text-xl font-semibold text-gray-700">No testimonies posted yet.</p>
+                    <p class="text-sm">Be the first to share how God is moving in your life!</p>
+                </div>`;
+            return;
+        }
+
+        list.innerHTML = testimoniesData.map(t => {
+            const formattedDate = new Date(t.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            const displayName = t.profiles?.full_name || 'A Grateful Believer';
+            const testimonyTitle = t.title || 'Praise Report';
+            const responses = t.prayer_responses || [];
+            
+            return `
+                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col justify-between space-y-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">${escapeHTML(displayName)}</span>
+                            <span class="text-xs text-gray-400 font-medium">${formattedDate}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">${escapeHTML(testimonyTitle)}</h3>
+                        <p class="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">${escapeHTML(t.content)}</p>
+                    </div>
+
+                    <!-- Replies Section -->
+                    <div class="mt-4 pt-3 border-t border-gray-100 space-y-3">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Responses & Encouragement</h4>
+                        <div class="space-y-2" id="responses-list-${t.id}">
+                            ${responses.length > 0 ? responses.map(r => `
+                                <div class="bg-gray-50 p-3 rounded-md text-xs space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-semibold text-gray-800">${escapeHTML(r.profiles?.full_name || 'Believer')}</span>
+                                        <span class="text-[10px] text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <p class="text-gray-700 whitespace-pre-wrap">${escapeHTML(r.response_text)}</p>
+                                </div>
+                            `).join('') : '<p class="text-xs text-gray-400 italic">No responses yet. Be the first to encourage!</p>'}
+                        </div>
+
+                        <div class="flex flex-col gap-2 mt-2">
+                            <input type="text" id="response-input-${t.id}" placeholder="Write a reply..." class="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                            <div class="flex justify-end">
+                                <button onclick="submitTestimonyReply('${t.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded transition-colors">Reply</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function handleNewTestimony(e) {
+        e.preventDefault();
+        
+        const titleInput = document.getElementById('testimony-title');
+        const textarea = document.getElementById('testimony-content');
+        const isPrivate = document.getElementById('testimony-private').checked;
+        
+        const titleVal = titleInput.value.trim();
+        const textVal = textarea.value.trim();
+
+        if (!textVal || !titleVal) return;
+
+        // Try inserting into 'testimonies' table first
+        let insertSuccess = false;
+        try {
+            const { error } = await window.sbClient
+                .from('testimonies')
+                .insert([{
+                    title: titleVal,
+                    content: textVal,
+                    user_id: loggedInUser.id
+                }]);
+            if (!error) {
+                insertSuccess = true;
+            } else {
+                console.warn("Testimonies table insert error, falling back to prayer_requests:", error.message);
+            }
+        } catch (err) {
+            console.warn("Testimonies table exception:", err);
+        }
+
+        // Fallback / also insert to prayer_requests if testimonies table isn't created or accessible
+        if (!insertSuccess) {
+            const { error } = await window.sbClient
+                .from('prayer_requests')
+                .insert([{
+                    title: titleVal,
+                    content: textVal,
+                    is_private: isPrivate,
+                    is_testimony: true,
+                    user_id: loggedInUser.id
+                }]);
+
+            if (error) {
+                alert("Failed to submit testimony: " + error.message);
+                return;
+            }
+        }
+
+        titleInput.value = '';
+        textarea.value = '';
+        document.getElementById('testimony-private').checked = false;
+        loadSharedTestimonies();
+        alert("Testimony shared successfully!");
+    }
+
+    async function submitTestimonyReply(testimonyId) {
+        const textarea = document.getElementById(`response-input-${testimonyId}`);
+        if (!textarea) return;
+        const text = textarea.value.trim();
+
+        if (!text) {
+            alert("Please write a reply first");
+            return;
+        }
+
+        let error;
+        try {
+            const res = await window.sbClient
+                .from('prayer_responses')
+                .insert({
+                    prayer_request_id: testimonyId,
+                    user_id: loggedInUser.id,
+                    response_text: text
+                });
+            error = res.error;
+            if (error) throw error;
+        } catch (err) {
+            console.error("Failed to submit testimony reply:", err.message);
+            error = err;
+        }
+
+        if (error) {
+            alert("Failed to submit reply: " + error.message);
+        } else {
+            textarea.value = '';
+            loadSharedTestimonies();
+        }
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    async function logoutUser(e) {
+        e.preventDefault();
+        await window.sbClient.auth.signOut();
+        window.location.replace('login.html');
+    }
+
+    initializeTestimonies();
+</script>
+
+</body>
+</html>

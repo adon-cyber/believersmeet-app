@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Feed | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://meet.jit.si/external_api.js"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+
+<nav class="bg-white shadow-md mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Community Fellowship Feed</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <form id="post-composition-form" class="space-y-4">
+                    <textarea id="post-raw-text" rows="3" placeholder="Share something with the church family..." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"></textarea>
+                    
+                    <select id="post-category-input" class="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <option value="Encouragement">🕊️ Word of Encouragement</option>
+                        <option value="Prayer Request">🙏 Prayer Request</option>
+                        <option value="Testimony">🙌 Testimony</option>
+                    </select>
+
+                    <input type="url" id="bible-link-input" placeholder="Add a Bible link (optional)..." class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow">Publish Post</button>
+                </form>
+            </div>
+
+            <!-- Believer Fellowship Connect & Discovery Matchmaking Widget -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-gray-100">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">🤝 Believer Fellowship Connect</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Discover and fellowship with members in your congregation.</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="discovery-filter-cell" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
+                            <option value="All">🏡 All Home Cells</option>
+                        </select>
+                        <select id="discovery-filter-role" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
+                            <option value="All">👤 All Roles</option>
+                            <option value="member">Member</option>
+                            <option value="admin">Leadership</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="discovery-card-container" class="relative min-h-[280px] flex items-center justify-center">
+                    <p class="text-gray-400 text-sm animate-pulse">Loading fellowship profiles...</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 pb-2 border-b border-gray-200">
+                <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white transition" onclick="filterTimeline('All', this)">🌍 All Posts</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Encouragement', this)">🕊️ Encouragements</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Prayer Request', this)">🙏 Prayer Requests</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Testimony', this)">🙌 Testimonies</button>
+            </div>
+
+            <div id="feed-wall-stream" class="space-y-4">Loading feed...</div>
+        </div>
+        
+        <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
+            <div class="bg-blue-50 p-5 rounded-xl border-l-4 border-blue-500 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-2">📹 Live Fellowship</h3>
+                <p class="text-sm text-gray-600 mb-4">Gather immediately via video with members of your congregation for prayer and study.</p>
+                <button onclick="launchVideoConferenceRoom()" class="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow">
+                    Join Church Video Room
+                </button>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <h4 class="text-lg font-bold text-blue-600 mb-3">💬 Live Chat</h4>
+                <div id="chat-messages-container" class="h-56 overflow-y-auto border border-gray-100 p-3 mb-3 rounded-lg flex flex-col gap-2 bg-gray-50 text-sm">
+                    <p class="text-xs text-gray-400 text-center py-4">Loading chat...</p>
+                </div>
+                <form id="live-chat-form" class="flex gap-2">
+                    <input type="text" id="chat-message-input" placeholder="Say hello..." required class="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">Send</button>
+                </form>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-xl border border-gray-200 shadow-sm">
+                <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
+                <form id="leadership-inbox-form">
+                    <textarea id="inbox-message-text" rows="3" placeholder="Send a private message to the Church Admin panel..." required class="w-full p-2.5 mb-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"></textarea>
+                    <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Send Secure Inquiry</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">📢 Official Church Bulletins</h3>
+                <div id="announcements-container" class="space-y-3 text-sm"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="video-fellowship-modal" class="video-overlay-modal">
+    <div class="video-container-frame">
+        <button class="close-video-btn" onclick="terminateConferenceCall()">Leave Call</button>
+        <div id="jitsi-iframe-injection-target" style="width: 100%; height: 100%;"></div>
+    </div>
+</div>
+
+<script>
+    let loggedInUser = null;
+    let currentUserProfile = null; 
+    let cachedPosts = []; 
+    let activeFilter = 'All';
+    let activeJitsiApiInstance = null;
+    let discoveryProfiles = [];
+    let currentDiscoveryIndex = 0;
+
+    async function loadDiscoveryProfiles() {
+        if (!currentUserProfile) return;
+        
+        let query = window.sbClient
+            .from('profiles')
+            .select('*')
+            .neq('id', loggedInUser.id);
+
+        if (currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
+            query = query.eq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data, error } = await query;
+        if (error) {
+            console.error("Error loading discovery profiles:", error.message);
+            document.getElementById('discovery-card-container').innerHTML = '<p class="text-red-500 text-sm">Failed to load fellowship profiles.</p>';
+            return;
+        }
+
+        discoveryProfiles = data || [];
+        
+        // Populate home cell dropdown dynamically
+        const cellSelect = document.getElementById('discovery-filter-cell');
+        const uniqueCells = [...new Set(discoveryProfiles.map(p => p.home_cell).filter(Boolean))];
+        cellSelect.innerHTML = '<option value="All">🏡 All Home Cells</option>' + uniqueCells.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+
+        currentDiscoveryIndex = 0;
+        renderCurrentDiscoveryCard();
+    }
+
+    function applyDiscoveryFilters() {
+        currentDiscoveryIndex = 0;
+        renderCurrentDiscoveryCard();
+    }
+
+    function getFilteredDiscoveryProfiles() {
+        const cellFilter = document.getElementById('discovery-filter-cell').value;
+        const roleFilter = document.getElementById('discovery-filter-role').value;
+
+        return discoveryProfiles.filter(p => {
+            const matchCell = cellFilter === 'All' || p.home_cell === cellFilter;
+            const matchRole = roleFilter === 'All' || p.role === roleFilter;
+            return matchCell && matchRole;
+        });
+    }
+
+    function renderCurrentDiscoveryCard() {
+        const container = document.getElementById('discovery-card-container');
+        const filtered = getFilteredDiscoveryProfiles();
+
+        if (filtered.length === 0 || currentDiscoveryIndex >= filtered.length) {
+            container.innerHTML = `
+                <div class="text-center py-10 px-4">
+                    <div class="text-3xl mb-2">🌿</div>
+                    <h4 class="text-base font-bold text-gray-800">No More Profiles to Discover</h4>
+                    <p class="text-xs text-gray-500 mt-1 mb-4">You have viewed all available believers matching your filters.</p>
+                    <button onclick="currentDiscoveryIndex=0; renderCurrentDiscoveryCard();" class="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition">Restart Discovery</button>
+                </div>
+            `;
+            return;
+        }
+
+        const profile = filtered[currentDiscoveryIndex];
+        const avatarUrl = profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Believer')}&background=2563eb&color=fff`;
+
+        container.innerHTML = `
+            <div class="w-full bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row gap-5 items-center">
+                <img src="${avatarUrl}" alt="Profile Photo" class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-50 shadow-inner flex-shrink-0">
+                <div class="flex-1 text-center sm:text-left">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                        <h4 class="text-lg font-bold text-gray-900">${escapeHTML(profile.full_name || 'Believer')}</h4>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${profile.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-blue-100 text-blue-800'}">${profile.role === 'admin' ? 'Leadership' : 'Fellowship Member'}</span>
+                    </div>
+
+                    ${profile.home_cell ? `<p class="text-xs text-gray-600 mb-2 flex items-center justify-center sm:justify-start gap-1">🏡 Cell: <strong class="text-gray-800">${escapeHTML(profile.home_cell)}</strong></p>` : ''}
+                    
+                    <p class="text-xs text-gray-700 mb-3 italic line-clamp-2">"${escapeHTML(profile.bio || 'Seeking fellowship and spiritual growth in the body of Christ.')}"</p>
+
+                    ${profile.favorite_scripture ? `<div class="p-2 bg-blue-50 rounded-lg border-l-2 border-blue-500 text-xs text-blue-900 mb-4 text-left">📖 "${escapeHTML(profile.favorite_scripture)}"</div>` : ''}
+
+                    <div class="flex items-center justify-center sm:justify-start gap-3">
+                        <button onclick="handlePassProfile('${profile.id}')" class="flex-1 sm:flex-initial px-5 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold rounded-lg text-xs transition shadow-sm">
+                            ✕ Pass
+                        </button>
+                        <button onclick="handleConnectProfile('${profile.id}', '${escapeHTML(profile.full_name || 'Believer')}')" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-lg text-xs transition shadow">
+                            🤝 Connect
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function handlePassProfile(targetUserId) {
+        // Record pass or simply advance to next profile in stack
+        currentDiscoveryIndex++;
+        renderCurrentDiscoveryCard();
+    }
+
+    async function handleConnectProfile(targetUserId, targetName) {
+        if (!loggedInUser) return;
+
+        try {
+            // Insert connection request / match record into database using proper column fields (user_id, connected_user_id, status)
+            const { error } = await window.sbClient
+                .from('connections')
+                .insert([{
+                    user_id: loggedInUser.id,
+                    connected_user_id: targetUserId,
+                    status: 'pending'
+                }]);
+
+            if (error) {
+                console.warn("Connection table insert note:", error.message);
+                // Render friendly fallback UI state rather than throwing uncaught console errors
+                alert(`Connection request to ${targetName} could not be saved to the database at the moment, but your session continues seamlessly.`);
+            } else {
+                alert(`Praise God! Connection request sent to ${targetName}.`);
+            }
+        } catch (err) {
+            console.error("Unexpected error during connection creation:", err);
+            alert(`Unable to complete connection request at this time. Please try again later.`);
+        } finally {
+            currentDiscoveryIndex++;
+            renderCurrentDiscoveryCard();
+        }
+    }
+
+    async function enforceLoginAndLoad() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) { await new Promise(r => setTimeout(r, 200)); attempts++; }
+        if (!window.sbClient) return;
+        
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+        loggedInUser = user;
+
+        const { data: profile, error: profileError } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            console.error("Profile payload retrieval error:", profileError.message);
+        }
+
+        if (profile) {
+            currentUserProfile = profile;
+            if (profile.role === 'admin' || profile.role === 'super_admin') {
+                document.getElementById('admin-nav-link').style.display = 'inline-block';
+            }
+        } else {
+            console.warn("Public profile row missing. Utilizing safe global fallback.");
+            currentUserProfile = {
+                id: user.id,
+                role: 'user',
+                church_id: 'global-fellowship',
+                full_name: user.email ? user.email.split('@')[0] : 'A Believer'
+            };
+        }
+
+        loadAnnouncements();
+        await fetchAndRenderWallTimeline();
+        await loadDiscoveryProfiles();
+        initLiveChat(); 
+        initTimelineRealtimeSync(); // Global synchronization activator
+        
+        document.getElementById('post-composition-form').addEventListener('submit', handleOutboundPostSubmit);
+        
+        document.getElementById('leadership-inbox-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUserProfile) return;
+            const textInput = document.getElementById('inbox-message-text');
+            const { error } = await window.sbClient.from('inbox').insert([{
+                sender_name: currentUserProfile.full_name,
+                message: textInput.value,
+                church_id: currentUserProfile.church_id
+            }]);
+            if (!error) {
+                alert("Inquiry successfully delivered to leadership dashboards!");
+                textInput.value = '';
+            } else {
+                alert("Error sending message: " + error.message);
+            }
+        });
+    }
+
+    // --- LIVE CHAT ENGINE ---
+    async function initLiveChat() {
+        if (!currentUserProfile || !currentUserProfile.church_id) return;
+        
+        const { data: messages } = await window.sbClient
+            .from('chat_messages')
+            .select('*')
+            .eq('church_id', currentUserProfile.church_id)
+            .order('created_at', { ascending: true })
+            .limit(50);
+
+        const chatBox = document.getElementById('chat-messages-container');
+        chatBox.innerHTML = '';
+        if (messages) messages.forEach(renderSingleChatMessage);
+
+        window.sbClient
+            .channel('church-group-chat')
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'chat_messages' 
+            }, payload => {
+                if (payload.new.church_id === currentUserProfile.church_id) {
+                    renderSingleChatMessage(payload.new);
+                }
+            })
+            .subscribe((status) => {
+                console.log("Supabase Realtime Chat Status:", status);
+            });
+
+        document.getElementById('live-chat-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-message-input');
+            const msg = input.value;
+            if (!msg.trim()) return;
+            
+            input.value = ''; 
+
+            const { error } = await window.sbClient.from('chat_messages').insert([{
+                user_name: currentUserProfile.full_name,
+                message: msg,
+                church_id: currentUserProfile.church_id,
+                user_id: loggedInUser.id
+            }]);
+
+            if (error) {
+                console.error("Chat delivery breakdown:", error.message);
+            }
+        };
+    }
+
+    function renderSingleChatMessage(chatData) {
+        const chatBox = document.getElementById('chat-messages-container');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'bg-white p-2 rounded-lg border border-gray-200 text-xs shadow-sm';
+        msgDiv.innerHTML = `<strong class="text-blue-700">${escapeHTML(chatData.user_name)}:</strong> <span class="text-gray-800">${escapeHTML(chatData.message)}</span>`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; 
+    }
+
+    // --- TIMELINE FEED REALTIME CHANNEL ---
+    function initTimelineRealtimeSync() {
+        if (!currentUserProfile) return;
+
+        // Auto-refresh timeline whenever posts are added, updated (Amen'd), or comments arrive
+        window.sbClient
+            .channel('interactive-timeline-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+                fetchAndRenderWallTimeline();
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, () => {
+                fetchAndRenderWallTimeline();
+            })
+            .subscribe((status) => {
+                console.log("Timeline Core Sync Status:", status);
+            });
+    }
+
+    // --- VIDEO CONFERENCING ENGINE HANDLERS ---
+    function launchVideoConferenceRoom() {
+        if (!currentUserProfile) return;
+        
+        const cleanChurchNamespace = "BelieversMeet-" + currentUserProfile.church_id.replace(/[^a-zA-Z0-9]/g, "");
+        document.getElementById('video-fellowship-modal').style.display = 'flex';
+        
+        const conferenceOptions = {
+            roomName: cleanChurchNamespace,
+            parentNode: document.getElementById('jitsi-iframe-injection-target'),
+            userInfo: { displayName: currentUserProfile.full_name },
+            interfaceConfigOverwrite: {
+                TOOLBAR_BUTTONS: [
+                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                    'framerate', 'chat', 'raisehand', 'videoquality', 'filmstrip',
+                    'tileview', 'shortcuts', 'mute-everyone', 'select-background'
+                ]
+            }
+        };
+        
+        activeJitsiApiInstance = new JitsiMeetExternalAPI("meet.jit.si", conferenceOptions);
+        activeJitsiApiInstance.addEventListener('videoConferenceLeft', () => {
+            terminateConferenceCall();
+        });
+    }
+
+    function terminateConferenceCall() {
+        document.getElementById('video-fellowship-modal').style.display = 'none';
+        if (activeJitsiApiInstance) {
+            activeJitsiApiInstance.dispose();
+            activeJitsiApiInstance = null;
+        }
+        document.getElementById('jitsi-iframe-injection-target').innerHTML = "";
+    }
+
+    // --- TIMELINE FEED & BULLETIN HANDLERS ---
+    async function loadAnnouncements() {
+        if (!currentUserProfile || !currentUserProfile.church_id) {
+            document.getElementById('announcements-container').innerHTML = '<p class="text-gray-500">Account pending assignment...</p>';
+            return;
+        }
+        const { data, error } = await window.sbClient
+            .from('announcements')
+            .select('*')
+            .eq('church_id', currentUserProfile.church_id) 
+            .order('pinned', { ascending: false }) 
+            .order('created_at', { ascending: false });
+
+        const container = document.getElementById('announcements-container');
+        if (error) { container.innerHTML = "<p class='text-red-500'>Error loading bulletins.</p>"; return; }
+
+        container.innerHTML = data && data.length > 0 ? data.map(ann => `
+            <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <h4 class="font-bold text-gray-800">${ann.pinned ? '📌 ' : ''}${escapeHTML(ann.title)}</h4>
+                <p class="text-xs text-gray-600 mt-1">${escapeHTML(ann.content)}</p>
+            </div>
+        `).join('') : '<p class="text-gray-500 text-xs">No bulletins posted yet.</p>';
+    }
+
+    async function fetchAndRenderWallTimeline() {
+        if (!currentUserProfile || !currentUserProfile.church_id) return;
+        
+        let query = window.sbClient
+            .from('posts')
+            .select('*, profiles:user_id(full_name), comments(id, content, profiles:user_id(full_name))');
+
+        if (currentUserProfile.church_id !== 'global-fellowship') {
+            query = query.eq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data: posts } = await query.order('created_at', { ascending: false });
+
+        if (posts) {
+            cachedPosts = posts; 
+            renderDataToStream(); 
+        }
+    }
+
+    function renderDataToStream() {
+        const stream = document.getElementById('feed-wall-stream');
+        const targetPosts = activeFilter === 'All' ? cachedPosts : cachedPosts.filter(p => p.category === activeFilter);
+
+        if (targetPosts.length === 0) {
+            stream.innerHTML = `<p class="text-center text-gray-500 py-8">No posts found under "${activeFilter}" yet.</p>`;
+            return;
+        }
+
+        stream.innerHTML = targetPosts.map(post => {
+            const rawCategory = post.category || 'Encouragement';
+            let badgeClass = 'bg-blue-100 text-blue-800 border-blue-200';
+            if (rawCategory === 'Prayer Request') {
+                badgeClass = 'bg-pink-100 text-pink-800 border-pink-200';
+            } else if (rawCategory === 'Testimony') {
+                badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
+            }
+
+            const commentsHTML = post.comments && post.comments.length > 0 
+                ? post.comments.map(c => `
+                    <div class="bg-white p-2.5 rounded-lg border border-gray-200 mb-2 text-sm shadow-sm">
+                        <div class="font-bold text-gray-700 text-xs">${escapeHTML(c.profiles?.full_name || 'A Believer')}</div>
+                        <div class="text-gray-800 mt-0.5">${escapeHTML(c.content)}</div>
+                    </div>
+                `).join('') 
+                : '<p class="text-xs text-gray-400 mb-2">No reflections shared yet.</p>';
+
+            return `
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm relative">
+                    <div class="flex justify-between items-center text-sm text-gray-500 mb-3">
+                        <strong class="text-gray-900 font-semibold">${escapeHTML(post.profiles?.full_name || 'A Believer')}</strong>
+                    </div>
+                    
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border mb-3 ${badgeClass}">${escapeHTML(rawCategory)}</span>
+                    <div class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${escapeHTML(post.content)}</div>
+                    
+                    ${post.bible_link ? `<div class="mb-3"><a href="${escapeHTML(post.bible_link)}" target="_blank" class="text-blue-600 hover:text-blue-700 font-bold text-sm inline-flex items-center gap-1">📖 Read Scripture</a></div>` : ''}
+                    
+                    <div>
+                        <button class="bg-blue-50 text-blue-800 border border-blue-200 px-3.5 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1 hover:bg-blue-100 transition transform active:scale-95 mb-3" onclick="handleAmenSubmit('${post.id}')">
+                            🙏 Amen <span>(${post.amen_count || 0})</span>
+                        </button>
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-3 mt-3 bg-gray-50 -mx-6 -mb-6 p-4 rounded-b-xl">
+                        <div class="comments-list-wrapper mb-3">
+                            ${commentsHTML}
+                        </div>
+                        <form onsubmit="handleInlineCommentSubmit(event, '${post.id}')" class="flex gap-2">
+                            <input type="text" id="comment-input-${post.id}" placeholder="Write a reflection..." required class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <button type="submit" class="px-3.5 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">Reply</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterTimeline(category, buttonElement) {
+        activeFilter = category;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white', 'active');
+            btn.classList.add('bg-gray-100', 'text-gray-700');
+        });
+        buttonElement.classList.remove('bg-gray-100', 'text-gray-700');
+        buttonElement.classList.add('bg-blue-600', 'text-white', 'active');
+        renderDataToStream();
+    }
+
+    async function handleAmenSubmit(postId) {
+        const currentPost = cachedPosts.find(p => p.id === postId);
+        const currentCount = currentPost ? (currentPost.amen_count || 0) : 0;
+        const { error } = await window.sbClient.from('posts').update({ amen_count: currentCount + 1 }).eq('id', postId);
+        if (error) alert("Error saving Amen: " + error.message);
+    }
+
+    async function handleOutboundPostSubmit(e) {
+        e.preventDefault();
+        if (!currentUserProfile) return;
+
+        const { error } = await window.sbClient.from('posts').insert([{ 
+            content: document.getElementById('post-raw-text').value,
+            user_id: loggedInUser.id,
+            bible_link: document.getElementById('bible-link-input').value,
+            category: document.getElementById('post-category-input').value,
+            church_id: currentUserProfile.church_id 
+        }]);
+        
+        if (!error) { 
+            document.getElementById('post-raw-text').value = ''; 
+            document.getElementById('bible-link-input').value = ''; 
+        } else {
+            alert("Error publishing post: " + error.message);
+        }
+    }
+
+    async function handleInlineCommentSubmit(e, postId) {
+        e.preventDefault();
+        const commentInputField = document.getElementById(`comment-input-${postId}`);
+        const content = commentInputField.value;
+        
+        const { error } = await window.sbClient.from('comments').insert([{ post_id: postId, user_id: loggedInUser.id, content }]);
+        if (!error) {
+            commentInputField.value = '';
+        } else {
+            alert("Error saving reflection: " + error.message);
+        }
+    }
+
+    async function logoutUser(e) { e.preventDefault(); await window.sbClient.auth.signOut(); window.location.replace('login.html'); }
+    function escapeHTML(str) { return String(str).replace(/[&<>"']/g, s => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[s])); }
+
+    enforceLoginAndLoad();
+</script>
+</body>
+</html>

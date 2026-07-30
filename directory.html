@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directory | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .member-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .member-info h3 { margin: 0; font-size: 1.1rem; }
+        .role-badge { background: #e7f1ff; color: #007bff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .search-bar { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<nav class="bg-white shadow-md mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="directory.html" class="text-xs sm:text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">Directory</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main style="max-width: 800px; margin: 20px auto; padding: 0 20px;">
+    <h1>Church Members</h1>
+    <input type="text" id="search" class="search-bar" placeholder="Search by name or role..." onkeyup="filterMembers()">
+    <div id="member-list">Loading members...</div>
+</main>
+
+<script>
+    let allMembers = [];
+
+    async function loadMembers() {
+    const { data: { user } } = await window.sbClient.auth.getUser();
+    if (!user) return window.location.href = 'index.html';
+
+    // 1. Fetch MY profile (including role)
+    const { data: myProfile, error: profileError } = await window.sbClient
+        .from('profiles')
+        .select('church_id, role') // Added 'role' here
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (profileError || !myProfile) return;
+    
+    // Store user info in a global variable so the render function can access it
+    window.loggedInUser = user;
+    window.currentUserProfile = myProfile;
+
+    // 2. Fetch members... (your existing code)
+    const { data: members, error: membersError } = await window.sbClient
+        .from('profiles')
+        .select('id, full_name, email, role')
+        .eq('church_id', myProfile.church_id)
+        .neq('id', user.id);
+        
+    allMembers = members || [];
+    renderList(allMembers);
+}
+
+function renderList(listData) {
+    const list = document.getElementById('member-list');
+    // Check if the current user has admin rights
+    const isAdmin = currentUserProfile?.role === 'admin' || currentUserProfile?.role === 'super_admin';
+    
+    list.innerHTML = listData.length > 0 ? listData.map(m => {
+        const displayName = (m.full_name && m.full_name.trim() !== "") ? m.full_name : m.email;
+        
+        // Build the Admin button ONLY if the user is an admin
+        const adminButton = isAdmin 
+            ? `<button onclick="promoteToAdmin('${m.id}')" style="background:orange; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; margin-left: 5px;">Promote</button>` 
+            : '';
+
+        return `
+            <div class="member-card cursor-pointer hover:bg-blue-50 transition" onclick="window.location.href='member-profile.html?id=${m.id}'">
+                <div class="member-info">
+                    <h3>${escapeHtml(displayName)}</h3>
+                    <small>${m.email}</small> <span class="role-badge">${m.role || 'Member'}</span>
+                </div>
+                <div>
+                    <button onclick="event.stopPropagation(); startChat('${m.id}')" style="background:#007bff; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">Message</button>
+                    ${adminButton}
+                </div>
+            </div>
+        `;
+    }).join('') : '<p>No other members found in your church.</p>';
+}
+
+
+    function filterMembers() {
+        const query = document.getElementById('search').value.toLowerCase();
+        const filtered = allMembers.filter(m => 
+            (m.full_name?.toLowerCase().includes(query) || "") || 
+            (m.role?.toLowerCase().includes(query) || "")
+        );
+        renderList(filtered);
+    }
+
+    function startChat(userId) {
+        localStorage.setItem('chat_target', userId);
+        window.location.href = 'inbox.html';
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+
+    // Initialize the app
+    async function initApp() {
+        await loadMembers();
+    }
+
+    initApp();
+</script>
+</body>
+</html>

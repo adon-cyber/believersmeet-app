@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Small Groups | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 pb-20 md:pb-0">
+
+<!-- Top Navigation -->
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+    <!-- Banner Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Community Cell Groups</h1>
+            <p class="text-blue-100 mt-1 text-sm sm:text-base">Find a local home group to connect, pray, and grow with believers in your neighborhood during the week.</p>
+        </div>
+    </div>
+
+    <!-- Admin Panel (Shown for Admins) -->
+    <div id="admin-panel" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hidden space-y-6">
+        <div>
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <span class="mr-2">⛪</span> Manage Church Groups / Fellowships & Settings
+            </h3>
+            <form id="group-creation-form" class="flex flex-col sm:flex-row gap-3 mb-6">
+                <input type="text" id="group-name-input" placeholder="New Group Name (e.g., Choir, Youth, Ushers)" required class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="text" id="group-location-input" placeholder="Location (Optional)" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <button id="add-group-btn" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg ml-2">+ Add Group</button>
+            </form>
+            <div id="church-groups-list" class="mt-4 space-y-2">
+                <p class="text-gray-400 italic">Loading groups...</p>
+            </div>
+            
+            <!-- Church Settings / Sub-groups Info Save Form -->
+            <form id="church-info-form" class="mt-6 pt-6 border-t border-gray-200 space-y-4">
+                <h4 class="text-md font-semibold text-gray-800">Church Information & Sub-group Settings</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Church Name</label>
+                        <input type="text" id="church-name-setting" placeholder="Church Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Church Address</label>
+                        <input type="text" id="church-address-setting" placeholder="Address / Location" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <button id="save-church-info-btn" type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg mt-4 flex items-center gap-2">💾 Save Church Info</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Groups Grid Container -->
+    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading community groups...</div>
+    </div>
+</main>
+
+<!-- Bottom Mobile Navigation Bar -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3 z-50 text-xs font-medium text-gray-600">
+    <a href="feed.html" class="flex flex-col items-center hover:text-blue-600">Feed</a>
+    <a href="prayer-wall.html" class="flex flex-col items-center hover:text-blue-600">Prayer</a>
+    <a href="testimonies.html" class="flex flex-col items-center hover:text-blue-600">Testimonies</a>
+    <a href="inboxx.html" class="flex flex-col items-center hover:text-blue-600">Inbox</a>
+    <a href="events.html" class="flex flex-col items-center hover:text-blue-600">Events</a>
+    <a href="groups.html" class="flex flex-col items-center text-blue-600 font-bold">Groups</a>
+    <a href="profile.html" class="flex flex-col items-center hover:text-blue-600">Profile</a>
+</div>
+
+<script>
+    let currentUserProfile = null;
+    let currentUser = null;
+    let joinedGroupIds = new Set();
+    let editingGroupId = null;
+
+    async function initApp() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            document.getElementById('groups-container').innerHTML = '<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Failed to initialize Supabase client.</div>';
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+        currentUser = user;
+
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+        
+        currentUserProfile = profile;
+
+        if (profile) {
+            if (profile.role === 'admin' || profile.role === 'super_admin') {
+                const adminLink = document.getElementById('admin-nav-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+
+                document.getElementById('admin-panel').classList.remove('hidden');
+                loadChurchGroups(profile.church_id);
+            }
+        }
+
+        await fetchUserMemberships();
+        loadGroups();
+        initRealtimeSync();
+    }
+
+    function initRealtimeSync() {
+        window.sbClient
+            .channel('groups-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, () => {
+                loadGroups();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, async () => {
+                await fetchUserMemberships();
+                loadGroups();
+            })
+            .subscribe();
+    }
+
+    async function fetchUserMemberships() {
+        if (!currentUser) return;
+        const { data, error } = await window.sbClient
+            .from('group_members')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        if (!error && data) {
+            joinedGroupIds = new Set(data.map(m => m.group_id));
+        }
+    }
+
+    async function joinGroup(groupId) {
+        if (!currentUser) return;
+        const { error } = await window.sbClient
+            .from('group_members')
+            .insert([{ group_id: groupId, user_id: currentUser.id }]);
+
+        if (error) {
+            alert('Error joining group: ' + error.message);
+        } else {
+            await fetchUserMemberships();
+            loadGroups();
+        }
+    }
+
+    async function leaveGroup(groupId) {
+        if (!currentUser) return;
+        const { error } = await window.sbClient
+            .from('group_members')
+            .delete()
+            .match({ group_id: groupId, user_id: currentUser.id });
+
+        if (error) {
+            alert('Error leaving group: ' + error.message);
+        } else {
+            await fetchUserMemberships();
+            loadGroups();
+        }
+    }
+
+    async function loadGroups() {
+        const container = document.getElementById('groups-container');
+        
+        const query = window.sbClient
+            .from('groups')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (currentUserProfile?.church_id) {
+            query.eq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data: groups, error } = await query;
+
+        if (error) {
+            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading groups: ${escapeHtml(error.message)}</div>`;
+            return;
+        }
+
+        if (!groups || groups.length === 0) {
+            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No cell groups have been established for your church yet.</p></div>`;
+            return;
+        }
+
+        const isAdmin = currentUserProfile && (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin');
+
+        container.innerHTML = groups.map(group => {
+            const statusBadge = group.allow_instant_join 
+                ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">● Open (Instant Join)</span>`
+                : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">● Locked (Requires Approval)</span>`;
+
+            let dynamicActionRow = "";
+            if (isAdmin) {
+                dynamicActionRow = `
+                    <div class="flex gap-2 pt-4 border-t border-gray-100 mt-4">
+                        <button onclick="enterEditMode('${group.id}', '${escapeHtml(group.name)}', '${escapeHtml(group.location)}', '${escapeHtml(group.meeting_time)}', '${escapeHtml(group.leader_name)}', ${group.allow_instant_join})" class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition border border-gray-200">✏️ Edit</button>
+                        <button onclick="deleteGroup('${group.id}', '${escapeHtml(group.name)}')" class="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition border border-red-200">🗑️ Delete</button>
+                    </div>
+                `;
+            }
+
+            // Always display a clear joining option for non-admin users or alongside admin view if desired, 
+            // but let's make sure the join/request button is distinctly visible on every card!
+            const isMember = joinedGroupIds.has(group.id);
+            if (isMember) {
+                dynamicActionRow += `
+                    <div class="pt-3 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
+                        <button onclick="leaveGroup('${group.id}')" class="w-full py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                            <span>✓ Joined / Leave Group</span>
+                        </button>
+                    </div>
+                `;
+            } else {
+                dynamicActionRow += `
+                    <div class="pt-3 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
+                        <button onclick="joinGroup('${group.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                            <span>✨ Join Group</span>
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col justify-between transition hover:shadow-md">
+                    <div class="space-y-3">
+                        <div>${statusBadge}</div>
+                        <h3 class="text-lg font-bold text-gray-900">${escapeHtml(group.name)}</h3>
+                        <div class="space-y-1.5 text-sm text-gray-600">
+                            <div class="flex items-center gap-2"><span>📍</span><span>${escapeHtml(group.location)}</span></div>
+                            <div class="flex items-center gap-2"><span>🕒</span><span>${escapeHtml(group.meeting_time)}</span></div>
+                            <div class="flex items-center gap-2"><span>👤</span><span>Led by ${escapeHtml(group.leader_name)}</span></div>
+                        </div>
+                    </div>
+                    ${dynamicActionRow}
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function loadChurchGroups(churchId) {
+        const container = document.getElementById('church-groups-list');
+        if (!container) return;
+        try {
+            const { data: groups, error } = await window.sbClient.from('groups').select('*').eq('church_id', churchId).order('created_at', { ascending: false });
+            if (error) throw error;
+            if (!groups || groups.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic text-sm p-2">No sub-groups configured yet.</p>';
+                return;
+            }
+            container.innerHTML = groups.map(g => `<div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border rounded-lg shadow-sm"><div><p class="font-semibold text-gray-800 dark:text-gray-100">${escapeHtml(g.name)}</p>${g.location ? `<span class="text-xs text-gray-500">Location: ${escapeHtml(g.location)}</span>` : ''}</div><button onclick="deleteGroup('${g.id}', '${escapeHtml(g.name)}')" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1">🗑️ Delete</button></div>`).join('');
+        } catch (err) {
+            console.error('Failed to render groups:', err);
+            container.innerHTML = `<p class="text-red-500 text-xs">Error loading groups: ${escapeHtml(err.message)}</p>`;
+        }
+
+        // Load church details into form fields if available
+        if (currentUserProfile && currentUserProfile.church_id) {
+            const { data: churchData } = await window.sbClient.from('churches').select('*').eq('id', currentUserProfile.church_id).maybeSingle();
+            if (churchData) {
+                const nameField = document.getElementById('church-name-setting');
+                const addressField = document.getElementById('church-address-setting');
+                if (nameField && !nameField.value) nameField.value = churchData.name || '';
+                if (addressField && !addressField.value) addressField.value = churchData.address || '';
+            }
+        }
+    }
+
+    // --- CHURCH INFO / SETTINGS HANDLER ---
+    document.addEventListener('submit', async (e) => {
+        if (e.target && e.target.id === 'church-info-form') {
+            e.preventDefault();
+            const btn = document.getElementById('save-church-info-btn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'Saving...';
+
+            try {
+                const name = document.getElementById('church-name-setting').value;
+                const address = document.getElementById('church-address-setting').value;
+
+                const { error } = await window.sbClient.from('churches').update({
+                    name,
+                    address
+                }).eq('id', currentUserProfile.church_id);
+
+                if (error) throw error;
+                alert("Church settings & sub-groups info saved successfully!");
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+    });
+
+    document.getElementById('group-creation-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const groupNameInput = document.getElementById('group-name-input');
+        const groupName = groupNameInput ? groupNameInput.value : '';
+        const currentChurchId = currentUserProfile ? currentUserProfile.church_id : null;
+        
+        if (!currentChurchId) {
+            alert('Failed to add group: Invalid active church session/profile.');
+            return;
+        }
+
+        const newGroup = {
+            name: groupName.trim(),
+            church_id: currentChurchId
+        };
+        
+        const locationInput = document.getElementById('group-location-input');
+        if (locationInput && locationInput.value.trim()) {
+            newGroup.location = locationInput.value.trim();
+        }
+        
+        const { error } = await window.sbClient.from('groups').insert([newGroup]);
+        if (error) {
+            alert('Failed to add group: ' + error.message);
+        } else {
+            alert('Group added successfully!');
+            if (groupNameInput) groupNameInput.value = '';
+            if (locationInput) locationInput.value = '';
+            loadChurchGroups(currentChurchId);
+            loadGroups();
+        }
+    });
+
+    async function deleteGroup(id, groupName) {
+        const confirmation = confirm(`Remove this structural fellowship group "${groupName}"?`);
+        if (!confirmation) return;
+        const { error } = await window.sbClient.from('groups').delete().eq('id', id);
+        if (error) {
+            alert('Failed to remove group: ' + error.message);
+        } else {
+            alert('Group removed successfully!');
+            loadChurchGroups(currentUserProfile ? currentUserProfile.church_id : null);
+            loadGroups();
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    }
+
+    function logoutUser(e) { 
+        e.preventDefault(); 
+        window.sbClient.auth.signOut(); 
+        window.location.replace('login.html'); 
+    }
+
+    initApp();
+</script>
+</body>
+</html>

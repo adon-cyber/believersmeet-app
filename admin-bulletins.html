@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Church | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .section-box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="section-box" style="max-width: 500px; margin: 20px auto;">
+    <h2>Edit Church Profile</h2>
+    <div class="form-group">
+        <label>Church Name</label>
+        <input type="text" id="church-name">
+    </div>
+    <div class="form-group">
+        <label>Church Location</label>
+        <input type="text" id="church-location">
+    </div>
+    <button onclick="saveChurchProfile()" style="width: 100%;">Save Church Details</button>
+</div>
+
+<div class="section-box" style="max-width: 500px; margin: 20px auto;">
+    <h2>Upload Weekly Bulletin</h2>
+    <div class="form-group">
+        <label>Bulletin Title</label>
+        <input type="text" id="bulletin-title">
+    </div>
+    <div class="form-group">
+        <label>Select PDF or Image</label>
+        <input type="file" id="bulletin-file" accept=".pdf,image/*">
+    </div>
+    <button onclick="postBulletin()" style="width: 100%;">Post Bulletin</button>
+</div>
+
+<script>
+    let currentUserProfile = null;
+
+    // 1. Initialization: Run this the moment the page opens
+    async function initApp() {
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) return window.location.replace('login.html');
+
+        // Fetch User Profile
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('church_id')
+            .eq('id', user.id)
+            .single();
+        
+        currentUserProfile = profile;
+        loadChurchData(); // Fetch the church details to fill the fields
+    }
+
+    // 2. Load current data into the fields
+    async function loadChurchData() {
+        const { data: church } = await window.sbClient
+            .from('churches')
+            .select('name, location')
+            .eq('id', currentUserProfile.church_id)
+            .single();
+
+        if (church) {
+            document.getElementById('church-name').value = church.name || '';
+            document.getElementById('church-location').value = church.location || '';
+        }
+    }
+
+    // 3. Save Profile Function
+    async function saveChurchProfile() {
+        const { error } = await window.sbClient
+            .from('churches')
+            .update({ 
+                name: document.getElementById('church-name').value,
+                location: document.getElementById('church-location').value 
+            })
+            .eq('id', currentUserProfile.church_id);
+
+        if (error) alert("Error: " + error.message);
+        else alert("Church details updated!");
+    }
+    function renderUserBadge(verificationType) {
+    if (!verificationType || verificationType === 'none') return '';
+
+    const badges = {
+        'church': '<span class="badge b-church" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:bold; margin-left:6px;">⛪ Church</span>',
+        'pastor': '<span class="badge b-pastor" style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:bold; margin-left:6px;">🛡️ Pastor</span>',
+        'leader': '<span class="badge b-leader" style="background:#ecfdf5; color:#047857; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:bold; margin-left:6px;">✨ Leader</span>'
+    };
+
+    return badges[verificationType.toLowerCase()] || '';
+}
+
+// Example usage when rendering a user's name:
+// const profileNameHTML = `${profile.full_name} ${renderUserBadge(profile.verification_type)}`;
+
+    // 4. Bulletin Upload Function
+    async function postBulletin() {
+        const title = document.getElementById('bulletin-title').value;
+        const file = document.getElementById('bulletin-file').files[0];
+        if (!title || !file) return alert("Please add a title and a file.");
+
+        const filePath = `bulletins/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await window.sbClient.storage.from('bulletins').upload(filePath, file);
+        if (uploadError) return alert("Upload failed: " + uploadError.message);
+
+        const { data: urlData } = window.sbClient.storage.from('bulletins').getPublicUrl(filePath);
+
+        const { error: dbError } = await window.sbClient
+            .from('bulletins')
+            .insert([{ title: title, content_url: urlData.publicUrl, church_id: currentUserProfile.church_id }]);
+
+        if (dbError) alert("Database error: " + dbError.message);
+        else { alert("Bulletin posted!"); location.reload(); }
+    }
+
+    initApp();
+</script>
+</body>
+</html>

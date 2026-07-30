@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profiles & Directory | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="feed.html" class="text-xl font-bold text-emerald-600 flex-shrink-0 mr-4">BelieversMeet</a>
+                <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Giving</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md transition-colors">Profile</a>
+                    <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
+                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+            <div class="lg:col-span-1">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">My Profile Settings</h2>
+                    <form id="profile-edit-form">
+                        <div class="mb-4">
+                            <label for="prof-name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="prof-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="prof-cell" class="block text-sm font-medium text-gray-700 mb-2">Home Cell Group / Fellowship</label>
+                            <input type="text" id="prof-cell" placeholder="e.g., Bethany Center, Grace Cell" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="prof-scripture" class="block text-sm font-medium text-gray-700 mb-2">Favorite Scripture Reference</label>
+                            <input type="text" id="prof-scripture" placeholder="e.g., Romans 8:28" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="prof-bio" class="block text-sm font-medium text-gray-700 mb-2">Short Bio / Christian Journey</label>
+                            <textarea id="prof-bio" rows="4" placeholder="Share a brief word about your walk or area of ministry..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea>
+                        </div>
+                        
+                        <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;" onmouseover="this.style.backgroundColor='#0056b3'" onmouseout="this.style.backgroundColor='#007bff'" class="w-full font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Save Profile Updates</button>
+                    </form>
+                    
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-2">Choose Profile Photo:</label>
+                        <input type="file" id="file-upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-600 hover:file:bg-emerald-100">
+                        <button onclick="uploadAvatar()" class="w-full mt-3 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Upload Photo</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-2">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Fellowship Directory</h2>
+                    
+                    <div class="mb-6">
+                        <input type="text" id="directory-search" class="search-box w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="🔍 Search members by name or cell group..." autocomplete="off">
+                    </div>
+                    
+                    <div id="directory-container" class="directory-list space-y-4">
+                        <p class="text-center text-gray-500 py-8">Loading member records...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let loggedInUser = null;
+        let masterProfilesDataset = [];
+
+        async function initializeProfileWorkspace() {
+            let attempts = 0;
+            while (!window.sbClient && attempts < 15) {
+                await new Promise(r => setTimeout(r, 200));
+                attempts++;
+            }
+
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (!user) {
+                window.location.replace('login.html');
+                return;
+            }
+            loggedInUser = user;
+
+            await fetchAndPopulateMyProfile();
+            await fetchDirectoryRecords();
+            
+            document.getElementById('directory-search').addEventListener('input', runDirectoryFilter);
+            document.getElementById('profile-edit-form').addEventListener('submit', handleProfileUpdateSubmission);
+        }
+
+        // --- NEW: Upload Function ---
+        async function uploadAvatar() {
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput.files[0];
+            if (!file) return alert("Please select a file first.");
+
+            // Uploading to Supabase
+            const fileName = `${loggedInUser.id}_${Date.now()}`;
+            const { data, error } = await window.sbClient.storage
+                .from('avatars') 
+                .upload(fileName, file);
+
+            if (error) return alert("Upload failed: " + error.message);
+
+            // Get URL and update profile table
+            const { data: urlData } = window.sbClient.storage.from('avatars').getPublicUrl(fileName);
+            
+            const { error: dbError } = await window.sbClient
+                .from('profiles')
+                .update({ avatar_url: urlData.publicUrl })
+                .eq('id', loggedInUser.id);
+
+            if (dbError) {
+                alert("Error updating profile link: " + dbError.message);
+            } else {
+                alert("Photo updated successfully!");
+                location.reload();
+            }
+        }
+        // ----------------------------
+
+        async function fetchAndPopulateMyProfile() {
+            const { data: profile, error } = await window.sbClient
+                .from('profiles')
+                .select('*')
+                .eq('id', loggedInUser.id)
+                .single();
+
+            if (error) {
+                alert("Error mapping user context: " + error.message);
+                return;
+            }
+
+            if (profile) {
+                document.getElementById('prof-name').value = profile.full_name || '';
+                document.getElementById('prof-cell').value = profile.home_cell || '';
+                document.getElementById('prof-scripture').value = profile.favorite_scripture || '';
+                document.getElementById('prof-bio').value = profile.bio || '';
+            }
+        }
+
+        async function fetchDirectoryRecords() {
+            const { data: records, error } = await window.sbClient
+                .from('profiles')
+                .select('id, full_name, role, home_cell, favorite_scripture, bio')
+                .order('full_name', { ascending: true });
+
+            if (error) {
+                document.getElementById('directory-container').innerHTML = `<p class="text-center text-red-500 py-4">Failed to fetch data ledger.</p>`;
+                return;
+            }
+
+            masterProfilesDataset = records || [];
+            renderDirectoryCards(masterProfilesDataset);
+        }
+
+        function renderDirectoryCards(dataset) {
+            const targetContainer = document.getElementById('directory-container');
+
+            if (dataset.length === 0) {
+                targetContainer.innerHTML = `<p class="text-center text-gray-500 py-8">No registered believers match your current filter.</p>`;
+                return;
+            }
+
+            targetContainer.innerHTML = dataset.map(m => {
+                const isMe = m.id === loggedInUser.id;
+                return `
+                    <div class="member-card p-5 border border-gray-200 rounded-lg bg-white hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer" onclick="window.location.href='member-profile.html?id=${m.id}'">
+                        <div class="flex items-center justify-between mb-3">
+                            <strong class="text-lg font-semibold text-gray-900">${escapeHTML(m.full_name)}</strong>
+                            <div class="flex items-center space-x-2">
+                                ${isMe ? '<span class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">You</span>' : ''}
+                                <span class="px-2 py-1 text-xs font-medium ${m.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'} rounded-full">${m.role === 'admin' ? 'Leadership' : 'Member'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+                            ${m.home_cell ? '<span class="flex items-center"><span class="mr-1">🏡</span> Cell: <strong class="ml-1">' + escapeHTML(m.home_cell) + '</strong></span>' : ''}
+                        </div>
+
+                        ${m.bio ? '<p class="text-gray-700 text-sm mb-3 whitespace-pre-wrap">' + escapeHTML(m.bio) + '</p>' : ''}
+                        
+                        ${m.favorite_scripture ? '<div class="mt-3 pl-3 border-l-4 border-emerald-500 bg-emerald-50 p-2 rounded-r-lg">' +
+                            '<div class="text-xs font-medium text-emerald-800 mb-1">📖 Favorite Scripture</div>' +
+                            '<div class="text-sm text-gray-700 italic">"' + escapeHTML(m.favorite_scripture) + '"</div>' +
+                        '</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function runDirectoryFilter(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const filtered = masterProfilesDataset.filter(p => {
+                const nameMatch = p.full_name?.toLowerCase().includes(query);
+                const cellMatch = p.home_cell?.toLowerCase().includes(query);
+                const scriptureMatch = p.favorite_scripture?.toLowerCase().includes(query);
+                return nameMatch || cellMatch || scriptureMatch;
+            });
+            renderDirectoryCards(filtered);
+        }
+
+        async function handleProfileUpdateSubmission(e) {
+            e.preventDefault();
+            
+            // Show a loading state on the button
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Saving...";
+            submitBtn.disabled = true;
+
+            const { error } = await window.sbClient
+                .from('profiles')
+                .update({
+                    full_name: document.getElementById('prof-name').value.trim(),
+                    home_cell: document.getElementById('prof-cell').value.trim(),
+                    favorite_scripture: document.getElementById('prof-scripture').value.trim(),
+                    bio: document.getElementById('prof-bio').value.trim()
+                })
+                .eq('id', loggedInUser.id);
+
+            // Reset button
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+
+            if (error) {
+                alert("Profile sync failure: " + error.message);
+            } else {
+                alert("Praise God! Your profile parameters have been updated.");
+                // Refresh local data and re-render
+                await fetchDirectoryRecords(); 
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, function(s) {
+                return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[s];
+            });
+        }
+
+        async function logoutUser(e) {
+            e.preventDefault();
+            await window.sbClient.auth.signOut();
+            window.location.replace('login.html');
+        }
+
+        initializeProfileWorkspace();
+    </script>
+</body>
+</html>

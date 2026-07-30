@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Profile | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hidden { display: none !important; }
+        .badge { display: inline-block; vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<nav class="bg-blue-600 shadow-md mb-6" style="background-color: #007bff !important;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div id="church-logo-container" class="flex items-center space-x-2">
+                    <img id="church-logo-img" src="" alt="Church Logo" class="w-8 h-8 rounded-full object-cover hidden">
+                    <span id="church-logo-placeholder" class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">BM</span>
+                </div>
+                <a href="feed.html" class="text-xl font-bold text-white flex-shrink-0">BelieversMeet</a>
+            </div>
+            <div class="flex items-center space-x-1 sm:space-x-3 overflow-x-auto whitespace-nowrap py-2 px-4 no-scrollbar">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main style="max-width: 600px; margin: 40px auto; padding: 20px;">
+    <div id="profile-container" class="bg-white shadow rounded-lg p-6 text-center">
+        <p class="text-gray-500 py-8">Loading member profile details...</p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="block-profile-btn" class="hidden text-sm text-red-600 border border-red-300 px-4 py-2 rounded-md hover:bg-red-50">
+            🚫 Block Member
+        </button>
+    </div>
+</main>
+
+<script>
+    let loggedInUser = null;
+    const targetUserId = new URLSearchParams(window.location.search).get('id');
+
+    async function loadChurchLogo() {
+        try {
+            const churchId = localStorage.getItem('church_id');
+            if (!churchId) return;
+            const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
+            if (church && church.logo_url) {
+                const img = document.getElementById('church-logo-img');
+                const placeholder = document.getElementById('church-logo-placeholder');
+                img.src = church.logo_url;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Error loading church logo:", e);
+        }
+    }
+
+    async function loadMemberProfile() {
+        const container = document.getElementById('profile-container');
+        if (!targetUserId) {
+            container.innerHTML = `<h3 class="text-lg font-bold text-red-600">Profile ID not specified in URL</h3>`;
+            return;
+        }
+
+        const { data, error } = await window.sbClient.from('profiles').select('*, churches!profiles_church_id_fkey(name, id)').eq('id', targetUserId).maybeSingle();
+        if (error || !data) {
+            container.innerHTML = `<p class="text-red-500">Member profile not available or could not be found.</p>`;
+            return;
+        }
+
+        const { data: { user: currentUser } } = await window.sbClient.auth.getUser();
+        const isOwner = currentUser?.id === targetUserId;
+        const avatar = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'User')}`;
+
+        container.innerHTML = `
+            <img src="${avatar}" style="width:120px; height:120px; border-radius:50%; margin: 0 auto 15px auto; object-fit: cover;">
+            <div class="flex items-center justify-center space-x-2 mb-2">
+                <h1 class="text-2xl font-bold text-gray-900">${escapeHTML(data.full_name || 'Anonymous Member')}</h1>
+                <span id="member-presence-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline
+                </span>
+            </div>
+            <p class="member-church text-gray-600 mb-2"><strong>Church:</strong> <span id="memberChurch">${escapeHTML(data.churches?.name || 'Not specified')}</span></p>
+            ${data.home_cell ? `<p class="text-gray-600 mb-2"><strong>Home Cell Group:</strong> ${escapeHTML(data.home_cell)}</p>` : ''}
+            ${data.favorite_scripture ? `<p class="text-gray-600 mb-4 italic">"${escapeHTML(data.favorite_scripture)}"</p>` : ''}
+            <p class="text-gray-700 mb-6 whitespace-pre-wrap">${escapeHTML(data.bio || 'This member hasn\'t written a bio yet.')}</p>
+            
+            <div class="flex flex-wrap justify-center gap-3 mb-4">
+                <button id="connect-btn" onclick="handleConnectClick()" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Connect</button>
+                <button onclick="handleChatClick()" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Chat</button>
+            </div>
+
+            ${isOwner ? `<div class="mt-4"><a href="profile.html" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700" style="background-color: #007bff;">Edit Profile</a></div>` : ''}
+        `;
+
+        const blockBtn = document.getElementById('block-profile-btn');
+        if (blockBtn && currentUser && !isOwner) {
+            blockBtn.classList.remove('hidden');
+        }
+
+        await checkConnectionStatus(currentUser?.id, targetUserId);
+    }
+
+    let currentConnectionState = 'none'; // 'none', 'pending', 'accepted'
+
+    async function checkConnectionStatus(currentUserId, viewedUserId) {
+        if (!currentUserId || !viewedUserId || currentUserId === viewedUserId) {
+            const btn = document.getElementById('connect-btn');
+            if (btn && currentUserId === viewedUserId) btn.style.display = 'none';
+            return;
+        }
+
+        try {
+            const { data, error } = await window.sbClient
+                .from('connections')
+                .select('*')
+                .or(`and(requester_id.eq.${currentUserId},recipient_id.eq.${viewedUserId}),and(requester_id.eq.${viewedUserId},recipient_id.eq.${currentUserId})`)
+                .maybeSingle();
+
+            const btn = document.getElementById('connect-btn');
+            if (!btn) return;
+
+            if (data) {
+                if (data.status === 'accepted') {
+                    currentConnectionState = 'accepted';
+                    btn.textContent = 'Connected';
+                    btn.disabled = true;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.cursor = 'not-allowed';
+                } else if (data.status === 'pending') {
+                    currentConnectionState = 'pending';
+                    btn.textContent = 'Request Pending';
+                    btn.disabled = true;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.cursor = 'not-allowed';
+                }
+            } else {
+                currentConnectionState = 'none';
+                btn.textContent = 'Connect';
+                btn.disabled = false;
+                btn.style.backgroundColor = '#007bff';
+                btn.style.cursor = 'pointer';
+            }
+        } catch (e) {
+            console.error("Error checking connection status:", e);
+        }
+    }
+
+    async function handleConnectClick() {
+        if (!loggedInUser) {
+            alert("Please log in to connect with members.");
+            return;
+        }
+        if (!targetUserId || loggedInUser.id === targetUserId) return;
+
+        const btn = document.getElementById('connect-btn');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        try {
+            const { error } = await window.sbClient
+                .from('connections')
+                .insert([{
+                    requester_id: loggedInUser.id,
+                    recipient_id: targetUserId,
+                    status: 'pending'
+                }]);
+
+            if (error) {
+                alert("Could not send connection request: " + error.message);
+                btn.disabled = false;
+                btn.textContent = 'Connect';
+            } else {
+                currentConnectionState = 'pending';
+                btn.textContent = 'Request Pending';
+                btn.disabled = true;
+                btn.style.backgroundColor = '#6c757d';
+                btn.style.cursor = 'not-allowed';
+            }
+        } catch (e) {
+            console.error("Error sending connection request:", e);
+            btn.disabled = false;
+            btn.textContent = 'Connect';
+        }
+    }
+
+    function handleChatClick() {
+        if (!targetUserId) {
+            alert("Target user not specified.");
+            return;
+        }
+        window.location.href = 'chat.html?user=' + targetUserId;
+    }
+
+    async function blockUser(idOfTargetToBlock) {
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) return alert("Authentication error.");
+        
+        const { error } = await window.sbClient
+            .from('blocks')
+            .insert([{ blocker_id: user.id, blocked_id: idOfTargetToBlock }]);
+
+        if (error) {
+            alert("Could not block user: " + error.message);
+        } else {
+            alert("User has been blocked successfully.");
+            window.location.replace('feed.html'); 
+        }
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(s) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[s];
+        });
+    }
+
+    async function logoutUser(e) {
+        e.preventDefault();
+        await window.sbClient.auth.signOut();
+        window.location.replace('login.html');
+    }
+
+    document.getElementById('block-profile-btn').addEventListener('click', () => {
+        if (!targetUserId) return;
+        if (confirm("Block this user? Their profile and interactions will be hidden.")) {
+            blockUser(targetUserId);
+        }
+    });
+
+    (async () => {
+        let retries = 0;
+        while (!window.sbClient && retries < 20) { 
+            await new Promise(r => setTimeout(r, 200)); 
+            retries++; 
+        }
+        
+        if (!window.sbClient) {
+            console.error("Supabase client failed to initialize.");
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        loggedInUser = user;
+
+        await loadChurchLogo();
+        await loadMemberProfile();
+
+        if (loggedInUser && targetUserId) {
+            const presenceChannel = window.sbClient.channel('online-users', {
+                config: {
+                    presence: { key: loggedInUser.id }
+                }
+            });
+
+            presenceChannel.on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                let isOnline = false;
+                for (const key in state) {
+                    const presences = state[key];
+                    for (const p of presences) {
+                        if (p.user_id === targetUserId) {
+                            isOnline = true;
+                            break;
+                        }
+                    }
+                    if (isOnline) break;
+                }
+
+                const badge = document.getElementById('member-presence-badge');
+                if (badge) {
+                    if (isOnline) {
+                        badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
+                        badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-green-500 rounded-full inline-block animate-pulse"></span> Online`;
+                    } else {
+                        badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800";
+                        badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline`;
+                    }
+                }
+            });
+
+            presenceChannel.subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({ user_id: loggedInUser.id, online_at: new Date().toISOString() });
+                }
+            });
+        }
+    })();
+</script>
+</body>
+</html>
