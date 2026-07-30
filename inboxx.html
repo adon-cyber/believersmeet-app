@@ -8,10 +8,10 @@
     <script src="supabase-config.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+<body class="bg-gray-50 flex flex-col h-[100dvh] overflow-hidden">
 
 <!-- Top Navigation -->
-<nav class="bg-white shadow-md z-50 flex-shrink-0">
+<nav class="bg-white shadow-md z-50 flex-shrink-0 hidden md:block">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
@@ -32,12 +32,12 @@
 </nav>
 
 <!-- Main Container -->
-<main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex overflow-hidden">
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 flex-1 flex overflow-hidden">
+<main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-6 flex overflow-hidden h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-4rem)]">
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 flex-1 flex overflow-hidden relative">
         
         <!-- Sidebar / Contacts List -->
-        <div id="sidebar-container" class="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-gray-50">
-            <div class="p-4 border-b border-gray-200 bg-white font-bold text-gray-800 flex justify-between items-center">
+        <div id="sidebar-container" class="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-gray-50 absolute md:relative inset-0 z-10 md:z-auto transition-transform duration-300">
+            <div class="p-4 border-b border-gray-200 bg-white font-bold text-gray-800 flex justify-between items-center flex-shrink-0">
                 <span>Fellow Believers</span>
                 <span class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Direct Messaging</span>
             </div>
@@ -47,7 +47,7 @@
         </div>
 
         <!-- Chat Area -->
-        <div id="chat-area-pane" class="hidden md:flex flex-1 flex-col bg-white">
+        <div id="chat-area-pane" class="hidden md:flex flex-1 flex-col bg-white absolute md:relative inset-0 z-20 md:z-auto">
             <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-400">
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">💬</div>
                 <h3 class="text-lg font-bold text-gray-700">Select a fellowship contact</h3>
@@ -195,17 +195,20 @@
         pane.classList.remove('hidden');
         pane.innerHTML = `
             <!-- Chat Header -->
-            <div class="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm">
+            <div class="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm flex-shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                    <button onclick="backToMemberList()" class="md:hidden p-1.5 mr-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition flex items-center justify-center" title="Back to Member List">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
                         ${escapeHtml(recipientName.charAt(0).toUpperCase())}
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-gray-900">${escapeHtml(recipientName)}</h3>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-gray-900 truncate">${escapeHtml(recipientName)}</h3>
                         <p class="text-xs text-green-600 flex items-center gap-1 font-medium"><span>●</span> Online Fellowship</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-shrink-0">
                     <button id="start-video-btn" title="Start Video Call" class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition flex items-center justify-center">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="3" ry="3"></rect></svg>
                     </button>
@@ -219,7 +222,7 @@
             </div>
 
             <!-- Chat Input Form -->
-            <form class="p-4 bg-white border-t border-gray-200 flex gap-2" id="msg-send-form">
+            <form class="p-4 bg-white border-t border-gray-200 flex gap-2 flex-shrink-0" id="msg-send-form">
                 <input type="text" id="msg-input" placeholder="Type a message to encourage or fellowship..." required class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm transition">
                 <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm">Send</button>
             </form>
@@ -255,6 +258,17 @@
             .subscribe();
 
         fetchThreadMessages();
+    }
+
+    function backToMemberList() {
+        const pane = document.getElementById('chat-area-pane');
+        pane.classList.add('hidden');
+        selectedUser = null;
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-600'));
+        if (activeChannel) {
+            window.sbClient.removeChannel(activeChannel);
+            activeChannel = null;
+        }
     }
 
     async function fetchThreadMessages() {
