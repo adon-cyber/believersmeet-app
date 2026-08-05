@@ -7,45 +7,46 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
+    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-3 flex-shrink-0 mr-4">
-                    <a href="feed.html" class="text-xl font-bold text-emerald-600 flex items-center">
-                        <span class="mr-2">⛪</span> BelieversMeet Admin
-                    </a>
-                </div>
+                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
                 <div class="nav-scrollable-row no-scrollbar flex items-center space-x-1 sm:space-x-3 py-2 px-4">
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Giving</a>
-                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
-                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Profile</a>
-                    <a href="admin.html" class="text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md transition-colors">Dashboard</a>
-                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                    <a href="admin.html" id="admin-nav-link" class="text-xs sm:text-sm font-bold text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content Area -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        <div class="mb-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Church Management Dashboard</h1>
-            <p class="text-sm text-gray-600 mt-1">Manage announcements, fellowship groups, church events, inquiries, and member roles.</p>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
+        
+        <!-- Page Header Section matching giving.html style -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Church Management Dashboard</h1>
+                <p class="text-blue-100 text-base">Manage announcements, fellowship groups, church events, inquiries, and member roles.</p>
+            </div>
         </div>
 
         <!-- User Management Section (Super Admin Only) -->
-        <div id="user-management-section" class="bg-white shadow rounded-lg p-6 mb-8 hidden">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <span class="mr-2">👥</span> Manage Profiles & Members
+        <div id="user-management-section" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto mb-8 hidden">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-users text-blue-600"></i> Manage Profiles & Members
             </h3>
             <div id="admin-list" class="divide-y divide-gray-200">
                 <p class="text-gray-500 py-4">Loading members...</p>
@@ -53,58 +54,62 @@
         </div>
 
         <!-- Grid Section: Publish Announcement & Schedule Event -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 max-w-4xl mx-auto">
             <!-- Publish Announcement -->
-            <div id="publish-section" class="bg-white shadow rounded-lg p-6 hidden">
-                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <span class="mr-2">📢</span> Publish New Announcement
-                </h3>
-                <form id="announcement-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input type="text" id="ann-title" placeholder="Announcement title..." required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Details</label>
-                        <textarea id="ann-content" rows="3" placeholder="Write announcement details..." required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <input type="checkbox" id="ann-pinned" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
-                        <label for="ann-pinned" class="text-sm font-medium text-gray-700">Pin to top</label>
-                    </div>
-                    <button id="publish-announcement-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg mt-4 transition flex items-center justify-center space-x-2">
-                        <span>📢 Post Announcement</span>
-                    </button>
-                </form>
+            <div id="publish-section" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hidden flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-bullhorn text-blue-600"></i> Publish New Announcement
+                    </h3>
+                    <form id="announcement-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            <input type="text" id="ann-title" placeholder="Announcement title..." required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Details</label>
+                            <textarea id="ann-content" rows="3" placeholder="Write announcement details..." required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="ann-pinned" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="ann-pinned" class="text-sm font-medium text-gray-700">Pin to top</label>
+                        </div>
+                        <button id="publish-announcement-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition-all flex items-center justify-center space-x-2 text-sm">
+                            <span><i class="fas fa-bullhorn mr-1"></i> Post Announcement</span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Schedule Event -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <span class="mr-2">📅</span> Schedule New Event
-                </h3>
-                <form id="event-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
-                        <input type="text" id="evt-title" placeholder="e.g. Sunday Service, Bible Study" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
-                        <input type="datetime-local" id="evt-date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div class="pt-6">
-                        <button id="schedule-event-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg mt-4 transition flex items-center justify-center space-x-2">
-                            <span>📅 Schedule Event</span>
-                        </button>
-                    </div>
-                </form>
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-blue-600"></i> Schedule New Event
+                    </h3>
+                    <form id="event-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                            <input type="text" id="evt-title" placeholder="e.g. Sunday Service, Bible Study" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                            <input type="datetime-local" id="evt-date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div class="pt-6">
+                            <button id="schedule-event-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition-all flex items-center justify-center space-x-2 text-sm">
+                                <span><i class="fas fa-calendar-plus mr-1"></i> Schedule Event</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <!-- Leadership Inbox & Inquiries -->
-        <div class="bg-white shadow rounded-lg p-6 mb-8">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <span class="mr-2">📥</span> Leadership Inbox & Inquiries
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto mb-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-inbox text-blue-600"></i> Leadership Inbox & Inquiries
             </h3>
             <div id="inbox-messages-container" class="space-y-3">
                 <p class="text-gray-500 py-4">Loading inquiries...</p>
@@ -112,9 +117,9 @@
         </div>
 
         <!-- Active Board Bulletins -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <span class="mr-2">📋</span> Active Board Bulletins
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-clipboard-list text-blue-600"></i> Active Board Bulletins
             </h3>
             <div id="announcements-container" class="mt-4 space-y-2"><p class="text-gray-400 italic text-sm">Loading...</p></div>
         </div>
@@ -227,7 +232,7 @@
               container.innerHTML = '<p class="text-gray-500 italic text-sm p-2">No active bulletins posted yet.</p>';
               return;
             }
-            container.innerHTML = announcements.map(a => `<div class="p-3 bg-white dark:bg-gray-800 border rounded-lg shadow-sm mb-2"><div class="flex justify-between items-start"><h4 class="font-semibold text-gray-800 dark:text-gray-100">${escapeHTML(a.title || 'Bulletin')}</h4><button onclick="deleteAnnouncement('${a.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold">🗑️</button></div><p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${escapeHTML(a.content || '')}</p></div>`).join('');
+            container.innerHTML = announcements.map(a => `<div class="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mb-3 flex justify-between items-start"><div><h4 class="font-bold text-gray-900 text-sm">${escapeHTML(a.title || 'Bulletin')}</h4><p class="text-sm text-gray-600 mt-1">${escapeHTML(a.content || '')}</p></div><button onclick="deleteAnnouncement('${a.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold p-1" title="Delete Bulletin"><i class="fas fa-trash"></i></button></div>`).join('');
           } catch (err) {
             console.error('Failed to render announcements:', err);
             container.innerHTML = `<p class="text-red-500 text-xs">Error loading bulletins: ${escapeHTML(err.message)}</p>`;
@@ -248,9 +253,9 @@
             if (error) { container.innerHTML = "<p class='text-red-500 py-3'>Setup 'inbox' table in Supabase to view incoming mail records.</p>"; return; }
 
             container.innerHTML = messages && messages.length > 0 ? messages.map(m => `
-                <div class="p-4 bg-gray-50 border-l-4 border-emerald-500 rounded-r-md">
+                <div class="p-4 bg-blue-50 border-l-4 border-blue-600 rounded-r-xl">
                     <div class="flex justify-between items-center text-xs text-gray-500 mb-1">
-                        <strong class="text-gray-800">From: ${escapeHTML(m.sender_name || 'Anonymous Member')}</strong>
+                        <strong class="text-gray-900 font-semibold">From: ${escapeHTML(m.sender_name || 'Anonymous Member')}</strong>
                         <span>${new Date(m.created_at).toLocaleDateString()}</span>
                     </div>
                     <p class="text-sm text-gray-700 m-0">${escapeHTML(m.message)}</p>
@@ -283,34 +288,34 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email / ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Role</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Assign Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email / ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Role</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Assign Role</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${profiles.map(p => `
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                         ${escapeHTML(p.full_name || 'Unnamed Member')}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         ${escapeHTML(p.email || p.id)}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${p.role === 'admin' ? 'bg-purple-100 text-purple-800' : p.role === 'finance' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${p.role === 'admin' ? 'bg-purple-100 text-purple-800' : p.role === 'finance' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
                                             ${escapeHTML(p.role || 'user')}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center justify-end space-x-2">
-                                            <select id="role-select-${p.id}" class="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <select id="role-select-${p.id}" class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                 <option value="user" ${p.role === 'user' ? 'selected' : ''}>user</option>
                                                 <option value="finance" ${p.role === 'finance' ? 'selected' : ''}>finance</option>
                                                 <option value="admin" ${p.role === 'admin' ? 'selected' : ''}>admin</option>
                                             </select>
-                                            <button onclick="updateUserRole('${p.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md font-semibold transition">
+                                            <button onclick="updateUserRole('${p.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-semibold shadow transition">
                                                 Update Role
                                             </button>
                                         </div>
@@ -377,7 +382,7 @@
 
             const toast = document.createElement('div');
             toast.id = 'toast-notification';
-            toast.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center space-x-2 transition-all duration-300 transform translate-y-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`;
+            toast.className = `fixed bottom-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium flex items-center space-x-2 transition-all duration-300 transform translate-y-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`;
             toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${escapeHTML(message)}</span>`;
             
             document.body.appendChild(toast);

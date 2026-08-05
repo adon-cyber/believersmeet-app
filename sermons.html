@@ -48,6 +48,16 @@
         </button>
     </div>
 
+    <!-- Dual-Tab Toggle Navigation -->
+    <div class="flex border-b border-gray-200 bg-white rounded-xl shadow-sm px-4 pt-4">
+        <button id="tab-fellow-members" onclick="switchTab('fellow')" class="pb-3 px-6 font-bold text-sm border-b-2 border-blue-600 text-blue-600 transition-all flex items-center gap-2">
+            <i class="fas fa-church"></i> Fellow Church Members
+        </button>
+        <button id="tab-other-churches" onclick="switchTab('other')" class="pb-3 px-6 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all flex items-center gap-2">
+            <i class="fas fa-globe"></i> Other Churches
+        </button>
+    </div>
+
     <!-- Sermons Container -->
     <div id="sermons-container" class="space-y-4">
         <div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading sermons...</div>
@@ -91,6 +101,23 @@
 
 <script>
     let currentUserProfile = null;
+    let activeTab = 'fellow'; // 'fellow' or 'other'
+
+    function switchTab(tab) {
+        activeTab = tab;
+        const fellowBtn = document.getElementById('tab-fellow-members');
+        const otherBtn = document.getElementById('tab-other-churches');
+
+        if (tab === 'fellow') {
+            fellowBtn.className = "pb-3 px-6 font-bold text-sm border-b-2 border-blue-600 text-blue-600 transition-all flex items-center gap-2";
+            otherBtn.className = "pb-3 px-6 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all flex items-center gap-2";
+        } else {
+            otherBtn.className = "pb-3 px-6 font-bold text-sm border-b-2 border-blue-600 text-blue-600 transition-all flex items-center gap-2";
+            fellowBtn.className = "pb-3 px-6 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all flex items-center gap-2";
+        }
+
+        loadSermons();
+    }
 
     async function initApp() {
         let attempts = 0;
@@ -146,11 +173,17 @@
             return;
         }
 
-        const { data: sermons, error } = await window.sbClient
+        let query = window.sbClient
             .from('sermons')
-            .select('*')
-            .eq('church_id', currentUserProfile.church_id)
-            .order('created_at', { ascending: false });
+            .select('*');
+
+        if (activeTab === 'fellow') {
+            query = query.eq('church_id', currentUserProfile.church_id);
+        } else {
+            query = query.neq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data: sermons, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
             container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading sermons: ${escapeHtml(error.message)}</div>`;
