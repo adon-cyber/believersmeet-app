@@ -1,14 +1,14 @@
 /* --- 1. Root Variables & Reset --- */
 :root {
-    --primary: #007bff;
-    --primary-hover: #0056b3;
-    --background: #f4f6f9;
-    --text: #333333;
-    --text-light: #666666;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --background: #f9fafb;
+    --text: #1f2937;
+    --text-light: #6b7280;
     --card-bg: #ffffff;
-    --border: #e2e8f0;
-    --success: #2ec4b6;
-    --error: #e63946;
+    --border: #e5e7eb;
+    --success: #10b981;
+    --error: #ef4444;
 }
 
 * {
