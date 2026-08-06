@@ -41,7 +41,7 @@ nav {
     align-items: center;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
     flex-wrap: wrap;
     gap: 10px;
 }
@@ -53,16 +53,22 @@ nav a {
     font-weight: 500;
     transition: color 0.2s;
     font-size: 0.95rem;
+    padding: 10px 12px; /* Step 3: Tap Targets - at least 10px padding */
 }
 
 nav a:hover { color: #e2e8f0; }
-nav .brand { font-weight: bold; font-size: 1.2rem; color: white; margin-right: auto; }
+nav .brand { font-weight: bold; font-size: 1.2rem; color: white; margin-right: auto; padding: 10px 0; }
 
 main {
     max-width: 800px;
     margin: 30px auto;
     padding: 0 20px;
     width: 100%;
+}
+
+/* Step 2: Spacing & Overlaps - ensure body/content has enough padding-top for fixed/sticky headers */
+body {
+    padding-top: 64px;
 }
 
 /* Responsive adjustment for mobile */
@@ -72,20 +78,45 @@ main {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
-        padding: 0 !important;
+        padding-top: 60px !important; /* Step 2: Ensure content is not covered by navbar */
     }
     
     nav {
-        padding: 10px 12px;
+        padding: 8px 12px;
         justify-content: space-between;
         flex-wrap: wrap;
+        position: sticky;
+        top: 0;
+        z-index: 1000; /* Step 2: High z-index */
     }
     nav .brand {
         font-size: 1.1rem;
+        padding: 8px 0;
     }
-    nav a {
-        margin-right: 10px;
+    nav a, .nav-scrollable-row a {
+        margin-right: 8px;
         font-size: 0.9rem;
+        padding: 10px 14px !important; /* Step 3: Tap targets padding */
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    /* Step 1: Mobile Navbar Layout - Scrollable horizontal row so links don't squish */
+    .nav-scrollable-row {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        width: 100%;
+        gap: 8px;
+        padding: 4px 0 8px 0;
+    }
+    .nav-scrollable-row::-webkit-scrollbar {
+        display: none;
     }
     
     main, .container, .profile-container, .dashboard-container, .content-wrapper {
