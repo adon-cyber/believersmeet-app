@@ -67,9 +67,18 @@ main {
 
 /* Responsive adjustment for mobile */
 @media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
     nav {
         padding: 10px 12px;
         justify-content: space-between;
+        flex-wrap: wrap;
     }
     nav .brand {
         font-size: 1.1rem;
@@ -78,24 +87,85 @@ main {
         margin-right: 10px;
         font-size: 0.9rem;
     }
-    main { 
-        margin: 15px auto; 
-        padding: 0 12px; 
+    
+    main, .container, .profile-container, .dashboard-container, .content-wrapper {
+        margin: 15px auto !important;
+        padding: 0 15px !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
+    
     .hero h1 { 
         font-size: 2rem !important; 
     }
     .hero p { 
         font-size: 1rem !important; 
     }
+    
+    /* Form elements, inputs, buttons full width */
+    input, textarea, select, button, .btn {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
     button, .btn {
-        width: 100%;
         padding: 14px 20px;
         font-size: 1.05rem;
+        margin-bottom: 12px;
     }
     .cta-group {
-        flex-direction: column;
+        flex-direction: column !important;
         gap: 10px;
+    }
+
+    /* Column Alignments & Grids Stack */
+    .row, .grid, .feed-layout, .profile-grid, .dashboard-grid, .admin-grid, .chat-layout, .inbox-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        width: 100% !important;
+    }
+    
+    /* Specific components: Tables wrapped in responsive container */
+    table, .table-responsive, .admin-table-container {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Chat / Inbox bubbles & layout */
+    .chat-container, .inbox-container, .messages-list, .chat-box {
+        width: 100% !important;
+        padding: 10px !important;
+    }
+    .chat-bubble, .message-bubble {
+        max-width: 85% !important;
+        word-break: break-word;
+    }
+
+    /* Profiles & Fellow Members / Other Members tabs & grids */
+    .profile-tabs, .member-tabs, .fellow-members-grid, .other-members-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+    .profile-card, .member-card {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Spacing & Tap Targets */
+    a, button, .btn, input, select {
+        min-height: 44px; /* comfortable tap targets */
+    }
+    .card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
     }
 }
 
