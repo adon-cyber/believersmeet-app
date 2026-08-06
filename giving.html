@@ -492,21 +492,39 @@
                 throw new Error("User not authenticated or Supabase not initialized");
             }
 
+            // 1. Fetch logged-in user's profile to get church_id and church affiliation
+            const { data: userProfile, error: profileError } = await window.sbClient
+                .from('profiles')
+                .select('church_id')
+                .eq('id', loggedInUser.id)
+                .maybeSingle();
+
+            if (profileError || !userProfile || !userProfile.church_id) {
+                alert("Your account is not linked to a local church yet. Please join a church first.");
+                window.location.href = 'join-church.html';
+                return;
+            }
+
+            const userChurchId = userProfile.church_id;
             let financeUser = null;
             
+            // 2. Fetch the finance administrator of the logged-in user's own church (role === 'finance' AND church_id === userChurchId)
             const { data: financeProfiles, error: financeError } = await window.sbClient
                 .from('profiles')
-                .select('id, role, full_name, email')
+                .select('id, role, full_name, email, church_id')
                 .eq('role', 'finance')
+                .eq('church_id', userChurchId)
                 .limit(1);
 
             if (!financeError && financeProfiles && financeProfiles.length > 0) {
                 financeUser = financeProfiles[0];
             } else {
+                // Fallback: If no dedicated finance role found in the same church, look for an admin/super_admin of the same church
                 const { data: adminProfiles, error: adminError } = await window.sbClient
                     .from('profiles')
-                    .select('id, role, full_name, email')
+                    .select('id, role, full_name, email, church_id')
                     .or('role.eq.admin,role.eq.super_admin')
+                    .eq('church_id', userChurchId)
                     .limit(1);
 
                 if (!adminError && adminProfiles && adminProfiles.length > 0) {
@@ -515,12 +533,13 @@
             }
 
             if (!financeUser) {
-                alert("The finance department has not been assigned yet. Please contact system administration.");
+                alert("The finance department for your local church has not been assigned yet. Please contact your church administration.");
                 return;
             }
 
             const financeUserId = financeUser.id;
 
+            // 3. Check for existing conversation or insert message with church_id explicitly linked
             const { data: existingMessages, error: msgError } = await window.sbClient
                 .from('messages')
                 .select('id')
@@ -538,7 +557,8 @@
                         sender_id: loggedInUser.id,
                         receiver_id: financeUserId,
                         recipient_id: financeUserId,
-                        content: "Hello, I am reaching out regarding church giving and finance inquiries."
+                        content: "Hello, I am reaching out regarding church giving and finance inquiries.",
+                        church_id: userChurchId
                     }]);
 
                 if (insertError) {
@@ -546,7 +566,12 @@
                 }
             }
 
-            window.location.href = `inbox.html?recipient=${financeUserId}`;
+            // 4. Show success notification using the established blue notification theme
+            showSuccessToast("Your message has been securely sent to your local church's finance team.");
+
+            setTimeout(() => {
+                window.location.href = `inbox.html?recipient=${financeUserId}`;
+            }, 1200);
 
         } catch (err) {
             console.error("Error in contactFinanceTeam:", err);
