@@ -203,12 +203,34 @@ button:hover, .btn:hover { background-color: var(--primary-hover); }
     border-top: 1px solid var(--border); 
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+/* Option 1: Scrollable Row Navigation & Utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-/* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+  -webkit-overflow-scrolling: touch; /* Smooth touch inertia scrolling for iOS/WebKit */
+  scroll-behavior: smooth;
+}
+
+.nav-scrollable-row {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.nav-scrollable-row::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-scrollable-row a,
+.nav-scrollable-row button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }

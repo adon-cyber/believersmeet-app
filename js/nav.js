@@ -1,14 +1,11 @@
-// Central Dropdown Navigation Script (`js/nav.js`)
+// Central Navigation Script (`js/nav.js`) - Option 1: Scrollable Row
 (function() {
-    async function initDropdownNav() {
-        // 1. Locate #navbar container
+    async function initScrollableNav() {
         const navbarContainer = document.getElementById('navbar');
         if (!navbarContainer) {
-            console.error("Critical Error: Element with id 'navbar' not found in document body.");
             return;
         }
 
-        // 2. Determine user role from Supabase if available to conditionally add Admin Panel
         let isAdminOrLeader = false;
         try {
             let attempts = 0;
@@ -42,58 +39,51 @@
             console.warn("Could not fetch user profile for admin check in navigation:", err);
         }
 
-        // 3. Define all project files as selectable options
         const options = [
             { href: 'feed.html', label: '🌍 Feed' },
-            { href: 'groups.html', label: '🏡 Small Groups' },
+            { href: 'giving.html', label: 'Giving' },
             { href: 'sermons.html', label: '🎙️ Sermons' },
-            { href: 'testimonies.html', label: '🙌 Testimonies' },
-            { href: 'events.html', label: '📅 Events' },
+            { href: 'groups.html', label: '🏡 Small Groups' },
             { href: 'prayer-wall.html', label: '🙏 Prayer Wall' },
-            { href: 'inbox.html', label: '✉️ Messages' },
-            { href: 'profile.html', label: '👤 My Profile' }
+            { href: 'testimonies.html', label: '🙌 Testimonies' },
+            { href: 'inboxx.html', label: '✉️ Inbox' },
+            { href: 'events.html', label: '📅 Events' },
+            { href: 'profile.html', label: '👤 Profile' },
+            { href: 'settings.html', label: 'Settings' }
         ];
 
         if (isAdminOrLeader) {
             options.push({ href: 'admin.html', label: '⚙️ Admin Panel' });
         }
 
-        // Read current page pathname to set as active/selected
         const currentFilename = window.location.pathname.split('/').pop() || 'feed.html';
 
-        // Render the clear navigation dropdown box
         navbarContainer.innerHTML = `
-            <div style="background: #007bff; border-bottom: 1px solid #0056b3; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="BELIEVERS.LOGO.png" alt="Church Logo" style="height: 32px; width: 32px; object-fit: contain; border-radius: 50%; background: white; padding: 2px;" />
-                    <span style="font-weight: 700; color: #ffffff; font-size: 16px;">BelieversMeet</span>
+            <nav class="bg-blue-600 shadow-md sticky top-0 z-50" style="background-color: #007bff !important;">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <div class="flex items-center space-x-3 flex-shrink-0 mr-4">
+                            <a href="feed.html" class="text-xl font-bold text-white flex items-center" style="color: #ffffff !important;">
+                                <img src="BELIEVERS.LOGO.png" alt="Logo" class="w-8 h-8 rounded-full object-cover mr-2 bg-white p-0.5"> BelieversMeet
+                            </a>
+                        </div>
+                        <div class="nav-scrollable-row no-scrollbar flex items-center space-x-1 sm:space-x-3 py-2 px-2">
+                            ${options.map(opt => {
+                                const isActive = currentFilename === opt.href;
+                                const activeClasses = isActive ? 'font-bold text-blue-600 bg-white px-3 py-1.5 rounded-md shadow-sm' : 'font-medium text-white hover:text-blue-200 px-3 py-1.5 rounded-md transition-colors';
+                                return `<a href="${opt.href}" class="text-xs sm:text-sm ${activeClasses}" style="${isActive ? 'color: #007bff !important;' : 'color: #ffffff !important;'}">${opt.label}</a>`;
+                            }).join('')}
+                            <a href="#" onclick="if(window.sbClient) { window.sbClient.auth.signOut().then(() => window.location.href='login.html'); } else { window.location.href='login.html'; }" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-3 py-1.5 rounded-md transition-colors flex-shrink-0" style="color: #fecaca !important;">Logout</a>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <label for="central-nav-select" style="font-size: 13px; font-weight: 600; color: #ffffff;">Navigation:</label>
-                    <select id="central-nav-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #1e293b; font-size: 14px; font-weight: 500; outline: none; cursor: pointer; transition: border-color 0.2s;">
-                        <option value="" disabled>-- Select Page --</option>
-                        ${options.map(opt => `<option value="${opt.href}" ${currentFilename === opt.href ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                    </select>
-                </div>
-            </div>
+            </nav>
         `;
-
-        // 4 & 5. Attach change event listener so selecting any file immediately redirects
-        const selectEl = document.getElementById('central-nav-select');
-        if (selectEl) {
-            selectEl.addEventListener('change', (e) => {
-                const selectedValue = e.target.value;
-                if (selectedValue) {
-                    window.location.href = selectedValue;
-                }
-            });
-        }
     }
 
-    // Run initialization on DOMContentLoaded or immediately if already loaded
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDropdownNav);
+        document.addEventListener('DOMContentLoaded', initScrollableNav);
     } else {
-        initDropdownNav();
+        initScrollableNav();
     }
 })();
