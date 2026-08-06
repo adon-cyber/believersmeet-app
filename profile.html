@@ -7,73 +7,115 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-50">
-    <nav class="bg-white shadow-md">
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <a href="feed.html" class="text-xl font-bold text-emerald-600 flex-shrink-0 mr-4">BelieversMeet</a>
+                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
                 <div class="nav-scrollable-row no-scrollbar flex items-center space-x-1 sm:space-x-3 py-2 px-4">
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Giving</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md transition-colors">Profile</a>
-                    <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
-                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                    <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
+        
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-7xl mx-auto gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Member Profiles & Directory</h1>
+                <p class="text-blue-100 text-base">Manage your personal profile settings and connect with fellow believers.</p>
+            </div>
+        </div>
+
+        <!-- Success Notification Toast -->
+        <div id="success-toast" class="hidden fixed top-20 right-5 z-50 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 transition-opacity duration-300">
+            <i class="fas fa-check-circle text-xl"></i>
+            <span id="success-toast-msg" class="font-medium text-sm">Profile updated successfully!</span>
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-1 lg:grid-cols-3 mt-8">
             <div class="lg:col-span-1">
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">My Profile Settings</h2>
-                    <form id="profile-edit-form">
-                        <div class="mb-4">
-                            <label for="prof-name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                            <input type="text" id="prof-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fas fa-user-cog text-blue-600"></i> My Profile Settings
+                    </h2>
+                    <form id="profile-edit-form" class="space-y-4">
+                        <div>
+                            <label for="prof-name" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Full Name</label>
+                            <input type="text" id="prof-name" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="prof-cell" class="block text-sm font-medium text-gray-700 mb-2">Home Cell Group / Fellowship</label>
-                            <input type="text" id="prof-cell" placeholder="e.g., Bethany Center, Grace Cell" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        <div>
+                            <label for="prof-cell" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Home Cell Group / Fellowship</label>
+                            <input type="text" id="prof-cell" placeholder="e.g., Bethany Center, Grace Cell" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="prof-scripture" class="block text-sm font-medium text-gray-700 mb-2">Favorite Scripture Reference</label>
-                            <input type="text" id="prof-scripture" placeholder="e.g., Romans 8:28" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        <div>
+                            <label for="prof-scripture" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Favorite Scripture Reference</label>
+                            <input type="text" id="prof-scripture" placeholder="e.g., Romans 8:28" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         
-                        <div class="mb-6">
-                            <label for="prof-bio" class="block text-sm font-medium text-gray-700 mb-2">Short Bio / Christian Journey</label>
-                            <textarea id="prof-bio" rows="4" placeholder="Share a brief word about your walk or area of ministry..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea>
+                        <div>
+                            <label for="prof-bio" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Short Bio / Christian Journey</label>
+                            <textarea id="prof-bio" rows="4" placeholder="Share a brief word about your walk or area of ministry..." class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500"></textarea>
                         </div>
                         
-                        <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;" onmouseover="this.style.backgroundColor='#0056b3'" onmouseout="this.style.backgroundColor='#007bff'" class="w-full font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Save Profile Updates</button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors shadow-sm w-full">
+                            Save Profile Updates
+                        </button>
                     </form>
                     
-                    <div class="mt-6 pt-6 border-t border-gray-200">
-                        <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-2">Choose Profile Photo:</label>
-                        <input type="file" id="file-upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-600 hover:file:bg-emerald-100">
-                        <button onclick="uploadAvatar()" class="w-full mt-3 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Upload Photo</button>
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <label for="file-upload" class="block text-xs font-semibold text-gray-700 uppercase mb-2">Choose Profile Photo:</label>
+                        <input type="file" id="file-upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-3">
+                        <button onclick="uploadAvatar()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-camera mr-2"></i> Upload Photo
+                        </button>
                     </div>
                 </div>
             </div>
             
             <div class="lg:col-span-2">
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">Fellowship Directory</h2>
-                    
-                    <div class="mb-6">
-                        <input type="text" id="directory-search" class="search-box w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" placeholder="🔍 Search members by name or cell group..." autocomplete="off">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fas fa-users text-blue-600"></i> Fellowship Directory
+                    </h2>
+
+                    <!-- Category Tabs Navigation -->
+                    <div class="flex border-b border-gray-200 mb-6">
+                        <button id="tab-fellow" onclick="switchDirectoryTab('fellow')" class="flex-1 py-3 px-4 text-center font-semibold text-sm border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-church"></i> Fellow Church Members <span id="count-fellow" class="ml-1 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">0</span>
+                        </button>
+                        <button id="tab-other" onclick="switchDirectoryTab('other')" class="flex-1 py-3 px-4 text-center font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-globe"></i> Other Churches / Members <span id="count-other" class="ml-1 bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">0</span>
+                        </button>
                     </div>
                     
-                    <div id="directory-container" class="directory-list space-y-4">
+                    <div class="mb-6 relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="directory-search" class="w-full text-sm border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-blue-500 focus:border-blue-500" placeholder="Search members by name or cell group..." autocomplete="off">
+                    </div>
+                    
+                    <div id="directory-container" class="space-y-4">
                         <p class="text-center text-gray-500 py-8">Loading member records...</p>
                     </div>
                 </div>
@@ -81,15 +123,30 @@
         </div>
     </main>
 
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+        &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
+      </div>
+    </footer>
+
     <script>
         let loggedInUser = null;
-        let masterProfilesDataset = [];
+        let loggedInUserProfile = null;
+        let fellowMembersDataset = [];
+        let otherMembersDataset = [];
+        let currentActiveTab = 'fellow'; // 'fellow' or 'other'
 
         async function initializeProfileWorkspace() {
             let attempts = 0;
             while (!window.sbClient && attempts < 15) {
                 await new Promise(r => setTimeout(r, 200));
                 attempts++;
+            }
+
+            if (!window.sbClient) {
+                console.warn("Supabase client not initialized.");
+                return;
             }
 
             const { data: { user } } = await window.sbClient.auth.getUser();
@@ -99,20 +156,45 @@
             }
             loggedInUser = user;
 
-            await fetchAndPopulateMyProfile();
+            // Fetch logged in user profile
+            const { data: profile, error: profError } = await window.sbClient
+                .from('profiles')
+                .select('*, churches(name)')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (profError) {
+                console.warn("Error mapping user context: " + profError.message);
+            }
+
+            loggedInUserProfile = profile || {};
+
+            if (loggedInUserProfile) {
+                if (loggedInUserProfile.role === 'admin' || loggedInUserProfile.role === 'super_admin') {
+                    const adminLink = document.getElementById('admin-nav-link');
+                    if (adminLink) adminLink.classList.remove('hidden');
+                }
+            }
+
+            // Populate personal settings form
+            if (loggedInUserProfile.full_name !== undefined) {
+                document.getElementById('prof-name').value = loggedInUserProfile.full_name || '';
+                document.getElementById('prof-cell').value = loggedInUserProfile.home_cell || '';
+                document.getElementById('prof-scripture').value = loggedInUserProfile.favorite_scripture || '';
+                document.getElementById('prof-bio').value = loggedInUserProfile.bio || '';
+            }
+
             await fetchDirectoryRecords();
             
             document.getElementById('directory-search').addEventListener('input', runDirectoryFilter);
             document.getElementById('profile-edit-form').addEventListener('submit', handleProfileUpdateSubmission);
         }
 
-        // --- NEW: Upload Function ---
         async function uploadAvatar() {
             const fileInput = document.getElementById('file-upload');
             const file = fileInput.files[0];
             if (!file) return alert("Please select a file first.");
 
-            // Uploading to Supabase
             const fileName = `${loggedInUser.id}_${Date.now()}`;
             const { data, error } = await window.sbClient.storage
                 .from('avatars') 
@@ -120,7 +202,6 @@
 
             if (error) return alert("Upload failed: " + error.message);
 
-            // Get URL and update profile table
             const { data: urlData } = window.sbClient.storage.from('avatars').getPublicUrl(fileName);
             
             const { error: dbError } = await window.sbClient
@@ -131,36 +212,15 @@
             if (dbError) {
                 alert("Error updating profile link: " + dbError.message);
             } else {
-                alert("Photo updated successfully!");
-                location.reload();
-            }
-        }
-        // ----------------------------
-
-        async function fetchAndPopulateMyProfile() {
-            const { data: profile, error } = await window.sbClient
-                .from('profiles')
-                .select('*')
-                .eq('id', loggedInUser.id)
-                .single();
-
-            if (error) {
-                alert("Error mapping user context: " + error.message);
-                return;
-            }
-
-            if (profile) {
-                document.getElementById('prof-name').value = profile.full_name || '';
-                document.getElementById('prof-cell').value = profile.home_cell || '';
-                document.getElementById('prof-scripture').value = profile.favorite_scripture || '';
-                document.getElementById('prof-bio').value = profile.bio || '';
+                showSuccessToast("Photo updated successfully!");
+                setTimeout(() => location.reload(), 1500);
             }
         }
 
         async function fetchDirectoryRecords() {
             const { data: records, error } = await window.sbClient
                 .from('profiles')
-                .select('id, full_name, role, home_cell, favorite_scripture, bio')
+                .select('id, full_name, role, home_cell, favorite_scripture, bio, church_id, churches(name)')
                 .order('full_name', { ascending: true });
 
             if (error) {
@@ -168,38 +228,87 @@
                 return;
             }
 
-            masterProfilesDataset = records || [];
-            renderDirectoryCards(masterProfilesDataset);
+            const allProfiles = records || [];
+            const myChurchId = loggedInUserProfile.church_id || null;
+
+            fellowMembersDataset = [];
+            otherMembersDataset = [];
+
+            allProfiles.forEach(m => {
+                if (myChurchId && m.church_id === myChurchId) {
+                    fellowMembersDataset.push(m);
+                } else if (!myChurchId && !m.church_id) {
+                    // If neither has a church assigned, group them together or treat as fellow/unassigned
+                    fellowMembersDataset.push(m);
+                } else {
+                    otherMembersDataset.push(m);
+                }
+            });
+
+            // Update tab badges
+            document.getElementById('count-fellow').innerText = fellowMembersDataset.length;
+            document.getElementById('count-other').innerText = otherMembersDataset.length;
+
+            renderActiveDirectoryView();
+        }
+
+        function switchDirectoryTab(tabName) {
+            currentActiveTab = tabName;
+            const btnFellow = document.getElementById('tab-fellow');
+            const btnOther = document.getElementById('tab-other');
+
+            if (tabName === 'fellow') {
+                btnFellow.className = "flex-1 py-3 px-4 text-center font-semibold text-sm border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors flex items-center justify-center gap-2";
+                btnOther.className = "flex-1 py-3 px-4 text-center font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors flex items-center justify-center gap-2";
+            } else {
+                btnOther.className = "flex-1 py-3 px-4 text-center font-semibold text-sm border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors flex items-center justify-center gap-2";
+                btnFellow.className = "flex-1 py-3 px-4 text-center font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors flex items-center justify-center gap-2";
+            }
+
+            document.getElementById('directory-search').value = '';
+            renderActiveDirectoryView();
+        }
+
+        function renderActiveDirectoryView() {
+            const activeDataset = currentActiveTab === 'fellow' ? fellowMembersDataset : otherMembersDataset;
+            renderDirectoryCards(activeDataset);
         }
 
         function renderDirectoryCards(dataset) {
             const targetContainer = document.getElementById('directory-container');
 
             if (dataset.length === 0) {
-                targetContainer.innerHTML = `<p class="text-center text-gray-500 py-8">No registered believers match your current filter.</p>`;
+                const emptyMsg = currentActiveTab === 'fellow' 
+                    ? "No fellow church members found in your congregation yet." 
+                    : "No members from other churches found at this time.";
+                targetContainer.innerHTML = `<p class="text-center text-gray-500 py-8">${emptyMsg}</p>`;
                 return;
             }
 
             targetContainer.innerHTML = dataset.map(m => {
+                const isAdmin = m.role === 'admin' || m.role === 'super_admin' || m.role === 'finance';
                 const isMe = m.id === loggedInUser.id;
+                const churchName = m.churches?.name || (m.church_id ? 'Assigned Church' : 'Independent / General');
+                
                 return `
-                    <div class="member-card p-5 border border-gray-200 rounded-lg bg-white hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer" onclick="window.location.href='member-profile.html?id=${m.id}'">
+                    <div class="member-card p-5 border border-gray-200 rounded-xl bg-white hover:border-blue-300 hover:shadow-md transition-all cursor-pointer" onclick="window.location.href='member-profile.html?id=${m.id}'">
                         <div class="flex items-center justify-between mb-3">
-                            <strong class="text-lg font-semibold text-gray-900">${escapeHTML(m.full_name)}</strong>
+                            <strong class="text-lg font-bold text-gray-900">${escapeHTML(m.full_name)}</strong>
                             <div class="flex items-center space-x-2">
-                                ${isMe ? '<span class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">You</span>' : ''}
-                                <span class="px-2 py-1 text-xs font-medium ${m.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'} rounded-full">${m.role === 'admin' ? 'Leadership' : 'Member'}</span>
+                                ${isMe ? '<span class="px-2.5 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">You</span>' : ''}
+                                <span class="px-2.5 py-1 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full"><i class="fas fa-church mr-1"></i> ${escapeHTML(churchName)}</span>
+                                <span class="px-2.5 py-1 text-xs font-semibold ${isAdmin ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'} rounded-full">${isAdmin ? 'Leadership' : 'Member'}</span>
                             </div>
                         </div>
                         
                         <div class="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                            ${m.home_cell ? '<span class="flex items-center"><span class="mr-1">🏡</span> Cell: <strong class="ml-1">' + escapeHTML(m.home_cell) + '</strong></span>' : ''}
+                            ${m.home_cell ? '<span class="flex items-center"><i class="fas fa-home text-blue-600 mr-1.5"></i> Cell: <strong class="ml-1 text-gray-900">' + escapeHTML(m.home_cell) + '</strong></span>' : ''}
                         </div>
 
                         ${m.bio ? '<p class="text-gray-700 text-sm mb-3 whitespace-pre-wrap">' + escapeHTML(m.bio) + '</p>' : ''}
                         
-                        ${m.favorite_scripture ? '<div class="mt-3 pl-3 border-l-4 border-emerald-500 bg-emerald-50 p-2 rounded-r-lg">' +
-                            '<div class="text-xs font-medium text-emerald-800 mb-1">📖 Favorite Scripture</div>' +
+                        ${m.favorite_scripture ? '<div class="mt-3 pl-3 border-l-4 border-blue-600 bg-blue-50 p-3 rounded-r-xl">' +
+                            '<div class="text-xs font-bold text-blue-900 mb-1 flex items-center gap-1.5"><i class="fas fa-book-open"></i> Favorite Scripture</div>' +
                             '<div class="text-sm text-gray-700 italic">"' + escapeHTML(m.favorite_scripture) + '"</div>' +
                         '</div>' : ''}
                     </div>
@@ -209,11 +318,14 @@
 
         function runDirectoryFilter(e) {
             const query = e.target.value.toLowerCase().trim();
-            const filtered = masterProfilesDataset.filter(p => {
+            const baseDataset = currentActiveTab === 'fellow' ? fellowMembersDataset : otherMembersDataset;
+            
+            const filtered = baseDataset.filter(p => {
                 const nameMatch = p.full_name?.toLowerCase().includes(query);
                 const cellMatch = p.home_cell?.toLowerCase().includes(query);
                 const scriptureMatch = p.favorite_scripture?.toLowerCase().includes(query);
-                return nameMatch || cellMatch || scriptureMatch;
+                const churchMatch = p.churches?.name?.toLowerCase().includes(query);
+                return nameMatch || cellMatch || scriptureMatch || churchMatch;
             });
             renderDirectoryCards(filtered);
         }
@@ -221,7 +333,6 @@
         async function handleProfileUpdateSubmission(e) {
             e.preventDefault();
             
-            // Show a loading state on the button
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerText;
             submitBtn.innerText = "Saving...";
@@ -237,17 +348,25 @@
                 })
                 .eq('id', loggedInUser.id);
 
-            // Reset button
             submitBtn.innerText = originalText;
             submitBtn.disabled = false;
 
             if (error) {
                 alert("Profile sync failure: " + error.message);
             } else {
-                alert("Praise God! Your profile parameters have been updated.");
-                // Refresh local data and re-render
+                showSuccessToast("Praise God! Your profile parameters have been updated.");
                 await fetchDirectoryRecords(); 
             }
+        }
+
+        function showSuccessToast(message) {
+            const toast = document.getElementById('success-toast');
+            const msgEl = document.getElementById('success-toast-msg');
+            if (msgEl) msgEl.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
         }
 
         function escapeHTML(str) {

@@ -382,7 +382,7 @@
 
             const toast = document.createElement('div');
             toast.id = 'toast-notification';
-            toast.className = `fixed bottom-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium flex items-center space-x-2 transition-all duration-300 transform translate-y-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`;
+            toast.className = `fixed bottom-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium flex items-center space-x-2 transition-all duration-300 transform translate-y-0 ${type === 'success' ? 'bg-blue-600' : 'bg-red-600'}`;
             toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${escapeHTML(message)}</span>`;
             
             document.body.appendChild(toast);

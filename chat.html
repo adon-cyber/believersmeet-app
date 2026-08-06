@@ -169,6 +169,7 @@
 
     async function fetchMessages() {
         const container = document.getElementById('messages-container');
+        console.log("Fetching messages for conversation between:", currentUser.id, "and target:", targetUserId);
         try {
             const { data: messages, error } = await window.sbClient
                 .from('messages')
@@ -177,14 +178,16 @@
                 .order('created_at', { ascending: true });
 
             if (error) {
-                console.error("Error fetching messages:", error);
-                container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages.</div>`;
+                console.error("Supabase error fetching messages:", error.message, error.details, error.hint);
+                container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages: ${escapeHTML(error.message)}</div>`;
                 return;
             }
 
+            console.log("Fetched messages successfully:", messages);
             renderMessages(messages || []);
         } catch (e) {
             console.error("Exception fetching messages:", e);
+            container.innerHTML = `<div class="text-center text-red-500 py-4">Network or unexpected error loading messages. Check console.</div>`;
         }
     }
 
