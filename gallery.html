@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+<!-- Navigation Bar -->
+<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
+            <div class="nav-scrollable-row no-scrollbar flex items-center space-x-1 sm:space-x-3 py-2 px-4 overflow-x-auto">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                <a href="gallery.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Gallery</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors flex-shrink-0" style="color: #fecaca !important;">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content Area -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full">
+    
+    <!-- Page Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 mb-10 text-white shadow-md">
+        <div class="max-w-3xl">
+            <span class="bg-blue-500 bg-opacity-40 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Community Moments</span>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">Church Photo Gallery</h1>
+            <p class="text-blue-100 text-base sm:text-lg leading-relaxed">
+                Explore fellowship moments, worship services, and community events captured through our lens.
+            </p>
+        </div>
+    </div>
+
+    <!-- Image Gallery Grid (CSS Grid: 3 cols desktop, 2 cols tablet, 1 col mobile) -->
+    <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Static Placeholder Item 1 -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
+            <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
+                <img src="images/meet2.jpg" alt="Sunday Worship Service" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500" style="max-width: 100%; object-fit: cover;">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> Sunday Worship Experience</span>
+                </div>
+            </div>
+            <div class="p-4 flex items-center justify-between bg-white">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-sm">Sunday Worship</h3>
+                    <p class="text-xs text-gray-500">Main Sanctuary Celebration</p>
+                </div>
+                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full">Community</span>
+            </div>
+        </div>
+
+        <!-- Static Placeholder Item 2 -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
+            <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
+                <img src="images/BELIEVERS.LOGO.png" alt="Believers Logo & Fellowship" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 bg-blue-50 p-8" style="max-width: 100%; object-fit: cover;">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> BelieversMeet Identity</span>
+                </div>
+            </div>
+            <div class="p-4 flex items-center justify-between bg-white">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-sm">Believers Fellowship</h3>
+                    <p class="text-xs text-gray-500">United in Faith</p>
+                </div>
+                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full">Branding</span>
+            </div>
+        </div>
+
+        <!-- Static Placeholder Item 3 -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
+            <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
+                <img src="images/meet2.jpg" alt="Youth Fellowship Gathering" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 filter brightness-95" style="max-width: 100%; object-fit: cover;">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> Youth Ministry Outing</span>
+                </div>
+            </div>
+            <div class="p-4 flex items-center justify-between bg-white">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-sm">Youth Fellowship</h3>
+                    <p class="text-xs text-gray-500">Next Generation Leaders</p>
+                </div>
+                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full">Youth</span>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200 mt-auto py-6">
+    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+        &copy; 2026 BelieversMeet. All rights reserved. Building communities in faith and love.
+    </div>
+</footer>
+
+<script>
+    function logoutUser(e) {
+        e.preventDefault();
+        if (window.sbClient) {
+            window.sbClient.auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            });
+        } else {
+            window.location.href = 'login.html';
+        }
+    }
+
+    async function initGallery() {
+        try {
+            let attempts = 0;
+            while (!window.sbClient && attempts < 15) {
+                await new Promise(r => setTimeout(r, 150));
+                attempts++;
+            }
+
+            if (!window.sbClient) return;
+
+            const grid = document.getElementById('gallery-grid');
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            
+            let query = window.sbClient.from('gallery_images').select('*');
+
+            if (user) {
+                const { data: profile } = await window.sbClient
+                    .from('profiles')
+                    .select('role, church_id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profile) {
+                    if (profile.role === 'admin' || profile.role === 'super_admin') {
+                        const adminNav = document.getElementById('admin-nav-link');
+                        if (adminNav) adminNav.classList.remove('hidden');
+                    }
+
+                    // Optional but recommended: Filter the query so members only see photos uploaded for their specific church
+                    if (profile.church_id) {
+                        query = query.eq('church_id', profile.church_id);
+                    }
+                }
+            }
+
+            // Fetch images ordering by the most recent uploads first
+            const { data: galleryImages, error } = await query.order('created_at', { ascending: false });
+
+            if (error) {
+                console.warn("Could not fetch gallery images:", error.message);
+                return;
+            }
+
+            if (galleryImages && galleryImages.length > 0) {
+                grid.innerHTML = galleryImages.map(img => `
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
+                        <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
+                            <img src="${escapeHTML(img.image_url)}" alt="${escapeHTML(img.caption || 'Church Memory')}" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500" style="max-width: 100%; object-fit: cover;">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                                <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> ${escapeHTML(img.caption || 'Fellowship Memory')}</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex items-center justify-between bg-white">
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-sm truncate max-w-xs">${escapeHTML(img.caption || 'Community Memory')}</h3>
+                                <p class="text-xs text-gray-500">By ${escapeHTML(img.uploader_name || 'Church Admin')} &bull; ${new Date(img.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full flex-shrink-0">Memory</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500"><i class="fas fa-images text-4xl mb-3 text-gray-300"></i><p>No gallery memories uploaded for your church yet.</p></div>';
+            }
+        } catch (err) {
+            console.warn("Gallery initialization error:", err);
+        }
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.toString().replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    document.addEventListener('DOMContentLoaded', initGallery);
+</script>
+
+</body>
+</html>

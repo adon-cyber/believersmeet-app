@@ -53,6 +53,26 @@
             </div>
         </div>
 
+        <!-- Upload Gallery Memory Section -->
+        <div id="gallery-upload-section" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto mb-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-images text-blue-600"></i> Upload Gallery Memory
+            </h3>
+            <form id="gallery-upload-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Select Photo</label>
+                    <input type="file" id="gallery-file-input" accept="image/*" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Caption (Optional)</label>
+                    <input type="text" id="gallery-caption-input" placeholder="Enter a caption or description for this memory..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <button id="gallery-upload-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition-all flex items-center justify-center space-x-2 text-sm">
+                    <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload Photo</span>
+                </button>
+            </form>
+        </div>
+
         <!-- Grid Section: Publish Announcement & Schedule Event -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 max-w-4xl mx-auto">
             <!-- Publish Announcement -->
@@ -347,6 +367,62 @@
                 showNotification("Failed to update role: " + err.message, "error");
             }
         }
+
+        // --- GALLERY UPLOAD HANDLER ---
+        document.getElementById('gallery-upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('gallery-upload-btn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading Memory...`;
+
+            try {
+                const fileInput = document.getElementById('gallery-file-input');
+                const captionInput = document.getElementById('gallery-caption-input');
+                
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    throw new Error("Please select an image file to upload.");
+                }
+
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const filePath = `${fileName}`;
+
+                // Upload to Supabase Storage bucket 'gallery'
+                const { data: uploadData, error: uploadError } = await window.sbClient.storage
+                    .from('gallery')
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    // If bucket doesn't exist or permissions issue, provide clear instruction or try 'memories'
+                    throw new Error("Storage upload failed: " + uploadError.message);
+                }
+
+                // Get Public URL
+                const { data: { publicUrl } } = window.sbClient.storage
+                    .from('gallery')
+                    .getPublicUrl(filePath);
+
+                // Insert into gallery_images table
+                const { error: dbError } = await window.sbClient.from('gallery_images').insert([{
+                    image_url: publicUrl,
+                    caption: captionInput.value.trim(),
+                    church_id: currentUserProfile.church_id,
+                    uploader_name: currentUserProfile.full_name || 'Admin'
+                }]);
+
+                if (dbError) throw dbError;
+
+                showNotification("Photo uploaded successfully!", "success");
+                e.target.reset();
+            } catch (err) {
+                showNotification("Error: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        });
 
         // --- EVENT HANDLER ---
         document.getElementById('event-form').addEventListener('submit', async (e) => {

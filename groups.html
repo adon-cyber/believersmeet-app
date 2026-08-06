@@ -234,6 +234,8 @@
             // Always display a clear joining option for non-admin users or alongside admin view if desired, 
             // but let's make sure the join/request button is distinctly visible on every card!
             const isMember = joinedGroupIds.has(group.id);
+            let membersListHtml = '';
+            
             if (isMember) {
                 dynamicActionRow += `
                     <div class="pt-3 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
@@ -262,11 +264,75 @@
                             <div class="flex items-center gap-2"><span>🕒</span><span>${escapeHtml(group.meeting_time)}</span></div>
                             <div class="flex items-center gap-2"><span>👤</span><span>Led by ${escapeHtml(group.leader_name)}</span></div>
                         </div>
+                        ${isMember ? `
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-users text-blue-600"></i> Group Members</h4>
+                                <div id="group-members-${group.id}" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                    <p class="text-xs text-gray-400 italic">Loading members...</p>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                     ${dynamicActionRow}
                 </div>
             `;
         }).join('');
+
+        // Fetch and populate members for joined groups
+        groups.forEach(async group => {
+            if (joinedGroupIds.has(group.id)) {
+                const membersContainer = document.getElementById(`group-members-${group.id}`);
+                if (membersContainer) {
+                    try {
+                        // Fetch group_members joined with profiles, filtering by church if profile has church_id
+                        let query = window.sbClient
+                            .from('group_members')
+                            .select('user_id, profiles(id, full_name, avatar_url, church_id)')
+                            .eq('group_id', group.id);
+
+                        const { data: memData, error: memErr } = await query;
+
+                        if (memErr) throw memErr;
+
+                        if (memData && memData.length > 0) {
+                            // Filter so members only see users whose church matches the logged-in user's church
+                            const churchFilteredMembers = memData.filter(m => {
+                                const p = m.profiles;
+                                if (!p) return false;
+                                if (currentUserProfile?.church_id && p.church_id && p.church_id !== currentUserProfile.church_id) {
+                                    return false;
+                                }
+                                return true;
+                            });
+
+                            if (churchFilteredMembers.length > 0) {
+                                membersContainer.innerHTML = churchFilteredMembers.map(m => {
+                                    const p = m.profiles || {};
+                                    const avatar = p.avatar_url || 'images/BELIEVERS.LOGO.png';
+                                    const name = p.full_name || 'Fellowship Member';
+                                    return `
+                                        <div class="flex items-center justify-between text-xs py-1 px-2 bg-blue-50 rounded-lg">
+                                            <div class="flex items-center space-x-2">
+                                                <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" class="w-6 h-6 rounded-full object-cover">
+                                                <span class="font-semibold text-gray-800">${escapeHtml(name)}</span>
+                                            </div>
+                                            <span class="text-[10px] text-blue-600 font-medium">Member</span>
+                                        </div>
+                                    `;
+                                }).join('');
+                            } else {
+                                membersContainer.innerHTML = '<p class="text-xs text-gray-400 italic">No church members found in this group.</p>';
+                            }
+                        } else {
+                            membersContainer.innerHTML = '<p class="text-xs text-gray-400 italic">No members in this group yet.</p>';
+                        }
+                    } catch (err) {
+                        console.error('Error loading group members:', err);
+                        membersContainer.innerHTML = '<p class="text-xs text-red-400">Failed to load members.</p>';
+                    }
+                }
+            }
+        });
     }
 
     async function loadChurchGroups(churchId) {
