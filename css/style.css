@@ -102,10 +102,12 @@ body {
         align-items: center;
     }
     
-    /* Step 1: Mobile Navbar Layout - Scrollable horizontal row so links don't squish */
+    /* Step 1: Fix the Secondary Navigation */
     .nav-scrollable-row {
         display: flex;
+        flex-wrap: nowrap;
         overflow-x: auto;
+        max-width: 100%;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
@@ -119,11 +121,26 @@ body {
         display: none;
     }
     
-    main, .container, .profile-container, .dashboard-container, .content-wrapper {
-        margin: 15px auto !important;
-        padding: 0 15px !important;
+    /* Step 2: Fix Feed Cards and Containers */
+    main, .container, .profile-container, .dashboard-container, .content-wrapper, .card, .post-card, .feed-container, #feed-container {
         width: 100% !important;
         max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin: 15px auto !important;
+        padding: 0 15px !important;
+    }
+
+    /* Step 3: Lock the Body */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+        padding-top: 60px !important;
     }
     
     .hero h1 { 
