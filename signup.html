@@ -69,11 +69,6 @@
                     </select>
                 </div>
 
-                <div id="church-select-container">
-                    <label for="churchCodeInput" class="block text-sm font-medium text-gray-700 mb-1">Church Code</label>
-                    <input type="text" id="churchCodeInput" placeholder="e.g., JINJA2026" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </div>
-
                 <div>
                     <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                         Sign Up
@@ -112,20 +107,6 @@
             inputField.type = inputField.type === 'password' ? 'text' : 'password';
         }
 
-        document.getElementById('role-select').addEventListener('change', (e) => {
-            const role = e.target.value;
-            const churchContainer = document.getElementById('church-select-container');
-            const churchInput = document.getElementById('churchCodeInput');
-            if (role === 'admin') {
-                churchContainer.classList.add('hidden');
-                churchInput.removeAttribute('required');
-                churchInput.value = '';
-            } else {
-                churchContainer.classList.remove('hidden');
-                churchInput.setAttribute('required', 'required');
-            }
-        });
-
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errBox = document.getElementById('error-message');
@@ -142,7 +123,6 @@
             const confirmPassword = document.getElementById('confirm-password').value;
             const fullName = document.getElementById('full-name').value.trim();
             const role = document.getElementById('role-select').value;
-            const churchCode = document.getElementById('churchCodeInput') ? document.getElementById('churchCodeInput').value.trim() : '';
 
             if (password !== confirmPassword) {
                 errBox.textContent = "Passwords do not match.";
@@ -150,36 +130,6 @@
                 btn.disabled = false; 
                 btn.textContent = "Sign Up";
                 return;
-            }
-
-            let churchUuid = null;
-            if (role === 'member') {
-                if (!churchCode) {
-                    alert("Invalid Church Code. Please check with your church leadership");
-                    errBox.textContent = "Invalid Church Code. Please check with your church leadership";
-                    errBox.classList.remove('hidden');
-                    btn.disabled = false; 
-                    btn.textContent = "Sign Up";
-                    return;
-                }
-
-                // Query church by code (checking both join_code and code)
-                const { data: church, error: churchQueryError } = await window.sbClient
-                    .from('churches')
-                    .select('id, name')
-                    .or(`join_code.eq.${churchCode.toUpperCase()},code.eq.${churchCode.toUpperCase()}`)
-                    .maybeSingle();
-
-                if (churchQueryError || !church) {
-                    alert("Invalid Church Code. Please check with your church leadership");
-                    errBox.textContent = "Invalid Church Code. Please check with your church leadership";
-                    errBox.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.textContent = "Sign Up";
-                    return;
-                }
-
-                churchUuid = church.id;
             }
 
             try {
@@ -195,11 +145,6 @@
                     is_verified: false
                 };
 
-                if (role === 'member' && churchUuid) {
-                    profileData.church_id = churchUuid;
-                    localStorage.setItem('church_id', churchUuid);
-                }
-
                 const { error: profileError } = await window.sbClient
                     .from('profiles')
                     .upsert(profileData);
@@ -209,11 +154,11 @@
                 if (role === 'admin') {
                     window.location.replace('register-church.html');
                 } else {
-                    window.location.replace('feed.html');
+                    window.location.replace('join-church.html');
                 }
             } catch (err) {
                 errBox.textContent = "Error: " + err.message;
-                errBox.classList.remove('hidden');
+                errBox.classList.add('hidden');
                 btn.disabled = false;
                 btn.textContent = "Sign Up";
             }
