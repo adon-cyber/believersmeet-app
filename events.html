@@ -300,8 +300,7 @@
 
         const { data: events, error } = await window.sbClient
             .from('events')
-            .select('*, event_invitations!inner(*)')
-            .eq('event_invitations.member_id', loggedInUser.id)
+            .select('*')
             .order('event_date', { ascending: true });
 
         if (error) {
