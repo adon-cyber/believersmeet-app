@@ -51,6 +51,7 @@
                         <input type="password" id="password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16" placeholder="••••••••">
                         <button type="button" onclick="togglePasswordVisibility('password')" class="absolute inset-y-0 right-0 px-3 flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none">Show/Hide</button>
                     </div>
+                    <p class="mt-1 text-xs text-gray-500">Must be at least 8 characters long, including uppercase, lowercase, number, and special character (@$!%*?&).</p>
                 </div>
 
                 <div>
@@ -128,6 +129,15 @@
                 errBox.textContent = "Passwords do not match.";
                 errBox.classList.remove('hidden');
                 btn.disabled = false; 
+                btn.textContent = "Sign Up";
+                return;
+            }
+
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!passwordRegex.test(password)) {
+                errBox.textContent = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+                errBox.classList.remove('hidden');
+                btn.disabled = false;
                 btn.textContent = "Sign Up";
                 return;
             }
