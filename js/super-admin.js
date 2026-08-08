@@ -66,6 +66,8 @@ async function initSuperAdmin() {
 
     // If verified as super_admin, load all users and churches
     await loadAllUsersAndChurches();
+    await loadViolationReports();
+    populateChurchDropdowns();
 
     // Wire up search input filter
     const searchInput = document.getElementById('user-search-input');
@@ -73,6 +75,154 @@ async function initSuperAdmin() {
         searchInput.addEventListener('input', (e) => {
             filterAndRenderUsers(e.target.value);
         });
+    }
+}
+
+function toggleChurchSelect(value) {
+    const container = document.getElementById('broadcast-church-container');
+    if (container) {
+        if (value === 'church') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+}
+
+function populateChurchDropdowns() {
+    const select = document.getElementById('broadcast-church-id');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select Church...</option>';
+    for (const [id, name] of Object.entries(allChurchesMap)) {
+        select.innerHTML += `<option value="${escapeHTML(id)}">${escapeHTML(name)}</option>`;
+    }
+}
+
+async function handleSendBroadcast(event) {
+    event.preventDefault();
+    const targetType = document.getElementById('broadcast-target-type').value;
+    const churchId = document.getElementById('broadcast-church-id').value;
+    const title = document.getElementById('broadcast-title').value;
+    const content = document.getElementById('broadcast-content').value;
+
+    if (targetType === 'church' && !churchId) {
+        alert("Please select a target church.");
+        return;
+    }
+
+    try {
+        const { error } = await window.sbClient
+            .from('announcements')
+            .insert({
+                sender_id: currentUserProfile.id,
+                target_type: targetType,
+                target_id: targetType === 'church' ? churchId : null,
+                title: title,
+                content: content
+            });
+
+        if (error) throw error;
+
+        showNotification("Announcement / Message broadcast successfully!", "success");
+        document.getElementById('broadcast-form').reset();
+        toggleChurchSelect('all');
+    } catch (err) {
+        showNotification("Failed to broadcast message: " + err.message, "error");
+    }
+}
+
+async function loadViolationReports() {
+    const container = document.getElementById('violations-list-container');
+    if (!container) return;
+
+    container.innerHTML = `<div class="text-center py-6 text-gray-500 italic">Loading violation reports...</div>`;
+
+    try {
+        const { data: violations, error } = await window.sbClient
+            .from('violations')
+            .select(`
+                *,
+                reported_user:profiles!reported_user_id(id, full_name, email, role, is_blocked),
+                reporter:profiles!reporter_id(id, full_name, email)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!violations || violations.length === 0) {
+            container.innerHTML = `<div class="text-center py-8 text-gray-500 italic bg-gray-50 rounded-xl border border-dashed border-gray-200">No violation reports found. Platform is fully compliant.</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        violations.forEach(v => {
+            const reportedName = v.reported_user ? v.reported_user.full_name || v.reported_user.email : 'Unknown User';
+            const reporterName = v.reporter ? v.reporter.full_name || v.reporter.email : 'Anonymous / System';
+            const isBlocked = v.reported_user && v.reported_user.is_blocked;
+            const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+
+            const card = document.createElement('div');
+            card.className = 'p-4 rounded-xl border border-gray-200 bg-gray-50 flex flex-col gap-3';
+            card.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${statusColor}">${escapeHTML(v.status.toUpperCase())}</span>
+                        <h4 class="text-sm font-bold text-gray-900 mt-1">Reported User: <span class="text-red-600">${escapeHTML(reportedName)}</span></h4>
+                        <p class="text-xs text-gray-500">Reason: <strong class="text-gray-700">${escapeHTML(v.reason)}</strong></p>
+                    </div>
+                    <span class="text-xs text-gray-400">${new Date(v.created_at).toLocaleDateString()}</span>
+                </div>
+                ${v.details ? `<p class="text-xs text-gray-600 bg-white p-2.5 rounded-lg border border-gray-200">"${escapeHTML(v.details)}"</p>` : ''}
+                <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-xs">
+                    <span class="text-gray-500">Reported by: ${escapeHTML(reporterName)}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg font-medium transition-colors">Mark Reviewed</button>
+                        ${isBlocked ? 
+                            `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Unblock User</button>` :
+                            `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Block / Deactivate</button>`
+                        }
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        container.innerHTML = `<div class="text-center py-6 text-red-500 text-sm">Failed to load violations: ${escapeHTML(err.message)}</div>`;
+    }
+}
+
+async function updateViolationStatus(violationId, newStatus) {
+    try {
+        const { error } = await window.sbClient
+            .from('violations')
+            .update({ status: newStatus })
+            .eq('id', violationId);
+
+        if (error) throw error;
+        showNotification("Violation report status updated.", "success");
+        await loadViolationReports();
+    } catch (err) {
+        showNotification("Failed to update status: " + err.message, "error");
+    }
+}
+
+async function toggleBlockUser(userId, blockStatus) {
+    if (!confirm(`Are you sure you want to ${blockStatus ? 'BLOCK / DEACTIVATE' : 'UNBLOCK'} this user account?`)) {
+        return;
+    }
+
+    try {
+        const { error } = await window.sbClient
+            .from('profiles')
+            .update({ is_blocked: blockStatus })
+            .eq('id', userId);
+
+        if (error) throw error;
+        showNotification(`User account successfully ${blockStatus ? 'blocked' : 'unblocked'}.`, "success");
+        await loadAllUsersAndChurches();
+        await loadViolationReports();
+    } catch (err) {
+        showNotification("Failed to update account status: " + err.message, "error");
     }
 }
 

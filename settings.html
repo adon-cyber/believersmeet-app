@@ -66,6 +66,14 @@
                 <input type="file" id="image-upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-600 hover:file:bg-emerald-100 mb-4">
                 <button onclick="uploadProfileImage()" id="upload-btn" class="w-full py-2 px-4 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">Upload New Photo</button>
             </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-medium text-gray-900">Platform Guidelines & Standards</h2>
+                    <p class="text-sm text-gray-500">Read our community terms and rules.</p>
+                </div>
+                <button onclick="openTermsModal(event)" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">View Terms & Rules</button>
+            </div>
         </div>
     </main>
 
@@ -173,6 +181,37 @@
             e.preventDefault();
             await window.sbClient.auth.signOut();
             window.location.replace('login.html');
+        }
+
+        function openTermsModal(e) {
+            e.preventDefault();
+            let modal = document.getElementById('terms-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'terms-modal';
+                modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[80vh]">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <h3 class="text-xl font-bold text-gray-900"><i class="fas fa-file-contract text-emerald-600 mr-2"></i>Platform Terms & Community Rules</h3>
+                            <button onclick="document.getElementById('terms-modal').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+                        </div>
+                        <div class="space-y-4 text-sm text-gray-600">
+                            <p>Welcome to BelieversMeet. By registering and participating in our faith community, you agree to abide by the following standards:</p>
+                            <h4 class="font-bold text-gray-900">1. Christian Character & Respect</h4>
+                            <p>All members must treat others with Christ-like love, patience, and respect. Harassment, hate speech, bullying, or abusive behavior will result in immediate account deactivation.</p>
+                            <h4 class="font-bold text-gray-900">2. Authentic Fellowship</h4>
+                            <p>Accounts must represent real individuals or recognized fellowship groups. Impersonation or fraudulent representation is strictly prohibited.</p>
+                            <h4 class="font-bold text-gray-900">3. Content Moderation & Violations</h4>
+                            <p>Admins and users can report any breach of these terms using the "Report Violation" mechanism. Super Administrators hold final authority to review and block offending accounts.</p>
+                        </div>
+                        <div class="mt-6 text-right">
+                            <button onclick="document.getElementById('terms-modal').remove()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-sm font-medium">Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
         }
 
         loadProfile();

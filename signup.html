@@ -112,8 +112,11 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-        &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500 space-y-2">
+        <p>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</p>
+        <p>
+            <a href="#" onclick="openTermsModal(event)" class="text-indigo-600 hover:text-indigo-800 font-medium underline">Terms & Rules</a>
+        </p>
       </div>
     </footer>
 
@@ -229,6 +232,37 @@
         });
 
         loadChurches();
+
+        function openTermsModal(e) {
+            e.preventDefault();
+            let modal = document.getElementById('terms-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'terms-modal';
+                modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[80vh]">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                            <h3 class="text-xl font-bold text-gray-900"><i class="fas fa-file-contract text-indigo-600 mr-2"></i>Platform Terms & Community Rules</h3>
+                            <button onclick="document.getElementById('terms-modal').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+                        </div>
+                        <div class="space-y-4 text-sm text-gray-600">
+                            <p>Welcome to BelieversMeet. By registering and participating in our faith community, you agree to abide by the following standards:</p>
+                            <h4 class="font-bold text-gray-900">1. Christian Character & Respect</h4>
+                            <p>All members must treat others with Christ-like love, patience, and respect. Harassment, hate speech, bullying, or abusive behavior will result in immediate account deactivation.</p>
+                            <h4 class="font-bold text-gray-900">2. Authentic Fellowship</h4>
+                            <p>Accounts must represent real individuals or recognized fellowship groups. Impersonation or fraudulent representation is strictly prohibited.</p>
+                            <h4 class="font-bold text-gray-900">3. Content Moderation & Violations</h4>
+                            <p>Admins and users can report any breach of these terms using the "Report Violation" mechanism. Super Administrators hold final authority to review and block offending accounts.</p>
+                        </div>
+                        <div class="mt-6 text-right">
+                            <button onclick="document.getElementById('terms-modal').remove()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-medium">I Understand & Agree</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
     </script>
 </body>
 </html>
