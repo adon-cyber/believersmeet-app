@@ -61,6 +61,11 @@
                             <label for="prof-name" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Full Name</label>
                             <input type="text" id="prof-name" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
                         </div>
+
+                        <div>
+                            <label for="prof-role" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Role</label>
+                            <input type="text" id="prof-role" disabled readonly class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-gray-100 cursor-not-allowed text-gray-500">
+                        </div>
                         
                         <div>
                             <label for="prof-cell" class="block text-xs font-semibold text-gray-700 uppercase mb-1">Home Cell Group / Fellowship</label>
@@ -179,6 +184,7 @@
             // Populate personal settings form
             if (loggedInUserProfile.full_name !== undefined) {
                 document.getElementById('prof-name').value = loggedInUserProfile.full_name || '';
+                document.getElementById('prof-role').value = loggedInUserProfile.role || 'member';
                 document.getElementById('prof-cell').value = loggedInUserProfile.home_cell || '';
                 document.getElementById('prof-scripture').value = loggedInUserProfile.favorite_scripture || '';
                 document.getElementById('prof-bio').value = loggedInUserProfile.bio || '';

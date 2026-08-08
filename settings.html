@@ -39,6 +39,11 @@
 
             <form id="settings-form" onsubmit="updateProfile(event)">
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Account Role</label>
+                    <input type="text" id="edit-role" disabled readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed text-gray-500">
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                     <input type="text" id="edit-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 </div>
@@ -81,6 +86,7 @@
             const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).single();
             if (profile) {
                 document.getElementById('edit-name').value = profile.full_name || '';
+                document.getElementById('edit-role').value = profile.role || 'member';
                 document.getElementById('edit-bio').value = profile.bio || '';
                 if (profile.avatar_url) {
                     document.getElementById('avatar-preview').src = profile.avatar_url;
