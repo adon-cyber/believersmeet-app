@@ -70,10 +70,8 @@
                 </div>
 
                 <div id="church-select-container">
-                    <label for="church-select" class="block text-sm font-medium text-gray-700 mb-1">Affiliated Church</label>
-                    <select id="church-select" class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="">Loading churches...</option>
-                    </select>
+                    <label for="churchCodeInput" class="block text-sm font-medium text-gray-700 mb-1">Church Code</label>
+                    <input type="text" id="churchCodeInput" placeholder="e.g., JINJA2026" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </div>
 
                 <div>
@@ -106,24 +104,8 @@
             return true;
         }
 
-        async function loadChurches() {
-            await waitForSupabase();
-            const select = document.getElementById('church-select');
-            const { data: churches, error } = await window.sbClient.from('churches').select('id, name');
-            
-            if (error) {
-                select.innerHTML = '<option value="">Error loading churches</option>';
-                return;
-            }
-
-            select.innerHTML = '<option value="">-- Choose your Church --</option>';
-            churches.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name;
-                select.appendChild(opt);
-            });
-        }
+        // loadChurches is no longer needed since we use a text input for church code
+        function loadChurches() {}
 
         function togglePasswordVisibility(fieldId) {
             const inputField = document.getElementById(fieldId);
@@ -133,14 +115,14 @@
         document.getElementById('role-select').addEventListener('change', (e) => {
             const role = e.target.value;
             const churchContainer = document.getElementById('church-select-container');
-            const churchSelect = document.getElementById('church-select');
+            const churchInput = document.getElementById('churchCodeInput');
             if (role === 'admin') {
                 churchContainer.classList.add('hidden');
-                churchSelect.removeAttribute('required');
-                churchSelect.value = '';
+                churchInput.removeAttribute('required');
+                churchInput.value = '';
             } else {
                 churchContainer.classList.remove('hidden');
-                churchSelect.setAttribute('required', 'required');
+                churchInput.setAttribute('required', 'required');
             }
         });
 
@@ -160,7 +142,7 @@
             const confirmPassword = document.getElementById('confirm-password').value;
             const fullName = document.getElementById('full-name').value.trim();
             const role = document.getElementById('role-select').value;
-            const churchId = document.getElementById('church-select').value;
+            const churchCode = document.getElementById('churchCodeInput') ? document.getElementById('churchCodeInput').value.trim() : '';
 
             if (password !== confirmPassword) {
                 errBox.textContent = "Passwords do not match.";
@@ -170,12 +152,34 @@
                 return;
             }
 
-            if (role === 'member' && !churchId) {
-                errBox.textContent = "Please select your church.";
-                errBox.classList.remove('hidden');
-                btn.disabled = false; 
-                btn.textContent = "Sign Up";
-                return;
+            let churchUuid = null;
+            if (role === 'member') {
+                if (!churchCode) {
+                    alert("Invalid Church Code. Please check with your church leadership");
+                    errBox.textContent = "Invalid Church Code. Please check with your church leadership";
+                    errBox.classList.remove('hidden');
+                    btn.disabled = false; 
+                    btn.textContent = "Sign Up";
+                    return;
+                }
+
+                // Query church by code (checking both join_code and code)
+                const { data: church, error: churchQueryError } = await window.sbClient
+                    .from('churches')
+                    .select('id, name')
+                    .or(`join_code.eq.${churchCode.toUpperCase()},code.eq.${churchCode.toUpperCase()}`)
+                    .maybeSingle();
+
+                if (churchQueryError || !church) {
+                    alert("Invalid Church Code. Please check with your church leadership");
+                    errBox.textContent = "Invalid Church Code. Please check with your church leadership";
+                    errBox.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = "Sign Up";
+                    return;
+                }
+
+                churchUuid = church.id;
             }
 
             try {
@@ -191,8 +195,9 @@
                     is_verified: false
                 };
 
-                if (role === 'member') {
-                    profileData.church_id = churchId;
+                if (role === 'member' && churchUuid) {
+                    profileData.church_id = churchUuid;
+                    localStorage.setItem('church_id', churchUuid);
                 }
 
                 const { error: profileError } = await window.sbClient
