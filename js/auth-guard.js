@@ -35,16 +35,26 @@
 
         const user = session.user;
 
-        // 2. Check localStorage cache for church_id
+        // Bypass check for super admin (`adoniakasango@gmail.com` or role `super_admin`)
+        const isSuperAdmin = user.email === 'adoniakasango@gmail.com';
+        if (isSuperAdmin) {
+            return;
+        }
+
+        // Also fetch profile early or check role if present
         let churchId = localStorage.getItem('church_id');
 
-        // 3. If missing from localStorage, query Supabase profiles table
         if (!churchId) {
             const { data: profile, error: profileError } = await sb
                 .from('profiles')
                 .select('church_id, role')
                 .eq('id', user.id)
                 .maybeSingle();
+
+            if (profile && profile.role === 'super_admin') {
+                // Super admin bypasses church join code check entirely
+                return;
+            }
 
             if (profileError || !profile || !profile.church_id) {
                 // If user is admin/church, maybe they registered a church but need setup/register page

@@ -16,6 +16,7 @@
             if (window.sbClient) {
                 const { data: { user } } = await window.sbClient.auth.getUser();
                 if (user) {
+                    const isSuperAdmin = user.email === 'adoniakasango@gmail.com';
                     const { data: profile } = await window.sbClient
                         .from('profiles')
                         .select('role, church_id')
@@ -25,12 +26,12 @@
                     const currentPath = window.location.pathname.split('/').pop() || 'feed.html';
                     const isJoinPage = currentPath === 'join-church.html' || currentPath === 'register-church.html';
 
-                    if (profile && !profile.church_id && !isJoinPage && !currentPath.includes('login') && !currentPath.includes('signup')) {
+                    if (!isSuperAdmin && profile && profile.role !== 'super_admin' && !profile.church_id && !isJoinPage && !currentPath.includes('login') && !currentPath.includes('signup')) {
                         window.location.replace('join-church.html');
                         return;
                     }
 
-                    if (profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'leader')) {
+                    if (isSuperAdmin || (profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'leader'))) {
                         isAdminOrLeader = true;
                     }
                 }
