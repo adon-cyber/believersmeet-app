@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Control Center | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation Bar matching floating pill-button design -->
+    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
+                <div class="nav-scrollable-row no-scrollbar flex items-center space-x-1 sm:space-x-3 py-2 px-4">
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                    <a href="super-admin.html" id="super-admin-nav-link" class="text-xs sm:text-sm font-bold text-white bg-indigo-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">🛡️ Developer Control Center</a>
+                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full">
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-indigo-700 text-white p-8 rounded-xl shadow-md my-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    <i class="fas fa-shield-alt text-yellow-300"></i> Developer Control Center
+                </h1>
+                <p class="text-indigo-100 text-base">Master administration panel to manage all platform users, standard administrators, fellowship associations, and system security roles.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="super-admin-badge" class="bg-yellow-400 text-gray-900 font-bold px-4 py-1.5 rounded-full text-sm shadow">
+                    Super Admin Verified
+                </span>
+            </div>
+        </div>
+
+        <!-- Quick Stats Overview -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Users</p>
+                    <h3 id="stat-total-users" class="text-3xl font-bold text-gray-900 mt-1">-</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Administrators</p>
+                    <h3 id="stat-total-admins" class="text-3xl font-bold text-gray-900 mt-1">-</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Churches / Fellowships</p>
+                    <h3 id="stat-total-churches" class="text-3xl font-bold text-gray-900 mt-1">-</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                    <i class="fas fa-church"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Table Section -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
+            <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-database text-indigo-600"></i> Platform User Directory
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">Manage user roles, verify permissions, or terminate accounts securely across the entire database.</p>
+                </div>
+                <div class="w-full sm:w-auto flex items-center gap-3">
+                    <div class="relative w-full sm:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="user-search-input" placeholder="Search by name or email..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button onclick="loadAllUsersAndChurches()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 p-2.5 rounded-xl transition-colors" title="Refresh User List">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User Name</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email / ID</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Church / Fellowship</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Role</th>
+                            <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="super-admin-users-tbody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500 italic">
+                                <svg class="animate-spin h-6 w-6 text-indigo-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Loading database records securely...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+        &copy; 2026 BelieversMeet Developer Control Center. Secured Super Administrator Portal.
+      </div>
+    </footer>
+
+    <!-- Script Logic -->
+    <script src="js/super-admin.js"></script>
+</body>
+</html>
