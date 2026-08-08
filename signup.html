@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up | BelieversMeet</title>
     <!-- Tailwind CSS CDN -->
-    
-    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
 </head>
 <body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900">
 
     <!-- Header / Navbar -->
     <header class="bg-white border-b border-gray-200">
-        <div class="glass-card floating-card glass-card floating-card max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="index.html" class="text-xl font-bold text-indigo-600 hover:text-indigo-500">BelieversMeet</a>
             <div class="text-sm">
                 <span class="text-gray-500">Already have an account?</span>
@@ -23,7 +24,7 @@
 
     <!-- Main Content -->
     <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="glass-card floating-card glass-card floating-card max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
             <div>
                 <h2 class="text-center text-3xl font-extrabold text-gray-900">Join BelieversMeet</h2>
                 <p class="mt-2 text-center text-sm text-gray-600">
@@ -93,39 +94,41 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-      <div class="glass-card floating-card glass-card floating-card max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
         &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
       </div>
     </footer>
 
     <!-- Script Section -->
-    <script type="module">
-        import { auth, db } from './firebase-config.js';
-        import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-        import { collection, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-
-        async function loadChurches() {
-            const select = document.getElementById('church-select');
-            try {
-                const querySnapshot = await getDocs(collection(db, "churches"));
-                select.innerHTML = '<option value="">-- Choose your Church --</option>';
-                querySnapshot.forEach((docSnap) => {
-                    const c = docSnap.data();
-                    const opt = document.createElement('option');
-                    opt.value = docSnap.id;
-                    opt.textContent = c.name || 'Unnamed Church';
-                    select.appendChild(opt);
-                });
-            } catch (error) {
-                console.error(error);
-                select.innerHTML = '<option value="">Error loading churches</option>';
-            }
+    <script>
+        async function waitForSupabase() {
+            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
+            return true;
         }
 
-        window.togglePasswordVisibility = function(fieldId) {
+        async function loadChurches() {
+            await waitForSupabase();
+            const select = document.getElementById('church-select');
+            const { data: churches, error } = await window.sbClient.from('churches').select('id, name');
+            
+            if (error) {
+                select.innerHTML = '<option value="">Error loading churches</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">-- Choose your Church --</option>';
+            churches.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function togglePasswordVisibility(fieldId) {
             const inputField = document.getElementById(fieldId);
             inputField.type = inputField.type === 'password' ? 'text' : 'password';
-        };
+        }
 
         document.getElementById('role-select').addEventListener('change', (e) => {
             const role = e.target.value;
@@ -146,6 +149,8 @@
             const errBox = document.getElementById('error-message');
             errBox.classList.add('hidden');
 
+            await waitForSupabase();
+            
             const btn = document.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.textContent = "Creating Account...";
@@ -174,23 +179,27 @@
             }
 
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+                const { data: authData, error: authError } = await window.sbClient.auth.signUp({
+                    email, password
+                });
+                if (authError) throw authError;
 
                 const profileData = {
-                    id: user.uid,
+                    id: authData.user.id,
                     full_name: fullName,
                     role: role,
-                    is_verified: false,
-                    createdAt: new Date().toISOString()
+                    is_verified: false
                 };
 
                 if (role === 'member') {
                     profileData.church_id = churchId;
-                    profileData.churchId = churchId;
                 }
 
-                await setDoc(doc(db, "users", user.uid), profileData);
+                const { error: profileError } = await window.sbClient
+                    .from('profiles')
+                    .upsert(profileData);
+                
+                if (profileError) throw profileError;
 
                 if (role === 'admin') {
                     window.location.replace('register-church.html');
@@ -198,7 +207,6 @@
                     window.location.replace('feed.html');
                 }
             } catch (err) {
-                console.error(err);
                 errBox.textContent = "Error: " + err.message;
                 errBox.classList.remove('hidden');
                 btn.disabled = false;

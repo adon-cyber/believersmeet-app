@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | BelieversMeet</title>
     <!-- Tailwind CSS CDN -->
-    
-            <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
 </head>
 <body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900">
 
     <!-- Header / Navbar -->
     <header class="bg-white border-b border-gray-200">
-        <div class="glass-card floating-card glass-card floating-card max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="index.html" class="text-xl font-bold text-indigo-600 hover:text-indigo-500">BelieversMeet</a>
             <div class="text-sm">
                 <span class="text-gray-500">New here?</span>
@@ -23,7 +24,7 @@
 
     <!-- Main Content -->
     <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="glass-card floating-card glass-card floating-card max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
             <div>
                 <h2 class="text-center text-3xl font-extrabold text-gray-900">Welcome Back</h2>
                 <p class="mt-2 text-center text-sm text-gray-600">
@@ -74,21 +75,24 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-      <div class="glass-card floating-card glass-card floating-card max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
         &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
       </div>
     </footer>
 
     <!-- Script Section -->
-    <script type="module">
-        import { auth, db } from './firebase-config.js';
-        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    <script>
+        async function waitForSupabase() {
+            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
+            return true;
+        }
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errBox = document.getElementById('error-message');
             errBox.classList.add('hidden');
+
+            await waitForSupabase();
 
             const btn = document.querySelector('button[type="submit"]');
             btn.disabled = true;
@@ -98,15 +102,18 @@
             const password = document.getElementById('login-password').value;
 
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+                const { data, error } = await window.sbClient.auth.signInWithPassword({ email, password });
 
-                if (user) {
-                    const userDocRef = doc(db, "users", user.uid);
-                    const userDoc = await getDoc(userDocRef);
+                if (error) throw error;
 
-                    if (!userDoc.exists() || !userDoc.data().church_id) {
-                        const profile = userDoc.exists() ? userDoc.data() : null;
+                if (data.user) {
+                    const { data: profile, error: profileError } = await window.sbClient
+                        .from('profiles')
+                        .select('church_id, role')
+                        .eq('id', data.user.id)
+                        .maybeSingle();
+
+                    if (profileError || !profile || !profile.church_id) {
                         if (profile && profile.role === 'admin') {
                             window.location.replace('register-church.html');
                         } else {
@@ -116,20 +123,18 @@
                         window.location.replace('feed.html');
                     }
                 }
-            } catch (error) {
-                console.error("Login error:", error);
-                alert(error.message);
-                errBox.textContent = error.message;
+            } catch (err) {
+                errBox.textContent = err.message;
                 errBox.classList.remove('hidden');
                 btn.disabled = false;
                 btn.textContent = "Log In";
             }
         });
 
-        window.togglePasswordVisibility = function() {
+        function togglePasswordVisibility() {
             const p = document.getElementById('login-password');
             p.type = p.type === 'password' ? 'text' : 'password';
-        };
+        }
     </script>
 </body>
 </html>
