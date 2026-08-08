@@ -1,411 +1,227 @@
-/* --- 1. Root Variables & Reset --- */
+/* ==========================================================================
+   BELIEVERSMEET DESIGN SYSTEM & THEME ENGINE
+   Theme: Modern Glassmorphic Indigo & Ambient Floating Animations
+   ========================================================================== */
+
+/* 1. Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+/* 2. Theme Variables */
 :root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --background: #f9fafb;
-    --text: #1f2937;
-    --text-light: #6b7280;
-    --card-bg: #ffffff;
-    --border: #e5e7eb;
-    --success: #10b981;
-    --error: #ef4444;
+  /* Color Palette */
+  --bg-dark: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --bg-card-hover: rgba(51, 65, 85, 0.8);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-focus: #6366f1;
+
+  --primary: #6366f1;
+  --primary-glow: rgba(99, 102, 241, 0.35);
+  --primary-hover: #4f46e5;
+  --accent: #a855f7;
+  --accent-glow: rgba(168, 85, 247, 0.35);
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-sub: #cbd5e1;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+
+  /* Shadows & Effects */
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-glow: 0 0 25px var(--primary-glow);
+  --blur-glass: blur(16px);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    max-width: 100%;
-}
-
-img, video, canvas, svg, .card, .post-card {
-    max-width: 100%;
-    height: auto;
+/* 3. Core Reset & Base Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    background-color: var(--background);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden;
-    width: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.9) 0px, var(--bg-dark) 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-/* --- 2. Layout & Navigation --- */
-nav {
-    background-color: var(--primary);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    flex-wrap: wrap;
-    gap: 10px;
+/* 4. Headings & Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
 }
 
-nav a {
-    color: white;
-    text-decoration: none;
-    margin-right: 15px;
-    font-weight: 500;
-    transition: color 0.2s;
-    font-size: 0.95rem;
-    padding: 10px 12px; /* Step 3: Tap Targets - at least 10px padding */
+h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-nav a:hover { color: #e2e8f0; }
-nav .brand { font-weight: bold; font-size: 1.2rem; color: white; margin-right: auto; padding: 10px 0; }
-
-main {
-    max-width: 800px;
-    margin: 30px auto;
-    padding: 0 20px;
-    width: 100%;
+p {
+  color: var(--text-muted);
 }
 
-/* Step 2: Spacing & Overlaps - ensure body/content has enough padding-top for fixed/sticky headers */
-body {
-    padding-top: 64px;
-}
-
-/* Responsive adjustment for mobile */
-@media (max-width: 768px) {
-    html, body {
-        overflow-x: hidden !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding-top: 60px !important; /* Step 2: Ensure content is not covered by navbar */
-    }
-    
-    nav {
-        padding: 8px 12px;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        position: sticky;
-        top: 0;
-        z-index: 1000; /* Step 2: High z-index */
-    }
-    nav .brand {
-        font-size: 1.1rem;
-        padding: 8px 0;
-    }
-    nav a, .nav-scrollable-row a {
-        margin-right: 8px;
-        font-size: 0.9rem;
-        padding: 10px 14px !important; /* Step 3: Tap targets padding */
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-    }
-    
-    /* Step 1: Fix the Secondary Navigation */
-    .nav-scrollable-row {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        max-width: 100%;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-        width: 100%;
-        gap: 8px;
-        padding: 4px 0 8px 0;
-    }
-    .nav-scrollable-row::-webkit-scrollbar {
-        display: none;
-    }
-    
-    /* Step 2: Fix Feed Cards and Containers */
-    main, .container, .profile-container, .dashboard-container, .content-wrapper, .card, .post-card, .feed-container, #feed-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        margin: 15px auto !important;
-        padding: 0 15px !important;
-    }
-
-    /* Step 3: Lock the Body */
-    html, body {
-        overflow-x: hidden !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        position: relative !important;
-        padding-top: 60px !important;
-    }
-    
-    .hero h1 { 
-        font-size: 2rem !important; 
-    }
-    .hero p { 
-        font-size: 1rem !important; 
-    }
-    
-    /* Form elements, inputs, buttons full width */
-    input, textarea, select, button, .btn {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-    button, .btn {
-        padding: 14px 20px;
-        font-size: 1.05rem;
-        margin-bottom: 12px;
-    }
-    .cta-group {
-        flex-direction: column !important;
-        gap: 10px;
-    }
-
-    /* Column Alignments & Grids Stack */
-    .row, .grid, .feed-layout, .profile-grid, .dashboard-grid, .admin-grid, .chat-layout, .inbox-layout {
-        display: flex !important;
-        flex-direction: column !important;
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
-        width: 100% !important;
-    }
-    
-    /* Specific components: Tables wrapped in responsive container */
-    table, .table-responsive, .admin-table-container {
-        display: block !important;
-        width: 100% !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Chat / Inbox bubbles & layout */
-    .chat-container, .inbox-container, .messages-list, .chat-box {
-        width: 100% !important;
-        padding: 10px !important;
-    }
-    .chat-bubble, .message-bubble {
-        max-width: 85% !important;
-        word-break: break-word;
-    }
-
-    /* Profiles & Fellow Members / Other Members tabs & grids */
-    .profile-tabs, .member-tabs, .fellow-members-grid, .other-members-grid {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 10px !important;
-    }
-    .profile-card, .member-card {
-        width: 100% !important;
-        margin-bottom: 15px !important;
-    }
-
-    /* Spacing & Tap Targets */
-    a, button, .btn, input, select {
-        min-height: 44px; /* comfortable tap targets */
-    }
-    .card {
-        padding: 15px !important;
-        margin-bottom: 15px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    nav {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-    nav .brand {
-        margin-right: 0;
-        margin-bottom: 5px;
-    }
-    .nav-scrollable-row {
-        justify-content: flex-start;
-        padding-bottom: 5px;
-    }
-}
-
-/* --- 3. UI Components --- */
-.card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    border: 1px solid var(--border);
-}
-
-h1, h2, h3 { margin-bottom: 15px; color: var(--primary); }
-
-/* --- 4. Forms & Inputs --- */
-input, textarea, select {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    background: #f8fafc;
-}
-
-input:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: #ffffff;
-}
-
-button, .btn {
-    display: inline-block;
-    background-color: var(--primary);
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    transition: background 0.2s;
-    font-size: 1rem;
-}
-
-button:hover, .btn:hover { background-color: var(--primary-hover); }
-
-/* --- 5. Utilities & Status --- */
-.text-error { color: var(--error); font-weight: 500; }
-.text-success { color: var(--success); font-weight: 500; }
-.flex-row { display: flex; justify-content: space-between; align-items: center; }
-
-.dev-footer {
-    text-align: center;
-    padding: 30px;
-    margin-top: 50px;
-    border-top: 1px solid #eee;
-    color: #888;
-    font-size: 0.85rem;
-}
-
-/* --- 6. Animations --- */
+/* 5. Keyframe Animations */
 @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(0.5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes floatSlow {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px var(--primary-glow); }
+  50% { box-shadow: 0 0 30px var(--accent-glow); }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.hero, .feat-box { animation: fadeIn 1.2s ease-out; }
-.feat-icon { display: inline-block; animation: float 3s ease-in-out infinite; }
-/* Add these to your style.css */
-
-/* Hero Section */
-.hero { 
-    text-align: center; 
-    padding: 60px 20px; 
-    background: var(--card-bg); 
-    border-radius: 12px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-    margin-top: 40px; 
-    border-top: 5px solid var(--primary); 
-}
-.hero h1 { font-size: 2.8rem; margin-bottom: 15px; }
-.hero p { font-size: 1.2rem; color: var(--text-light); margin-bottom: 35px; }
-
-/* Features Section */
-.features { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-    gap: 20px; 
-    margin-top: 40px; 
-}
-.feat-box { text-align: center; padding: 20px; }
-.feat-icon { font-size: 2.5rem; margin-bottom: 10px; }
-
-/* CTA Group */
-.cta-group { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-/* Add these to your style.css */
-
-/* Password Toggles */
-.password-container { position: relative; display: flex; align-items: center; }
-.toggle-btn { 
-    position: absolute; right: 10px; background: none; border: none; 
-    color: var(--primary); cursor: pointer; font-size: 0.8rem; font-weight: bold; 
+/* 6. Utility & Animation Classes */
+.floating {
+  animation: float 5s ease-in-out infinite;
 }
 
-/* Utilities */
-.w-full { width: 100%; }
-.mb-15 { margin-bottom: 15px; }
-.text-center { text-align: center; }
-/* Feed Layout Refinements */
-.feed-layout { 
-    display: grid; 
-    grid-template-columns: 1fr 320px; 
-    gap: 30px; 
+.floating-slow {
+  animation: floatSlow 8s ease-in-out infinite;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 900px) {
-    .feed-layout { grid-template-columns: 1fr; }
-    .announcements-sidebar { display: none; } /* Hide sidebar on small screens */
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Polished Post Cards */
-.post-card { 
-    background: var(--card-bg); 
-    border: 1px solid var(--border); 
-    border-radius: 12px; 
-    padding: 24px; 
-    transition: transform 0.2s; 
-}
-.post-card:hover { border-color: var(--primary); }
-
-/* Interaction area */
-.action-bar { 
-    display: flex; 
-    gap: 15px; 
-    margin-top: 15px; 
-    padding-top: 15px; 
-    border-top: 1px solid var(--border); 
+/* 7. Glassmorphic Card Containers */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass);
+  padding: 2rem;
+  transition: var(--transition);
 }
 
-/* Option 1: Scrollable Row Navigation & Utility */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-  -webkit-overflow-scrolling: touch; /* Smooth touch inertia scrolling for iOS/WebKit */
-  scroll-behavior: smooth;
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
 }
 
-.nav-scrollable-row {
+/* 8. Form Controls (Inputs, Selects, Labels) */
+.form-group {
+  margin-bottom: 1.5rem;
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+input::placeholder {
+  color: #64748b;
+}
+
+/* 9. Buttons */
+.btn-primary {
+  display: inline-flex;
   align-items: center;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  justify-content: center;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-glow);
 }
 
-.nav-scrollable-row::-webkit-scrollbar {
-  display: none;
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px var(--accent-glow);
+  filter: brightness(1.1);
 }
 
-.nav-scrollable-row a,
-.nav-scrollable-row button {
-  white-space: nowrap;
-  flex-shrink: 0;
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* 10. Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }
