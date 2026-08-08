@@ -107,11 +107,22 @@
                 if (error) throw error;
 
                 if (data.user) {
+                    const isSuperAdmin = data.user.email === 'adoniakasango@gmail.com';
+                    if (isSuperAdmin) {
+                        window.location.replace('feed.html');
+                        return;
+                    }
+
                     const { data: profile, error: profileError } = await window.sbClient
                         .from('profiles')
                         .select('church_id, role')
                         .eq('id', data.user.id)
                         .maybeSingle();
+
+                    if (profile && profile.role === 'super_admin') {
+                        window.location.replace('feed.html');
+                        return;
+                    }
 
                     if (profileError || !profile || !profile.church_id) {
                         if (profile && profile.role === 'admin') {
