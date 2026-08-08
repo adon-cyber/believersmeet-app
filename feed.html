@@ -250,19 +250,18 @@
         if (!loggedInUser) return;
 
         try {
-            // Insert connection request / match record into database using proper column fields (user_id, connected_user_id, status)
+            // Insert connection request into database using correct schema column names (requester_id, recipient_id, status)
             const { error } = await window.sbClient
                 .from('connections')
                 .insert([{
-                    user_id: loggedInUser.id,
-                    connected_user_id: targetUserId,
+                    requester_id: loggedInUser.id,
+                    recipient_id: targetUserId,
                     status: 'pending'
                 }]);
 
             if (error) {
-                console.warn("Connection table insert note:", error.message);
-                // Render friendly fallback UI state rather than throwing uncaught console errors
-                alert(`Connection request to ${targetName} could not be saved to the database at the moment, but your session continues seamlessly.`);
+                console.error("Supabase connection insert error details:", error);
+                alert(`Connection request to ${targetName} could not be saved: ${error.message || JSON.stringify(error)}`);
             } else {
                 alert(`Praise God! Connection request sent to ${targetName}.`);
             }
