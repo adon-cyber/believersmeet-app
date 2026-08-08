@@ -6,7 +6,7 @@
     <title>Sign Up | BelieversMeet</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-        </head>
+</head>
 <body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900">
 
     <!-- Header / Navbar -->
@@ -98,35 +98,33 @@
     </footer>
 
     <!-- Script Section -->
-    <script>
-        async function waitForSupabase() {
-            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
-            return true;
-        }
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { collection, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
         async function loadChurches() {
-            await waitForSupabase();
             const select = document.getElementById('church-select');
-            const { data: churches, error } = await window.sbClient.from('churches').select('id, name');
-            
-            if (error) {
+            try {
+                const querySnapshot = await getDocs(collection(db, "churches"));
+                select.innerHTML = '<option value="">-- Choose your Church --</option>';
+                querySnapshot.forEach((docSnap) => {
+                    const c = docSnap.data();
+                    const opt = document.createElement('option');
+                    opt.value = docSnap.id;
+                    opt.textContent = c.name || 'Unnamed Church';
+                    select.appendChild(opt);
+                });
+            } catch (error) {
+                console.error(error);
                 select.innerHTML = '<option value="">Error loading churches</option>';
-                return;
             }
-
-            select.innerHTML = '<option value="">-- Choose your Church --</option>';
-            churches.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name;
-                select.appendChild(opt);
-            });
         }
 
-        function togglePasswordVisibility(fieldId) {
+        window.togglePasswordVisibility = function(fieldId) {
             const inputField = document.getElementById(fieldId);
             inputField.type = inputField.type === 'password' ? 'text' : 'password';
-        }
+        };
 
         document.getElementById('role-select').addEventListener('change', (e) => {
             const role = e.target.value;
@@ -147,8 +145,6 @@
             const errBox = document.getElementById('error-message');
             errBox.classList.add('hidden');
 
-            await waitForSupabase();
-            
             const btn = document.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.textContent = "Creating Account...";
@@ -177,27 +173,23 @@
             }
 
             try {
-                const { data: authData, error: authError } = await window.sbClient.auth.signUp({
-                    email, password
-                });
-                if (authError) throw authError;
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
                 const profileData = {
-                    id: authData.user.id,
+                    id: user.uid,
                     full_name: fullName,
                     role: role,
-                    is_verified: false
+                    is_verified: false,
+                    createdAt: new Date().toISOString()
                 };
 
                 if (role === 'member') {
                     profileData.church_id = churchId;
+                    profileData.churchId = churchId;
                 }
 
-                const { error: profileError } = await window.sbClient
-                    .from('profiles')
-                    .upsert(profileData);
-                
-                if (profileError) throw profileError;
+                await setDoc(doc(db, "users", user.uid), profileData);
 
                 if (role === 'admin') {
                     window.location.replace('register-church.html');
@@ -205,6 +197,7 @@
                     window.location.replace('feed.html');
                 }
             } catch (err) {
+                console.error(err);
                 errBox.textContent = "Error: " + err.message;
                 errBox.classList.remove('hidden');
                 btn.disabled = false;
