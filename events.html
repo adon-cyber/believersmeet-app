@@ -313,7 +313,25 @@
             return;
         }
 
-        allEvents = events;
+        // Filter events based on logged-in user's church_id against host_church_id (or church_id) and invited_church_ids array.
+        // Super admins or users without a church can see all events, or filter as appropriate.
+        const userChurchId = currentUserProfile?.church_id;
+        const isSuperAdmin = currentUserProfile?.role === 'super_admin';
+
+        const filteredEvents = isSuperAdmin ? events : events.filter(evt => {
+            const hostId = evt.host_church_id || evt.church_id;
+            const invitedIds = evt.invited_church_ids || [];
+            
+            // If user has a church, they can see events hosted by their church OR events where their church is invited
+            if (userChurchId) {
+                return hostId === userChurchId || invitedIds.includes(userChurchId);
+            }
+            
+            // If user has no church, show events with no specific church restriction or public events (or none)
+            return !hostId || hostId === '';
+        });
+
+        allEvents = filteredEvents;
         renderFilteredEvents();
     }
 
