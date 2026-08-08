@@ -6,7 +6,7 @@
     <title>Register Your Church | BelieversMeet</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-        </head>
+</head>
 <body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900">
 
     <!-- Header / Navbar -->
@@ -34,11 +34,11 @@
 
             <!-- Multi-step Form -->
             <form id="church-registration-form" novalidate class="mt-8 space-y-5">
-                
+
                 <!-- STEP 1: Church Info -->
                 <div id="step-1-container" class="space-y-4">
                     <div class="border-b border-gray-200 pb-2 text-xs font-semibold uppercase tracking-wider text-indigo-600">Step 1: Church Information</div>
-                    
+
                     <div>
                         <label for="church-name" class="block text-sm font-medium text-gray-700 mb-1">Church Name</label>
                         <input type="text" id="church-name" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Jinja Worship Center">
@@ -89,22 +89,22 @@
 
                     <div id="auth-credentials-section">
                         <div class="border-t border-gray-200 my-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Admin Account Credentials</div>
-                        
+
                         <div class="space-y-3">
                             <div>
                                 <label for="pastor-name" class="block text-sm font-medium text-gray-700 mb-1">Your Full Name</label>
-                                <input type="text" id="pastor-name" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="John Doe">
+                                <input type="text" id="pastor-name" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="John Doe">
                             </div>
 
                             <div>
                                 <label for="pastor-email" class="block text-sm font-medium text-gray-700 mb-1">Admin Email Address</label>
-                                <input type="email" id="pastor-email" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="pastor@church.com">
+                                <input type="email" id="pastor-email" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="pastor@church.com">
                             </div>
 
                             <div>
                                 <label for="pastor-password" class="block text-sm font-medium text-gray-700 mb-1">Create Secure Password</label>
                                 <div class="relative">
-                                    <input type="password" id="pastor-password" minlength="6" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16" placeholder="••••••••">
+                                    <input type="password" id="pastor-password" required minlength="6" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16" placeholder="••••••••">
                                     <button type="button" onclick="togglePasswordVisibility('pastor-password')" class="absolute inset-y-0 right-0 px-3 flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none">Show/Hide</button>
                                 </div>
                             </div>
@@ -152,7 +152,7 @@
 
                 <div class="text-center pt-2" id="member-signup-prompt">
                     <p class="text-xs text-gray-500">
-                        Are you a regular church member looking to join? 
+                        Are you a regular church member looking to join?
                         <a href="signup.html" class="font-medium text-indigo-600 hover:text-indigo-500">Sign Up here</a>
                     </p>
                 </div>
@@ -168,20 +168,16 @@
     </footer>
 
     <!-- Script Section -->
-    <script>
-        async function waitForSupabase() {
-            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
-            return true;
-        }
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { createUserWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { collection, addDoc, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
         let currentUser = null;
 
-        window.addEventListener('load', async () => {
-            await waitForSupabase();
-            const { data: { user } } = await window.sbClient.auth.getUser();
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // If user is already logged in, hide credential fields as they are already authenticated!
                 document.getElementById('auth-credentials-section').classList.add('hidden');
                 document.getElementById('pastor-name').removeAttribute('required');
                 document.getElementById('pastor-email').removeAttribute('required');
@@ -190,10 +186,10 @@
             }
         });
 
-        function togglePasswordVisibility(fieldId) {
+        window.togglePasswordVisibility = function(fieldId) {
             const inputField = document.getElementById(fieldId);
             inputField.type = inputField.type === 'password' ? 'text' : 'password';
-        }
+        };
 
         document.getElementById('church-logo-file').addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -239,8 +235,6 @@
             const errBox = document.getElementById('error-message');
             errBox.classList.add('hidden');
 
-            await waitForSupabase();
-
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
             btn.textContent = "Establishing ecosystem...";
@@ -249,7 +243,6 @@
             const churchLocation = document.getElementById('church-location').value.trim();
             const churchAddress = document.getElementById('church-address').value.trim();
             const logoUrlInput = document.getElementById('church-logo-url').value.trim();
-            const logoFile = document.getElementById('church-logo-file').files[0];
             const adminPosition = document.getElementById('admin-position').value;
 
             let authDataUser = currentUser;
@@ -264,31 +257,11 @@
                         throw new Error("Please fill in all Admin Account Credentials.");
                     }
 
-                    const { data: signUpData, error: authError } = await window.sbClient.auth.signUp({
-                        email: pastorEmail,
-                        password: pastorPassword
-                    });
-                    
-                    if (authError) throw authError;
-                    if (!signUpData.user) throw new Error("Authentication initialization failed.");
-                    authDataUser = signUpData.user;
+                    const userCredential = await createUserWithEmailAndPassword(auth, pastorEmail, pastorPassword);
+                    authDataUser = userCredential.user;
                 }
 
-                let logoUrl = logoUrlInput || null;
-                if (logoFile) {
-                    const fileExt = logoFile.name.split('.').pop();
-                    const fileName = `church_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-                    const { error: uploadError } = await window.sbClient.storage
-                        .from('avatars')
-                        .upload(fileName, logoFile, { upsert: true });
-                    
-                    if (!uploadError) {
-                        const { data: publicUrlData } = window.sbClient.storage
-                            .from('avatars')
-                            .getPublicUrl(fileName);
-                        logoUrl = publicUrlData.publicUrl;
-                    }
-                }
+                const logoUrl = logoUrlInput || null;
 
                 // Helper function to generate unique 6-character alphanumeric join code
                 function generateJoinCode(name) {
@@ -300,36 +273,32 @@
 
                 const joinCode = generateJoinCode(churchName);
 
-                const { data: churchData, error: churchError } = await window.sbClient
-                    .from('churches')
-                    .insert([{ 
-                        name: churchName, 
-                        location: churchLocation,
-                        address: churchAddress,
-                        join_code: joinCode,
-                        ...(logoUrl ? { logo_url: logoUrl } : {})
-                    }])
-                    .select();
+                // Save church document into the churches Firestore collection
+                const churchRef = await addDoc(collection(db, "churches"), {
+                    name: churchName,
+                    location: churchLocation,
+                    address: churchAddress,
+                    join_code: joinCode,
+                    createdAt: new Date().toISOString(),
+                    ...(logoUrl ? { logo_url: logoUrl } : {})
+                });
 
-                if (churchError) throw churchError;
-                if (!churchData || churchData.length === 0) throw new Error("Failed to retrieve generated Church metadata ID.");
-                
-                const generatedChurchId = churchData[0].id;
+                const generatedChurchId = churchRef.id;
+                const pastorFullName = authDataUser.displayName || (currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : document.getElementById('pastor-name').value.trim());
 
-                const pastorFullName = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]) : document.getElementById('pastor-name').value.trim();
-
-                const { error: profileError } = await window.sbClient
-                    .from('profiles')
-                    .upsert({
-                        id: authDataUser.id,
-                        full_name: pastorFullName,
-                        church_id: generatedChurchId, 
-                        role: 'admin',
-                        position: adminPosition,
-                        ...(logoUrl ? { avatar_url: logoUrl } : {})
-                    });
-                
-                if (profileError) throw profileError;
+                // Save admin user document into the users Firestore collection with accountType: "admin" and associated churchId
+                await setDoc(doc(db, "users", authDataUser.uid), {
+                    id: authDataUser.uid,
+                    full_name: pastorFullName,
+                    email: authDataUser.email,
+                    accountType: "admin",
+                    role: "admin",
+                    position: adminPosition,
+                    churchId: generatedChurchId,
+                    church_id: generatedChurchId,
+                    createdAt: new Date().toISOString(),
+                    ...(logoUrl ? { avatar_url: logoUrl } : {})
+                });
 
                 // Show success screen with join code
                 document.getElementById('step-2-container').classList.add('hidden');
