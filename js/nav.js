@@ -58,17 +58,19 @@
         const currentFilename = window.location.pathname.split('/').pop() || 'feed.html';
 
         navbarContainer.innerHTML = `
-            <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <nav class="sticky top-0 z-50 py-3 px-4" style="position: sticky; top: 0; z-index: 1000;">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
-                        <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-                        <div class="nav-scrollable-row no-scrollbar flex items-center space-x-1 sm:space-x-3 py-2 px-4">
+                        <a href="feed.html" class="text-xl font-bold text-gray-900 hover:text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
+                        <div class="nav-scrollable-row no-scrollbar flex flex-wrap items-center justify-center gap-3 p-4">
                             ${options.map(opt => {
                                 const isActive = currentFilename === opt.href;
-                                const activeClasses = isActive ? 'font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors' : 'font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors';
-                                return `<a href="${opt.href}" class="text-xs sm:text-sm ${activeClasses}" style="color: #ffffff !important;">${opt.label}</a>`;
+                                const activeClasses = isActive 
+                                    ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white' 
+                                    : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600';
+                                return `<a href="${opt.href}" class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out shadow-sm hover:shadow-md hover:-translate-y-1 ${activeClasses}">${opt.label}</a>`;
                             }).join('')}
-                            <a href="#" onclick="if(window.sbClient) { window.sbClient.auth.signOut().then(() => window.location.href='login.html'); } else { window.location.href='login.html'; }" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors flex-shrink-0" style="color: #fecaca !important;">Logout</a>
+                            <a href="#" onclick="if(window.sbClient) { window.sbClient.auth.signOut().then(() => window.location.href='login.html'); } else { window.location.href='login.html'; }" class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out shadow-sm hover:shadow-md hover:-translate-y-1 bg-white text-red-600 hover:bg-red-50 flex-shrink-0">Logout</a>
                         </div>
                     </div>
                 </div>
