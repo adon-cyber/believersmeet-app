@@ -175,7 +175,7 @@
 
         let query = window.sbClient
             .from('sermons')
-            .select('*');
+            .select('*, churches(name)');
 
         if (activeTab === 'fellow') {
             query = query.eq('church_id', currentUserProfile.church_id);
@@ -195,11 +195,16 @@
             return;
         }
 
-        container.innerHTML = sermons.map(sermon => `
+        container.innerHTML = sermons.map(sermon => {
+            const churchName = sermon.churches?.name || sermon.church_name || 'Home Church';
+            return `
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4 transition hover:shadow-md">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900">${escapeHtml(sermon.title)}</h3>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="text-lg font-bold text-gray-900">${escapeHtml(sermon.title)}</h3>
+                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">${escapeHtml(churchName)}</span>
+                        </div>
                         <p class="text-sm font-medium text-blue-600 mt-0.5">By ${escapeHtml(sermon.preacher)}</p>
                     </div>
                     <span class="text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100 w-fit">${new Date(sermon.created_at).toLocaleDateString()}</span>
@@ -211,7 +216,7 @@
                     </audio>
                 </div>
             </div>
-        `).join('');
+        `;}).join('');
     }
 
     async function handleUploadSermon(e) {
