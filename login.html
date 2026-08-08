@@ -79,18 +79,15 @@
     </footer>
 
     <!-- Script Section -->
-    <script>
-        async function waitForSupabase() {
-            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
-            return true;
-        }
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errBox = document.getElementById('error-message');
             errBox.classList.add('hidden');
-
-            await waitForSupabase();
 
             const btn = document.querySelector('button[type="submit"]');
             btn.disabled = true;
@@ -100,18 +97,15 @@
             const password = document.getElementById('login-password').value;
 
             try {
-                const { data, error } = await window.sbClient.auth.signInWithPassword({ email, password });
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
-                if (error) throw error;
+                if (user) {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
 
-                if (data.user) {
-                    const { data: profile, error: profileError } = await window.sbClient
-                        .from('profiles')
-                        .select('church_id, role')
-                        .eq('id', data.user.id)
-                        .maybeSingle();
-
-                    if (profileError || !profile || !profile.church_id) {
+                    if (!userDoc.exists() || !userDoc.data().church_id) {
+                        const profile = userDoc.exists() ? userDoc.data() : null;
                         if (profile && profile.role === 'admin') {
                             window.location.replace('register-church.html');
                         } else {
@@ -121,18 +115,20 @@
                         window.location.replace('feed.html');
                     }
                 }
-            } catch (err) {
-                errBox.textContent = err.message;
+            } catch (error) {
+                console.error("Login error:", error);
+                alert(error.message);
+                errBox.textContent = error.message;
                 errBox.classList.remove('hidden');
                 btn.disabled = false;
                 btn.textContent = "Log In";
             }
         });
 
-        function togglePasswordVisibility() {
+        window.togglePasswordVisibility = function() {
             const p = document.getElementById('login-password');
             p.type = p.type === 'password' ? 'text' : 'password';
-        }
+        };
     </script>
 </body>
 </html>
