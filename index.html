@@ -310,23 +310,34 @@
     <!-- Authentication & Supabase Script -->
     <script>
         async function initAuthCheck() {
-            if (!window.sbClient) return;
             try {
-                const { data: { session } } = await window.sbClient.auth.getSession();
+                if (!window.sbClient) return;
+                const { data: { session }, error: sessionError } = await window.sbClient.auth.getSession();
+                if (sessionError) {
+                    console.warn("Handled initialization error:", sessionError);
+                }
                 if (session) {
                     window.location.replace('feed.html');
                 } else {
                     window.sbClient.auth.onAuthStateChange((event, session) => {
-                        if (session) {
-                            window.location.replace('feed.html');
+                        try {
+                            if (session) {
+                                window.location.replace('feed.html');
+                            }
+                        } catch (e) {
+                            console.warn("Handled initialization error:", e);
                         }
                     });
                 }
-            } catch (err) {
-                console.error('Auth check error:', err);
+            } catch (e) {
+                console.warn("Handled initialization error:", e);
             }
         }
-        initAuthCheck();
+        try {
+            initAuthCheck();
+        } catch (e) {
+            console.warn("Handled initialization error:", e);
+        }
     </script>
 
     <!-- Footer -->
