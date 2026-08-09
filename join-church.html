@@ -13,23 +13,23 @@
         (async function checkAlreadyJoined() {
             async function waitForSupabase() {
                 let attempts = 0;
-                while (!window.supabase && !window.sbClient && attempts < 50) {
+                while (!window.supabaseClient && !window.supabase && !window.sbClient && attempts < 50) {
                     await new Promise(r => setTimeout(r, 50));
                     attempts++;
                 }
-                return window.supabase || window.sbClient;
+                return window.supabaseClient || window.supabase || window.sbClient;
             }
 
-            const sb = await waitForSupabase();
-            if (!sb) return;
+            const client = await waitForSupabase();
+            if (!client) return;
 
-            const { data: { session } } = await sb.auth.getSession();
+            const { data: { session } } = await client.auth.getSession();
             if (!session) {
                 window.location.replace('login.html');
                 return;
             }
 
-            const { data: profile } = await sb
+            const { data: profile } = await client
                 .from('profiles')
                 .select('church_id, role')
                 .eq('id', session.user.id)
