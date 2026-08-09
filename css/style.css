@@ -1,93 +1,64 @@
-/* Tailwind CSS Revert & UI/UX Enhanced Backgrounds with Animations */
-
-@keyframes kenBurns {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-@keyframes subtleDrift {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 0%; }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.85; }
-  50% { opacity: 1; }
-}
+/* Tailwind CSS Revert & UI/UX Clean Backgrounds */
 
 /* Background Utility Classes */
 .bg-community-hero {
   background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('../images/meet2.jpg') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 25s infinite alternate ease-in-out;
 }
 
 .bg-events-dynamic {
   background: linear-gradient(rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.90)), url('https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: subtleDrift 30s infinite alternate linear;
 }
 
 .bg-giving-light {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1532629345422-7515f3d16bb9?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 30s infinite alternate ease-in-out;
 }
 
 .bg-admin-minimal {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: subtleDrift 30s infinite alternate linear;
 }
 
 .bg-auth-auth {
   background: linear-gradient(rgba(15, 23, 42, 0.80), rgba(30, 41, 59, 0.88)), url('https://images.unsplash.com/photo-1507692049990-2fae7e8daedc?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 30s infinite alternate ease-in-out;
 }
 
 .bg-sermons-media {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 30s infinite alternate ease-in-out;
 }
 
 .bg-feed-social {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: subtleDrift 30s infinite alternate linear;
 }
 
 .bg-prayer-wall {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1507692049990-2fae7e8daedc?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 28s infinite alternate ease-in-out;
 }
 
 .bg-groups-fellowship {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: subtleDrift 32s infinite alternate linear;
 }
 
 .bg-testimonies-grace {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 30s infinite alternate ease-in-out;
 }
 
 .bg-gallery-showcase {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: subtleDrift 25s infinite alternate linear;
 }
 
 .bg-church-dash {
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
-  animation: kenBurns 30s infinite alternate ease-in-out;
 }
 
 .bg-chat-fellowship {
