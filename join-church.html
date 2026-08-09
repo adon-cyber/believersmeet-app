@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,31 +43,31 @@
             } else {
                 // Reveal join-church body
                 if (document.body) {
-                    document.body.style.display = 'block';
+                    document.body.style.display = 'flex';
                 } else {
                     window.addEventListener('DOMContentLoaded', () => {
-                        document.body.style.display = 'block';
+                        document.body.style.display = 'flex';
                     });
                 }
             }
         })();
     </script>
 </head>
-<body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900" style="display: none;">
+<body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900 bg-cover bg-center bg-no-repeat relative" style="display: none; background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('images/meet2.jpg');">
 
     <!-- Header / Navbar -->
-    <header class="bg-white border-b border-gray-200">
+    <header class="bg-white/90 backdrop-blur-md border-b border-white/20 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="feed.html" class="text-xl font-bold text-indigo-600 hover:text-indigo-500">BelieversMeet</a>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-md w-full space-y-8 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 p-8 shadow-2xl rounded-2xl border border-white/20">
             <div>
-                <h2 class="text-center text-3xl font-extrabold text-gray-900">Welcome! Let's get you set up.</h2>
-                <p class="mt-2 text-center text-sm text-gray-600">
+                <h2 class="text-center text-3xl font-extrabold text-gray-900 dark:text-white">Welcome! Let's get you set up.</h2>
+                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
                     Enter the Church Code given to you by your church leadership.
                 </p>
             </div>
@@ -76,12 +76,12 @@
 
             <form id="setup-form" class="mt-8 space-y-5">
                 <div>
-                    <label for="church-id-input" class="block text-sm font-medium text-gray-700 mb-1">Church Join Code (e.g., JINJA2026)</label>
-                    <input type="text" id="church-id-input" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., JINJA2026">
+                    <label for="church-id-input" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Church Join Code (e.g., JINJA2026)</label>
+                    <input type="text" id="church-id-input" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="e.g., JINJA2026">
                 </div>
 
                 <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg">
                         Complete Setup
                     </button>
                 </div>
@@ -90,8 +90,8 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+    <footer class="bg-white/90 backdrop-blur-md border-t border-white/25 mt-auto py-6 relative z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-600 dark:text-gray-300">
         &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
       </div>
     </footer>
