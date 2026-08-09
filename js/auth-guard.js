@@ -25,11 +25,20 @@
       .single();
 
     if (church) {
+      // If church is in pending_trial status, redirect to activate-trial.html
+      if (church.subscription_status === 'pending_trial') {
+        if (!window.location.pathname.includes('activate-trial.html')) {
+          return window.location.href = 'activate-trial.html';
+        }
+      } else if (window.location.pathname.includes('activate-trial.html')) {
+        return window.location.href = 'index.html';
+      }
+
       const now = new Date();
-      const trialEndsAt = new Date(church.trial_ends_at);
+      const trialEndsAt = church.trial_ends_at ? new Date(church.trial_ends_at) : null;
       
       // If trial is expired and they haven't paid/upgraded
-      if (now > trialEndsAt && church.subscription_status === 'trial') {
+      if (trialEndsAt && now > trialEndsAt && church.subscription_status === 'trial') {
         // Allow them to see the expired page, prevent infinite loop
         if (!window.location.pathname.includes('subscription-expired.html')) {
           return window.location.href = 'subscription-expired.html';
@@ -42,7 +51,7 @@
       }
     }
   } else {
-    if (window.location.pathname.includes('subscription-expired.html')) {
+    if (window.location.pathname.includes('subscription-expired.html') || window.location.pathname.includes('activate-trial.html')) {
       return window.location.href = 'index.html';
     }
   }

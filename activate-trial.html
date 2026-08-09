@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Free Trial | BelieversMeet</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+</head>
+<body class="bg-[url('images/roo-background.jpg.png')] bg-cover bg-center bg-no-repeat bg-fixed min-h-screen flex flex-col text-white overflow-x-hidden w-full font-sans antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-bold text-indigo-400 hover:text-indigo-300">BelieversMeet</a>
+            <div class="text-sm" id="auth-header-action">
+                <button id="logout-btn" class="text-gray-300 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded border border-slate-700 transition">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="backdrop-blur-md bg-white/90 dark:bg-slate-900/90 shadow-2xl rounded-2xl border border-white/20 p-8 text-center max-w-lg w-full mx-auto my-auto text-gray-900 dark:text-white">
+            
+            <!-- Welcome Badge / Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-2xl font-bold mb-4 shadow-inner">
+                ✨
+            </div>
+
+            <!-- Heading -->
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                Welcome, Admin!
+            </h2>
+
+            <!-- Subtitle -->
+            <p class="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                Claim your 6-month free trial to start setting up your church workspace and onboarding members.
+            </p>
+
+            <!-- Feature List -->
+            <div class="mt-6 text-left bg-gray-50 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200 dark:border-slate-700 space-y-3">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Included in your 6-Month Free Trial:</h4>
+                <ul class="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-600 dark:text-green-400 font-bold">✓</span> Full Member Directory & Management
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-600 dark:text-green-400 font-bold">✓</span> Real-Time Messaging & Chat Channels
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-600 dark:text-green-400 font-bold">✓</span> Events, Bulletins & Programme Scheduling
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-600 dark:text-green-400 font-bold">✓</span> Secure Giving & Offering Management Setup
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Status Feedback Container -->
+            <div id="status-message" class="hidden mt-4 rounded-md p-3 text-sm"></div>
+
+            <!-- Action Button -->
+            <div class="mt-8">
+                <button id="start-trial-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Start 6-Month Free Trial
+                </button>
+            </div>
+
+            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                No credit card required. Your trial activates instantly.
+            </p>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900/80 backdrop-blur-md border-t border-slate-800 py-6 text-center text-xs text-gray-400">
+        &copy; 2026 BelieversMeet. All rights reserved.
+    </footer>
+
+    <!-- Script Section -->
+    <script>
+        async function waitForSupabase() {
+            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
+            return true;
+        }
+
+        window.addEventListener('load', async () => {
+            await waitForSupabase();
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check if user has an admin profile with church_id
+            const { data: profile } = await window.sbClient
+                .from('profiles')
+                .select('church_id, role')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile || !profile.church_id || profile.role !== 'admin') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Check if church already has an active trial or subscription
+            const { data: church } = await window.sbClient
+                .from('churches')
+                .select('subscription_status')
+                .eq('id', profile.church_id)
+                .single();
+
+            if (church && church.subscription_status === 'trial') {
+                // Already activated, proceed to dashboard
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await window.sbClient.auth.signOut();
+            window.location.href = 'login.html';
+        });
+
+        document.getElementById('start-trial-btn').addEventListener('click', async () => {
+            const statusBox = document.getElementById('status-message');
+            statusBox.classList.add('hidden');
+
+            const client = window.sbClient || window.supabaseClient || window.supabase;
+            if (!client || !client.auth) {
+                statusBox.className = "mt-4 rounded-md p-3 text-sm bg-red-100 text-red-700 border border-red-200";
+                statusBox.textContent = "Connection error. Please refresh.";
+                statusBox.classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('start-trial-btn');
+            btn.disabled = true;
+            btn.textContent = "Activating Free Trial...";
+
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Fetch user's profile to get church_id
+                const { data: profile, error: profileError } = await client
+                    .from('profiles')
+                    .select('church_id')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profileError || !profile || !profile.church_id) {
+                    throw new Error("Associated church workspace not found.");
+                }
+
+                // Calculate trial expiration date (6 months from now)
+                const sixMonthsLater = new Date();
+                sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+
+                // Update church record
+                const { error } = await client
+                    .from('churches')
+                    .update({
+                        subscription_status: 'trial',
+                        trial_ends_at: sixMonthsLater.toISOString()
+                    })
+                    .eq('id', profile.church_id);
+
+                if (error) {
+                    throw error;
+                }
+
+                statusBox.className = "mt-4 rounded-md p-3 text-sm bg-green-100 text-green-700 border border-green-200";
+                statusBox.textContent = "Trial activated successfully! Redirecting to dashboard...";
+                statusBox.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1200);
+
+            } catch (err) {
+                console.error("Trial activation error:", err);
+                statusBox.className = "mt-4 rounded-md p-3 text-sm bg-red-100 text-red-700 border border-red-200";
+                statusBox.textContent = "Error activating trial: " + err.message;
+                statusBox.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = "Start 6-Month Free Trial";
+            }
+        });
+    </script>
+
+</body>
+</html>
