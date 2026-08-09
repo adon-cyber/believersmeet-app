@@ -101,11 +101,11 @@ function populateChurchDropdowns() {
 async function handleSendBroadcast(event) {
     event.preventDefault();
     const targetType = document.getElementById('broadcast-target-type').value;
-    const churchId = document.getElementById('broadcast-church-id').value;
+    const selectedTargetId = document.getElementById('broadcast-church-id').value;
     const title = document.getElementById('broadcast-title').value;
     const content = document.getElementById('broadcast-content').value;
 
-    if (targetType === 'church' && !churchId) {
+    if (targetType === 'church' && !selectedTargetId) {
         alert("Please select a target church.");
         return;
     }
@@ -114,11 +114,11 @@ async function handleSendBroadcast(event) {
         const { error } = await window.sbClient
             .from('announcements')
             .insert({
-                sender_id: currentUserProfile.id,
+                title,
+                content,
+                sender_id: currentUserProfile.id || currentUser.id,
                 target_type: targetType,
-                target_id: targetType === 'church' ? churchId : null,
-                title: title,
-                content: content,
+                target_id: targetType === 'church' ? selectedTargetId : null,
                 created_at: new Date()
             });
 
