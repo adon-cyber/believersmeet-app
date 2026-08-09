@@ -138,13 +138,13 @@
 
         // Show body if all checks pass and we haven't redirected
         if (document.body) {
-            document.body.style.display = 'block';
+            document.body.style.display = '';
         }
     } catch (err) {
         console.error("Auth guard error:", err);
         // Fallback safely to show body so the page never stays blank
         if (document.body) {
-            document.body.style.display = 'block';
+            document.body.style.display = '';
         }
     }
 })();
