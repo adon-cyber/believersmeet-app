@@ -118,13 +118,15 @@ async function handleSendBroadcast(event) {
                 target_type: targetType,
                 target_id: targetType === 'church' ? churchId : null,
                 title: title,
-                content: content
+                content: content,
+                created_at: new Date()
             });
 
         if (error) throw error;
 
-        showNotification("Announcement / Message broadcast successfully!", "success");
-        document.getElementById('broadcast-form').reset();
+        showNotification("Announcement / Message broadcast successfully! Broadcast sent.", "success");
+        const form = document.getElementById('broadcast-form');
+        if (form) form.reset();
         toggleChurchSelect('all');
     } catch (err) {
         showNotification("Failed to broadcast message: " + err.message, "error");
