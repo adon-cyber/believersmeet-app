@@ -35,9 +35,18 @@
 </nav>
 
 <!-- Main Container -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full flex flex-col">
-    <!-- Dual-Tab Toggle Navigation -->
-    <div class="flex border-b border-gray-200 mb-6 bg-white rounded-xl shadow-sm px-4 pt-4">
+<!-- Update your main container wrapper to use a flex row on desktop -->
+<div class="flex flex-col md:flex-row h-[calc(100vh-120px)] w-full overflow-hidden">
+    <!-- Left Column: Contact Sidebar -->
+    <div class="w-full md:w-1/3 overflow-y-auto border-r border-gray-200">
+        <!-- Contacts list here -->
+    </div>
+
+    <!-- Right Column: Active Chat / Message Window -->
+    <div class="w-full md:w-2/3 flex flex-col justify-between h-full bg-white">
+        <!-- Chat history & input box here -->
+    </div>
+</div>
         <button id="tab-fellow-members" onclick="switchTab('fellow')" class="pb-3 px-6 font-bold text-sm border-b-2 border-blue-600 text-blue-600 transition-all flex items-center gap-2">
             <i class="fas fa-church"></i> Fellow Church Members
         </button>
