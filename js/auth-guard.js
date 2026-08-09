@@ -1,100 +1,27 @@
-// js/auth-guard.js
 (async function() {
-    // Skip guard if we are on public entry pages
-    const path = window.location.pathname;
-    const publicPages = ['login.html', 'signup.html', 'join-church.html', 'register-church.html', 'forgot-password.html', 'reset-password.html', 'index.html', 'setup.html'];
-    const isPublic = publicPages.some(page => path.endsWith(page) || path === '/' || path === '');
-    if (isPublic) {
-        return;
-    }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return window.location.href = 'login.html';
 
-    // Helper to wait for Supabase client
-    async function waitForSupabase() {
-        let attempts = 0;
-        while (!window.sbClient && attempts < 50) {
-            await new Promise(r => setTimeout(r, 50));
-            attempts++;
-        }
-        return window.sbClient;
-    }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('church_id, role')
+    .eq('id', session.user.id)
+    .single();
 
-    const sb = await waitForSupabase();
-    if (!sb) {
-        // If supabase client fails to load, fail safe by redirecting to login
-        window.location.replace('login.html');
-        return;
-    }
+  const isSuperAdmin = profile?.role === 'super_admin';
+  const hasChurch = profile?.church_id;
 
-    try {
-        // 1. Check authenticated user session
-        const { data: { session }, error: sessionError } = await sb.auth.getSession();
-        if (sessionError || !session || !session.user) {
-            window.location.replace('login.html');
-            return;
-        }
+  // If on join-church page and already has a church, send them to index
+  if (window.location.pathname.includes('join-church.html')) {
+    if (hasChurch || isSuperAdmin) window.location.href = 'index.html';
+    else document.body.style.display = 'block';
+    return;
+  }
 
-        const user = session.user;
-
-        // Bypass check for super admin (`adoniakasango@gmail.com` or role `super_admin`)
-        const isSuperAdmin = user.email === 'adoniakasango@gmail.com';
-        if (isSuperAdmin) {
-            return;
-        }
-
-        // Also fetch profile early or check role if present
-        let churchId = localStorage.getItem('church_id');
-
-        if (!churchId) {
-            const { data: profile, error: profileError } = await sb
-                .from('profiles')
-                .select('church_id, role')
-                .eq('id', user.id)
-                .maybeSingle();
-
-            if (profile && profile.role === 'super_admin') {
-                // Super admin bypasses church join code check entirely
-                return;
-            }
-
-            if (profileError || !profile || !profile.church_id) {
-                // If user is admin/church, maybe they registered a church but need setup/register page
-                if (profile && (profile.role === 'admin' || profile.role === 'super_admin')) {
-                    // Let admins pass or redirect to register/dashboard if needed, but per instructions missing church_id redirects to entry page
-                    // Wait, let's check if they have a church registered or if role is admin. Actually prompt says:
-                    // "If the Church ID is missing, or invalid, immediately redirect the user to the Church ID entry page (e.g., window.location.href = 'church-entry.html';)."
-                    // Here our entry page is join-church.html (or register-church.html for admins).
-                    if (profile.role === 'admin') {
-                        window.location.replace('register-church.html');
-                    } else {
-                        window.location.replace('join-church.html');
-                    }
-                    return;
-                } else {
-                    window.location.replace('join-church.html');
-                    return;
-                }
-            }
-
-            churchId = profile.church_id;
-            localStorage.setItem('church_id', churchId);
-        }
-
-        // 4. Validate churchId against churches table to ensure it's valid and exists
-        const { data: church, error: churchError } = await sb
-            .from('churches')
-            .select('id')
-            .eq('id', churchId)
-            .maybeSingle();
-
-        if (churchError || !church) {
-            localStorage.removeItem('church_id');
-            window.location.replace('join-church.html');
-            return;
-        }
-
-        // Successfully validated church ID session
-    } catch (err) {
-        console.error("Auth guard error:", err);
-        window.location.replace('login.html');
-    }
+  // If on a protected page and has NO church, send them to join
+  if (!hasChurch && !isSuperAdmin) {
+    window.location.href = 'join-church.html';
+  } else {
+    document.body.style.display = 'block';
+  }
 })();

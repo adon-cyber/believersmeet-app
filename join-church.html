@@ -8,9 +8,52 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
-    <script src="js/auth-guard.js"></script>
+    <script>
+        // Inverse Logic: If user ALREADY has a church_id, redirect them away to index.html (or feed.html)
+        (async function checkAlreadyJoined() {
+            async function waitForSupabase() {
+                let attempts = 0;
+                while (!window.supabase && !window.sbClient && attempts < 50) {
+                    await new Promise(r => setTimeout(r, 50));
+                    attempts++;
+                }
+                return window.supabase || window.sbClient;
+            }
+
+            const sb = await waitForSupabase();
+            if (!sb) return;
+
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            const { data: profile } = await sb
+                .from('profiles')
+                .select('church_id, role')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+            const isSuperAdmin = (profile?.role === 'super_admin') || (session.user.email === 'adoniakasango@gmail.com');
+            const hasChurch = profile && profile.church_id !== null && profile.church_id !== '';
+
+            if (hasChurch || isSuperAdmin) {
+                window.location.replace('index.html');
+            } else {
+                // Reveal join-church body
+                if (document.body) {
+                    document.body.style.display = 'block';
+                } else {
+                    window.addEventListener('DOMContentLoaded', () => {
+                        document.body.style.display = 'block';
+                    });
+                }
+            }
+        })();
+    </script>
 </head>
-<body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900">
+<body class="h-full flex flex-col justify-between font-sans antialiased text-gray-900" style="display: none;">
 
     <!-- Header / Navbar -->
     <header class="bg-white border-b border-gray-200">
@@ -55,15 +98,9 @@
 
     <script>
         async function waitForSupabase() {
-            while (!window.sbClient) await new Promise(r => setTimeout(r, 100));
-            return true;
+            while (!window.supabase && !window.sbClient) await new Promise(r => setTimeout(r, 100));
+            return window.supabase || window.sbClient;
         }
-
-        window.addEventListener('load', async () => {
-            await waitForSupabase();
-            const { data: { user } } = await window.sbClient.auth.getUser();
-            if (!user) window.location.replace('login.html');
-        });
 
         document.getElementById('setup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -76,15 +113,15 @@
             btn.textContent = "Saving...";
 
             try {
-                await waitForSupabase();
-                const { data: { user } } = await window.sbClient.auth.getUser();
+                const sb = await waitForSupabase();
+                const { data: { user } } = await sb.auth.getUser();
                 if (!user) {
                     window.location.replace('login.html');
                     return;
                 }
 
                 // Query church by code
-                const { data: church, error } = await window.sbClient
+                const { data: church, error } = await sb
                     .from('churches')
                     .select('id, name')
                     .eq('join_code', churchCode.toUpperCase())
@@ -96,7 +133,7 @@
 
                 const churchUuid = church.id;
 
-                const { error: updateError } = await window.sbClient
+                const { error: updateError } = await sb
                     .from('profiles')
                     .update({ church_id: churchUuid, role: 'member' })
                     .eq('id', user.id);
@@ -106,7 +143,7 @@
                 // Securely save to localStorage and update profile before redirecting
                 localStorage.setItem('church_id', churchUuid);
 
-                window.location.replace('feed.html');
+                window.location.replace('index.html');
             } catch (err) {
                 errBox.textContent = err.message;
                 errBox.classList.remove('hidden');
