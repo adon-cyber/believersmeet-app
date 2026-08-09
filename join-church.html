@@ -98,8 +98,12 @@
 
     <script>
         async function waitForSupabase() {
-            while (!window.supabase && !window.sbClient) await new Promise(r => setTimeout(r, 100));
-            return window.supabase || window.sbClient;
+            let attempts = 0;
+            while (!window.supabaseClient && !window.supabase && !window.sbClient && attempts < 50) {
+                await new Promise(r => setTimeout(r, 50));
+                attempts++;
+            }
+            return window.supabaseClient || window.supabase || window.sbClient;
         }
 
         document.getElementById('setup-form').addEventListener('submit', async (e) => {
@@ -113,15 +117,23 @@
             btn.textContent = "Saving...";
 
             try {
-                const sb = await waitForSupabase();
-                const { data: { user } } = await sb.auth.getUser();
-                if (!user) {
+                const client = window.supabaseClient || window.supabase;
+                if (!client || !client.auth) {
+                    console.error("Supabase client or auth is not initialized.");
+                    alert("Connection error. Please refresh the page and try again.");
+                    btn.disabled = false;
+                    btn.textContent = "Complete Setup";
+                    return;
+                }
+
+                const { data: { user }, error: userError } = await client.auth.getUser();
+                if (userError || !user) {
                     window.location.replace('login.html');
                     return;
                 }
 
                 // Query church by code
-                const { data: church, error } = await sb
+                const { data: church, error } = await client
                     .from('churches')
                     .select('id, name')
                     .eq('join_code', churchCode.toUpperCase())
@@ -133,7 +145,7 @@
 
                 const churchUuid = church.id;
 
-                const { error: updateError } = await sb
+                const { error: updateError } = await client
                     .from('profiles')
                     .update({ church_id: churchUuid, role: 'member' })
                     .eq('id', user.id);
