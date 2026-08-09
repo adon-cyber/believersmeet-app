@@ -1,3 +1,8 @@
+input, textarea, select {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
 /* Tailwind CSS Revert & UI/UX Clean Backgrounds */
 
 /* Background Utility Classes */
