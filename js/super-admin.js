@@ -144,12 +144,8 @@ async function loadViolationReports() {
 
     try {
         const { data: violations, error } = await window.sbClient
-            .from('violations')
-            .select(`
-                *,
-                reporter:profiles!fk_reporter(id, full_name, email, avatar_url),
-                offender:profiles!fk_reported_user(id, full_name, email, avatar_url)
-            `)
+            .from('violations_view')
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -168,9 +164,9 @@ async function loadViolationReports() {
         if (container) {
             container.innerHTML = '';
             violations.forEach(v => {
-                const reportedName = v.offender ? v.offender.full_name || v.offender.email : 'Unknown User';
-                const reporterName = v.reporter ? v.reporter.full_name || v.reporter.email : 'Anonymous / System';
-                const isBlocked = v.offender && v.offender.is_blocked;
+                const reportedName = v.offender_name || v.offender_email || 'Unknown User';
+                const reporterName = v.reporter_name || v.reporter_email || 'Anonymous / System';
+                const isBlocked = v.offender_is_blocked;
                 const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
 
                 const card = document.createElement('div');
@@ -203,9 +199,9 @@ async function loadViolationReports() {
         // Render Responsive Data Table
         if (tableTbody) {
             tableTbody.innerHTML = violations.map(v => {
-                const reportedName = v.offender ? v.offender.full_name || v.offender.email : 'Unknown User';
-                const reporterName = v.reporter ? v.reporter.full_name || v.reporter.email : 'Anonymous / System';
-                const isBlocked = v.offender && v.offender.is_blocked;
+                const reportedName = v.offender_name || v.offender_email || 'Unknown User';
+                const reporterName = v.reporter_name || v.reporter_email || 'Anonymous / System';
+                const isBlocked = v.offender_is_blocked;
                 const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
                 const proofHtml = v.proof_url ? `<a href="${escapeHTML(v.proof_url)}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-semibold underline flex items-center gap-1"><i class="fas fa-external-link-alt"></i> View Proof</a>` : `<span class="text-gray-400 italic">None</span>`;
 
