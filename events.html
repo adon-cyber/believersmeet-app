@@ -498,13 +498,13 @@
                         </div>
                     </div>
                     <div class="p-5 pt-0 flex items-center justify-between border-t border-gray-100 mt-4 pt-4">
-                        <span class="text-xs font-semibold text-gray-500">👥 ${rsvpCount} ${rsvpCount === 1 ? 'Attendee' : 'Attendees'}</span>
+                        <span id="attendee-count-${evt.id}" class="text-xs font-semibold text-gray-500">👥 ${rsvpCount} ${rsvpCount === 1 ? 'Attendee' : 'Attendees'}</span>
                         <div class="flex gap-2 items-center">
                             <button onclick="openEventReportModal('${evt.id}', '${escapeHtml(evt.title).replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 text-xs transition" title="Report Event Violation">
                                 <i class="fas fa-flag"></i>
                             </button>
-                            <button onclick="toggleRsvp('${evt.id}', ${hasRsvp})" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}">
-                                ${hasRsvp ? '✓ RSVP' : "RSVP"}
+                            <button id="rsvp-btn-${evt.id}" onclick="toggleRsvp('${evt.id}', ${hasRsvp})" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-green-600 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}">
+                                ${hasRsvp ? '✓ RSVP\'d' : 'RSVP'}
                             </button>
                         </div>
                     </div>
@@ -514,17 +514,60 @@
     }
 
     async function toggleRsvp(eventId, hasRsvp) {
+        const btn = document.getElementById(`rsvp-btn-${eventId}`);
+        const countSpan = document.getElementById(`attendee-count-${eventId}`);
+        
+        // Find current event object in allEvents
+        const evt = allEvents.find(e => e.id === eventId);
+        if (!evt) {
+            loadEvents();
+            return;
+        }
+
+        if (!evt.event_registrations) {
+            evt.event_registrations = [];
+        }
+
         if (hasRsvp) {
+            // Optimistic DOM update for cancellation
+            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== loggedInUser.id);
+            const newCount = evt.event_registrations.length;
+            
+            if (countSpan) {
+                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
+            }
+            if (btn) {
+                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
+                btn.innerText = 'RSVP';
+                btn.setAttribute('onclick', `toggleRsvp('${eventId}', false)`);
+            }
+
             const { error } = await window.sbClient
                 .from('event_registrations')
                 .delete()
                 .eq('event_id', eventId)
                 .eq('profile_id', loggedInUser.id);
 
-            if (error) alert("Error cancelling RSVP: " + error.message);
-            else loadEvents();
+            if (error) {
+                alert("Error cancelling RSVP: " + error.message);
+                loadEvents(); // Revert on error
+            }
         } else {
             const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
+            
+            // Optimistic DOM update for RSVP success
+            evt.event_registrations.push({ profile_id: loggedInUser.id });
+            const newCount = evt.event_registrations.length;
+
+            if (countSpan) {
+                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
+            }
+            if (btn) {
+                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
+                btn.innerText = '✓ RSVP\'d';
+                btn.setAttribute('onclick', `toggleRsvp('${eventId}', true)`);
+            }
+
             const { error } = await window.sbClient
                 .from('event_registrations')
                 .insert([{ 
@@ -538,11 +581,14 @@
                 }]);
 
             if (error) {
-                if (error.code === '23505') alert("You have already RSVP'd for this event.");
-                else alert("Error: " + error.message);
+                if (error.code === '23505') {
+                    alert("You have already RSVP'd for this event.");
+                } else {
+                    alert("Error: " + error.message);
+                }
+                loadEvents(); // Revert on error
             } else {
                 alert(`RSVP successful! Your entry coupon is ${randomCoupon}`);
-                loadEvents();
             }
         }
     }

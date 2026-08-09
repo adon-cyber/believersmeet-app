@@ -133,9 +133,14 @@ async function handleSendBroadcast(event) {
 
 async function loadViolationReports() {
     const container = document.getElementById('violations-list-container');
-    if (!container) return;
-
-    container.innerHTML = `<div class="text-center py-6 text-gray-500 italic">Loading violation reports...</div>`;
+    const tableTbody = document.getElementById('violations-table-tbody');
+    
+    if (container) {
+        container.innerHTML = `<div class="text-center py-6 text-gray-500 italic">Loading violation reports...</div>`;
+    }
+    if (tableTbody) {
+        tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 italic">Loading violation reports table...</td></tr>`;
+    }
 
     try {
         const { data: violations, error } = await window.sbClient
@@ -150,44 +155,107 @@ async function loadViolationReports() {
         if (error) throw error;
 
         if (!violations || violations.length === 0) {
-            container.innerHTML = `<div class="text-center py-8 text-gray-500 italic bg-gray-50 rounded-xl border border-dashed border-gray-200">No violation reports found. Platform is fully compliant.</div>`;
+            if (container) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-500 italic bg-gray-50 rounded-xl border border-dashed border-gray-200">No violation reports found. Platform is fully compliant.</div>`;
+            }
+            if (tableTbody) {
+                tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 italic">No violation reports found.</td></tr>`;
+            }
             return;
         }
 
-        container.innerHTML = '';
-        violations.forEach(v => {
-            const reportedName = v.reported_user ? v.reported_user.full_name || v.reported_user.email : 'Unknown User';
-            const reporterName = v.reporter ? v.reporter.full_name || v.reporter.email : 'Anonymous / System';
-            const isBlocked = v.reported_user && v.reported_user.is_blocked;
-            const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+        // Render Cards
+        if (container) {
+            container.innerHTML = '';
+            violations.forEach(v => {
+                const reportedName = v.reported_user ? v.reported_user.full_name || v.reported_user.email : 'Unknown User';
+                const reporterName = v.reporter ? v.reporter.full_name || v.reporter.email : 'Anonymous / System';
+                const isBlocked = v.reported_user && v.reported_user.is_blocked;
+                const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
 
-            const card = document.createElement('div');
-            card.className = 'p-4 rounded-xl border border-gray-200 bg-gray-50 flex flex-col gap-3';
-            card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${statusColor}">${escapeHTML(v.status.toUpperCase())}</span>
-                        <h4 class="text-sm font-bold text-gray-900 mt-1">Reported User: <span class="text-red-600">${escapeHTML(reportedName)}</span></h4>
-                        <p class="text-xs text-gray-500">Reason: <strong class="text-gray-700">${escapeHTML(v.reason)}</strong></p>
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl border border-gray-200 bg-gray-50 flex flex-col gap-3';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${statusColor}">${escapeHTML(v.status.toUpperCase())}</span>
+                            <h4 class="text-sm font-bold text-gray-900 mt-1">Reported User: <span class="text-red-600">${escapeHTML(reportedName)}</span></h4>
+                            <p class="text-xs text-gray-500">Reason: <strong class="text-gray-700">${escapeHTML(v.reason)}</strong></p>
+                        </div>
+                        <span class="text-xs text-gray-400">${new Date(v.created_at).toLocaleDateString()}</span>
                     </div>
-                    <span class="text-xs text-gray-400">${new Date(v.created_at).toLocaleDateString()}</span>
-                </div>
-                ${v.details ? `<p class="text-xs text-gray-600 bg-white p-2.5 rounded-lg border border-gray-200">"${escapeHTML(v.details)}"</p>` : ''}
-                <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-xs">
-                    <span class="text-gray-500">Reported by: ${escapeHTML(reporterName)}</span>
-                    <div class="flex items-center gap-2">
-                        <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg font-medium transition-colors">Mark Reviewed</button>
-                        ${isBlocked ? 
-                            `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Unblock User</button>` :
-                            `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Block / Deactivate</button>`
-                        }
+                    ${v.details ? `<p class="text-xs text-gray-600 bg-white p-2.5 rounded-lg border border-gray-200">"${escapeHTML(v.details)}"</p>` : ''}
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-xs">
+                        <span class="text-gray-500">Reported by: ${escapeHTML(reporterName)}</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg font-medium transition-colors">Mark Reviewed</button>
+                            ${isBlocked ? 
+                                `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Unblock User</button>` :
+                                `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Block / Deactivate</button>`
+                            }
+                        </div>
                     </div>
-                </div>
-            `;
-            container.appendChild(card);
-        });
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Render Responsive Data Table
+        if (tableTbody) {
+            tableTbody.innerHTML = violations.map(v => {
+                const reportedName = v.reported_user ? v.reported_user.full_name || v.reported_user.email : 'Unknown User';
+                const reporterName = v.reporter ? v.reporter.full_name || v.reporter.email : 'Anonymous / System';
+                const isBlocked = v.reported_user && v.reported_user.is_blocked;
+                const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                const proofHtml = v.proof_url ? `<a href="${escapeHTML(v.proof_url)}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-semibold underline flex items-center gap-1"><i class="fas fa-external-link-alt"></i> View Proof</a>` : `<span class="text-gray-400 italic">None</span>`;
+
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                            ${new Date(v.created_at).toLocaleDateString()} ${new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${escapeHTML(reporterName)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
+                            ${escapeHTML(reportedName)}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div class="font-semibold">${escapeHTML(v.reason)}</div>
+                            ${v.details ? `<div class="text-xs text-gray-500 truncate max-w-xs">${escapeHTML(v.details)}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            ${proofHtml}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${statusColor}">
+                                ${escapeHTML(v.status.toUpperCase())}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end space-x-2">
+                                <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg font-medium transition" title="Mark Reviewed">
+                                    Review
+                                </button>
+                                ${isBlocked ? 
+                                    `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold transition">Unblock</button>` :
+                                    `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold transition">Block</button>`
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
     } catch (err) {
-        container.innerHTML = `<div class="text-center py-6 text-red-500 text-sm">Failed to load violations: ${escapeHTML(err.message)}</div>`;
+        console.error("Failed to load violations:", err);
+        if (container) {
+            container.innerHTML = `<div class="text-center py-6 text-red-500 text-sm">Failed to load violations: ${escapeHTML(err.message)}</div>`;
+        }
+        if (tableTbody) {
+            tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-6 text-center text-red-500 font-semibold">Error loading violations: ${escapeHTML(err.message)}</td></tr>`;
+        }
     }
 }
 
@@ -364,17 +432,28 @@ async function updateUserRole(userId) {
     }
 
     try {
-        const { error } = await window.sbClient
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', userId);
+        console.log(`Updating user ${userId} role to ${newRole} via secure RPC...`);
+        const { error } = await window.sbClient.rpc('super_admin_update_user_role', {
+            target_user_id: userId,
+            new_role: newRole
+        });
 
-        if (error) throw error;
+        if (error) {
+            console.warn("RPC failed, falling back to direct table update...", error);
+            const { error: updateError } = await window.sbClient
+                .from('profiles')
+                .update({ role: newRole })
+                .eq('id', userId);
+
+            if (updateError) throw updateError;
+        }
 
         showNotification("User role updated successfully!", "success");
         await loadAllUsersAndChurches();
     } catch (err) {
+        console.error("Failed to update user role:", err);
         showNotification("Failed to update role: " + err.message, "error");
+        alert("Silent RLS or database error updating role: " + err.message);
     }
 }
 
