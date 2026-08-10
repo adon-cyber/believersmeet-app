@@ -100,10 +100,15 @@
 
                 <div>
                     <label for="role-select" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Account Type</label>
-                    <select id="role-select" required class="block w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800 dark:text-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="member" selected>Member</option>
-                        <option value="admin">Admin</option>
+                    <select id="role-select" onchange="toggleJoinCodeField(this.value)" required class="block w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800 dark:text-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="member" selected>Regular Member</option>
+                        <option value="admin">Church Creator / Admin</option>
                     </select>
+                </div>
+
+                <div id="join-code-container">
+                    <label for="church-join-code" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Church Join Code (Optional)</label>
+                    <input type="text" id="church-join-code" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700 uppercase" placeholder="e.g., JINJA2026">
                 </div>
 
                 <div>
@@ -216,6 +221,16 @@
             }
         });
 
+        function toggleJoinCodeField(role) {
+            const container = document.getElementById('join-code-container');
+            if (role === 'admin') {
+                container.classList.add('hidden');
+                document.getElementById('church-join-code').value = '';
+            } else {
+                container.classList.remove('hidden');
+            }
+        }
+
         let storedSignupData = null;
 
         // SECTION A: Initial Signup Handler
@@ -237,6 +252,13 @@
             const confirmPassword = document.getElementById('confirm-password').value;
             const fullName = document.getElementById('full-name').value.trim();
             const role = document.getElementById('role-select').value;
+            const joinCodeInput = document.getElementById('church-join-code') ? document.getElementById('church-join-code').value.trim() : '';
+
+            if (role === 'member' && joinCodeInput) {
+                localStorage.setItem('pending_church_join_code', joinCodeInput.toUpperCase());
+            } else {
+                localStorage.removeItem('pending_church_join_code');
+            }
 
             if (password !== confirmPassword) {
                 errBox.textContent = "Passwords do not match.";
@@ -327,10 +349,37 @@
                 successBox.textContent = "Email verified successfully! Redirecting...";
                 successBox.classList.remove('hidden');
 
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (role === 'admin') {
                         window.location.replace('register-church.html');
                     } else {
+                        const pendingJoinCode = localStorage.getItem('pending_church_join_code');
+                        if (pendingJoinCode) {
+                            try {
+                                const { data: church, error: churchError } = await sb
+                                    .from('churches')
+                                    .select('id')
+                                    .eq('join_code', pendingJoinCode.toUpperCase())
+                                    .single();
+
+                                if (!churchError && church) {
+                                    const { data: { user } } = await sb.auth.getUser();
+                                    if (user) {
+                                        await sb
+                                            .from('profiles')
+                                            .update({ church_id: church.id, role: 'member' })
+                                            .eq('id', user.id);
+
+                                        localStorage.setItem('church_id', church.id);
+                                        localStorage.removeItem('pending_church_join_code');
+                                        window.location.replace('feed.html');
+                                        return;
+                                    }
+                                }
+                            } catch (linkErr) {
+                                console.warn("Automatic join code linking failed:", linkErr);
+                            }
+                        }
                         window.location.replace('join-church.html');
                     }
                 }, 1000);
