@@ -12,27 +12,27 @@
 <body class="min-h-screen flex flex-col font-sans text-slate-100 bg-slate-950">
 
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
+    <nav class="bg-blue-600 shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3 flex-shrink-0 mr-4">
-                    <a href="feed.html" class="text-xl font-bold text-emerald-600 flex items-center">
+                    <a href="feed.html" class="text-xl font-bold text-white flex items-center">
                         <span class="mr-2">⛪</span> BelieversMeet
                     </a>
                 </div>
-                <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]"></div>
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Giving</a>
-                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
-                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Profile</a>
-                    <a href="church-dashboard.html" class="text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md transition-colors">Church Admin</a>
-                    <a href="settings.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-emerald-600 px-2 py-1 rounded-md transition-colors">Settings</a>
-                    <button onclick="logout()" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</button>
+                <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch] items-center">
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Giving</a>
+                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Sermons</a>
+                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                    <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Profile</a>
+                    <a href="church-dashboard.html" class="text-xs sm:text-sm font-bold text-white bg-blue-700 px-2 py-1 rounded-md transition-colors">Church Admin</a>
+                    <a href="settings.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors">Settings</a>
+                    <button onclick="logout()" class="text-xs sm:text-sm font-medium text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</button>
                 </div>
             </div>
         </div>
@@ -41,52 +41,52 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
         <div class="mb-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Church Leadership Dashboard</h1>
-            <p class="text-sm text-gray-600 mt-1">Manage weekly programmes, view congregation members, and update church coordinates.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Church Leadership Dashboard</h1>
+            <p class="text-sm text-slate-300 mt-1">Manage weekly programmes, view congregation members, and update church coordinates.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column: Add Programme & Update Location -->
             <div class="space-y-8 lg:col-span-1">
                 <!-- Add New Programme Card -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
                         <span class="mr-2">📅</span> Add New Programme
                     </h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Programme Title</label>
-                            <input type="text" id="p-title" placeholder="e.g. Sunday Service" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Programme Title</label>
+                            <input type="text" id="p-title" placeholder="e.g. Sunday Service" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                            <input type="time" id="p-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Time</label>
+                            <input type="time" id="p-time" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea id="p-desc" rows="3" placeholder="Programme description..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                            <textarea id="p-desc" rows="3" placeholder="Programme description..." class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"></textarea>
                         </div>
-                        <button id="add-btn" onclick="addProgramme()" class="w-full py-2 px-4 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition">Publish Programme</button>
+                        <button id="add-btn" onclick="addProgramme()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition">Publish Programme</button>
                     </div>
                 </div>
 
                 <!-- Update Church Location Card -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
                         <span class="mr-2">📍</span> Update Church Location
                     </h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                            <input type="text" id="lat" placeholder="e.g. 0.4479" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Latitude</label>
+                            <input type="text" id="lat" placeholder="e.g. 0.4479" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                            <input type="text" id="lng" placeholder="e.g. 33.2025" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Longitude</label>
+                            <input type="text" id="lng" placeholder="e.g. 33.2025" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400">
                         </div>
-                        <button onclick="updateLocation()" class="w-full py-2 px-4 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition">Save Coordinates</button>
-                        <button onclick="detectAndSaveLocation()" class="w-full py-2 px-4 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition">Use Current GPS</button>
-                        <p id="gps-status" class="text-xs text-gray-500 text-center mt-2"></p>
+                        <button onclick="updateLocation()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition">Save Coordinates</button>
+                        <button onclick="detectAndSaveLocation()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition">Use Current GPS</button>
+                        <p id="gps-status" class="text-xs text-slate-400 text-center mt-2"></p>
                     </div>
                 </div>
             </div>
@@ -94,22 +94,22 @@
             <!-- Right Column: Members List & Programmes List -->
             <div class="space-y-8 lg:col-span-2">
                 <!-- Members in my Church Card -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
                         <span class="mr-2">👥</span> Members in my Church
                     </h3>
-                    <div id="member-list" class="divide-y divide-gray-200">
-                        <p class="text-gray-500 py-4">Loading members...</p>
+                    <div id="member-list" class="divide-y divide-slate-800">
+                        <p class="text-slate-400 py-4">Loading members...</p>
                     </div>
                 </div>
 
                 <!-- Existing Programmes Card -->
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
                         <span class="mr-2">📋</span> Published Programmes
                     </h3>
-                    <div id="programme-list" class="divide-y divide-gray-200">
-                        <p class="text-gray-500 py-4">Loading programmes...</p>
+                    <div id="programme-list" class="divide-y divide-slate-800">
+                        <p class="text-slate-400 py-4">Loading programmes...</p>
                     </div>
                 </div>
             </div>
@@ -117,8 +117,8 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+    <footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-400">
         &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
       </div>
     </footer>
@@ -234,19 +234,19 @@
                 .order('created_at', { ascending: false });
 
             if (error) {
-                container.innerHTML = `<p class="text-red-500 py-3">Error loading programmes: ${escapeHTML(error.message)}</p>`;
+                container.innerHTML = `<p class="text-red-400 py-3">Error loading programmes: ${escapeHTML(error.message)}</p>`;
                 return;
             }
 
             container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => `
                 <div class="py-3 flex items-center justify-between">
                     <div>
-                        <h4 class="text-sm font-semibold text-gray-900">${escapeHTML(p.title)} <span class="text-xs font-normal text-gray-500 ml-2">(${escapeHTML(p.start_time)})</span></h4>
-                        ${p.description ? `<p class="text-xs text-gray-600 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+                        <h4 class="text-sm font-semibold text-white">${escapeHTML(p.title)} <span class="text-xs font-normal text-slate-400 ml-2">(${escapeHTML(p.start_time)})</span></h4>
+                        ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
                     </div>
-                    <button onclick="deleteProgramme('${p.id}')" class="text-sm text-red-600 hover:text-red-800 font-medium ml-4">Delete</button>
+                    <button onclick="deleteProgramme('${p.id}')" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-medium ml-4 transition">Delete</button>
                 </div>
-            `).join('') : '<p class="text-gray-500 py-3">No programmes published yet.</p>';
+            `).join('') : '<p class="text-slate-400 py-3">No programmes published yet.</p>';
         }
 
         async function deleteProgramme(id) {
@@ -267,16 +267,16 @@
                 .eq('church_id', userChurchId);
 
             if (error) {
-                container.innerHTML = `<p class="text-red-500 py-3">Error loading members: ${escapeHTML(error.message)}</p>`;
+                container.innerHTML = `<p class="text-red-400 py-3">Error loading members: ${escapeHTML(error.message)}</p>`;
                 return;
             }
 
             container.innerHTML = members && members.length > 0 ? members.map(m => `
                 <div class="py-3 flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-900">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
-                    <span class="px-2 py-0.5 text-xs rounded bg-emerald-50 text-emerald-700 font-medium">${escapeHTML(m.role || 'member')}</span>
+                    <span class="text-sm font-medium text-white">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
+                    <span class="px-2 py-0.5 text-xs rounded bg-blue-900 text-blue-200 font-medium">${escapeHTML(m.role || 'member')}</span>
                 </div>
-            `).join('') : '<p class="text-gray-500 py-3">No members joined your church yet.</p>';
+            `).join('') : '<p class="text-slate-400 py-3">No members joined your church yet.</p>';
         }
 
         async function updateLocation() {
