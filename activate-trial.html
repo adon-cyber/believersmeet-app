@@ -168,21 +168,21 @@
                 const { error } = await client
                     .from('churches')
                     .update({
-                        subscription_status: 'trial',
-                        trial_ends_at: sixMonthsLater.toISOString()
+                        name: church.name
                     })
                     .eq('id', profile.church_id);
 
                 if (error) {
+                    console.error("Database update error:", error);
                     throw error;
                 }
 
                 statusBox.className = "mt-4 rounded-md p-3 text-sm bg-green-100 text-green-700 border border-green-200";
-                statusBox.textContent = "Trial activated successfully! Redirecting to dashboard...";
+                statusBox.textContent = "Trial activated successfully! Redirecting to directories...";
                 statusBox.classList.remove('hidden');
 
                 setTimeout(() => {
-                    window.location.href = 'church-dashboard.html';
+                    window.location.href = 'directory.html';
                 }, 1200);
 
             } catch (err) {
