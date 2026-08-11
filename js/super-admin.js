@@ -273,7 +273,13 @@ async function updateViolationStatus(violationId, newStatus) {
     }
 }
 
-async function toggleBlockUser(userId, blockStatus) {
+async function toggleBlockUser(targetUserId, blockStatus) {
+    if (!targetUserId || targetUserId === 'undefined' || targetUserId === 'null') {
+        console.error("Invalid target user ID provided for status update:", targetUserId);
+        showNotification("Failed to update account status: Invalid user ID", "error");
+        return;
+    }
+
     if (!confirm(`Are you sure you want to ${blockStatus ? 'BLOCK / DEACTIVATE' : 'UNBLOCK'} this user account?`)) {
         return;
     }
@@ -282,7 +288,7 @@ async function toggleBlockUser(userId, blockStatus) {
         const { error } = await window.sbClient
             .from('profiles')
             .update({ is_blocked: blockStatus })
-            .eq('id', userId);
+            .eq('id', targetUserId);
 
         if (error) throw error;
         showNotification(`User account successfully ${blockStatus ? 'blocked' : 'unblocked'}.`, "success");
