@@ -255,6 +255,14 @@
                 localStorage.removeItem('pending_church_join_code');
             }
 
+            if (!password || password.trim() === "") {
+                errBox.textContent = "Password is required to complete registration.";
+                errBox.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = "Sign Up";
+                return;
+            }
+
             if (password !== confirmPassword) {
                 errBox.textContent = "Passwords do not match.";
                 errBox.classList.remove('hidden');

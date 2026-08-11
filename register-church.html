@@ -262,13 +262,16 @@
                     const pastorEmail = document.getElementById('pastor-email').value.trim();
                     const pastorPassword = document.getElementById('pastor-password').value;
 
-                    if (!pastorName || !pastorEmail || !pastorPassword) {
-                        throw new Error("Please fill in all Admin Account Credentials.");
+                    if (!pastorName || !pastorEmail || !pastorPassword || pastorPassword.trim() === "") {
+                        throw new Error("Password is required to complete registration.");
                     }
 
                     const { data: signUpData, error: authError } = await window.sbClient.auth.signUp({
                         email: pastorEmail,
-                        password: pastorPassword
+                        password: pastorPassword,
+                        options: {
+                            data: { full_name: pastorName }
+                        }
                     });
                     
                     if (authError) throw authError;
