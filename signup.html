@@ -125,28 +125,25 @@
                 </div>
             </form>
 
-            <!-- SECTION B: Hidden OTP Verification Form -->
-            <form id="otp-form" class="mt-8 space-y-5 hidden">
+            <!-- SECTION B: Check Your Email Confirmation State (Verification Link Flow) -->
+            <div id="email-confirmation-state" class="mt-8 space-y-6 hidden text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 text-center">
-                        We have sent a 6-digit verification code to <span id="verification-email-display" class="font-semibold text-indigo-600 dark:text-indigo-400"></span>. Please enter it below to complete your registration.
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Check your email</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                        We have sent a confirmation link to <span id="verification-email-display" class="font-semibold text-indigo-600 dark:text-indigo-400"></span>. Please click the link inside to verify your account.
                     </p>
-                    <label for="otp-code" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">6-Digit Verification Code</label>
-                    <input type="text" id="otp-code" maxlength="6" pattern="\d{6}" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 tracking-widest text-center text-xl font-bold focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="123456">
                 </div>
-
-                <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg">
-                        Verify Code & Complete Sign Up
-                    </button>
+                <div class="pt-2">
+                    <a href="login.html" class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg">
+                        Proceed to Login
+                    </a>
                 </div>
-
-                <div class="text-center pt-2">
-                    <button type="button" id="resend-otp-btn" class="text-xs text-indigo-600 hover:text-indigo-500 font-medium">
-                        Didn't receive code? Resend
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </main>
 
@@ -231,9 +228,7 @@
             }
         }
 
-        let storedSignupData = null;
-
-        // SECTION A: Initial Signup Handler
+        // Initial Signup Handler with Email Verification Link & Proper Redirect URL
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errBox = document.getElementById('error-message');
@@ -278,8 +273,18 @@
             }
 
             try {
+                // Determine redirect URL based on user type (church founder/admin vs regular member join code)
+                const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                const redirectTo = role === 'admin' 
+                    ? baseUrl + 'register-church.html'
+                    : (joinCodeInput ? baseUrl + 'feed.html' : baseUrl + 'join-church.html');
+
                 const { data: authData, error: authError } = await sb.auth.signUp({
-                    email, password
+                    email, 
+                    password,
+                    options: {
+                        emailRedirectTo: redirectTo
+                    }
                 });
                 if (authError) throw authError;
 
@@ -300,128 +305,16 @@
                     }
                 }
 
-                // Store signup state for verification step
-                storedSignupData = { email, role };
-
-                // Reveal Section B (OTP Form) and hide Section A
+                // Hide Signup Form and Reveal Check Your Email Confirmation State
                 document.getElementById('signup-form').classList.add('hidden');
-                const otpForm = document.getElementById('otp-form');
-                otpForm.classList.remove('hidden');
+                document.getElementById('email-confirmation-state').classList.remove('hidden');
                 document.getElementById('verification-email-display').textContent = email;
-
-                successBox.textContent = "Account initialized! Please enter the 6-digit verification code sent to your email.";
-                successBox.classList.remove('hidden');
 
             } catch (err) {
                 errBox.textContent = "Error: " + err.message;
                 errBox.classList.remove('hidden');
                 btn.disabled = false;
                 btn.textContent = "Sign Up";
-            }
-        });
-
-        // SECTION B: OTP Verification Handler
-        document.getElementById('otp-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errBox = document.getElementById('error-message');
-            const successBox = document.getElementById('success-message');
-            errBox.classList.add('hidden');
-            successBox.classList.add('hidden');
-
-            const sb = await waitForSupabase();
-            const token = document.getElementById('otp-code').value.trim();
-            const email = storedSignupData ? storedSignupData.email : document.getElementById('email').value.trim();
-            const role = storedSignupData ? storedSignupData.role : 'member';
-
-            const btn = document.querySelector('#otp-form button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = "Verifying Code...";
-
-            try {
-                const { data, error } = await sb.auth.verifyOtp({
-                    email,
-                    token,
-                    type: 'signup'
-                });
-
-                if (error) throw error;
-
-                successBox.textContent = "Email verified successfully! Redirecting...";
-                successBox.classList.remove('hidden');
-
-                setTimeout(async () => {
-                    if (role === 'admin') {
-                        window.location.replace('register-church.html');
-                    } else {
-                        const pendingJoinCode = localStorage.getItem('pending_church_join_code');
-                        if (pendingJoinCode) {
-                            try {
-                                const { data: church, error: churchError } = await sb
-                                    .from('churches')
-                                    .select('id')
-                                    .eq('join_code', pendingJoinCode.toUpperCase())
-                                    .single();
-
-                                if (!churchError && church) {
-                                    const { data: { user } } = await sb.auth.getUser();
-                                    if (user) {
-                                        await sb
-                                            .from('profiles')
-                                            .update({ church_id: church.id, role: 'member' })
-                                            .eq('id', user.id);
-
-                                        localStorage.setItem('church_id', church.id);
-                                        localStorage.removeItem('pending_church_join_code');
-                                        window.location.replace('feed.html');
-                                        return;
-                                    }
-                                }
-                            } catch (linkErr) {
-                                console.warn("Automatic join code linking failed:", linkErr);
-                            }
-                        }
-                        window.location.replace('join-church.html');
-                    }
-                }, 1000);
-
-            } catch (err) {
-                errBox.textContent = "Verification failed: " + (err.message || "Invalid or expired code.");
-                errBox.classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = "Verify Code & Complete Sign Up";
-            }
-        });
-
-        // Resend OTP button handler
-        document.getElementById('resend-otp-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const errBox = document.getElementById('error-message');
-            const successBox = document.getElementById('success-message');
-            errBox.classList.add('hidden');
-            successBox.classList.add('hidden');
-
-            const sb = await waitForSupabase();
-            const email = storedSignupData ? storedSignupData.email : document.getElementById('email').value.trim();
-
-            if (!email) {
-                errBox.textContent = "Email address not found. Please restart signup.";
-                errBox.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const { error } = await sb.auth.resend({
-                    type: 'signup',
-                    email: email
-                });
-
-                if (error) throw error;
-
-                successBox.textContent = "A new verification code has been sent to your email.";
-                successBox.classList.remove('hidden');
-            } catch (err) {
-                errBox.textContent = "Failed to resend code: " + err.message;
-                errBox.classList.remove('hidden');
             }
         });
 
