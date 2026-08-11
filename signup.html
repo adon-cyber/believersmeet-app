@@ -288,12 +288,12 @@
                 });
                 if (authError) throw authError;
 
-                if (authData && authData.user) {
+                if (authData && (authData.session || authData.user)) {
                     const profileData = {
                         id: authData.user.id,
                         full_name: fullName,
                         role: role,
-                        is_verified: false
+                        is_verified: true
                     };
 
                     const { error: profileError } = await sb
@@ -303,9 +303,22 @@
                     if (profileError) {
                         console.warn("Profile upsert warning:", profileError.message);
                     }
+
+                    // Automatically redirect based on user role / selection
+                    const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                    if (role === 'super_admin' || email === 'adoniakasango@gmail.com') {
+                        window.location.replace('super-admin.html');
+                    } else if (role === 'admin') {
+                        window.location.replace('register-church.html');
+                    } else if (joinCodeInput) {
+                        window.location.replace('feed.html');
+                    } else {
+                        window.location.replace('join-church.html');
+                    }
+                    return;
                 }
 
-                // Hide Signup Form and Reveal Check Your Email Confirmation State
+                // Fallback if session/user check wasn't caught above
                 document.getElementById('signup-form').classList.add('hidden');
                 document.getElementById('email-confirmation-state').classList.remove('hidden');
                 document.getElementById('verification-email-display').textContent = email;
