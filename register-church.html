@@ -278,17 +278,23 @@
 
                 let logoUrl = logoUrlInput || null;
                 if (logoFile) {
-                    const fileExt = logoFile.name.split('.').pop();
-                    const fileName = `church_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-                    const { error: uploadError } = await window.sbClient.storage
-                        .from('avatars')
-                        .upload(fileName, logoFile, { upsert: true });
-                    
-                    if (!uploadError) {
-                        const { data: publicUrlData } = window.sbClient.storage
+                    try {
+                        const fileExt = logoFile.name.split('.').pop();
+                        const fileName = `church_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+                        const { error: uploadError } = await window.sbClient.storage
                             .from('avatars')
-                            .getPublicUrl(fileName);
-                        logoUrl = publicUrlData.publicUrl;
+                            .upload(fileName, logoFile, { upsert: true });
+                        
+                        if (!uploadError) {
+                            const { data: publicUrlData } = window.sbClient.storage
+                                .from('avatars')
+                                .getPublicUrl(fileName);
+                            logoUrl = publicUrlData.publicUrl;
+                        } else {
+                            console.warn("Image upload failed, falling back to default placeholder:", uploadError);
+                        }
+                    } catch (uploadCatchErr) {
+                        console.warn("Image upload threw an exception, falling back to default placeholder:", uploadCatchErr);
                     }
                 }
 
