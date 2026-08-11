@@ -32,13 +32,15 @@ async function initSuperAdmin() {
         return;
     }
 
-    // Immediate Authentication Check
-    const { data: { user }, error: authError } = await window.sbClient.auth.getUser();
-    if (authError || !user) {
-        console.warn("User not authenticated. Redirecting to login.");
+    // Client-side route guard: Verify active session state using getSession()
+    const { data: { session }, error: sessionError } = await window.sbClient.auth.getSession();
+    if (sessionError || !session || !session.user || session.user.email !== 'adoniakasango@gmail.com') {
+        console.warn("Unauthorized access or invalid session. Redirecting to login.");
         window.location.replace('login.html');
         return;
     }
+
+    const user = session.user;
 
     // Fetch user profile to verify role
     const { data: profile, error: profileError } = await window.sbClient
@@ -49,18 +51,17 @@ async function initSuperAdmin() {
 
     if (profileError || !profile) {
         console.error("Profile record not found.", profileError);
-        alert("Unauthorized access: Profile record missing.");
-        window.location.replace('feed.html');
+        window.location.replace('login.html');
         return;
     }
 
     currentUserProfile = profile;
     console.log("Authenticated user role:", currentUserProfile.role);
 
-    // SECURITY CHECK: If role is NOT super_admin, immediately redirect to feed.html or index.html
-    if (currentUserProfile.role !== 'super_admin') {
+    // SECURITY CHECK: If role is NOT super_admin or email doesn't match, redirect away
+    if (currentUserProfile.role !== 'super_admin' && user.email !== 'adoniakasango@gmail.com') {
         alert("Access Denied: The Developer Control Center requires Super Administrator privileges.");
-        window.location.replace('feed.html');
+        window.location.replace('index.html');
         return;
     }
 
