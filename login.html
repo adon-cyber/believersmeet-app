@@ -114,7 +114,7 @@
                 if (data.user) {
                     const isSuperAdmin = data.user.email === 'adoniakasango@gmail.com';
                     if (isSuperAdmin) {
-                        window.location.replace(encodeURI('super admin.html'));
+                        window.location.replace('super-admin.html');
                         return;
                     }
 
@@ -125,7 +125,7 @@
                         .maybeSingle();
 
                     if (profile && profile.role === 'super_admin') {
-                        window.location.replace(encodeURI('super admin.html'));
+                        window.location.replace('super-admin.html');
                         return;
                     }
 
