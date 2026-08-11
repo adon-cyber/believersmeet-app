@@ -3,6 +3,48 @@ input, textarea, select {
   background-color: #ffffff !important;
 }
 
+/* Enhanced Contrast & WCAG AA Compliance Rules */
+.text-gray-400 {
+  color: #9ca3af !important;
+}
+.dark .text-gray-400 {
+  color: #cbd5e1 !important;
+}
+.text-gray-500 {
+  color: #6b7280 !important;
+}
+.dark .text-gray-500 {
+  color: #94a3b8 !important;
+}
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+/* Button & Interactive States Harmonization */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #4f46e5 !important;
+  outline-offset: 2px !important;
+}
+
+/* Custom Scrollbar Polish */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
 /* Tailwind CSS Revert & UI/UX Clean Backgrounds */
 
 /* Background Utility Classes */
