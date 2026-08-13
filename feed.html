@@ -257,7 +257,26 @@
     async function handleConnectProfile(targetUserId, targetName) {
         if (!loggedInUser) return;
 
+        if (targetUserId === loggedInUser.id) {
+            alert("You cannot send a connection request to yourself.");
+            return;
+        }
+
         try {
+            // First check if a connection already exists in either direction
+            const { data: existingConn } = await window.sbClient
+                .from('connections')
+                .select('*')
+                .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},recipient_id.eq.${loggedInUser.id})`)
+                .maybeSingle();
+
+            if (existingConn) {
+                alert("Connection request already exists");
+                currentDiscoveryIndex++;
+                renderCurrentDiscoveryCard();
+                return;
+            }
+
             const { error } = await window.sbClient
                 .from('connections')
                 .insert([{
@@ -269,7 +288,7 @@
             if (error) {
                 console.error("Supabase connection insert error details:", error);
                 if (error.code === '23505' || (error.message && error.message.includes('unique constraint'))) {
-                    alert(`Connection request already sent to ${targetName}!`);
+                    alert("Connection request already exists");
                 } else {
                     alert(`Connection request to ${targetName} could not be saved: ${error.message || JSON.stringify(error)}`);
                 }
@@ -278,7 +297,11 @@
             }
         } catch (err) {
             console.error("Unexpected error during connection creation:", err);
-            alert(`Connection request already sent!`);
+            if (err.code === '23505' || (err.message && err.message.includes('unique constraint'))) {
+                alert("Connection request already exists");
+            } else {
+                alert("Connection request already exists");
+            }
         } finally {
             currentDiscoveryIndex++;
             renderCurrentDiscoveryCard();

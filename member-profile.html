@@ -175,9 +175,35 @@
 
         const btn = document.getElementById('connect-btn');
         btn.disabled = true;
-        btn.textContent = 'Sending...';
+        btn.textContent = 'Checking...';
 
         try {
+            // First check if a connection already exists in either direction
+            const { data: existingConn } = await window.sbClient
+                .from('connections')
+                .select('*')
+                .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},recipient_id.eq.${loggedInUser.id})`)
+                .maybeSingle();
+
+            if (existingConn) {
+                if (existingConn.status === 'accepted') {
+                    currentConnectionState = 'accepted';
+                    btn.textContent = 'Connected';
+                    btn.disabled = true;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    currentConnectionState = 'pending';
+                    btn.textContent = 'Request Pending';
+                    btn.disabled = true;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.cursor = 'not-allowed';
+                }
+                alert("Connection request already exists");
+                return;
+            }
+
+            btn.textContent = 'Sending...';
             const { error } = await window.sbClient
                 .from('connections')
                 .insert([{
@@ -187,9 +213,20 @@
                 }]);
 
             if (error) {
-                alert("Could not send connection request: " + error.message);
-                btn.disabled = false;
-                btn.textContent = 'Connect';
+                if (error.code === '23505' || (error.message && error.message.includes('unique constraint'))) {
+                    alert("Connection request already exists");
+                    currentConnectionState = 'pending';
+                    btn.textContent = 'Request Pending';
+                    btn.disabled = true;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    alert("Could not send connection request: " + error.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Connect';
+                    btn.style.backgroundColor = '#007bff';
+                    btn.style.cursor = 'pointer';
+                }
             } else {
                 currentConnectionState = 'pending';
                 btn.textContent = 'Request Pending';
@@ -199,8 +236,20 @@
             }
         } catch (e) {
             console.error("Error sending connection request:", e);
-            btn.disabled = false;
-            btn.textContent = 'Connect';
+            if (e.code === '23505' || (e.message && e.message.includes('unique constraint'))) {
+                alert("Connection request already exists");
+                currentConnectionState = 'pending';
+                btn.textContent = 'Request Pending';
+                btn.disabled = true;
+                btn.style.backgroundColor = '#6c757d';
+                btn.style.cursor = 'not-allowed';
+            } else {
+                alert("Could not send connection request: " + (e.message || e));
+                btn.disabled = false;
+                btn.textContent = 'Connect';
+                btn.style.backgroundColor = '#007bff';
+                btn.style.cursor = 'pointer';
+            }
         }
     }
 
