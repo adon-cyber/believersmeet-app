@@ -49,6 +49,7 @@
             { href: 'testimonies.html', label: 'Testimonies' },
             { href: 'inboxx.html', label: 'Inbox' },
             { href: 'events.html', label: 'Events' },
+            { href: 'gallery.html', label: 'Gallery' },
             { href: 'profile.html', label: 'Profile' }
         ];
 
