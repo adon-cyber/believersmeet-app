@@ -34,7 +34,7 @@ async function initSuperAdmin() {
 
     // Client-side route guard: Verify active session state using getSession()
     const { data: { session }, error: sessionError } = await window.sbClient.auth.getSession();
-    if (sessionError || !session || !session.user || session.user.email !== 'adoniakasango@gmail.com') {
+    if (sessionError || !session || !session.user || session.user.email !== 'adonstance@gmail.com') {
         console.warn("Unauthorized access or invalid session. Redirecting to login.");
         window.location.replace('login.html');
         return;
@@ -58,8 +58,8 @@ async function initSuperAdmin() {
     currentUserProfile = profile;
     console.log("Authenticated user role:", currentUserProfile.role);
 
-    // SECURITY CHECK: If role is NOT super_admin or super-admin or email doesn't match, redirect away
-    if (currentUserProfile.role !== 'super_admin' && currentUserProfile.role !== 'super-admin' && user.email !== 'adoniakasango@gmail.com') {
+    // SECURITY CHECK: If role is NOT super_admin or email doesn't match, redirect away
+    if (currentUserProfile.role !== 'super_admin' && user.email !== 'adonstance@gmail.com') {
         alert("Access Denied: The Developer Control Center requires Super Administrator privileges.");
         window.location.replace('index.html');
         return;
