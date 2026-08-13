@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Feed | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://meet.jit.si/external_api.js"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -101,25 +100,6 @@
         </div>
         
         <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
-            <div class="bg-blue-50 p-5 rounded-xl border-l-4 border-blue-500 shadow-sm">
-                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-2">📹 Live Fellowship</h3>
-                <p class="text-sm text-gray-600 mb-4">Gather immediately via video with members of your congregation for prayer and study.</p>
-                <button onclick="launchVideoConferenceRoom()" class="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow">
-                    Join Church Video Room
-                </button>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <h4 class="text-lg font-bold text-blue-600 mb-3">💬 Live Chat</h4>
-                <div id="chat-messages-container" class="h-56 overflow-y-auto border border-gray-100 p-3 mb-3 rounded-lg flex flex-col gap-2 bg-gray-50 text-sm">
-                    <p class="text-xs text-gray-400 text-center py-4">Loading chat...</p>
-                </div>
-                <form id="live-chat-form" class="flex gap-2">
-                    <input type="text" id="chat-message-input" placeholder="Say hello..." required class="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">Send</button>
-                </form>
-            </div>
-
             <div class="bg-slate-50 p-5 rounded-xl border border-gray-200 shadow-sm">
                 <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
                 <form id="leadership-inbox-form">
@@ -136,13 +116,6 @@
     </div>
 </main>
 
-<div id="video-fellowship-modal" class="video-overlay-modal">
-    <div class="video-container-frame">
-        <button class="close-video-btn" onclick="terminateConferenceCall()">Leave Call</button>
-        <div id="jitsi-iframe-injection-target" style="width: 100%; height: 100%;"></div>
-    </div>
-</div>
-
 <!-- Footer -->
 <footer class="bg-white border-t border-gray-200 mt-auto py-6">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
@@ -155,7 +128,6 @@
     let currentUserProfile = null; 
     let cachedPosts = []; 
     let activeFilter = 'All';
-    let activeJitsiApiInstance = null;
     let discoveryProfiles = [];
     let currentDiscoveryIndex = 0;
 
@@ -253,7 +225,6 @@
     }
 
     async function handlePassProfile(targetUserId) {
-        // Record pass or simply advance to next profile in stack
         currentDiscoveryIndex++;
         renderCurrentDiscoveryCard();
     }
@@ -262,7 +233,6 @@
         if (!loggedInUser) return;
 
         try {
-            // Insert connection request into database using correct schema column names (requester_id, recipient_id, status)
             const { error } = await window.sbClient
                 .from('connections')
                 .insert([{
@@ -324,8 +294,7 @@
         await loadFeedGallery();
         await fetchAndRenderWallTimeline();
         await loadDiscoveryProfiles();
-        initLiveChat(); 
-        initTimelineRealtimeSync(); // Global synchronization activator
+        initTimelineRealtimeSync(); 
         
         document.getElementById('post-composition-form').addEventListener('submit', handleOutboundPostSubmit);
         
@@ -347,71 +316,10 @@
         });
     }
 
-    // --- LIVE CHAT ENGINE ---
-    async function initLiveChat() {
-        if (!currentUserProfile || !currentUserProfile.church_id) return;
-        
-        const { data: messages } = await window.sbClient
-            .from('chat_messages')
-            .select('*')
-            .eq('church_id', currentUserProfile.church_id)
-            .order('created_at', { ascending: true })
-            .limit(50);
-
-        const chatBox = document.getElementById('chat-messages-container');
-        chatBox.innerHTML = '';
-        if (messages) messages.forEach(renderSingleChatMessage);
-
-        window.sbClient
-            .channel('church-group-chat')
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'chat_messages' 
-            }, payload => {
-                if (payload.new.church_id === currentUserProfile.church_id) {
-                    renderSingleChatMessage(payload.new);
-                }
-            })
-            .subscribe((status) => {
-                console.log("Supabase Realtime Chat Status:", status);
-            });
-
-        document.getElementById('live-chat-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-message-input');
-            const msg = input.value;
-            if (!msg.trim()) return;
-            
-            input.value = ''; 
-
-            const { error } = await window.sbClient.from('chat_messages').insert([{
-                user_name: currentUserProfile.full_name,
-                message: msg,
-                church_id: currentUserProfile.church_id,
-                user_id: loggedInUser.id
-            }]);
-
-            if (error) {
-                console.error("Chat delivery breakdown:", error.message);
-            }
-        };
-    }
-
-    function renderSingleChatMessage(chatData) {
-        const chatBox = document.getElementById('chat-messages-container');
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'bg-white p-2 rounded-lg border border-gray-200 text-xs shadow-sm';
-        msgDiv.innerHTML = `<strong class="text-blue-700">${escapeHTML(chatData.user_name)}:</strong> <span class="text-gray-800">${escapeHTML(chatData.message)}</span>`;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight; 
-    }
-
     // --- TIMELINE FEED REALTIME CHANNEL ---
     function initTimelineRealtimeSync() {
         if (!currentUserProfile) return;
 
-        // Auto-refresh timeline whenever posts are added, updated (Amen'd), or comments arrive
         window.sbClient
             .channel('interactive-timeline-channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
@@ -423,41 +331,6 @@
             .subscribe((status) => {
                 console.log("Timeline Core Sync Status:", status);
             });
-    }
-
-    // --- VIDEO CONFERENCING ENGINE HANDLERS ---
-    function launchVideoConferenceRoom() {
-        if (!currentUserProfile) return;
-        
-        const cleanChurchNamespace = "BelieversMeet-" + currentUserProfile.church_id.replace(/[^a-zA-Z0-9]/g, "");
-        document.getElementById('video-fellowship-modal').style.display = 'flex';
-        
-        const conferenceOptions = {
-            roomName: cleanChurchNamespace,
-            parentNode: document.getElementById('jitsi-iframe-injection-target'),
-            userInfo: { displayName: currentUserProfile.full_name },
-            interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: [
-                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                    'framerate', 'chat', 'raisehand', 'videoquality', 'filmstrip',
-                    'tileview', 'shortcuts', 'mute-everyone', 'select-background'
-                ]
-            }
-        };
-        
-        activeJitsiApiInstance = new JitsiMeetExternalAPI("meet.jit.si", conferenceOptions);
-        activeJitsiApiInstance.addEventListener('videoConferenceLeft', () => {
-            terminateConferenceCall();
-        });
-    }
-
-    function terminateConferenceCall() {
-        document.getElementById('video-fellowship-modal').style.display = 'none';
-        if (activeJitsiApiInstance) {
-            activeJitsiApiInstance.dispose();
-            activeJitsiApiInstance = null;
-        }
-        document.getElementById('jitsi-iframe-injection-target').innerHTML = "";
     }
 
     // --- FEED GALLERY MEMORIES ---
