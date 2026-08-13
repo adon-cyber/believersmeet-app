@@ -79,6 +79,17 @@
                 </div>
             </div>
 
+            <!-- Gallery Memories Widget -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">📸 Gallery Memories</h3>
+                    <a href="gallery.html" class="text-xs text-blue-600 hover:text-blue-800 font-bold">View All Gallery &rarr;</a>
+                </div>
+                <div id="feed-gallery-container" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <p class="col-span-full text-center text-gray-400 text-sm py-4">Loading gallery memories...</p>
+                </div>
+            </div>
+
             <div class="flex flex-wrap gap-2 pb-2 border-b border-gray-200">
                 <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white transition" onclick="filterTimeline('All', this)">🌍 All Posts</button>
                 <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Encouragement', this)">🕊️ Encouragements</button>
@@ -310,6 +321,7 @@
         }
 
         loadAnnouncements();
+        await loadFeedGallery();
         await fetchAndRenderWallTimeline();
         await loadDiscoveryProfiles();
         initLiveChat(); 
@@ -446,6 +458,44 @@
             activeJitsiApiInstance = null;
         }
         document.getElementById('jitsi-iframe-injection-target').innerHTML = "";
+    }
+
+    // --- FEED GALLERY MEMORIES ---
+    async function loadFeedGallery() {
+        const { data: photos, error } = await window.sbClient
+            .from('gallery_images')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        if (!error && photos) {
+            renderFeedGallerySection(photos);
+        } else {
+            console.error("Error loading feed gallery:", error?.message);
+            const container = document.getElementById('feed-gallery-container');
+            if (container) {
+                container.innerHTML = '<p class="col-span-full text-center text-xs text-red-500 py-2">Failed to load gallery memories.</p>';
+            }
+        }
+    }
+
+    function renderFeedGallerySection(photos) {
+        const container = document.getElementById('feed-gallery-container');
+        if (!container) return;
+
+        if (!photos || photos.length === 0) {
+            container.innerHTML = '<p class="col-span-full text-center text-xs text-gray-400 py-4">No gallery photos uploaded yet.</p>';
+            return;
+        }
+
+        container.innerHTML = photos.map(photo => `
+            <a href="gallery.html" class="block group relative aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200">
+                <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(photo.caption || 'Church Memory')}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-end p-2">
+                    <p class="text-white text-xs opacity-0 group-hover:opacity-100 transition truncate">${escapeHTML(photo.caption || '')}</p>
+                </div>
+            </a>
+        `).join('');
     }
 
     // --- TIMELINE FEED & BULLETIN HANDLERS ---
