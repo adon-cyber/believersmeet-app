@@ -185,12 +185,12 @@
                 }
 
                 statusBox.className = "mt-4 rounded-md p-3 text-sm bg-green-100 text-green-700 border border-green-200";
-                statusBox.textContent = "Trial activated successfully! Redirecting to directories...";
+                statusBox.textContent = "Trial activated successfully! Redirecting to church dashboard...";
                 statusBox.classList.remove('hidden');
 
                 setTimeout(() => {
-                    window.location.href = 'directory.html';
-                }, 1200);
+                    window.location.href = 'church-dashboard.html';
+                }, 1500);
 
             } catch (err) {
                 console.error("Trial activation error:", err);
