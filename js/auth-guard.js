@@ -49,7 +49,12 @@ window.logoutUser = async function(e) {
             .maybeSingle();
             
         // Adjust this condition based on the exact column name in the database (e.g., 'role', 'is_admin')
-        const isAdmin = profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.is_admin === true);
+        const isAdmin = profile && (
+            profile.role === 'admin' || 
+            profile.role === 'super-admin' || 
+            profile.role === 'super_admin' || 
+            profile.is_admin === true
+        );
 
         if (isPublicPage) {
             // Logged in users shouldn't be on index/login.

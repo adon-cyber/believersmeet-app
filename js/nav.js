@@ -26,12 +26,12 @@
                     const currentPath = window.location.pathname.split('/').pop() || 'feed.html';
                     const isJoinPage = currentPath === 'join-church.html' || currentPath === 'register-church.html';
 
-                    if (!isSuperAdmin && profile && profile.role !== 'super_admin' && !profile.church_id && !isJoinPage && !currentPath.includes('login') && !currentPath.includes('signup')) {
+                    if (!isSuperAdmin && profile && profile.role !== 'super_admin' && profile.role !== 'super-admin' && !profile.church_id && !isJoinPage && !currentPath.includes('login') && !currentPath.includes('signup')) {
                         window.location.replace('join-church.html');
                         return;
                     }
 
-                    if (isSuperAdmin || (profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'leader'))) {
+                    if (isSuperAdmin || (profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin' || profile.role === 'leader'))) {
                         isAdminOrLeader = true;
                     }
                 }
