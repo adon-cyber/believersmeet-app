@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat | BelieversMeet</title>
+    <title>Inbox & Chat | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
@@ -22,7 +22,7 @@
 <nav class="bg-blue-600 shadow-md flex-shrink-0 w-full" style="background-color: #007bff !important;">
     <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-            <!-- Logo & Title: Set to NEVER shrink -->
+            <!-- Logo & Title -->
             <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 pr-2 sm:pr-4">
                 <div id="church-logo-container" class="flex items-center space-x-2">
                     <img id="church-logo-img" src="" alt="Church Logo" class="w-8 h-8 rounded-full object-cover hidden">
@@ -31,7 +31,7 @@
                 <a href="feed.html" class="text-lg sm:text-xl font-bold text-white flex-shrink-0">BelieversMeet</a>
             </div>
             
-            <!-- Swipable Links: Set to take remaining space (flex-1) and allow shrinking (min-w-0) -->
+            <!-- Swipable Links -->
             <div class="flex-1 min-w-0 flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-1 sm:px-2 scroll-smooth [-webkit-overflow-scrolling:touch] no-scrollbar">
                 <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">My Feed</a>
                 <a href="giving.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Giving</a>
@@ -39,7 +39,7 @@
                 <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
                 <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
                 <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors">Inbox</a>
                 <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
                 <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
                 <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
@@ -48,85 +48,122 @@
     </div>
 </nav>
 
-<!-- Main Chat Container -->
-<main class="flex-grow w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col h-full">
-    <!-- Chat Header -->
-    <div id="chat-header" class="bg-white shadow rounded-t-lg p-4 flex items-center justify-between border-b">
-        <div class="flex items-center space-x-3">
-            <a href="member-profile.html" id="back-to-profile" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
-                &larr; Back
-            </a>
-            <div class="flex items-center space-x-3">
-                <img id="target-avatar" src="" alt="" class="w-10 h-10 rounded-full object-cover hidden">
-                <div id="target-avatar-placeholder" class="w-10 h-10 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center font-bold text-sm">?</div>
-                <div>
-                    <h2 id="target-name" class="font-bold text-gray-900 text-base">Loading...</h2>
-                    <p class="text-xs text-gray-500">Direct Message</p>
+<!-- Main Unified Split-Screen Container -->
+<main class="flex flex-col md:flex-row w-full max-w-6xl mx-auto h-[calc(100vh-4rem)] overflow-hidden my-auto shadow-2xl bg-white rounded-none md:rounded-xl border border-gray-200">
+    
+    <!-- Left Sidebar (The Inbox List) -->
+    <div id="left-sidebar" class="w-full md:w-1/3 md:max-w-sm flex flex-col bg-white border-r border-gray-200 h-full flex-shrink-0">
+        <!-- Tabs Header -->
+        <div class="flex border-b border-gray-200 bg-gray-50 flex-shrink-0">
+            <button id="tab-fellow-members" onclick="switchTab('fellow')" class="flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors">
+                <i class="fas fa-church"></i> Fellow Church
+            </button>
+            <button id="tab-other-churches" onclick="switchTab('other')" class="flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors">
+                <i class="fas fa-globe"></i> Other Churches
+            </button>
+        </div>
+
+        <!-- Scrollable Contacts List -->
+        <div id="users-directory" class="flex-1 overflow-y-auto divide-y divide-gray-100">
+            <div class="p-6 text-center text-gray-400 text-sm">Loading contacts...</div>
+        </div>
+    </div>
+
+    <!-- Right Main Area (The Chat Interface) -->
+    <div id="right-chat-area" class="flex-1 flex flex-col bg-white relative h-full overflow-hidden">
+        
+        <!-- Empty State (Shown when no user is selected) -->
+        <div id="empty-chat-state" class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
+            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800">Select a fellowship contact to start messaging</h3>
+            <p class="text-sm text-gray-500 mt-1 max-w-sm">Choose a brother or sister from the list on the left to begin your 1-on-1 direct conversation.</p>
+        </div>
+
+        <!-- Active Chat Container (Hidden by default until a user is selected) -->
+        <div id="active-chat-container" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            <!-- Chat Header -->
+            <div id="chat-header" class="bg-white shadow-sm p-4 flex items-center justify-between border-b flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <button onclick="clearSelectedUser()" class="md:hidden text-blue-600 hover:text-blue-800 p-1.5 rounded-lg bg-gray-100 flex items-center justify-center mr-1" title="Back to Directory">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <img id="target-avatar" src="" alt="" class="w-10 h-10 rounded-full object-cover hidden">
+                        <div id="target-avatar-placeholder" class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">?</div>
+                        <div>
+                            <h2 id="target-name" class="font-bold text-gray-900 text-base">Loading...</h2>
+                            <p id="target-church-sub" class="text-xs text-gray-500">Direct Message</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="start-video-call" class="text-blue-600 hover:text-blue-800 p-2.5 rounded-full hover:bg-blue-50 transition-colors" title="Start Video Call">
+                        <i class="fas fa-video text-lg"></i>
+                    </button>
                 </div>
             </div>
+
+            <!-- Message History Container -->
+            <div id="messages-container" class="flex-grow bg-gray-50 p-4 overflow-y-auto flex flex-col space-y-3">
+                <div class="text-center text-gray-400 py-4">Loading messages...</div>
+            </div>
+
+            <!-- Message Input Area -->
+            <div class="bg-white shadow p-3 border-t flex-shrink-0">
+                <form id="message-form" class="w-full flex gap-2 items-center" onsubmit="sendMessage(event)">
+                    <input 
+                        type="text" 
+                        id="message-input" 
+                        placeholder="Type a message..." 
+                        required 
+                        autocomplete="off"
+                        class="flex-grow min-w-0 border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                    <button 
+                        type="submit" 
+                        id="send-btn"
+                        class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition-colors text-sm shadow-sm"
+                        style="background-color: #007bff;"
+                    >
+                        Send
+                    </button>
+                </form>
+            </div>
         </div>
-        <div>
-            <button id="start-video-call" class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-gray-100 transition-colors" title="Start Video Call">
-                <i class="fas fa-video text-xl"></i>
-            </button>
-        </div>
-    </div>
 
-    <!-- Video Call Overlay UI -->
-    <div id="video-call-overlay" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
-        <!-- Remote Video (Full Screen) -->
-        <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
-
-        <!-- Local Video (Floating Smaller View) -->
-        <video id="local-video" autoplay muted playsinline class="absolute bottom-20 right-6 w-32 h-48 bg-black rounded-lg border-2 border-white object-cover shadow-lg z-10"></video>
-
-        <!-- Call Control Bar at the bottom -->
-        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-center justify-center space-x-6 z-20">
-            <button id="toggle-mic" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors" title="Toggle Mic">
-                <i class="fas fa-microphone text-lg"></i>
-            </button>
-            <button id="end-call" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold flex items-center space-x-2 shadow-lg transition-colors" title="End Call">
-                <i class="fas fa-phone-slash"></i>
-                <span>End Call</span>
-            </button>
-            <button id="toggle-camera" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors" title="Toggle Camera">
-                <i class="fas fa-video text-lg"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Message History Container -->
-    <div id="messages-container" class="flex-grow bg-white p-4 overflow-y-auto flex flex-col space-y-3 shadow-inner">
-        <div class="text-center text-gray-400 py-4">Loading messages...</div>
-    </div>
-
-    <!-- Message Input Area -->
-    <div class="bg-white shadow rounded-b-lg p-3 border-t">
-        <form id="message-form" class="w-full flex gap-2 items-center" onsubmit="sendMessage(event)">
-            <input 
-                type="text" 
-                id="message-input" 
-                placeholder="Type a message..." 
-                required 
-                autocomplete="off"
-                class="flex-grow min-w-0 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-            <button 
-                type="submit" 
-                id="send-btn"
-                class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
-                style="background-color: #007bff;"
-            >
-                Send
-            </button>
-        </form>
     </div>
 </main>
 
+<!-- Video Call Overlay UI -->
+<div id="video-call-overlay" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
+    <!-- Remote Video (Full Screen) -->
+    <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
+
+    <!-- Local Video (Floating Smaller View) -->
+    <video id="local-video" autoplay muted playsinline class="absolute bottom-20 right-6 w-32 h-48 bg-black rounded-lg border-2 border-white object-cover shadow-lg z-10"></video>
+
+    <!-- Call Control Bar at the bottom -->
+    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-center justify-center space-x-6 z-20">
+        <button id="toggle-mic" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors" title="Toggle Mic">
+            <i class="fas fa-microphone text-lg"></i>
+        </button>
+        <button id="end-call" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold flex items-center space-x-2 shadow-lg transition-colors" title="End Call">
+            <i class="fas fa-phone-slash"></i>
+            <span>End Call</span>
+        </button>
+        <button id="toggle-camera" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors" title="Toggle Camera">
+            <i class="fas fa-video text-lg"></i>
+        </button>
+    </div>
+</div>
+
 <script>
     let currentUser = null;
-    const targetUserId = new URLSearchParams(window.location.search).get('user');
     let targetUser = null;
+    let activeTab = 'fellow'; // 'fellow' or 'other'
+    let activeChannel = null;
 
     async function loadChurchLogo() {
         try {
@@ -145,45 +182,114 @@
         }
     }
 
-    async function initChat() {
-        if (!targetUserId) {
-            document.getElementById('messages-container').innerHTML = `<div class="text-center text-red-500 py-8">Target user ID not specified in URL.</div>`;
-            return;
+    function switchTab(tab) {
+        activeTab = tab;
+        const fellowBtn = document.getElementById('tab-fellow-members');
+        const otherBtn = document.getElementById('tab-other-churches');
+
+        if (tab === 'fellow') {
+            fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
+            otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+        } else {
+            otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
+            fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
         }
 
-        const backLink = document.getElementById('back-to-profile');
-        backLink.href = `member-profile.html?id=${targetUserId}`;
+        loadUserDirectory();
+    }
 
-        const { data: { user } } = await window.sbClient.auth.getUser();
-        currentUser = user;
+    async function loadUserDirectory() {
+        if (!currentUser) return;
+        const directoryEl = document.getElementById('users-directory');
 
-        if (!currentUser) {
-            window.location.replace('login.html');
-            return;
+        try {
+            const { data: blocks } = await window.sbClient.from('blocks')
+                .select('blocked_id, blocker_id')
+                .or(`blocker_id.eq.${currentUser.id},blocked_id.eq.${currentUser.id}`);
+            
+            const blockedIds = blocks ? blocks.map(b => b.blocker_id === currentUser.id ? b.blocked_id : b.blocker_id) : [];
+            const excludedIds = [currentUser.id, ...blockedIds];
+
+            let query = window.sbClient
+                .from('profiles')
+                .select('*, churches!profiles_church_id_fkey(name, id)')
+                .not('id', 'in', `(${excludedIds.join(',')})`);
+
+            const userChurchId = currentUser.church_id || localStorage.getItem('church_id');
+            if (userChurchId) {
+                if (activeTab === 'fellow') {
+                    query = query.eq('church_id', userChurchId);
+                } else {
+                    query = query.neq('church_id', userChurchId);
+                }
+            } else {
+                if (activeTab === 'fellow') {
+                    query = query.is('church_id', null);
+                } else {
+                    query = query.not('church_id', 'is', null);
+                }
+            }
+
+            const { data: profiles, error } = await query.order('full_name', { ascending: true });
+            if (error) throw error;
+
+            if (!profiles || profiles.length === 0) {
+                directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No members found in this tab.</div>`;
+                return;
+            }
+
+            directoryEl.innerHTML = profiles.map(p => {
+                const displayName = escapeHTML(p.full_name || p.email || 'Member');
+                const initial = displayName.charAt(0).toUpperCase();
+                const churchName = p.churches?.name ? p.churches.name : 'Independent';
+                const isSelected = targetUser && targetUser.id === p.id;
+
+                return `
+                    <div id="user-row-${p.id}" onclick="selectUser('${p.id}')" class="p-3.5 hover:bg-blue-50/60 cursor-pointer transition flex items-center gap-3 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600 font-semibold' : ''}">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                            ${initial}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-sm font-bold text-gray-900 truncate">${displayName}</span>
+                                ${p.is_verified ? '<span class="text-blue-500 text-xs" title="Verified">✅</span>' : ''}
+                            </div>
+                            <p class="text-xs text-gray-500 truncate mt-0.5">⛪ ${escapeHTML(churchName)}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (e) {
+            console.error("Error loading directory:", e);
+            directoryEl.innerHTML = `<div class="p-6 text-center text-red-500 text-sm">Error loading contacts.</div>`;
         }
+    }
 
-        if (currentUser.id === targetUserId) {
-            document.getElementById('messages-container').innerHTML = `<div class="text-center text-gray-500 py-8">You cannot chat with yourself.</div>`;
-            document.getElementById('message-form').style.display = 'none';
-            return;
-        }
-
-        // Fetch target user profile
-        const { data: profile, error } = await window.sbClient.from('profiles').select('*').eq('id', targetUserId).maybeSingle();
+    async function selectUser(userId) {
+        if (!userId) return;
+        
+        // Fetch profile
+        const { data: profile, error } = await window.sbClient.from('profiles').select('*, churches!profiles_church_id_fkey(name)').eq('id', userId).maybeSingle();
         if (error || !profile) {
-            document.getElementById('target-name').textContent = 'Unknown User';
-            document.getElementById('messages-container').innerHTML = `<div class="text-center text-red-500 py-8">Target user profile could not be found.</div>`;
+            alert("Could not load user profile.");
             return;
         }
 
         targetUser = profile;
-        const nameEl = document.getElementById('target-name');
-        nameEl.innerHTML = `
-            ${escapeHTML(targetUser.full_name || 'Member')} 
-            <span id="presence-badge" class="inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                <span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline
-            </span>
-        `;
+        window.history.pushState({}, '', `?user=${userId}`);
+
+        // Update UI highlights
+        document.querySelectorAll('[id^="user-row-"]').forEach(el => el.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-600'));
+        const activeRow = document.getElementById(`user-row-${userId}`);
+        if (activeRow) activeRow.classList.add('bg-blue-50', 'border-l-4', 'border-blue-600');
+
+        // Toggle mobile/desktop view
+        applyResponsiveLayout();
+
+        // Populate Chat Header
+        document.getElementById('target-name').textContent = targetUser.full_name || 'Member';
+        document.getElementById('target-church-sub').textContent = targetUser.churches?.name ? targetUser.churches.name : 'Direct Message';
 
         const avatarImg = document.getElementById('target-avatar');
         const avatarPlaceholder = document.getElementById('target-avatar-placeholder');
@@ -192,34 +298,89 @@
             avatarImg.classList.remove('hidden');
             avatarPlaceholder.classList.add('hidden');
         } else {
+            avatarImg.classList.add('hidden');
+            avatarPlaceholder.classList.remove('hidden');
             avatarPlaceholder.textContent = (targetUser.full_name || 'U').charAt(0).toUpperCase();
+        }
+
+        // Setup Video Call Room Link
+        const videoBtn = document.getElementById('start-video-call');
+        videoBtn.onclick = () => {
+            const room = [currentUser.id.substring(0, 12), targetUser.id.substring(0, 12)].sort().join('-');
+            window.location.href = `video-call.html?room=${room}`;
+        };
+
+        if (activeChannel) {
+            window.sbClient.removeChannel(activeChannel);
         }
 
         await fetchMessages();
         setupRealtimeSubscription();
     }
 
+    function clearSelectedUser() {
+        targetUser = null;
+        window.history.pushState({}, '', window.location.pathname);
+        document.querySelectorAll('[id^="user-row-"]').forEach(el => el.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-600'));
+        applyResponsiveLayout();
+    }
+
+    function applyResponsiveLayout() {
+        const leftSidebar = document.getElementById('left-sidebar');
+        const rightArea = document.getElementById('right-chat-area');
+        const emptyState = document.getElementById('empty-chat-state');
+        const activeContainer = document.getElementById('active-chat-container');
+
+        const hasUser = Boolean(targetUser);
+
+        if (hasUser) {
+            emptyState.classList.add('hidden');
+            activeContainer.classList.remove('hidden');
+            
+            // On mobile, if user is selected, show right area and hide left sidebar
+            if (window.innerWidth < 768) {
+                leftSidebar.classList.add('hidden');
+                rightArea.classList.remove('hidden');
+            } else {
+                leftSidebar.classList.remove('hidden');
+                rightArea.classList.remove('hidden');
+            }
+        } else {
+            emptyState.classList.remove('hidden');
+            activeContainer.classList.add('hidden');
+
+            // On mobile, if no user is selected, show left sidebar and hide right area
+            if (window.innerWidth < 768) {
+                leftSidebar.classList.remove('hidden');
+                rightArea.classList.add('hidden');
+            } else {
+                leftSidebar.classList.remove('hidden');
+                rightArea.classList.remove('hidden');
+            }
+        }
+    }
+
+    // Listen to window resize for responsive transitions
+    window.addEventListener('resize', () => {
+        applyResponsiveLayout();
+    });
+
     async function fetchMessages() {
+        if (!currentUser || !targetUser) return;
         const container = document.getElementById('messages-container');
-        console.log("Fetching messages for conversation between:", currentUser.id, "and target:", targetUserId);
+
         try {
             const { data: messages, error } = await window.sbClient
                 .from('messages')
                 .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${currentUser.id})`)
+                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${targetUser.id}),and(sender_id.eq.${targetUser.id},receiver_id.eq.${currentUser.id})`)
                 .order('created_at', { ascending: true });
 
-            if (error) {
-                console.error("Supabase error fetching messages:", error.message, error.details, error.hint);
-                container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages: ${escapeHTML(error.message)}</div>`;
-                return;
-            }
-
-            console.log("Fetched messages successfully:", messages);
+            if (error) throw error;
             renderMessages(messages || []);
         } catch (e) {
-            console.error("Exception fetching messages:", e);
-            container.innerHTML = `<div class="text-center text-red-500 py-4">Network or unexpected error loading messages. Check console.</div>`;
+            console.error("Error fetching messages:", e);
+            container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages.</div>`;
         }
     }
 
@@ -234,8 +395,8 @@
             const isMe = msg.sender_id === currentUser.id;
             const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
-                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                    <div class="max-w-[85%] sm:max-w-md px-4 py-2 rounded-lg text-sm break-words ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-900 rounded-bl-none'}" ${isMe ? 'style="background-color: #007bff;"' : ''}>
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}" data-content="${escapeHTML(msg.content)}">
+                    <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words ${isMe ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none shadow-sm'}" ${isMe ? 'style="background-color: #007bff;"' : ''}>
                         ${escapeHTML(msg.content)}
                     </div>
                     <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
@@ -250,7 +411,7 @@
         e.preventDefault();
         const input = document.getElementById('message-input');
         const content = input.value.trim();
-        if (!content || !currentUser || !targetUserId) return;
+        if (!content || !currentUser || !targetUser) return;
 
         input.value = '';
 
@@ -259,12 +420,27 @@
                 .from('messages')
                 .insert([{
                     sender_id: currentUser.id,
-                    receiver_id: targetUserId,
+                    receiver_id: targetUser.id,
                     content: content
                 }]);
 
             if (error) {
                 alert("Failed to send message: " + error.message);
+            } else {
+                const container = document.getElementById('messages-container');
+                if (container.querySelector('.text-center')) {
+                    container.innerHTML = '';
+                }
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                container.innerHTML += `
+                    <div class="flex flex-col items-end" data-content="${escapeHTML(content)}">
+                        <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words bg-blue-600 text-white rounded-br-none shadow-sm" style="background-color: #007bff;">
+                            ${escapeHTML(content)}
+                        </div>
+                        <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
+                    </div>
+                `;
+                container.scrollTop = container.scrollHeight;
             }
         } catch (e) {
             console.error("Error sending message:", e);
@@ -272,62 +448,23 @@
     }
 
     function setupRealtimeSubscription() {
-        window.sbClient
-            .channel('public:messages')
+        if (!targetUser) return;
+        activeChannel = window.sbClient
+            .channel(`chat-direct-${currentUser.id}-${targetUser.id}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'messages'
             }, payload => {
                 const newMsg = payload.new;
-                // Check if message belongs to this conversation
                 if (
-                    (newMsg.sender_id === currentUser.id && newMsg.receiver_id === targetUserId) ||
-                    (newMsg.sender_id === targetUserId && newMsg.receiver_id === currentUser.id)
+                    (newMsg.sender_id === currentUser.id && newMsg.receiver_id === targetUser.id) ||
+                    (newMsg.sender_id === targetUser.id && newMsg.receiver_id === currentUser.id)
                 ) {
                     fetchMessages();
                 }
             })
             .subscribe();
-
-        // Setup presence tracking & channel
-        const presenceChannel = window.sbClient.channel('online-users', {
-            config: {
-                presence: { key: currentUser.id }
-            }
-        });
-
-        presenceChannel.on('presence', { event: 'sync' }, () => {
-            const state = presenceChannel.presenceState();
-            let isOnline = false;
-            for (const key in state) {
-                const presences = state[key];
-                for (const p of presences) {
-                    if (p.user_id === targetUserId) {
-                        isOnline = true;
-                        break;
-                    }
-                }
-                if (isOnline) break;
-            }
-
-            const badge = document.getElementById('presence-badge');
-            if (badge) {
-                if (isOnline) {
-                    badge.className = "inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
-                    badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-green-500 rounded-full inline-block animate-pulse"></span> Online`;
-                } else {
-                    badge.className = "inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800";
-                    badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline`;
-                }
-            }
-        });
-
-        presenceChannel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                await presenceChannel.track({ user_id: currentUser.id, online_at: new Date().toISOString() });
-            }
-        });
     }
 
     function escapeHTML(str) {
@@ -361,11 +498,29 @@
             return;
         }
 
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        currentUser = { ...user, role: profile?.role, church_id: profile?.church_id };
+
         await loadChurchLogo();
-        await initChat();
+        await loadUserDirectory();
+
+        // Check URL parameter ?user=ID on load
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialUserId = urlParams.get('user');
+        if (initialUserId) {
+            await selectUser(initialUserId);
+        } else {
+            applyResponsiveLayout();
+        }
     })();
 </script>
-  <script src="js/notifications.js"></script>
-  <script src="js/video-call.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/video-call.js"></script>
 </body>
 </html>
