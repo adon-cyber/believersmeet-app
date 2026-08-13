@@ -148,6 +148,41 @@
 
 </main>
 
+<!-- Lightbox Modal for Full-Screen Preview -->
+<div id="gallery-lightbox" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+    <div class="relative max-w-4xl w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col md:flex-row transform scale-95 transition-transform duration-300" id="lightbox-content-box">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+        <div class="md:w-3/5 bg-black flex items-center justify-center relative min-h-[300px] md:min-h-[500px]">
+            <img id="lightbox-img" src="" alt="Preview" class="max-h-[80vh] w-auto object-contain">
+        </div>
+        <div class="md:w-2/5 p-6 flex flex-col justify-between bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800">
+            <div>
+                <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-3">
+                    <i class="fas fa-heart text-red-400 mr-1"></i> Community Memory
+                </span>
+                <h3 id="lightbox-caption" class="text-xl font-bold text-white mb-4 leading-snug"></h3>
+                <div class="flex items-center space-x-3 mb-6 pt-4 border-t border-slate-800">
+                    <div id="lightbox-uploader-avatar" class="w-10 h-10 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center font-bold border border-blue-500/30">
+                        U
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Uploaded by</p>
+                        <p id="lightbox-uploader" class="text-sm font-medium text-slate-200"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                <span id="lightbox-date" class="flex items-center">
+                    <i class="far fa-calendar-alt mr-1.5 text-blue-400"></i> 
+                </span>
+                <span class="text-blue-400 font-medium hover:underline cursor-pointer" onclick="closeLightbox()">Close Viewer</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Footer -->
 <footer class="bg-white border-t border-gray-200 mt-auto py-6">
     <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
@@ -155,96 +190,186 @@
     </div>
 </footer>
 
-<script>
-    function logoutUser(e) {
-        e.preventDefault();
-        if (window.sbClient) {
-            window.sbClient.auth.signOut().then(() => {
+    <script>
+        function logoutUser(e) {
+            e.preventDefault();
+            if (window.sbClient) {
+                window.sbClient.auth.signOut().then(() => {
+                    window.location.href = 'login.html';
+                });
+            } else {
                 window.location.href = 'login.html';
-            });
-        } else {
-            window.location.href = 'login.html';
+            }
         }
-    }
 
-    async function initGallery() {
-        try {
-            let attempts = 0;
-            while (!window.sbClient && attempts < 15) {
-                await new Promise(r => setTimeout(r, 150));
-                attempts++;
-            }
-
-            if (!window.sbClient) return;
-
-            const grid = document.getElementById('gallery-grid');
-            const { data: { user } } = await window.sbClient.auth.getUser();
-            
-            let query = window.sbClient.from('gallery_images').select('*');
-
-            if (user) {
-                const { data: profile } = await window.sbClient
-                    .from('profiles')
-                    .select('role, church_id')
-                    .eq('id', user.id)
-                    .maybeSingle();
-
-                if (profile) {
-                    if (profile.role === 'admin' || profile.role === 'super_admin') {
-                        const adminNav = document.getElementById('admin-nav-link');
-                        if (adminNav) adminNav.classList.remove('hidden');
-                    }
-
-                    // Optional but recommended: Filter the query so members only see photos uploaded for their specific church
-                    if (profile.church_id) {
-                        query = query.eq('church_id', profile.church_id);
-                    }
-                }
-            }
-
-            // Fetch images ordering by the most recent uploads first
-            const { data: galleryImages, error } = await query.order('created_at', { ascending: false });
+        async function loadGalleryMemories() {
+            const { data: photos, error } = await window.sbClient
+                .from('gallery_images')
+                .select('*')
+                .order('created_at', { ascending: false });
 
             if (error) {
-                console.warn("Could not fetch gallery images:", error.message);
+                console.error("Error loading gallery:", error);
+                const grid = document.getElementById('gallery-grid');
+                if (grid) {
+                    grid.innerHTML = '<div class="col-span-full py-12 text-center text-red-400"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>Failed to load gallery memories. Please try again later.</p></div>';
+                }
+                return;
+            }
+            renderAnimatedGallery(photos);
+        }
+
+        function renderAnimatedGallery(photos) {
+            const grid = document.getElementById('gallery-grid');
+            if (!grid) return;
+
+            if (!photos || photos.length === 0) {
+                grid.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 animate-fade-in-up"><i class="fas fa-images text-5xl mb-3 text-gray-600"></i><p class="text-lg">No gallery memories found yet.</p></div>';
                 return;
             }
 
-            if (galleryImages && galleryImages.length > 0) {
-                grid.innerHTML = galleryImages.map(img => `
-                    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
-                        <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
-                            <img src="${escapeHTML(img.image_url)}" alt="${escapeHTML(img.caption || 'Church Memory')}" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500" style="max-width: 100%; object-fit: cover;">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                                <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> ${escapeHTML(img.caption || 'Fellowship Memory')}</span>
+            grid.innerHTML = photos.map((photo, index) => {
+                const delayClass = `animate-fade-in-up`;
+                const animationDelay = `animation-delay: ${index * 100}ms;`;
+                const formattedDate = photo.created_at ? new Date(photo.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent';
+                const uploader = photo.uploader_name || 'Community Member';
+                const caption = photo.caption || 'Fellowship Moment';
+
+                // Escape values for safe embedding in data attributes or click handlers
+                const safeImgUrl = (photo.image_url || '').replace(/'/g, "\\'");
+                const safeCaption = caption.replace(/'/g, "\\'");
+                const safeUploader = uploader.replace(/'/g, "\\'");
+                const safeDate = formattedDate.replace(/'/g, "\\'");
+
+                return `
+                    <div class="${delayClass} bg-slate-900 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-800 flex flex-col group transform hover:-translate-y-1 cursor-pointer" style="${animationDelay}" onclick="openLightbox('${safeImgUrl}', '${safeCaption}', '${safeUploader}', '${safeDate}')">
+                        <div class="relative overflow-hidden aspect-video bg-slate-950 h-64">
+                            <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(caption)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" style="max-width: 100%; object-fit: cover;">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+                            
+                            <!-- Floating badge -->
+                            <div class="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1">
+                                <i class="fas fa-heart text-red-400"></i>
+                                <span>Memory</span>
+                            </div>
+
+                            <!-- Caption overlay on hover -->
+                            <div class="absolute inset-x-0 bottom-0 p-5 transform transition-transform duration-300">
+                                <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">${escapeHTML(caption)}</p>
                             </div>
                         </div>
-                        <div class="p-4 flex items-center justify-between bg-white">
-                            <div>
-                                <h3 class="font-bold text-gray-900 text-sm truncate max-w-xs">${escapeHTML(img.caption || 'Community Memory')}</h3>
-                                <p class="text-xs text-gray-500">By ${escapeHTML(img.uploader_name || 'Church Admin')} &bull; ${new Date(img.created_at).toLocaleDateString()}</p>
+                        <div class="p-5 flex items-center justify-between bg-slate-900/90 backdrop-blur-md border-t border-slate-800/80">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm border border-blue-500/30">
+                                    ${escapeHTML(uploader.charAt(0).toUpperCase())}
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-slate-200 text-sm">${escapeHTML(uploader)}</h3>
+                                    <p class="text-xs text-slate-400 flex items-center mt-0.5">
+                                        <i class="far fa-calendar-alt mr-1 text-blue-400"></i> ${escapeHTML(formattedDate)}
+                                    </p>
+                                </div>
                             </div>
-                            <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full flex-shrink-0">Memory</span>
+                            <div class="text-slate-400 hover:text-blue-400 transition-colors cursor-pointer p-2" title="Like / Love">
+                                <i class="fas fa-heart text-lg hover:text-red-500 transition-colors"></i>
+                            </div>
                         </div>
                     </div>
-                `).join('');
-            } else {
-                grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500"><i class="fas fa-images text-4xl mb-3 text-gray-300"></i><p>No gallery memories uploaded for your church yet.</p></div>';
-            }
-        } catch (err) {
-            console.warn("Gallery initialization error:", err);
+                `;
+            }).join('');
         }
-    }
 
-    function escapeHTML(str) {
-      if (!str) return '';
-      return str.toString().replace(/[&<>'"]/g, 
-        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-      );
-    }
+        async function initGallery() {
+            try {
+                let attempts = 0;
+                while (!window.sbClient && attempts < 15) {
+                    await new Promise(r => setTimeout(r, 150));
+                    attempts++;
+                }
 
-    document.addEventListener('DOMContentLoaded', initGallery);
-</script>
+                if (!window.sbClient) {
+                    console.warn("Supabase client not initialized.");
+                    return;
+                }
+
+                const { data: { user } } = await window.sbClient.auth.getUser();
+                if (user) {
+                    const { data: profile } = await window.sbClient
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .maybeSingle();
+
+                    if (profile && (profile.role === 'admin' || profile.role === 'super_admin')) {
+                        const adminNav = document.getElementById('admin-nav-link');
+                        if (adminNav) adminNav.classList.remove('hidden');
+                    }
+                }
+
+                await loadGalleryMemories();
+            } catch (err) {
+                console.warn("Gallery initialization error:", err);
+            }
+        }
+
+        function escapeHTML(str) {
+          if (!str) return '';
+          return str.toString().replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+          );
+        }
+
+        function openLightbox(imgUrl, caption, uploader, date) {
+            const lightbox = document.getElementById('gallery-lightbox');
+            const img = document.getElementById('lightbox-img');
+            const captionEl = document.getElementById('lightbox-caption');
+            const uploaderEl = document.getElementById('lightbox-uploader');
+            const avatarEl = document.getElementById('lightbox-uploader-avatar');
+            const dateEl = document.getElementById('lightbox-date');
+            const contentBox = document.getElementById('lightbox-content-box');
+
+            if (!lightbox) return;
+
+            img.src = imgUrl;
+            captionEl.textContent = caption;
+            uploaderEl.textContent = uploader;
+            avatarEl.textContent = uploader.charAt(0).toUpperCase();
+            dateEl.innerHTML = `<i class="far fa-calendar-alt mr-1.5 text-blue-400"></i> ${date}`;
+
+            lightbox.classList.remove('hidden');
+            setTimeout(() => {
+                lightbox.classList.remove('opacity-0');
+                contentBox.classList.remove('scale-95');
+                contentBox.classList.add('scale-100');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('gallery-lightbox');
+            const contentBox = document.getElementById('lightbox-content-box');
+
+            if (!lightbox) return;
+
+            lightbox.classList.add('opacity-0');
+            contentBox.classList.remove('scale-100');
+            contentBox.classList.add('scale-95');
+
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+
+        // Close lightbox on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initGallery);
+    </script>
 
 </body>
 </html>
