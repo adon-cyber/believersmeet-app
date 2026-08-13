@@ -307,10 +307,10 @@
 
         async function declineRequest(requestId) {
             try {
-                // Delete or set to rejected
+                // Update row status to 'declined' instead of deleting
                 const { error } = await window.sbClient
                     .from('connections')
-                    .delete()
+                    .update({ status: 'declined', updated_at: new Date().toISOString() })
                     .eq('id', requestId);
 
                 if (error) throw error;
