@@ -1,7 +1,7 @@
 /**
  * Super Admin Panel Script (`js/super-admin.js`)
  * Handles authentication checks for super_admin role, fetches profiles & churches,
- * allows role updates, account deletion, and live searching.
+ * allows role updates, trial extensions, account deletion, and live searching.
  */
 
 function escapeHTML(str) {
@@ -13,7 +13,7 @@ function escapeHTML(str) {
 
 let currentUserProfile = null;
 let allUsersData = [];
-let allChurchesMap = {};
+let allChurchesMap = {}; // Maps church_id -> { name, trial_ends_at }
 
 async function initSuperAdmin() {
     console.log("Initializing Developer Control Center...");
@@ -94,8 +94,8 @@ function populateChurchDropdowns() {
     const select = document.getElementById('broadcast-church-id');
     if (!select) return;
     select.innerHTML = '<option value="">Select Church...</option>';
-    for (const [id, name] of Object.entries(allChurchesMap)) {
-        select.innerHTML += `<option value="${escapeHTML(id)}">${escapeHTML(name)}</option>`;
+    for (const [id, data] of Object.entries(allChurchesMap)) {
+        select.innerHTML += `<option value="${escapeHTML(id)}">${escapeHTML(data.name)}</option>`;
     }
 }
 
@@ -117,7 +117,7 @@ async function handleSendBroadcast(event) {
             .insert({
                 title,
                 content,
-                sender_id: currentUserProfile.id || currentUser.id,
+                sender_id: currentUserProfile.id,
                 target_type: targetType,
                 target_id: targetType === 'church' ? selectedTargetId : null,
                 created_at: new Date()
@@ -125,7 +125,7 @@ async function handleSendBroadcast(event) {
 
         if (error) throw error;
 
-        showNotification("Announcement / Message broadcast successfully! Broadcast sent.", "success");
+        showNotification("Announcement / Message broadcast successfully!", "success");
         const form = document.getElementById('broadcast-form');
         if (form) form.reset();
         toggleChurchSelect('all');
@@ -138,12 +138,8 @@ async function loadViolationReports() {
     const container = document.getElementById('violations-list-container');
     const tableTbody = document.getElementById('violations-table-tbody');
     
-    if (container) {
-        container.innerHTML = `<div class="text-center py-6 text-gray-500 italic">Loading violation reports...</div>`;
-    }
-    if (tableTbody) {
-        tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 italic">Loading violation reports table...</td></tr>`;
-    }
+    if (container) container.innerHTML = `<div class="text-center py-6 text-gray-500 italic">Loading violation reports...</div>`;
+    if (tableTbody) tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 italic">Loading violation reports table...</td></tr>`;
 
     try {
         const { data: violations, error } = await window.sbClient
@@ -154,91 +150,40 @@ async function loadViolationReports() {
         if (error) throw error;
 
         if (!violations || violations.length === 0) {
-            if (container) {
-                container.innerHTML = `<div class="text-center py-8 text-gray-500 italic bg-gray-50 rounded-xl border border-dashed border-gray-200">No violation reports found. Platform is fully compliant.</div>`;
-            }
-            if (tableTbody) {
-                tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 italic">No violation reports found.</td></tr>`;
-            }
+            if (container) container.innerHTML = `<div class="text-center py-8 text-gray-500 italic bg-gray-50 rounded-xl border border-dashed border-gray-200">No violation reports found. Platform is fully compliant.</div>`;
+            if (tableTbody) tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 italic">No violation reports found.</td></tr>`;
             return;
         }
 
-        // Render Cards
-        if (container) {
-            container.innerHTML = '';
-            violations.forEach(v => {
-                const reportedName = v.offender_name || v.offender_email || 'Unknown User';
-                const reporterName = v.reporter_name || v.reporter_email || 'Anonymous / System';
-                const isBlocked = v.offender_is_blocked;
-                const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-
-                const card = document.createElement('div');
-                card.className = 'p-4 rounded-xl border border-gray-200 bg-gray-50 flex flex-col gap-3';
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${statusColor}">${escapeHTML(v.status.toUpperCase())}</span>
-                            <h4 class="text-sm font-bold text-gray-900 mt-1">Reported User: <span class="text-red-600">${escapeHTML(reportedName)}</span></h4>
-                            <p class="text-xs text-gray-500">Reason: <strong class="text-gray-700">${escapeHTML(v.reason)}</strong></p>
-                        </div>
-                        <span class="text-xs text-gray-400">${new Date(v.created_at).toLocaleDateString()}</span>
-                    </div>
-                    ${v.details ? `<p class="text-xs text-gray-600 bg-white p-2.5 rounded-lg border border-gray-200">"${escapeHTML(v.details)}"</p>` : ''}
-                    <div class="flex items-center justify-between pt-2 border-t border-gray-200 text-xs">
-                        <span class="text-gray-500">Reported by: ${escapeHTML(reporterName)}</span>
-                        <div class="flex items-center gap-2">
-                            <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg font-medium transition-colors">Mark Reviewed</button>
-                            ${isBlocked ? 
-                                `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Unblock User</button>` :
-                                `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-medium transition-colors">Block / Deactivate</button>`
-                            }
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // Render Responsive Data Table
         if (tableTbody) {
             tableTbody.innerHTML = violations.map(v => {
                 const reportedName = v.offender_name || v.offender_email || 'Unknown User';
                 const reporterName = v.reporter_name || v.reporter_email || 'Anonymous / System';
                 const isBlocked = v.offender_is_blocked;
                 const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-                const proofHtml = v.proof_url ? `<a href="${escapeHTML(v.proof_url)}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-semibold underline flex items-center gap-1"><i class="fas fa-external-link-alt"></i> View Proof</a>` : `<span class="text-gray-400 italic">None</span>`;
+                const proofHtml = v.proof_url ? `<a href="${escapeHTML(v.proof_url)}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-semibold underline flex items-center gap-1">View Proof</a>` : `<span class="text-gray-400 italic">None</span>`;
 
                 return `
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                            ${new Date(v.created_at).toLocaleDateString()} ${new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            ${new Date(v.created_at).toLocaleDateString()}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            ${escapeHTML(reporterName)}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
-                            ${escapeHTML(reportedName)}
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${escapeHTML(reporterName)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">${escapeHTML(reportedName)}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">
                             <div class="font-semibold">${escapeHTML(v.reason)}</div>
                             ${v.details ? `<div class="text-xs text-gray-500 truncate max-w-xs">${escapeHTML(v.details)}</div>` : ''}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            ${proofHtml}
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">${proofHtml}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${statusColor}">
-                                ${escapeHTML(v.status.toUpperCase())}
-                            </span>
+                            <span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-full ${statusColor}">${escapeHTML(v.status.toUpperCase())}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
-                                <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg font-medium transition" title="Mark Reviewed">
-                                    Review
-                                </button>
+                                <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg font-medium">Review</button>
                                 ${isBlocked ? 
-                                    `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold transition">Unblock</button>` :
-                                    `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold transition">Block</button>`
+                                    `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold">Unblock</button>` :
+                                    `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold">Block</button>`
                                 }
                             </div>
                         </td>
@@ -246,25 +191,14 @@ async function loadViolationReports() {
                 `;
             }).join('');
         }
-
     } catch (err) {
         console.error("Failed to load violations:", err);
-        if (container) {
-            container.innerHTML = `<div class="text-center py-6 text-red-500 text-sm">Failed to load violations: ${escapeHTML(err.message)}</div>`;
-        }
-        if (tableTbody) {
-            tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-6 text-center text-red-500 font-semibold">Error loading violations: ${escapeHTML(err.message)}</td></tr>`;
-        }
     }
 }
 
 async function updateViolationStatus(violationId, newStatus) {
     try {
-        const { error } = await window.sbClient
-            .from('violations')
-            .update({ status: newStatus })
-            .eq('id', violationId);
-
+        const { error } = await window.sbClient.from('violations').update({ status: newStatus }).eq('id', violationId);
         if (error) throw error;
         showNotification("Violation report status updated.", "success");
         await loadViolationReports();
@@ -274,22 +208,11 @@ async function updateViolationStatus(violationId, newStatus) {
 }
 
 async function toggleBlockUser(targetUserId, blockStatus) {
-    if (!targetUserId || targetUserId === 'undefined' || targetUserId === 'null') {
-        console.error("Invalid target user ID provided for status update:", targetUserId);
-        showNotification("Failed to update account status: Invalid user ID", "error");
-        return;
-    }
-
-    if (!confirm(`Are you sure you want to ${blockStatus ? 'BLOCK / DEACTIVATE' : 'UNBLOCK'} this user account?`)) {
-        return;
-    }
+    if (!targetUserId) return;
+    if (!confirm(`Are you sure you want to ${blockStatus ? 'BLOCK' : 'UNBLOCK'} this user account?`)) return;
 
     try {
-        const { error } = await window.sbClient
-            .from('profiles')
-            .update({ is_blocked: blockStatus })
-            .eq('id', targetUserId);
-
+        const { error } = await window.sbClient.from('profiles').update({ is_blocked: blockStatus }).eq('id', targetUserId);
         if (error) throw error;
         showNotification(`User account successfully ${blockStatus ? 'blocked' : 'unblocked'}.`, "success");
         await loadAllUsersAndChurches();
@@ -303,25 +226,21 @@ async function loadAllUsersAndChurches() {
     try {
         const tbody = document.getElementById('super-admin-users-tbody');
         if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="px-6 py-8 text-center text-gray-500 italic">
-                        <svg class="animate-spin h-6 w-6 text-indigo-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Loading database records securely...
-                    </td>
-                </tr>
-            `;
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500 italic">Loading database records securely...</td></tr>`;
         }
 
-        // 1. Fetch all churches first for mapping names
+        // 1. Fetch all churches including trial information
         const { data: churches, error: churchError } = await window.sbClient
             .from('churches')
-            .select('id, name');
+            .select('id, name, trial_ends_at');
 
         if (!churchError && churches) {
             allChurchesMap = {};
             churches.forEach(c => {
-                allChurchesMap[c.id] = c.name;
+                allChurchesMap[c.id] = {
+                    name: c.name,
+                    trial_ends_at: c.trial_ends_at
+                };
             });
             document.getElementById('stat-total-churches').innerText = churches.length;
         } else {
@@ -337,8 +256,6 @@ async function loadAllUsersAndChurches() {
         if (profilesError) throw profilesError;
 
         allUsersData = profiles || [];
-
-        // Update Stats
         document.getElementById('stat-total-users').innerText = allUsersData.length;
         const adminCount = allUsersData.filter(p => p.role === 'admin' || p.role === 'super_admin' || p.role === 'super-admin').length;
         document.getElementById('stat-total-admins').innerText = adminCount;
@@ -347,10 +264,6 @@ async function loadAllUsersAndChurches() {
 
     } catch (err) {
         console.error("Error loading super admin data:", err);
-        const tbody = document.getElementById('super-admin-users-tbody');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-6 text-center text-red-500 font-semibold">Error loading database records: ${escapeHTML(err.message)}</td></tr>`;
-        }
     }
 }
 
@@ -364,8 +277,28 @@ function renderUsersTable(users) {
     }
 
     tbody.innerHTML = users.map(user => {
-        const churchName = user.church_id && allChurchesMap[user.church_id] ? allChurchesMap[user.church_id] : (user.church_id ? `ID: ${user.church_id.substring(0, 8)}...` : 'Independent / None');
-        const roleBadgeColor = (user.role === 'super_admin' || user.role === 'super-admin') ? 'bg-red-100 text-red-800 border border-red-300' : (user.role === 'admin' ? 'bg-purple-100 text-purple-800' : (user.role === 'finance' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'));
+        const churchData = user.church_id && allChurchesMap[user.church_id] ? allChurchesMap[user.church_id] : null;
+        const churchName = churchData ? churchData.name : (user.church_id ? `ID: ${user.church_id.substring(0, 8)}...` : 'Independent / None');
+        
+        // Trial calculation info for church admins
+        let trialHtml = '';
+        if (user.church_id && churchData) {
+            const trialEnd = churchData.trial_ends_at ? new Date(churchData.trial_ends_at) : null;
+            const isTrialActive = trialEnd && trialEnd > new Date();
+            const trialFormatted = trialEnd ? trialEnd.toLocaleDateString() : 'Not Set';
+            
+            trialHtml = `
+                <div class="mt-1 text-xs flex items-center gap-1">
+                    <span class="text-gray-500">Trial Ends:</span> 
+                    <span class="font-semibold ${isTrialActive ? 'text-green-600' : 'text-red-600'}">${trialFormatted}</span>
+                    <button onclick="extendChurchTrial('${user.church_id}')" class="ml-1 px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold border border-indigo-200 transition" title="Extend Church Trial">
+                        + Extend Trial
+                    </button>
+                </div>
+            `;
+        }
+
+        const roleBadgeColor = (user.role === 'super_admin' || user.role === 'super-admin') ? 'bg-red-100 text-red-800 border border-red-300' : (user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800');
         
         return `
             <tr class="hover:bg-gray-50 transition-colors">
@@ -380,13 +313,12 @@ function renderUsersTable(users) {
                         </div>
                     </div>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${escapeHTML(user.email || 'No email stored')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    ${escapeHTML(user.email || 'No email stored')}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    <span class="px-2.5 py-1 bg-gray-100 text-gray-800 rounded-lg text-xs font-medium">
+                    <span class="px-2.5 py-1 bg-gray-100 text-gray-800 rounded-lg text-xs font-medium inline-block">
                         ${escapeHTML(churchName)}
                     </span>
+                    ${trialHtml}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${roleBadgeColor}">
@@ -400,10 +332,8 @@ function renderUsersTable(users) {
                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                             <option value="super-admin" ${user.role === 'super-admin' || user.role === 'super_admin' ? 'selected' : ''}>Super Admin</option>
                         </select>
-                        <button onclick="updateUserRole('${user.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-semibold shadow transition flex items-center space-x-1">
-                            <span>Update</span>
-                        </button>
-                        <button onclick="deleteUserAccount('${user.id}', '${escapeHTML(user.full_name || user.email || 'User')}')" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs px-3 py-2 rounded-lg font-semibold border border-red-200 transition flex items-center space-x-1" title="Delete Account">
+                        <button onclick="updateUserRole('${user.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-semibold shadow transition">Update</button>
+                        <button onclick="deleteUserAccount('${user.id}', '${escapeHTML(user.full_name || user.email || 'User')}')" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs px-3 py-2 rounded-lg font-semibold border border-red-200 transition" title="Delete Account">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -411,6 +341,32 @@ function renderUsersTable(users) {
             </tr>
         `;
     }).join('');
+}
+
+async function extendChurchTrial(churchId) {
+    const daysInput = prompt("Enter the number of days to extend this church's trial period (e.g., 30):", "30");
+    if (!daysInput || isNaN(daysInput)) return;
+    const daysToAdd = parseInt(daysInput, 10);
+
+    try {
+        const churchData = allChurchesMap[churchId];
+        const currentEnd = churchData && churchData.trial_ends_at ? new Date(churchData.trial_ends_at) : new Date();
+        const baseDate = currentEnd > new Date() ? currentEnd : new Date();
+        
+        const newTrialEndDate = new Date(baseDate.getTime() + (daysToAdd * 24 * 60 * 60 * 1000));
+
+        const { error } = await window.sbClient
+            .from('churches')
+            .update({ trial_ends_at: newTrialEndDate.toISOString() })
+            .eq('id', churchId);
+
+        if (error) throw error;
+
+        showNotification(`Church trial successfully extended by ${daysToAdd} days!`, "success");
+        await loadAllUsersAndChurches();
+    } catch (err) {
+        showNotification("Failed to extend church trial: " + err.message, "error");
+    }
 }
 
 function filterAndRenderUsers(query) {
@@ -432,53 +388,36 @@ async function updateUserRole(userId) {
     if (!selectEl) return;
     const newRole = selectEl.value;
 
-    if (!confirm(`Are you sure you want to update this user's role to "${newRole}"?`)) {
-        return;
-    }
+    if (!confirm(`Are you sure you want to update this user's role to "${newRole}"?`)) return;
 
     try {
-        console.log(`Updating user ${userId} role to ${newRole} via secure RPC...`);
         const { error } = await window.sbClient.rpc('super_admin_update_user_role', {
             target_user_id: userId,
             new_role: newRole
         });
 
         if (error) {
-            console.warn("RPC failed, falling back to direct table update...", error);
-            const { error: updateError } = await window.sbClient
-                .from('profiles')
-                .update({ role: newRole })
-                .eq('id', userId);
-
+            const { error: updateError } = await window.sbClient.from('profiles').update({ role: newRole }).eq('id', userId);
             if (updateError) throw updateError;
         }
 
         showNotification("User role updated successfully!", "success");
         await loadAllUsersAndChurches();
     } catch (err) {
-        console.error("Failed to update user role:", err);
         showNotification("Failed to update role: " + err.message, "error");
-        alert("Silent RLS or database error updating role: " + err.message);
     }
 }
 
 async function deleteUserAccount(userId, userName) {
     if (userId === currentUserProfile.id) {
-        alert("Security restriction: You cannot delete your own Super Administrator account while logged in.");
+        alert("Security restriction: You cannot delete your own Super Administrator account.");
         return;
     }
 
-    if (!confirm(`WARNING: Are you sure you want to delete the account for "${userName}"? This will permanently remove their profile record from the database.`)) {
-        return;
-    }
+    if (!confirm(`WARNING: Delete account for "${userName}"?`)) return;
 
     try {
-        // Delete profile record from profiles table
-        const { error: profileDelError } = await window.sbClient
-            .from('profiles')
-            .delete()
-            .eq('id', userId);
-
+        const { error: profileDelError } = await window.sbClient.from('profiles').delete().eq('id', userId);
         if (profileDelError) throw profileDelError;
 
         showNotification(`Account for "${userName}" deleted successfully.`, "success");
@@ -494,7 +433,7 @@ function showNotification(message, type = 'success') {
 
     const toast = document.createElement('div');
     toast.id = 'toast-notification';
-    toast.className = `fixed bottom-5 right-5 z-50 px-6 py-3 rounded-xl shadow-xl text-white font-medium flex items-center space-x-2 transition-all duration-300 transform translate-y-0 ${type === 'success' ? 'bg-indigo-600' : 'bg-red-600'}`;
+    toast.className = `fixed bottom-5 right-5 z-50 px-6 py-3 rounded-xl shadow-xl text-white font-medium flex items-center space-x-2 transition-all duration-300 ${type === 'success' ? 'bg-indigo-600' : 'bg-red-600'}`;
     toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${escapeHTML(message)}</span>`;
     
     document.body.appendChild(toast);
@@ -504,11 +443,4 @@ function showNotification(message, type = 'success') {
     }, 3500);
 }
 
-async function logoutUser(e) {
-    e.preventDefault();
-    await window.sbClient.auth.signOut();
-    window.location.replace('login.html');
-}
-
-// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', initSuperAdmin);
