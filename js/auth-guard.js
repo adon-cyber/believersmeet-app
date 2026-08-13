@@ -1,3 +1,21 @@
+// Global robust logout helper
+window.logoutUser = async function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    try {
+        const client = window.supabaseClient || window.supabase;
+        if (client && client.auth) {
+            await client.auth.signOut();
+        }
+    } catch (err) {
+        console.error("Signout error:", err);
+    }
+    try {
+        localStorage.clear();
+        sessionStorage.clear();
+    } catch (e) {}
+    window.location.replace('login.html');
+};
+
 (async function() {
     try {
         const client = window.supabaseClient || window.supabase;
@@ -9,8 +27,17 @@
             return;
         }
 
-        // Get current session/user with error handling
-        const { data: { session }, error: sessionError } = await client.auth.getSession();
+        // Wait for session to fully resolve or use getSession with safety timeout
+        let session = null;
+        let sessionError = null;
+        try {
+            const res = await client.auth.getSession();
+            session = res.data?.session;
+            sessionError = res.error;
+        } catch (sessErr) {
+            console.error("Session fetch exception:", sessErr);
+        }
+
         if (sessionError) {
             console.error("Auth session error:", sessionError);
         }
@@ -34,7 +61,7 @@
 
         // 1. If user is NOT logged in and trying to access a protected page -> Redirect to login
         if (!user && !isPublicPage) {
-            window.location.href = 'login.html';
+            window.location.replace('login.html');
             return;
         }
 
@@ -42,7 +69,7 @@
         if (user) {
             // Prevent logged-in users from lingering on auth pages like login/signup
             if (currentPath.includes('login.html') || currentPath.includes('signup.html')) {
-                window.location.href = 'index.html';
+                window.location.replace('feed.html');
                 return;
             }
 
@@ -70,7 +97,7 @@
             // Allow join-church page if user doesn't have a church and is not a super_admin
             if (currentPath.includes('join-church.html')) {
                 if (hasChurch || isSuperAdmin) {
-                    window.location.href = 'index.html';
+                    window.location.replace('feed.html');
                     return;
                 } else {
                     if (document.body) document.body.style.display = 'block';
@@ -86,7 +113,7 @@
 
             // If user does not have a church and is not super admin, redirect to join-church unless public or register-church
             if (!hasChurch && !isSuperAdmin && !isPublicPage) {
-                window.location.href = 'join-church.html';
+                window.location.replace('join-church.html');
                 return;
             }
 
@@ -137,12 +164,12 @@
                         // If trial pending activation onboarding step
                         if (church.subscription_status === 'pending_trial') {
                             if (!currentPath.includes('activate-trial.html')) {
-                                window.location.href = 'activate-trial.html';
+                                window.location.replace('activate-trial.html');
                                 return;
                             }
                         } else if (currentPath.includes('activate-trial.html') && church.subscription_status === 'trial') {
                             // If already activated, don't stay on activation page
-                            window.location.href = 'index.html';
+                            window.location.replace('feed.html');
                             return;
                         }
 
@@ -153,12 +180,12 @@
 
                             if (now > trialEndsAt) {
                                 if (!currentPath.includes('subscription-expired.html')) {
-                                    window.location.href = 'subscription-expired.html';
+                                    window.location.replace('subscription-expired.html');
                                     return;
                                 }
                             } else {
                                 if (currentPath.includes('subscription-expired.html')) {
-                                    window.location.href = 'index.html';
+                                    window.location.replace('feed.html');
                                     return;
                                 }
                             }
