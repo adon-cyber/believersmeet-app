@@ -8,6 +8,7 @@
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         .hidden { display: none !important; }
@@ -60,6 +61,34 @@
                     <p class="text-xs text-gray-500">Direct Message</p>
                 </div>
             </div>
+        </div>
+        <div>
+            <button id="start-video-call" class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-gray-100 transition-colors" title="Start Video Call">
+                <i class="fas fa-video text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Video Call Overlay UI -->
+    <div id="video-call-overlay" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
+        <!-- Remote Video (Full Screen) -->
+        <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
+
+        <!-- Local Video (Floating Smaller View) -->
+        <video id="local-video" autoplay muted playsinline class="absolute bottom-20 right-6 w-32 h-48 bg-black rounded-lg border-2 border-white object-cover shadow-lg z-10"></video>
+
+        <!-- Call Control Bar at the bottom -->
+        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-center justify-center space-x-6 z-20">
+            <button id="toggle-mic" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors" title="Toggle Mic">
+                <i class="fas fa-microphone text-lg"></i>
+            </button>
+            <button id="end-call" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold flex items-center space-x-2 shadow-lg transition-colors" title="End Call">
+                <i class="fas fa-phone-slash"></i>
+                <span>End Call</span>
+            </button>
+            <button id="toggle-camera" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors" title="Toggle Camera">
+                <i class="fas fa-video text-lg"></i>
+            </button>
         </div>
     </div>
 
@@ -334,5 +363,6 @@
     })();
 </script>
   <script src="js/notifications.js"></script>
+  <script src="js/video-call.js"></script>
 </body>
 </html>
