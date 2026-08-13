@@ -86,7 +86,7 @@
             <!-- Chat Header -->
             <div id="chat-header" class="bg-white shadow-sm p-4 flex items-center justify-between border-b flex-shrink-0">
                 <div class="flex items-center space-x-3">
-                    <button onclick="clearSelectedUser()" class="md:hidden text-blue-600 hover:text-blue-800 p-1.5 rounded-lg bg-gray-100 flex items-center justify-center mr-1" title="Back to Directory">
+                    <button onclick="clearSelectedUser()" class="md:hidden text-blue-600 hover:text-blue-800 p-1.5 rounded-lg bg-gray-100 flex items-center justify-center mr-1" title="Back">
                         <i class="fas fa-arrow-left"></i>
                     </button>
                     <div class="flex items-center space-x-3">
@@ -332,31 +332,21 @@
         const activeContainer = document.getElementById('active-chat-container');
 
         const hasUser = Boolean(targetUser);
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasUserParam = urlParams.has('user');
 
-        if (hasUser) {
-            emptyState.classList.add('hidden');
-            activeContainer.classList.remove('hidden');
-            
-            // On mobile, if user is selected, show right area and hide left sidebar
-            if (window.innerWidth < 768) {
-                leftSidebar.classList.add('hidden');
-                rightArea.classList.remove('hidden');
-            } else {
-                leftSidebar.classList.remove('hidden');
-                rightArea.classList.remove('hidden');
-            }
-        } else {
+        // Check if there is NO ?user=ID in the URL: Hide the Right Main Area (hidden md:flex) and show the Left Sidebar (flex md:flex).
+        // If there IS a ?user=ID in the URL: Hide the Left Sidebar (hidden md:flex) and show the Right Main Area (flex md:flex).
+        if (!hasUserParam) {
+            leftSidebar.className = "w-full md:w-1/3 md:max-w-sm flex flex-col bg-white border-r border-gray-200 h-full flex-shrink-0 flex md:flex";
+            rightArea.className = "flex-1 flex flex-col bg-white relative h-full overflow-hidden hidden md:flex";
             emptyState.classList.remove('hidden');
             activeContainer.classList.add('hidden');
-
-            // On mobile, if no user is selected, show left sidebar and hide right area
-            if (window.innerWidth < 768) {
-                leftSidebar.classList.remove('hidden');
-                rightArea.classList.add('hidden');
-            } else {
-                leftSidebar.classList.remove('hidden');
-                rightArea.classList.remove('hidden');
-            }
+        } else {
+            leftSidebar.className = "w-full md:w-1/3 md:max-w-sm flex flex-col bg-white border-r border-gray-200 h-full flex-shrink-0 hidden md:flex";
+            rightArea.className = "flex-1 flex flex-col bg-white relative h-full overflow-hidden flex md:flex";
+            emptyState.classList.add('hidden');
+            activeContainer.classList.remove('hidden');
         }
     }
 
