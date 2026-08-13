@@ -52,7 +52,7 @@
         </div>
 
         <div class="grid gap-8 md:grid-cols-1 lg:grid-cols-3 mt-8">
-            <div class="lg:col-span-1">
+            <div class="lg:col-span-1 space-y-8">
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
                     <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <i class="fas fa-user-cog text-blue-600"></i> My Profile Settings
@@ -94,6 +94,18 @@
                         <button onclick="uploadAvatar()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm">
                             <i class="fas fa-camera mr-2"></i> Upload Photo
                         </button>
+                    </div>
+                </div>
+
+                <!-- Pending Requests Widget -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fas fa-user-clock text-blue-600"></i> Pending Requests</span>
+                        <span id="pending-count-badge" class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full">0</span>
+                    </h2>
+                    <p class="text-xs text-gray-500 mb-4">Manage incoming connection requests from fellow believers.</p>
+                    <div id="pending-requests-container" class="space-y-3">
+                        <p class="text-xs text-gray-400 italic text-center py-4">Checking for pending requests...</p>
                     </div>
                 </div>
             </div>
@@ -192,9 +204,132 @@
             }
 
             await fetchDirectoryRecords();
+            await fetchPendingRequests();
             
             document.getElementById('directory-search').addEventListener('input', runDirectoryFilter);
             document.getElementById('profile-edit-form').addEventListener('submit', handleProfileUpdateSubmission);
+        }
+
+        async function fetchPendingRequests() {
+            const container = document.getElementById('pending-requests-container');
+            const badge = document.getElementById('pending-count-badge');
+            
+            try {
+                const { data: requests, error } = await window.sbClient
+                    .from('connections')
+                    .select('id, requester_id, recipient_id, status, created_at, profiles:profiles!connections_requester_id_fkey(id, full_name, avatar_url, home_cell)')
+                    .eq('recipient_id', loggedInUser.id)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    // Fallback if foreign key reference query format needs adjustment
+                    console.warn("Retrying query without explicit constraint name:", error.message);
+                    const fallbackRes = await window.sbClient
+                        .from('connections')
+                        .select('*, profiles:requester_id(id, full_name, avatar_url, home_cell)')
+                        .eq('recipient_id', loggedInUser.id)
+                        .eq('status', 'pending');
+                    
+                    if (fallbackRes.error) throw fallbackRes.error;
+                    processPendingRequestsList(fallbackRes.data || [], container, badge);
+                    return;
+                }
+
+                processPendingRequestsList(requests || [], container, badge);
+            } catch (err) {
+                console.error("Error fetching pending requests:", err);
+                container.innerHTML = `<p class="text-xs text-red-500 text-center py-2">Failed to load requests.</p>`;
+            }
+        }
+
+        function processPendingRequestsList(requests, container, badge) {
+            badge.innerText = requests.length;
+
+            if (requests.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">No pending requests right now.</p>`;
+                return;
+            }
+
+            container.innerHTML = requests.map(req => {
+                const sender = req.profiles || {};
+                const name = escapeHTML(sender.full_name || 'Believer');
+                const avatar = sender.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff`;
+                const cell = sender.home_cell ? `<span class="text-[10px] text-gray-500 block">🏡 ${escapeHTML(sender.home_cell)}</span>` : '';
+
+                return `
+                    <div id="request-card-${req.id}" class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-all">
+                        <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='member-profile.html?id=${sender.id}'">
+                            <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border border-blue-200 flex-shrink-0" alt="${name}">
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-900 hover:text-blue-600 transition">${name}</h4>
+                                ${cell}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <button onclick="acceptRequest('${req.id}')" title="Accept Request" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                            <button onclick="declineRequest('${req.id}')" title="Decline Request" class="px-3 py-1.5 bg-gray-200 hover:bg-red-600 hover:text-white text-gray-700 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                                <i class="fas fa-times"></i> Decline
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function acceptRequest(requestId) {
+            try {
+                const { error } = await window.sbClient
+                    .from('connections')
+                    .update({ status: 'accepted', updated_at: new Date().toISOString() })
+                    .eq('id', requestId);
+
+                if (error) throw error;
+
+                showSuccessToast("Praise God! Connection request accepted.");
+                const card = document.getElementById(`request-card-${requestId}`);
+                if (card) card.remove();
+
+                // Update badge count
+                const badge = document.getElementById('pending-count-badge');
+                const currentCount = parseInt(badge.innerText) || 1;
+                const newCount = Math.max(0, currentCount - 1);
+                badge.innerText = newCount;
+                if (newCount === 0) {
+                    document.getElementById('pending-requests-container').innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">No pending requests right now.</p>`;
+                }
+            } catch (err) {
+                alert("Failed to accept request: " + err.message);
+            }
+        }
+
+        async function declineRequest(requestId) {
+            try {
+                // Delete or set to rejected
+                const { error } = await window.sbClient
+                    .from('connections')
+                    .delete()
+                    .eq('id', requestId);
+
+                if (error) throw error;
+
+                showSuccessToast("Connection request declined.");
+                const card = document.getElementById(`request-card-${requestId}`);
+                if (card) card.remove();
+
+                // Update badge count
+                const badge = document.getElementById('pending-count-badge');
+                const currentCount = parseInt(badge.innerText) || 1;
+                const newCount = Math.max(0, currentCount - 1);
+                badge.innerText = newCount;
+                if (newCount === 0) {
+                    document.getElementById('pending-requests-container').innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">No pending requests right now.</p>`;
+                }
+            } catch (err) {
+                alert("Failed to decline request: " + err.message);
+            }
         }
 
         async function uploadAvatar() {
