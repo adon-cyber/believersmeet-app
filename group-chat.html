@@ -188,7 +188,7 @@
             // Fetch messages specifically queried by group_id with sender profile join
             const { data: messages, error } = await window.sbClient
                 .from('messages')
-                .select('*, profiles(full_name, avatar_url)')
+                .select('*, sender:profiles!sender_id(id, full_name, avatar_url)')
                 .eq('group_id', groupId)
                 .order('created_at', { ascending: true });
 
@@ -214,7 +214,7 @@
 
         container.innerHTML = messages.map(msg => {
             const isMe = msg.sender_id === currentUser.id;
-            const senderName = msg.profiles?.full_name || 'Group Member';
+            const senderName = msg.sender?.full_name || 'Group Member';
             const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
             return `
