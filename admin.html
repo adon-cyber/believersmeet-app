@@ -405,11 +405,13 @@
                     .getPublicUrl(filePath);
 
                 // Insert into gallery_images table
+                const { data: authData } = await window.sbClient.auth.getUser();
+                const user = authData?.user || {};
                 const { error: dbError } = await window.sbClient.from('gallery_images').insert([{
                     image_url: publicUrl,
                     caption: captionInput.value.trim(),
-                    church_id: currentUserProfile.church_id,
-                    uploader_name: currentUserProfile.full_name || 'Admin'
+                    church_id: currentUserProfile?.church_id || null,
+                    uploader_name: currentUserProfile?.full_name || user.user_metadata?.full_name || 'Admin'
                 }]);
 
                 if (dbError) throw dbError;
