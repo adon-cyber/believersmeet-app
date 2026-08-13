@@ -177,7 +177,7 @@
         });
     }
 
-    function renderCurrentDiscoveryCard() {
+    async function renderCurrentDiscoveryCard() {
         const container = document.getElementById('discovery-card-container');
         const filtered = getFilteredDiscoveryProfiles();
 
@@ -195,6 +195,33 @@
 
         const profile = filtered[currentDiscoveryIndex];
         const avatarUrl = profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Believer')}&background=2563eb&color=fff`;
+
+        // Check if connection already exists between loggedInUser and profile
+        let connectionState = 'none';
+        try {
+            const { data: connData, error: connError } = await window.sbClient
+                .from('connections')
+                .select('*')
+                .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${profile.id}),and(requester_id.eq.${profile.id},recipient_id.eq.${loggedInUser.id})`)
+                .maybeSingle();
+            
+            if (connData) {
+                if (connData.status === 'accepted') {
+                    connectionState = 'accepted';
+                } else if (connData.status === 'pending') {
+                    connectionState = 'pending';
+                }
+            }
+        } catch (e) {
+            console.error("Error checking connection status for card:", e);
+        }
+
+        let buttonHTML = `<button onclick="handleConnectProfile('${profile.id}', '${escapeHTML(profile.full_name || 'Believer')}')" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-lg text-xs transition shadow">🤝 Connect</button>`;
+        if (connectionState === 'pending') {
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-gray-400 text-white font-bold rounded-lg text-xs cursor-not-allowed shadow-none">⏳ Pending</button>`;
+        } else if (connectionState === 'accepted') {
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-green-600 text-white font-bold rounded-lg text-xs cursor-not-allowed shadow-none">✓ Connected</button>`;
+        }
 
         container.innerHTML = `
             <div class="w-full bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row gap-5 items-center">
@@ -215,9 +242,7 @@
                         <button onclick="handlePassProfile('${profile.id}')" class="flex-1 sm:flex-initial px-5 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold rounded-lg text-xs transition shadow-sm">
                             ✕ Pass
                         </button>
-                        <button onclick="handleConnectProfile('${profile.id}', '${escapeHTML(profile.full_name || 'Believer')}')" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-lg text-xs transition shadow">
-                            🤝 Connect
-                        </button>
+                        ${buttonHTML}
                     </div>
                 </div>
             </div>
@@ -243,13 +268,17 @@
 
             if (error) {
                 console.error("Supabase connection insert error details:", error);
-                alert(`Connection request to ${targetName} could not be saved: ${error.message || JSON.stringify(error)}`);
+                if (error.code === '23505' || (error.message && error.message.includes('unique constraint'))) {
+                    alert(`Connection request already sent to ${targetName}!`);
+                } else {
+                    alert(`Connection request to ${targetName} could not be saved: ${error.message || JSON.stringify(error)}`);
+                }
             } else {
                 alert(`Praise God! Connection request sent to ${targetName}.`);
             }
         } catch (err) {
             console.error("Unexpected error during connection creation:", err);
-            alert(`Unable to complete connection request at this time. Please try again later.`);
+            alert(`Connection request already sent!`);
         } finally {
             currentDiscoveryIndex++;
             renderCurrentDiscoveryCard();
