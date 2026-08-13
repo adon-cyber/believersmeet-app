@@ -143,22 +143,28 @@
             btn.textContent = "Activating Free Trial...";
 
             try {
-                const { data: { user } } = await client.auth.getUser();
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
+                let church = JSON.parse(localStorage.getItem('current_church') || 'null');
+                
+                if (!church || !church.id) {
+                    const { data: { user } } = await client.auth.getUser();
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    const { data: profile } = await client
+                        .from('profiles')
+                        .select('*, churches(*)')
+                        .eq('id', user.id)
+                        .single();
+                        
+                    church = profile?.churches || profile;
                 }
 
-                // Fetch user's profile to get church_id
-                const { data: profile, error: profileError } = await client
-                    .from('profiles')
-                    .select('church_id')
-                    .eq('id', user.id)
-                    .single();
-
-                if (profileError || !profile || !profile.church_id) {
-                    throw new Error("Associated church workspace not found.");
+                if (!church || (!church.id && !church.church_id)) {
+                    throw new Error("No church workspace found. Please complete church setup.");
                 }
+
+                const churchId = church.id || church.church_id;
 
                 // Calculate trial expiration date (6 months from now)
                 const sixMonthsLater = new Date();
@@ -168,9 +174,10 @@
                 const { error } = await client
                     .from('churches')
                     .update({
-                        name: church.name
+                        subscription_status: 'trial',
+                        trial_ends_at: sixMonthsLater.toISOString()
                     })
-                    .eq('id', profile.church_id);
+                    .eq('id', churchId);
 
                 if (error) {
                     console.error("Database update error:", error);
