@@ -43,6 +43,21 @@
             </div>
         </div>
 
+        <!-- Church Join Code Card -->
+        <div class="bg-white rounded-2xl border border-blue-200 p-8 shadow-sm max-w-4xl mx-auto mb-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="space-y-1 text-center sm:text-left">
+                <span class="text-xs font-bold tracking-wider text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">Church Workspace Join Code</span>
+                <div class="text-3xl sm:text-4xl font-mono font-extrabold text-gray-900 tracking-wider mt-2" id="church-join-code">CHURCH-....</div>
+                <p class="text-sm text-gray-500 mt-1">Share this code with your members so they can connect to your church workspace during registration.</p>
+            </div>
+            <div class="flex-shrink-0">
+                <button onclick="copyJoinCode()" id="copy-join-code-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fas fa-copy"></i>
+                    <span id="copy-btn-text">📋 Copy Join Code</span>
+                </button>
+            </div>
+        </div>
+
         <!-- User Management Section (Super Admin Only) -->
         <div id="user-management-section" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto mb-8 hidden">
             <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -204,6 +219,7 @@
                 document.getElementById('user-management-section').classList.remove('hidden');
                 loadInboxInquiries();
                 loadAllMembers();
+                loadChurchJoinCode();
             } else {
                 alert("Unauthorized: Admin privileges required.");
                 window.location.replace('feed.html');
@@ -474,6 +490,49 @@
             e.preventDefault();
             await window.sbClient.auth.signOut();
             window.location.replace('login.html');
+        }
+
+        // Fetch church join code from Supabase
+        async function loadChurchJoinCode() {
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await window.sbClient
+                .from('profiles')
+                .select('*, churches(*)')
+                .eq('id', user.id)
+                .single();
+
+            const church = profile?.churches || profile;
+            const joinCode = church?.join_code || church?.code || church?.church_code || currentUserProfile?.church_code || 'N/A';
+
+            const codeDisplay = document.getElementById('church-join-code');
+            if (codeDisplay) {
+                codeDisplay.innerText = joinCode;
+            }
+        }
+
+        async function copyJoinCode() {
+            const codeDisplay = document.getElementById('church-join-code');
+            const codeText = codeDisplay ? codeDisplay.innerText.trim() : '';
+            if (!codeText || codeText === 'CHURCH-....' || codeText === 'N/A') {
+                showNotification("No join code available to copy.", "error");
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(codeText);
+                const btnText = document.getElementById('copy-btn-text');
+                if (btnText) {
+                    btnText.innerText = '✓ Copied!';
+                    setTimeout(() => {
+                        btnText.innerText = '📋 Copy Join Code';
+                    }, 2500);
+                }
+                showNotification("Church join code copied to clipboard!", "success");
+            } catch (err) {
+                showNotification("Failed to copy join code.", "error");
+            }
         }
 
         initPage();
