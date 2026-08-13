@@ -271,9 +271,12 @@
             
             if (isMember) {
                 dynamicActionRow += `
-                    <div class="pt-3 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
-                        <button onclick="leaveGroup('${group.id}')" class="w-full py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2">
-                            <span>✓ Joined / Leave Group</span>
+                    <div class="pt-3 flex flex-col gap-2 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
+                        <a href="group-chat.html?groupId=${group.id}" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 text-center">
+                            <span>💬 Enter Group Chat</span>
+                        </a>
+                        <button onclick="leaveGroup('${group.id}')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                            <span>Leave Group</span>
                         </button>
                     </div>
                 `;

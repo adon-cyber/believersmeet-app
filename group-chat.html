@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Chat | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .hidden { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body style="background-image: linear-gradient(rgba(243, 244, 246, 0.85), rgba(243, 244, 246, 0.85)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed;" class="min-h-screen flex flex-col overflow-x-hidden text-gray-800">
+
+<!-- Global Navigation Bar -->
+<nav class="bg-blue-600 shadow-md flex-shrink-0" style="background-color: #007bff !important;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div id="church-logo-container" class="flex items-center space-x-2">
+                    <img id="church-logo-img" src="" alt="Church Logo" class="w-8 h-8 rounded-full object-cover hidden">
+                    <span id="church-logo-placeholder" class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">BM</span>
+                </div>
+                <a href="feed.html" class="text-xl font-bold text-white flex-shrink-0">BelieversMeet</a>
+            </div>
+            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-2 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">My Feed</a>
+                <a href="giving.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Giving</a>
+                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Sermons</a>
+                <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
+                <a href="inboxx.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
+                <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Group Chat Container -->
+<main class="flex-grow w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col h-full py-4">
+    <!-- Chat Header -->
+    <div id="chat-header" class="bg-white shadow rounded-t-lg p-4 flex items-center justify-between border-b">
+        <div class="flex items-center space-x-3">
+            <a href="groups.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                &larr; Groups
+            </a>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h2 id="group-name" class="font-bold text-gray-900 text-base">Loading Group...</h2>
+                    <p class="text-xs text-gray-500">Group Fellowship Chat</p>
+                </div>
+            </div>
+        </div>
+        <div>
+            <button id="start-video-call" class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-gray-100 transition-colors flex items-center space-x-1" title="Start Group Video Call">
+                <i class="fas fa-video text-lg"></i> <i class="fas fa-users text-xs"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Group Video Call Overlay UI (Multi-peer room link or multi-grid) -->
+    <div id="video-call-overlay" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between p-4">
+        <div class="flex justify-between items-center text-white p-2">
+            <h3 id="video-room-title" class="font-bold text-lg">Group Video Room</h3>
+            <button onclick="terminateGroupCall()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold">Leave Room</button>
+        </div>
+        <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-y-auto items-center justify-center">
+            <div class="relative bg-gray-900 rounded-xl overflow-hidden aspect-video border border-gray-700 flex items-center justify-center">
+                <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                <span class="absolute bottom-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
+            </div>
+            <!-- Multi-peer video placeholder container -->
+            <div class="relative bg-gray-900 rounded-xl overflow-hidden aspect-video border border-gray-700 flex items-center justify-center">
+                <div id="remote-video-placeholder" class="text-gray-400 text-sm flex flex-col items-center">
+                    <i class="fas fa-users text-3xl mb-2"></i>
+                    <span>Waiting for group members to join room...</span>
+                </div>
+                <video id="remote-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+            </div>
+        </div>
+        <div class="bg-gray-900/80 p-4 rounded-xl flex items-center justify-center space-x-4">
+            <button id="toggle-mic" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors">
+                <i class="fas fa-microphone text-lg"></i>
+            </button>
+            <button id="toggle-camera" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors">
+                <i class="fas fa-video text-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Message History Container -->
+    <div id="messages-container" class="flex-grow bg-white p-4 overflow-y-auto flex flex-col space-y-4 shadow-inner">
+        <div class="text-center text-gray-400 py-4">Loading group messages...</div>
+    </div>
+
+    <!-- Message Input Area -->
+    <div class="bg-white shadow rounded-b-lg p-3 border-t">
+        <form id="message-form" class="w-full flex gap-2 items-center" onsubmit="sendGroupMessage(event)">
+            <input 
+                type="text" 
+                id="message-input" 
+                placeholder="Type a message to the group..." 
+                required 
+                autocomplete="off"
+                class="flex-grow min-w-0 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+            <button 
+                type="submit" 
+                id="send-btn"
+                class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                style="background-color: #007bff;"
+            >
+                Send
+            </button>
+        </form>
+    </div>
+</main>
+
+<script>
+    let currentUser = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('groupId') || urlParams.get('group');
+    let groupData = null;
+    let localStream = null;
+
+    async function loadChurchLogo() {
+        try {
+            const churchId = localStorage.getItem('church_id');
+            if (!churchId) return;
+            const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
+            if (church && church.logo_url) {
+                const img = document.getElementById('church-logo-img');
+                const placeholder = document.getElementById('church-logo-placeholder');
+                img.src = church.logo_url;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Error loading church logo:", e);
+        }
+    }
+
+    async function initGroupChat() {
+        if (!groupId) {
+            document.getElementById('messages-container').innerHTML = `<div class="text-center text-red-500 py-8">Group ID not specified in URL.</div>`;
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        currentUser = user;
+
+        if (!currentUser) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        // Fetch group details
+        const { data: group, error: groupErr } = await window.sbClient.from('groups').select('*').eq('id', groupId).maybeSingle();
+        if (groupErr || !group) {
+            document.getElementById('group-name').textContent = 'Unknown Group';
+            document.getElementById('messages-container').innerHTML = `<div class="text-center text-red-500 py-8">Group could not be found.</div>`;
+            return;
+        }
+
+        groupData = group;
+        document.getElementById('group-name').textContent = groupData.name || 'Cell Group';
+        document.getElementById('video-room-title').textContent = `${groupData.name} - Video Room`;
+
+        await fetchGroupMessages();
+        setupGroupRealtimeSubscription();
+    }
+
+    async function fetchGroupMessages() {
+        const container = document.getElementById('messages-container');
+        try {
+            // Fetch messages specifically queried by group_id with sender profile join
+            const { data: messages, error } = await window.sbClient
+                .from('messages')
+                .select('*, profiles(full_name, avatar_url)')
+                .eq('group_id', groupId)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching group messages:", error.message);
+                container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages: ${escapeHTML(error.message)}</div>`;
+                return;
+            }
+
+            renderGroupMessages(messages || []);
+        } catch (e) {
+            console.error("Exception fetching group messages:", e);
+            container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages.</div>`;
+        }
+    }
+
+    function renderGroupMessages(messages) {
+        const container = document.getElementById('messages-container');
+        if (messages.length === 0) {
+            container.innerHTML = `<div class="text-center text-gray-400 py-8">No messages in this group yet. Be the first to greet!</div>`;
+            return;
+        }
+
+        container.innerHTML = messages.map(msg => {
+            const isMe = msg.sender_id === currentUser.id;
+            const senderName = msg.profiles?.full_name || 'Group Member';
+            const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            return `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                    ${!isMe ? `<span class="text-xs font-bold text-gray-600 mb-1 px-1">${escapeHTML(senderName)}</span>` : ''}
+                    <div class="max-w-[85%] sm:max-w-md px-4 py-2 rounded-lg text-sm break-words ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-900 rounded-bl-none'}" ${isMe ? 'style="background-color: #007bff;"' : ''}>
+                        ${escapeHTML(msg.content)}
+                    </div>
+                    <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
+                </div>
+            `;
+        }).join('');
+
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendGroupMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const content = input.value.trim();
+        if (!content || !currentUser || !groupId) return;
+
+        input.value = '';
+
+        try {
+            const { error } = await window.sbClient
+                .from('messages')
+                .insert([{
+                    sender_id: currentUser.id,
+                    group_id: groupId,
+                    content: content
+                }]);
+
+            if (error) {
+                alert("Failed to send message: " + error.message);
+            }
+        } catch (e) {
+            console.error("Error sending group message:", e);
+        }
+    }
+
+    function setupGroupRealtimeSubscription() {
+        window.sbClient
+            .channel(`group-chat-${groupId}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `group_id=eq.${groupId}`
+            }, payload => {
+                fetchGroupMessages();
+            })
+            .subscribe();
+    }
+
+    // Video call trigger for group
+    document.getElementById('start-video-call').addEventListener('click', async () => {
+        const overlay = document.getElementById('video-call-overlay');
+        overlay.classList.remove('hidden');
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('local-video').srcObject = localStream;
+        } catch (e) {
+            console.error("Camera/Mic access error:", e);
+            alert("Could not access camera or microphone.");
+        }
+    });
+
+    function terminateGroupCall() {
+        if (localStream) {
+            localStream.getTracks().forEach(t => t.stop());
+            localStream = null;
+        }
+        document.getElementById('video-call-overlay').classList.add('hidden');
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(s) {
+            return {
+                '&': '&',
+                '<': '<',
+                '>': '>',
+                '"': '"',
+                "'": '&#039;'
+            }[s];
+        });
+    }
+
+    async function logoutUser(e) {
+        e.preventDefault();
+        await window.sbClient.auth.signOut();
+        window.location.replace('login.html');
+    }
+
+    (async () => {
+        let retries = 0;
+        while (!window.sbClient && retries < 20) { 
+            await new Promise(r => setTimeout(r, 200)); 
+            retries++; 
+        }
+        
+        if (!window.sbClient) return;
+
+        await loadChurchLogo();
+        await initGroupChat();
+    })();
+</script>
+<script src="js/notifications.js"></script>
+</body>
+</html>

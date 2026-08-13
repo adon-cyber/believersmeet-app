@@ -170,7 +170,7 @@
 
 <main class="flex h-[calc(100vh-80px)] w-full overflow-hidden inbox-layout">
     <div class="w-72 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white users-sidebar">
-        <div class="sidebar-header">Direct Messages</div>
+        <div class="sidebar-header">Direct Messages (1-on-1 Only)</div>
         <div id="users-directory" class="users-list">
             <p style="padding: 16px; color: #64748b; text-align: center;">Loading brethren...</p>
         </div>
@@ -211,9 +211,9 @@
 
         await loadUserDirectory();
 
-        // Check if recipient parameter is in URL
+        // Check if recipient parameter is in URL, or userId parameter
         const urlParams = new URLSearchParams(window.location.search);
-        const recipientId = urlParams.get('recipient');
+        const recipientId = urlParams.get('recipient') || urlParams.get('userId');
         if (recipientId) {
             // Find user profile from directory or fetch directly
             const { data: targetProfile } = await window.sbClient
