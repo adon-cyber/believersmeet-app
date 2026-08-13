@@ -281,6 +281,21 @@
             }
 
             try {
+                // Graceful check for existing user / email conflict in profiles or auth
+                const { data: existingProfiles, error: checkError } = await sb
+                    .from('profiles')
+                    .select('id, email')
+                    .eq('email', email)
+                    .maybeSingle();
+                
+                if (existingProfiles) {
+                    errBox.textContent = "This email is already registered.";
+                    errBox.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = "Sign Up";
+                    return;
+                }
+
                 // Determine redirect URL based on user type (church founder/admin vs regular member join code)
                 const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 const redirectTo = role === 'admin' 
@@ -300,6 +315,7 @@
                     const profileData = {
                         id: authData.user.id,
                         full_name: fullName,
+                        email: email,
                         role: role,
                         is_verified: true
                     };
@@ -309,7 +325,15 @@
                         .upsert(profileData);
                     
                     if (profileError) {
-                        console.warn("Profile upsert warning:", profileError.message);
+                        console.error("Database error saving new user profile:", profileError);
+                        errBox.textContent = `Database error saving new user: ${profileError.message || JSON.stringify(profileError)}`;
+                        if (profileError.details) {
+                            errBox.textContent += ` (Details: ${profileError.details})`;
+                        }
+                        errBox.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.textContent = "Sign Up";
+                        return;
                     }
 
                     // Automatically redirect based on user role / selection
