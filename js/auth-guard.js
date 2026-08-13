@@ -93,20 +93,54 @@
             // 3. Subscription & Trial Enforcement (for church admins/members, skipping super_admins)
             if (hasChurch && !isSuperAdmin) {
                 try {
-                    const { data: church, error: churchError } = await client
-                        .from('churches')
-                        .select('trial_ends_at, subscription_status')
-                        .eq('id', hasChurch)
-                        .single();
+                    // Check local storage cache first to avoid unnecessary blocking roundtrips or race conditions
+                    let localStatus = localStorage.getItem('church_subscription_status');
+                    let church = null;
 
-                    if (!churchError && church) {
+                    if (localStatus === 'trial') {
+                        church = { subscription_status: 'trial' };
+                    } else {
+                        const localChurchStr = localStorage.getItem('current_church');
+                        if (localChurchStr) {
+                            try {
+                                const parsed = JSON.parse(localChurchStr);
+                                if (parsed && parsed.subscription_status) {
+                                    church = parsed;
+                                    if (parsed.subscription_status === 'trial') {
+                                        localStorage.setItem('church_subscription_status', 'trial');
+                                    }
+                                }
+                            } catch (e) {
+                                // ignore parse error
+                            }
+                        }
+                    }
+
+                    // If not found in local cache, fetch fresh un-cached profile/church from Supabase
+                    if (!church) {
+                        const { data: churchData, error: churchError } = await client
+                            .from('churches')
+                            .select('trial_ends_at, subscription_status')
+                            .eq('id', hasChurch)
+                            .single();
+
+                        if (!churchError && churchData) {
+                            church = churchData;
+                            localStorage.setItem('current_church', JSON.stringify(churchData));
+                            if (churchData.subscription_status) {
+                                localStorage.setItem('church_subscription_status', churchData.subscription_status);
+                            }
+                        }
+                    }
+
+                    if (church) {
                         // If trial pending activation onboarding step
                         if (church.subscription_status === 'pending_trial') {
                             if (!currentPath.includes('activate-trial.html')) {
                                 window.location.href = 'activate-trial.html';
                                 return;
                             }
-                        } else if (currentPath.includes('activate-trial.html')) {
+                        } else if (currentPath.includes('activate-trial.html') && church.subscription_status === 'trial') {
                             // If already activated, don't stay on activation page
                             window.location.href = 'index.html';
                             return;

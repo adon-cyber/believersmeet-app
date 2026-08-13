@@ -184,6 +184,14 @@
                     throw error;
                 }
 
+                // Update local storage and cached state immediately
+                if (church) {
+                    church.subscription_status = 'trial';
+                    church.trial_ends_at = sixMonthsLater.toISOString();
+                    localStorage.setItem('current_church', JSON.stringify(church));
+                }
+                localStorage.setItem('church_subscription_status', 'trial');
+
                 statusBox.className = "mt-4 rounded-md p-3 text-sm bg-green-100 text-green-700 border border-green-200";
                 statusBox.textContent = "Trial activated successfully! Redirecting to church dashboard...";
                 statusBox.classList.remove('hidden');
