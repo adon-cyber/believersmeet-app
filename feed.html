@@ -100,6 +100,21 @@
         </div>
         
         <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
+            <!-- Music Playlist Widget -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+                <h3 class="text-md font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-headphones-alt text-indigo-600"></i> Worship Playlist
+                </h3>
+                
+                <!-- This container will hold the dynamically loaded songs -->
+                <div id="music-playlist-container" class="space-y-3">
+                    <div class="text-sm text-gray-500 italic">Loading tracks...</div>
+                </div>
+
+                <!-- Global Hidden Audio Player -->
+                <audio id="global-audio-player" class="hidden"></audio>
+            </div>
+
             <div class="bg-slate-50 p-5 rounded-xl border border-gray-200 shadow-sm">
                 <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
                 <form id="leadership-inbox-form">
@@ -345,6 +360,7 @@
         await loadFeedGallery();
         await fetchAndRenderWallTimeline();
         await loadDiscoveryProfiles();
+        await loadMusicPlaylist();
         initTimelineRealtimeSync(); 
         
         document.getElementById('post-composition-form').addEventListener('submit', handleOutboundPostSubmit);
@@ -572,6 +588,105 @@
         } else {
             alert("Error saving reflection: " + error.message);
         }
+    }
+
+    // --- MUSIC PLAYLIST LOGIC ---
+    let playlistTracks = [];
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+
+    async function loadMusicPlaylist() {
+        const container = document.getElementById('music-playlist-container');
+        if (!container) return;
+
+        if (!currentUserProfile || !currentUserProfile.church_id) {
+            container.innerHTML = '<div class="text-sm text-gray-500 italic">Please complete your profile church assignment to load worship playlist.</div>';
+            return;
+        }
+
+        let query = window.sbClient
+            .from('worship_songs')
+            .select('*');
+
+        if (currentUserProfile.church_id !== 'global-fellowship') {
+            query = query.eq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error loading worship songs:", error.message);
+            // Fallback default sample tracks if table is empty or un-migrated yet
+            playlistTracks = [
+                { id: 'fallback-1', title: 'Amazing Grace (Worship)', artist: 'Believers Ensemble', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+                { id: 'fallback-2', title: 'Great Is Thy Faithfulness', artist: 'Grace Sanctuary', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
+            ];
+        } else {
+            playlistTracks = data && data.length > 0 ? data : [
+                { id: 'fallback-1', title: 'Amazing Grace (Worship)', artist: 'Believers Ensemble', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+                { id: 'fallback-2', title: 'Great Is Thy Faithfulness', artist: 'Grace Sanctuary', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
+            ];
+        }
+
+        renderPlaylistUI();
+    }
+
+    function renderPlaylistUI() {
+        const container = document.getElementById('music-playlist-container');
+        if (!container) return;
+
+        container.innerHTML = playlistTracks.map((track, index) => {
+            const isCurrent = index === currentTrackIndex;
+            return `
+                <div class="flex items-center justify-between p-3 rounded-lg border ${isCurrent ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-gray-100 hover:bg-gray-100'} transition cursor-pointer" onclick="playTrack(${index})">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <button class="w-8 h-8 rounded-full ${isCurrent && isPlaying ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'} flex items-center justify-center text-xs flex-shrink-0">
+                            <i class="fas ${isCurrent && isPlaying ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-gray-900 truncate">${escapeHTML(track.title)}</p>
+                            <p class="text-[10px] text-gray-500 truncate">${escapeHTML(track.artist)}</p>
+                        </div>
+                    </div>
+                    ${isCurrent ? '<span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider animate-pulse flex-shrink-0">Playing</span>' : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function playTrack(index) {
+        const audio = document.getElementById('global-audio-player');
+        if (!audio) return;
+
+        if (currentTrackIndex === index && isPlaying) {
+            audio.pause();
+            isPlaying = false;
+            renderPlaylistUI();
+            return;
+        }
+
+        currentTrackIndex = index;
+        const track = playlistTracks[currentTrackIndex];
+        if (!track) return;
+
+        audio.src = track.audio_url;
+        audio.play().then(() => {
+            isPlaying = true;
+            renderPlaylistUI();
+        }).catch(err => {
+            console.error("Audio playback error:", err);
+            isPlaying = false;
+            renderPlaylistUI();
+        });
+
+        audio.onended = () => {
+            if (currentTrackIndex < playlistTracks.length - 1) {
+                playTrack(currentTrackIndex + 1);
+            } else {
+                currentTrackIndex = 0;
+                playTrack(0);
+            }
+        };
     }
 
     async function logoutUser(e) { e.preventDefault(); await window.sbClient.auth.signOut(); window.location.replace('login.html'); }

@@ -165,9 +165,7 @@ async function loadViolationReports() {
 
                 return `
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                            ${new Date(v.created_at).toLocaleDateString()}
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${new Date(v.created_at).toLocaleDateString()}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${escapeHTML(reporterName)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">${escapeHTML(reportedName)}</td>
                         <td class="px-6 py-4 text-sm text-gray-700">
@@ -193,6 +191,8 @@ async function loadViolationReports() {
         }
     } catch (err) {
         console.error("Failed to load violations:", err);
+        if (container) container.innerHTML = `<div class="text-center py-6 text-red-500 text-sm">Failed to load violations: ${escapeHTML(err.message)}</div>`;
+        if (tableTbody) tableTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-6 text-center text-red-500 font-semibold">Error loading violations: ${escapeHTML(err.message)}</td></tr>`;
     }
 }
 
