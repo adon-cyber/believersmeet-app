@@ -57,8 +57,9 @@
                 <span class="text-xl sm:text-2xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent truncate">BelieversMeet</span>
             </a>
             <div class="flex items-center gap-3 sm:space-x-4" id="nav-auth-section">
-                <a href="login.html" class="hidden md:inline-flex text-sm font-semibold text-slate-300 hover:text-white transition px-4 py-2">Login</a>
-                <a href="signup.html" class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-full shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition duration-300 whitespace-nowrap">Get Started</a>
+                <a href="login.html" id="main-nav-auth-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg transition-all shadow-md">
+                    Login / Register
+                </a>
             </div>
         </div>
     </header>
@@ -93,15 +94,6 @@
                         <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
                             Share daily testimonies, present your prayer requests on the interactive prayer wall, stay updated with announcements, and experience genuine spiritual fellowship.
                         </p>
-                        <div class="pt-4 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                            <a href="signup.html" class="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl shadow-xl shadow-blue-600/30 transform hover:-translate-y-1 transition duration-300 group">
-                                Create an Account 
-                                <span class="ml-2 transform group-hover:translate-x-1 transition">🚀</span>
-                            </a>
-                            <a href="login.html" class="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl shadow-lg hover:shadow-slate-800/50 backdrop-blur transform hover:-translate-y-1 transition duration-300">
-                                Log In 🔑
-                            </a>
-                        </div>
 
                         <!-- Stats row -->
                         <div class="pt-8 grid grid-cols-3 gap-6 border-t border-slate-800/80 max-w-lg mx-auto lg:mx-0">
@@ -345,14 +337,6 @@
             <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6" data-aos="zoom-in">
                 <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">Ready to Join the Community?</h2>
                 <p class="text-slate-300 text-lg max-w-2xl mx-auto">Connect with your local church or global believers today. It takes less than a minute to get started.</p>
-                <div class="pt-4 flex flex-wrap justify-center gap-4">
-                    <a href="signup.html" class="px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl shadow-xl shadow-blue-600/40 transform hover:-translate-y-1 transition duration-300">
-                        Register Now 🚀
-                    </a>
-                    <a href="login.html" class="px-8 py-4 text-base font-bold text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-2xl shadow-lg backdrop-blur transform hover:-translate-y-1 transition duration-300">
-                        Sign In 🔑
-                    </a>
-                </div>
             </div>
         </section>
     </main>
@@ -369,6 +353,7 @@
     <!-- Authentication & Supabase Script -->
     <script>
         async function initAuthCheck() {
+            const authBtn = document.getElementById('main-nav-auth-btn');
             try {
                 if (!window.sbClient) return;
                 const { data: { session }, error: sessionError } = await window.sbClient.auth.getSession();
@@ -376,12 +361,27 @@
                     console.warn("Handled initialization error:", sessionError);
                 }
                 if (session) {
-                    window.location.replace('feed.html');
+                    if (authBtn) {
+                        authBtn.href = "admin.html";
+                        authBtn.textContent = "Go to Dashboard";
+                    }
                 } else {
+                    if (authBtn) {
+                        authBtn.href = "login.html";
+                        authBtn.textContent = "Login / Register";
+                    }
                     window.sbClient.auth.onAuthStateChange((event, session) => {
                         try {
                             if (session) {
-                                window.location.replace('feed.html');
+                                if (authBtn) {
+                                    authBtn.href = "admin.html";
+                                    authBtn.textContent = "Go to Dashboard";
+                                }
+                            } else {
+                                if (authBtn) {
+                                    authBtn.href = "login.html";
+                                    authBtn.textContent = "Login / Register";
+                                }
                             }
                         } catch (e) {
                             console.warn("Handled initialization error:", e);
