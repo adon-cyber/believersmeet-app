@@ -246,22 +246,22 @@
 
 <!-- Attendee Coupon Search & Download Modal -->
 <div id="coupon-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2"><span>🎟️</span> Retrieve & Download Ticket Coupon</h3>
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2"><span>🎟️</span> My Admission Coupons</h3>
             <button onclick="closeCouponModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
         </div>
         <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Enter Email or Unique Coupon Number</label>
+            <div id="admin-coupon-search-wrapper" class="hidden">
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Admin Search (Email or Unique Coupon Number)</label>
                 <div class="flex gap-2">
                     <input type="text" id="coupon-search-input" placeholder="e.g. user@example.com or CPN-8924" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     <button onclick="searchCoupon()" class="px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm whitespace-nowrap transition shadow">Search</button>
                 </div>
             </div>
             
-            <div id="coupon-result-container" class="mt-4">
-                <div class="text-center py-8 text-gray-400 text-sm">Enter your email or coupon number above to view your entry card.</div>
+            <div id="coupon-result-container" class="mt-4 space-y-6">
+                <div class="text-center py-8 text-gray-400 text-sm">Loading your coupons...</div>
             </div>
         </div>
     </div>
@@ -306,6 +306,7 @@
 
         if (profile) {
             const createEventBtn = document.getElementById('createEventBtn');
+            const adminSearchWrapper = document.getElementById('admin-coupon-search-wrapper');
             if (profile.role === 'admin' || profile.role === 'super_admin') {
                 const adminLink = document.getElementById('admin-nav-link');
                 if (adminLink) adminLink.classList.remove('hidden');
@@ -314,8 +315,10 @@
                 if (adminSection) adminSection.classList.remove('hidden');
 
                 if (createEventBtn) createEventBtn.style.display = 'flex';
+                if (adminSearchWrapper) adminSearchWrapper.classList.remove('hidden');
             } else {
                 if (createEventBtn) createEventBtn.style.display = 'none';
+                if (adminSearchWrapper) adminSearchWrapper.classList.add('hidden');
             }
         }
 
@@ -484,42 +487,13 @@
             const dayStr = eventDate.getDate();
 
             return `
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between transition hover:shadow-md">
-                    <div>
-                        <div class="relative h-48 bg-gray-100 overflow-hidden">
-                            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(evt.title)}" class="w-full h-full object-cover">
-                            <div class="absolute top-3 left-3 bg-white bg-opacity-90 backdrop-blur rounded-xl px-3 py-1 text-center shadow">
-                                <span class="block text-xs font-bold text-red-500 uppercase">${monthStr}</span>
-                                <span class="block text-lg font-extrabold text-gray-900">${dayStr}</span>
-                            </div>
-                            <span class="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">${escapeHtml(category)}</span>
-                        </div>
-                        <div class="p-5 space-y-3">
-                            <h3 class="text-lg font-bold text-gray-900 line-clamp-1">${escapeHtml(evt.title)}</h3>
-                            <div class="text-sm text-gray-600 space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span>📅</span>
-                                    <span>${eventDate.toLocaleString()}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span>📍</span>
-                                    <span class="truncate">${escapeHtml(evt.location)}</span>
-                                </div>
-                            </div>
-                            <p class="text-gray-700 text-sm line-clamp-2">${escapeHtml(evt.description)}</p>
-                        </div>
-                    </div>
-                    <div class="p-5 pt-0 flex items-center justify-between border-t border-gray-100 mt-4 pt-4">
-                        <span id="attendee-count-${evt.id}" class="text-xs font-semibold text-gray-500">👥 ${rsvpCount} ${rsvpCount === 1 ? 'Attendee' : 'Attendees'}</span>
-                        <div class="flex gap-2 items-center">
-                            <button onclick="openEventReportModal('${evt.id}', '${escapeHtml(evt.title).replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 text-xs transition" title="Report Event Violation">
-                                <i class="fas fa-flag"></i>
-                            </button>
-                            <button id="rsvp-btn-${evt.id}" onclick="toggleRsvp('${evt.id}')" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-blue-600 text-white hover:bg-blue-700'}">
-                                ${hasRsvp ? 'Opt Out' : 'Register'}
-                            </button>
-                        </div>
-                    </div>
+                <div class="event-card bg-slate-900 border border-slate-800 p-4 rounded shadow" data-event-id="${evt.id}">
+                    <h3 class="text-lg font-bold text-white">${escapeHtml(evt.title)}</h3>
+                    <p class="text-slate-400 mb-4">Date: ${eventDate.toLocaleString()}</p>
+                    
+                    <!-- ATTENDANCE BUTTONS -->
+                    <button class="register-btn bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition mt-2 ${hasRsvp ? 'hidden' : ''}" onclick="window.toggleAttendance('${evt.id}', 'registered')">Register</button>
+                    <button class="optout-btn bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded transition mt-2 ${hasRsvp ? '' : 'hidden'}" onclick="window.toggleAttendance('${evt.id}', 'opted_out')">Opt Out</button>
                 </div>
             `;
         }).join('');
@@ -814,10 +788,168 @@
 
     function openCouponModal() {
         document.getElementById('coupon-modal').classList.remove('hidden');
+        loadUserCoupons();
     }
 
     function closeCouponModal() {
         document.getElementById('coupon-modal').classList.add('hidden');
+    }
+
+    async function loadUserCoupons() {
+        const container = document.getElementById('coupon-result-container');
+        if (!container || !loggedInUser) return;
+
+        container.innerHTML = '<div class="text-center py-6 text-gray-500 text-sm">Loading your coupons...</div>';
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) return;
+
+        let query = window.sbClient
+            .from('event_registrations')
+            .select('*, events(*)');
+
+        const role = currentUserProfile?.role;
+        if (role !== 'admin' && role !== 'super_admin') {
+            // Force standard users to strictly query ONLY their own coupons
+            query = query.eq('profile_id', user.id);
+        }
+
+        const { data: coupons, error } = await query;
+
+        if (error) {
+            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">Error loading coupons: ${escapeHtml(error.message)}</div>`;
+            return;
+        }
+
+        if (!coupons || coupons.length === 0) {
+            container.innerHTML = `<div class="bg-gray-50 text-gray-500 p-8 rounded-2xl text-center text-sm font-medium border border-gray-200">You do not have any admission coupons yet. Register for an event to get your entry pass!</div>`;
+            return;
+        }
+
+        renderCouponCards(coupons);
+    }
+
+    async function searchCoupon() {
+        const queryVal = document.getElementById('coupon-search-input')?.value.trim() || '';
+        const container = document.getElementById('coupon-result-container');
+        if (!container) return;
+
+        const role = currentUserProfile?.role;
+        if (role !== 'admin' && role !== 'super_admin') {
+            loadUserCoupons();
+            return;
+        }
+
+        if (!queryVal) {
+            loadUserCoupons();
+            return;
+        }
+
+        container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">Searching coupon records...</div>';
+
+        let { data, error } = await window.sbClient
+            .from('event_registrations')
+            .select('*, events(*)')
+            .or(`attendee_email.eq.${queryVal},coupon_number.eq.${queryVal}`);
+
+        let regList = data;
+        if ((!regList || regList.length === 0) && queryVal.includes('@')) {
+            const { data: dataEmail } = await window.sbClient
+                .from('event_registrations')
+                .select('*, events(*)')
+                .ilike('attendee_email', `%${queryVal}%`);
+            regList = dataEmail;
+        } else if (!regList || regList.length === 0) {
+            const { data: dataCoupon } = await window.sbClient
+                .from('event_registrations')
+                .select('*, events(*)')
+                .ilike('coupon_number', `%${queryVal}%`);
+            regList = dataCoupon;
+        }
+
+        if (error || !regList || regList.length === 0) {
+            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">No ticket or coupon found matching "${escapeHtml(queryVal)}".</div>`;
+            return;
+        }
+
+        renderCouponCards(regList);
+    }
+
+    function renderCouponCards(regList) {
+        const container = document.getElementById('coupon-result-container');
+        if (!container) return;
+
+        container.innerHTML = regList.map((reg, index) => {
+            const evt = reg.events || {};
+            const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'Upcoming Event';
+            const isFree = reg.is_free || Number(reg.amount_paid || 0) === 0;
+            const amountDisplay = isFree ? 'FREE' : `$${Number(reg.amount_paid || 0).toFixed(2)}`;
+            const couponBgColor = evt.coupon_color || '#2563eb';
+
+            return `
+                <div id="couponCard-${index}" style="background-color: ${couponBgColor}; text-shadow: 0 1px 2px rgba(0,0,0,0.4);" class="text-white rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden space-y-6 border border-white border-opacity-30 my-6">
+                    <div class="absolute -right-12 -top-12 w-48 h-48 bg-white opacity-15 rounded-full blur-3xl"></div>
+                    
+                    <!-- Header Section: Event Title & Price / Pass Badge -->
+                    <div class="flex justify-between items-start border-b border-white border-opacity-25 pb-4">
+                        <div>
+                            <span class="text-xs font-black tracking-widest text-white text-opacity-90 uppercase bg-black bg-opacity-25 px-3 py-1 rounded-full shadow-sm">OFFICIAL ENTRY PASS</span>
+                            <h3 class="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">${escapeHtml(evt.title || 'Fellowship Event')}</h3>
+                        </div>
+                        <span class="px-3 py-1.5 ${isFree ? 'bg-emerald-500 text-white shadow-lg' : 'bg-black bg-opacity-40 text-white'} text-xs sm:text-sm font-black rounded-xl border border-white border-opacity-30 tracking-wider">${escapeHtml(amountDisplay)}</span>
+                    </div>
+
+                    <!-- Event & Attendee Details Expanded Logistical Section -->
+                    <div class="space-y-4 bg-black bg-opacity-20 p-5 rounded-2xl border border-white border-opacity-20 backdrop-blur-sm text-xs sm:text-sm">
+                        
+                        <!-- Attendee Section -->
+                        <div class="flex items-center gap-4 border-b border-white border-opacity-15 pb-4">
+                            ${reg.photo_url ? `<img src="${escapeHtml(reg.photo_url)}" alt="Attendee Photo" class="attendee-photo w-12 h-12 rounded-full object-cover border-2 border-white">` : `<div class="attendee-photo w-12 h-12 rounded-full flex items-center justify-center bg-blue-800 text-white font-bold text-xl shadow-inner border-2 border-white"><i class="fas fa-user"></i></div>`}
+                            <div class="space-y-0.5">
+                                <span class="text-[10px] font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Attendee Details</span>
+                                <span class="font-extrabold text-white text-base sm:text-lg block">${escapeHtml(reg.attendee_name || currentUserProfile?.full_name || 'Member')}</span>
+                                <span class="text-xs text-white text-opacity-90 font-mono block">${escapeHtml(reg.attendee_email || loggedInUser.email)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Distinct Logistical Rows -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                            <!-- Date & Time Row -->
+                            <div class="flex items-start gap-3 bg-black bg-opacity-15 p-3 rounded-xl border border-white border-opacity-10">
+                                <div class="text-lg text-blue-200 mt-0.5"><i class="fas fa-calendar-alt"></i></div>
+                                <div>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Date & Time</span>
+                                    <span class="font-extrabold text-white text-xs sm:text-sm block mt-0.5">${escapeHtml(eventDate)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Location Row -->
+                            <div class="flex items-start gap-3 bg-black bg-opacity-15 p-3 rounded-xl border border-white border-opacity-10">
+                                <div class="text-lg text-blue-200 mt-0.5"><i class="fas fa-map-marker-alt"></i></div>
+                                <div>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Location / Venue</span>
+                                    <span class="font-extrabold text-white text-xs sm:text-sm block mt-0.5">${escapeHtml(evt.location || 'Jinja Main Hall')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated Barcode & Coupon Code Bottom Block -->
+                    <div class="bg-white text-gray-900 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-2xl border border-gray-200" style="text-shadow: none !important;">
+                        <span class="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">Unique Admission Coupon Code</span>
+                        <div class="text-2xl sm:text-3xl font-mono font-black tracking-widest text-gray-900">${escapeHtml(reg.coupon_number || 'CPN-PASS')}</div>
+                        <div class="w-full h-10 bg-gray-900 mt-1 rounded-xl flex items-center justify-center font-mono text-white text-xs sm:text-sm tracking-[10px] opacity-95 select-none shadow-inner">||| | |||| || | |||| || | |||</div>
+                    </div>
+
+                    <!-- Print Button Container -->
+                    <div class="flex justify-end pt-1">
+                        <button onclick="window.print()" class="no-print px-5 py-2.5 bg-white text-gray-900 hover:bg-gray-100 font-extrabold rounded-xl text-xs transition shadow-xl flex items-center gap-2 transform hover:-translate-y-0.5" style="text-shadow: none !important;">
+                            <span>🖨️</span> Print / Download Pass
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     function escapeHtml(str) {
@@ -915,6 +1047,51 @@
                 setTimeout(() => toast.classList.add('hidden'), 300);
             }, 3500);
         }
+
+    window.toggleAttendance = async function(eventId, desiredStatus) {
+        // Fallback to whichever supabase client is globally available
+        const client = window.sbClient || window.supabase; 
+        if (!client) return alert("Database client not found.");
+
+        const { data: { user } } = await client.auth.getUser();
+        if (!user) return alert("Please log in first.");
+
+        // Upsert the attendance status
+        const { error } = await client
+            .from('event_attendees')
+            .upsert({ 
+                event_id: eventId, 
+                user_id: user.id, 
+                user_email: user.email,
+                status: desiredStatus,
+                updated_at: new Date().toISOString()
+            }, { 
+                onConflict: 'event_id, user_id' 
+            });
+
+        if (error) {
+            console.error("Error updating attendance:", error);
+            alert("Failed to update status.");
+            return;
+        }
+
+        // Dynamically toggle the buttons on the clicked card
+        const eventCard = document.querySelector(`[data-event-id="${eventId}"]`);
+        if (eventCard) {
+            const regBtn = eventCard.querySelector('.register-btn');
+            const optBtn = eventCard.querySelector('.optout-btn');
+            
+            if (desiredStatus === 'registered') {
+                if (regBtn) regBtn.classList.add('hidden');
+                if (optBtn) optBtn.classList.remove('hidden');
+                alert("Successfully registered!");
+            } else {
+                if (regBtn) regBtn.classList.remove('hidden');
+                if (optBtn) optBtn.classList.add('hidden');
+                alert("You have opted out of this event.");
+            }
+        }
+    };
 
     initApp();
 </script>
