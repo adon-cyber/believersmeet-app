@@ -115,9 +115,9 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Caption (Optional)</label>
-                        <input type="text" id="gallery-caption-input" placeholder="Enter a caption or description for this memory..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <input type="text" id="gallery-caption-input" placeholder="Enter a caption or description for this memory..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
-                    <button id="gallery-upload-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 text-sm">
+                    <button id="gallery-upload-btn" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                         <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload Photo</span>
                     </button>
                 </form>
@@ -131,17 +131,17 @@
                 <form id="music-upload-form" class="space-y-5">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Song Title</label>
-                        <input type="text" id="song-title-input" placeholder="Enter song title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <input type="text" id="song-title-input" placeholder="Enter song title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Artist / Ensemble</label>
-                        <input type="text" id="song-artist-input" placeholder="Enter artist name..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <input type="text" id="song-artist-input" placeholder="Enter artist name..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Audio File (MP3 / WAV)</label>
                         <input type="file" id="song-file-input" accept="audio/mp3, audio/wav, audio/mpeg" required class="w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 file:cursor-pointer transition">
                     </div>
-                    <button id="music-upload-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 text-sm">
+                    <button id="music-upload-btn" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                         <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload & Publish Song</span>
                     </button>
                 </form>
@@ -224,9 +224,9 @@
         <!-- 3. CHURCH DASHBOARD VIEW -->
         <div id="church-dashboard-view" class="hidden space-y-8">
             <!-- Super Admin Church Selector -->
-            <div id="super-admin-church-selector" class="mb-6 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl hidden">
+            <div id="super-admin-church-selector" class="mb-6 bg-slate-800/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/70 shadow-xl hidden">
                 <label class="block text-sm font-medium text-slate-300 mb-2">Select Church to Manage:</label>
-                <select id="active-church-select" onchange="changeManagedChurch(this.value)" class="bg-slate-800 text-white p-3 rounded-xl w-full border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none">
+                <select id="active-church-select" onchange="changeManagedChurch(this.value)" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     <option value="">Loading churches...</option>
                 </select>
             </div>
@@ -236,20 +236,20 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
                 <div class="space-y-8 lg:col-span-1">
-                    <div class="bg-slate-900 border border-slate-800 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
                         <h3 class="text-lg font-bold text-white mb-4">📅 Add New Programme</h3>
                         <div class="space-y-4">
-                            <input type="text" id="p-title" placeholder="Programme Title" class="w-full px-4 py-3 bg-slate-800 text-white border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-                            <input type="time" id="p-time" class="w-full px-4 py-3 bg-slate-800 text-white border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-                            <textarea id="p-desc" rows="3" placeholder="Description" class="w-full px-4 py-3 bg-slate-800 text-white border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                            <input type="text" id="p-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                            <input type="time" id="p-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                            <textarea id="p-desc" rows="3" placeholder="Description" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm resize-y"></textarea>
                             <button id="add-btn" onclick="addProgramme()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition">Publish</button>
                         </div>
                     </div>
-                    <div class="bg-slate-900 border border-slate-800 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
                         <h3 class="text-lg font-bold text-white mb-4">📍 Update Location</h3>
                         <div class="space-y-4">
-                            <input type="text" id="lat" placeholder="Latitude" class="w-full px-4 py-3 bg-slate-800 text-white border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-                            <input type="text" id="lng" placeholder="Longitude" class="w-full px-4 py-3 bg-slate-800 text-white border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                            <input type="text" id="lat" placeholder="Latitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                            <input type="text" id="lng" placeholder="Longitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                             <button onclick="updateLocation()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition">Save Coordinates</button>
                             <button onclick="detectAndSaveLocation()" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl transition">Use Current GPS</button>
                             <p id="gps-status" class="text-xs text-slate-400 text-center mt-2"></p>
@@ -258,11 +258,11 @@
                 </div>
                 <!-- Right Column -->
                 <div class="space-y-8 lg:col-span-2">
-                    <div class="bg-slate-900 border border-slate-800 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
                         <h3 class="text-lg font-bold text-white mb-4">👥 Members in Church</h3>
                         <div id="member-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load members.</p></div>
                     </div>
-                    <div class="bg-slate-900 border border-slate-800 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
                         <h3 class="text-lg font-bold text-white mb-4">📋 Published Programmes</h3>
                         <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load programmes.</p></div>
                     </div>
@@ -500,14 +500,28 @@
                     const diffTime = trialEnd.getTime() - now.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     
-                    let bannerClasses = "bg-blue-900/40 border-l-4 border-blue-500 p-4 text-sm text-blue-200 flex justify-between items-center my-4 rounded-xl shadow-lg border border-blue-500/20";
+                    let bannerClasses = "bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900 border border-blue-500/30 rounded-2xl p-4 text-slate-200 text-sm flex items-center justify-between shadow-lg my-6";
+                    let badgeClasses = "px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20";
+                    let iconBg = "p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 text-base";
+                    let titleText = "6-Month Free Trial Active";
+
                     if (diffDays <= 30) {
-                        bannerClasses = "bg-yellow-900/40 border-l-4 border-yellow-500 p-4 text-sm text-yellow-200 flex justify-between items-center my-4 rounded-xl shadow-lg border border-yellow-500/20";
+                        bannerClasses = "bg-gradient-to-r from-yellow-900/40 via-amber-900/30 to-slate-900 border border-yellow-500/30 rounded-2xl p-4 text-slate-200 text-sm flex items-center justify-between shadow-lg my-6";
+                        badgeClasses = "px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs font-semibold border border-yellow-500/20";
+                        iconBg = "p-2 rounded-xl bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-base";
+                        titleText = "Free Trial Expiring Soon";
                     }
 
                     trialBannerContainer.innerHTML = `
                         <div id="trial-info-banner" class="${bannerClasses}">
-                            <span><strong>6-Month Free Trial:</strong> Expires on <span id="church-trial-expiry" class="font-bold underline">${formattedExpiry}</span> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</span>
+                            <div class="flex items-center gap-3">
+                                <span class="${iconBg}">⏳</span>
+                                <div>
+                                    <span class="font-semibold text-white">${titleText}</span>
+                                    <p class="text-xs text-slate-400">Expires on <strong class="text-slate-200">${formattedExpiry}</strong> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</p>
+                                </div>
+                            </div>
+                            <span class="${badgeClasses}">${diffDays > 0 ? 'Active Plan' : 'Expired'}</span>
                         </div>
                     `;
                 }
