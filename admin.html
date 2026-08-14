@@ -35,6 +35,18 @@
     <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
         
+        <!-- 1. TAB NAVIGATION (Add at the very top of <main>) -->
+        <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden">
+            <button id="tab-btn-global" onclick="switchAdminTab('global')" class="py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none">
+                🌐 Global System Admin
+            </button>
+            <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none">
+                ⛪ Church Dashboard
+            </button>
+        </div>
+
+        <!-- 2. GLOBAL VIEW (Wrap ALL existing admin.html content inside this div) -->
+        <div id="global-admin-view" class="block">
         <!-- Page Header Section matching giving.html style -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto gap-4">
             <div>
@@ -191,6 +203,56 @@
             </h3>
             <div id="announcements-container" class="mt-4 space-y-2"><p class="text-gray-400 italic text-sm">Loading...</p></div>
         </div>
+        </div>
+
+        <!-- 3. CHURCH DASHBOARD VIEW (Paste this right below the closing tag of global-admin-view) -->
+        <div id="church-dashboard-view" class="hidden">
+            <!-- Super Admin Church Selector -->
+            <div id="super-admin-church-selector" class="mb-6 bg-slate-900 p-4 rounded-lg border border-slate-800 hidden">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Select Church to Manage:</label>
+                <select id="active-church-select" onchange="changeManagedChurch(this.value)" class="bg-slate-800 text-white p-2 rounded w-full border border-slate-700">
+                    <option value="">Loading churches...</option>
+                </select>
+            </div>
+
+            <div id="trial-banner-container" class="mb-6"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column -->
+                <div class="space-y-8 lg:col-span-1">
+                    <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">📅 Add New Programme</h3>
+                        <div class="space-y-4">
+                            <input type="text" id="p-title" placeholder="Programme Title" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md">
+                            <input type="time" id="p-time" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md">
+                            <textarea id="p-desc" rows="3" placeholder="Description" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md"></textarea>
+                            <button id="add-btn" onclick="addProgramme()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded">Publish</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">📍 Update Location</h3>
+                        <div class="space-y-4">
+                            <input type="text" id="lat" placeholder="Latitude" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md">
+                            <input type="text" id="lng" placeholder="Longitude" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md">
+                            <button onclick="updateLocation()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Coordinates</button>
+                            <button onclick="detectAndSaveLocation()" class="w-full py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded">Use Current GPS</button>
+                            <p id="gps-status" class="text-xs text-slate-400 text-center mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column -->
+                <div class="space-y-8 lg:col-span-2">
+                    <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">👥 Members in Church</h3>
+                        <div id="member-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load members.</p></div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">📋 Published Programmes</h3>
+                        <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load programmes.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Footer -->
@@ -210,6 +272,35 @@
         }
 
         let currentUserProfile = null;
+        let activeDashboardChurchId = null;
+
+        function switchAdminTab(tab) {
+            const globalView = document.getElementById('global-admin-view');
+            const dashboardView = document.getElementById('church-dashboard-view');
+            const btnGlobal = document.getElementById('tab-btn-global');
+            const btnDashboard = document.getElementById('tab-btn-dashboard');
+
+            if (tab === 'global') {
+                globalView.classList.remove('hidden');
+                globalView.classList.add('block');
+                dashboardView.classList.remove('block');
+                dashboardView.classList.add('hidden');
+
+                btnGlobal.className = "py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none";
+                btnDashboard.className = "py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none";
+            } else if (tab === 'dashboard') {
+                globalView.classList.remove('block');
+                globalView.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                dashboardView.classList.add('block');
+
+                btnGlobal.className = "py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none";
+                btnDashboard.className = "py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none";
+
+                // Load dashboard data if not loaded yet
+                initChurchDashboardView();
+            }
+        }
 
         async function initPage() {
             console.log("Initializing Admin Dashboard...");
@@ -247,13 +338,41 @@
             console.log("Access authorized. Role:", currentUserProfile.role);
 
             // UI Access Management Configurations
-            if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin') {
-                document.getElementById('publish-section').classList.remove('hidden');
-                document.getElementById('user-management-section').classList.remove('hidden');
-                loadInboxInquiries();
-                loadAllMembers();
-                loadChurchJoinCode();
-                if (typeof loadAdminEvents === 'function') loadAdminEvents();
+            if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church') {
+                
+                // Check if user is super admin or admin to show tabs
+                if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com') {
+                    const tabsEl = document.getElementById('admin-tabs');
+                    if (tabsEl) tabsEl.classList.remove('hidden');
+                }
+
+                if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin') {
+                    const pubSec = document.getElementById('publish-section');
+                    if (pubSec) pubSec.classList.remove('hidden');
+                    const usrMgmt = document.getElementById('user-management-section');
+                    if (usrMgmt) usrMgmt.classList.remove('hidden');
+                    loadInboxInquiries();
+                    loadAllMembers();
+                    loadChurchJoinCode();
+                    if (typeof loadAdminEvents === 'function') loadAdminEvents();
+                }
+
+                // Check URL params for direct church_id view or default tab
+                const urlParams = new URLSearchParams(window.location.search);
+                const overrideChurchId = urlParams.get('church_id');
+                const initialTab = urlParams.get('tab');
+
+                if (overrideChurchId && (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin')) {
+                    activeDashboardChurchId = overrideChurchId;
+                    switchAdminTab('dashboard');
+                } else if (initialTab === 'dashboard') {
+                    switchAdminTab('dashboard');
+                } else if (currentUserProfile.role === 'church' && currentUserProfile.church_id) {
+                    // If strictly a church admin, default to church dashboard view
+                    activeDashboardChurchId = currentUserProfile.church_id;
+                    switchAdminTab('dashboard');
+                }
+
             } else {
                 alert("Unauthorized: Admin privileges required.");
                 window.location.replace('feed.html');
@@ -262,6 +381,246 @@
             
             loadAnnouncements(currentUserProfile.church_id);
         }
+
+        // --- CHURCH DASHBOARD LOGIC ---
+        async function initChurchDashboardView() {
+            if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com') {
+                const selectorContainer = document.getElementById('super-admin-church-selector');
+                if (selectorContainer) selectorContainer.classList.remove('hidden');
+                await loadChurchesDropdown();
+            } else {
+                activeDashboardChurchId = currentUserProfile.church_id;
+            }
+
+            if (activeDashboardChurchId) {
+                loadChurchDetails(activeDashboardChurchId);
+                loadChurchMembers(activeDashboardChurchId);
+                loadChurchProgrammes(activeDashboardChurchId);
+            }
+        }
+
+        async function loadChurchesDropdown() {
+            const select = document.getElementById('active-church-select');
+            if (!select) return;
+
+            const { data: churches, error } = await window.sbClient.from('churches').select('id, name').order('name');
+            if (error) {
+                select.innerHTML = '<option value="">Error loading churches</option>';
+                return;
+            }
+
+            if (!churches || churches.length === 0) {
+                select.innerHTML = '<option value="">No churches found</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">-- Choose Church --</option>' + churches.map(c => `
+                <option value="${escapeHTML(c.id)}" ${activeDashboardChurchId === c.id ? 'selected' : ''}>${escapeHTML(c.name)}</option>
+            `).join('');
+
+            if (!activeDashboardChurchId && churches.length > 0) {
+                activeDashboardChurchId = churches[0].id;
+                select.value = activeDashboardChurchId;
+                loadChurchDetails(activeDashboardChurchId);
+                loadChurchMembers(activeDashboardChurchId);
+                loadChurchProgrammes(activeDashboardChurchId);
+            }
+        }
+
+        function changeManagedChurch(churchId) {
+            activeDashboardChurchId = churchId;
+            if (churchId) {
+                loadChurchDetails(churchId);
+                loadChurchMembers(churchId);
+                loadChurchProgrammes(churchId);
+            }
+        }
+
+        async function loadChurchDetails(churchId) {
+            const { data: church } = await window.sbClient.from('churches').select('*').eq('id', churchId).maybeSingle();
+            if (church) {
+                if (church.latitude) document.getElementById('lat').value = church.latitude;
+                if (church.longitude) document.getElementById('lng').value = church.longitude;
+
+                const trialBannerContainer = document.getElementById('trial-banner-container');
+                if (trialBannerContainer && church.trial_ends_at) {
+                    const trialEnd = new Date(church.trial_ends_at);
+                    const formattedExpiry = trialEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    const now = new Date();
+                    const diffTime = trialEnd.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let bannerClasses = "bg-blue-900 border-l-4 border-blue-500 p-3 text-xs text-blue-100 flex justify-between items-center my-2 rounded shadow-sm";
+                    if (diffDays <= 30) {
+                        bannerClasses = "bg-yellow-900 border-l-4 border-yellow-500 p-3 text-xs text-yellow-100 flex justify-between items-center my-2 rounded shadow-sm";
+                    }
+
+                    trialBannerContainer.innerHTML = `
+                        <div id="trial-info-banner" class="${bannerClasses}">
+                            <span><strong>6-Month Free Trial:</strong> Expires on <span id="church-trial-expiry" class="font-bold underline">${formattedExpiry}</span> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        async function addProgramme() {
+            if (!activeDashboardChurchId) {
+                alert("Please select a church first.");
+                return;
+            }
+            const btn = document.getElementById('add-btn');
+            const title = document.getElementById('p-title').value.trim();
+            const time = document.getElementById('p-time').value;
+            const desc = document.getElementById('p-desc').value.trim();
+
+            if (!title || !time) {
+                alert("Please fill in Title and Time.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Publishing...";
+
+            const { error } = await window.sbClient.from('programmes').insert({
+                church_id: activeDashboardChurchId,
+                title,
+                description: desc,
+                start_time: time
+            });
+
+            btn.disabled = false;
+            btn.innerText = "Publish";
+
+            if (error) {
+                alert("Error publishing programme: " + error.message);
+            } else {
+                showNotification("Programme added successfully!", "success");
+                document.getElementById('p-title').value = '';
+                document.getElementById('p-time').value = '';
+                document.getElementById('p-desc').value = '';
+                loadChurchProgrammes(activeDashboardChurchId);
+            }
+        }
+
+        async function loadChurchProgrammes(churchId) {
+            const container = document.getElementById('programme-list');
+            if (!container) return;
+            const { data: programmes, error } = await window.sbClient
+                .from('programmes')
+                .select('*')
+                .eq('church_id', churchId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p class="text-red-400 py-3">Error loading programmes: ${escapeHTML(error.message)}</p>`;
+                return;
+            }
+
+            container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => `
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-semibold text-white">${escapeHTML(p.title)} <span class="text-xs font-normal text-slate-400 ml-2">(${escapeHTML(p.start_time)})</span></h4>
+                        ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+                    </div>
+                    <button onclick="deleteChurchProgramme('${p.id}')" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-medium ml-4 transition">Delete</button>
+                </div>
+            `).join('') : '<p class="text-slate-400 py-3">No programmes published yet.</p>';
+        }
+
+        async function deleteChurchProgramme(id) {
+            if (!confirm("Are you sure you want to delete this programme?")) return;
+            const { error } = await window.sbClient.from('programmes').delete().eq('id', id);
+            if (error) {
+                alert("Error deleting programme: " + error.message);
+            } else {
+                loadChurchProgrammes(activeDashboardChurchId);
+            }
+        }
+
+        async function loadChurchMembers(churchId) {
+            const container = document.getElementById('member-list');
+            if (!container) return;
+            const { data: members, error } = await window.sbClient
+                .from('profiles')
+                .select('id, full_name, role')
+                .eq('church_id', churchId);
+
+            if (error) {
+                container.innerHTML = `<p class="text-red-400 py-3">Error loading members: ${escapeHTML(error.message)}</p>`;
+                return;
+            }
+
+            container.innerHTML = members && members.length > 0 ? members.map(m => `
+                <div class="py-3 flex items-center justify-between">
+                    <span class="text-sm font-medium text-white">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
+                    <span class="px-2 py-0.5 text-xs rounded bg-blue-900 text-blue-200 font-medium">${escapeHTML(m.role || 'member')}</span>
+                </div>
+            `).join('') : '<p class="text-slate-400 py-3">No members joined your church yet.</p>';
+        }
+
+        async function updateLocation() {
+            if (!activeDashboardChurchId) {
+                alert("Please select a church first.");
+                return;
+            }
+            const lat = document.getElementById('lat').value;
+            const lng = document.getElementById('lng').value;
+
+            if (!lat || !lng) {
+                alert("Please enter both latitude and longitude.");
+                return;
+            }
+
+            const { error } = await window.sbClient.from('churches').update({
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lng)
+            }).eq('id', activeDashboardChurchId);
+
+            if (error) {
+                alert("Error updating location: " + error.message);
+            } else {
+                showNotification("Church coordinates updated successfully!", "success");
+            }
+        }
+
+        async function detectAndSaveLocation() {
+            if (!activeDashboardChurchId) {
+                alert("Please select a church first.");
+                return;
+            }
+            const status = document.getElementById('gps-status');
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+            status.innerText = "Detecting current position...";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                document.getElementById('lat').value = lat;
+                document.getElementById('lng').value = lng;
+
+                const { error } = await window.sbClient.from('churches').update({
+                    latitude: lat,
+                    longitude: lng
+                }).eq('id', activeDashboardChurchId);
+
+                if (error) {
+                    status.innerText = "Error saving GPS location.";
+                    alert("Error saving GPS location: " + error.message);
+                } else {
+                    status.innerText = `Saved! Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+                    showNotification("GPS location saved successfully!", "success");
+                }
+            }, (err) => {
+                status.innerText = "Unable to retrieve your location.";
+                alert("Geolocation error: " + err.message);
+            });
+        }
+        // ---------------------------
 
         // --- ANNOUNCEMENT HANDLERS ---
         document.getElementById('announcement-form').addEventListener('submit', async (e) => {
@@ -510,7 +869,6 @@
                     .upload(filePath, file);
 
                 if (uploadError) {
-                    // If bucket doesn't exist or permissions issue, provide clear instruction or try 'memories'
                     throw new Error("Storage upload failed: " + uploadError.message);
                 }
 

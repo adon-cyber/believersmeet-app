@@ -294,7 +294,7 @@ function renderUsersTable(users) {
                     <button onclick="extendChurchTrial('${user.church_id}')" class="ml-1 px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold border border-indigo-200 transition" title="Extend Church Trial">
                         + Extend Trial
                     </button>
-                    <a href="church-dashboard.html?church_id=${user.church_id}" 
+                    <a href="admin.html?church_id=${user.church_id}&tab=dashboard" 
                        class="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 px-3 py-1.5 rounded transition inline-flex items-center ml-3 shadow-sm">
                        ⚙️ Manage Dashboard
                     </a>

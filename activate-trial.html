@@ -117,7 +117,7 @@
 
             if (church && church.subscription_status === 'trial') {
                 // Already activated, proceed to dashboard
-                window.location.href = 'church-dashboard.html';
+                window.location.href = 'admin.html?tab=dashboard';
             }
         });
 
@@ -197,7 +197,7 @@
                 statusBox.classList.remove('hidden');
 
                 setTimeout(() => {
-                    window.location.href = 'church-dashboard.html';
+                    window.location.href = 'admin.html?tab=dashboard';
                 }, 1500);
 
             } catch (err) {
