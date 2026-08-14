@@ -648,7 +648,12 @@
                             <p class="text-[10px] text-gray-500 truncate">${escapeHTML(track.artist)}</p>
                         </div>
                     </div>
-                    ${isCurrent ? '<span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider animate-pulse flex-shrink-0">Playing</span>' : ''}
+                    <div class="flex items-center gap-2">
+                        ${isCurrent ? '<span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider animate-pulse flex-shrink-0">Playing</span>' : ''}
+                        <a href="${track.audio_url}" download target="_blank" onclick="event.stopPropagation();" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-xs flex-shrink-0" title="Download Song">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </div>
                 </div>
             `;
         }).join('');

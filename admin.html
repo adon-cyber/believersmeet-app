@@ -88,6 +88,30 @@
             </form>
         </div>
 
+        <!-- Upload Song Form Section (Admin Only) -->
+        <div id="music-upload-section" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto mb-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-music text-blue-600"></i> Upload Worship Song
+            </h3>
+            <form id="music-upload-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Song Title</label>
+                    <input type="text" id="song-title-input" placeholder="Enter song title..." required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Artist / Ensemble</label>
+                    <input type="text" id="song-artist-input" placeholder="Enter artist name..." required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Audio File (MP3 / WAV)</label>
+                    <input type="file" id="song-file-input" accept="audio/mp3, audio/wav, audio/mpeg" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <button id="music-upload-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition-all flex items-center justify-center space-x-2 text-sm">
+                    <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload & Publish Song</span>
+                </button>
+            </form>
+        </div>
+
         <!-- Grid Section: Publish Announcement & Schedule Event -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 max-w-4xl mx-auto">
             <!-- Publish Announcement -->
@@ -384,7 +408,61 @@
             }
         }
 
-        // --- GALLERY UPLOAD HANDLER ---
+        // --- MUSIC UPLOAD HANDLER ---
+        document.getElementById('music-upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('music-upload-btn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading Song...`;
+
+            try {
+                const titleInput = document.getElementById('song-title-input');
+                const artistInput = document.getElementById('song-artist-input');
+                const fileInput = document.getElementById('song-file-input');
+
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    throw new Error("Please select an audio file to upload.");
+                }
+
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const filePath = `${fileName}`;
+
+                // Upload to Supabase Storage bucket 'music-uploads'
+                const { data: uploadData, error: uploadError } = await window.sbClient.storage
+                    .from('music-uploads')
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    throw new Error("Music storage upload failed: " + uploadError.message);
+                }
+
+                // Get Public URL
+                const { data: { publicUrl } } = window.sbClient.storage
+                    .from('music-uploads')
+                    .getPublicUrl(filePath);
+
+                // Insert into worship_songs table
+                const { error: dbError } = await window.sbClient.from('worship_songs').insert([{
+                    title: titleInput.value.trim(),
+                    artist: artistInput.value.trim(),
+                    audio_url: publicUrl,
+                    church_id: currentUserProfile?.church_id || null
+                }]);
+
+                if (dbError) throw dbError;
+
+                showNotification("Worship song uploaded and published successfully!", "success");
+                e.target.reset();
+            } catch (err) {
+                showNotification("Error: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        });
         document.getElementById('gallery-upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('gallery-upload-btn');
