@@ -685,47 +685,57 @@
             const couponBgColor = evt.coupon_color || '#2563eb';
 
             return `
-                <div id="couponCard" style="background-color: ${couponBgColor}; text-shadow: 0 1px 2px rgba(0,0,0,0.3);" class="text-white rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-4 border border-white border-opacity-20 my-4">
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
-                    <div class="flex justify-between items-start border-b border-white border-opacity-25 pb-3">
+                <div id="couponCard" style="background-color: ${couponBgColor}; text-shadow: 0 1px 2px rgba(0,0,0,0.4);" class="text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden space-y-6 border border-white border-opacity-30 my-6">
+                    <div class="absolute -right-12 -top-12 w-48 h-48 bg-white opacity-15 rounded-full blur-3xl"></div>
+                    
+                    <!-- Header Section: Event Title & Price / Pass Badge -->
+                    <div class="flex justify-between items-start border-b border-white border-opacity-25 pb-4">
                         <div>
-                            <span class="text-xs font-bold tracking-widest text-white text-opacity-90 uppercase">Official Entry Pass</span>
-                            <h4 class="text-xl font-extrabold text-white mt-0.5">${escapeHtml(evt.title || 'Community Event')}</h4>
+                            <span class="text-xs font-black tracking-widest text-white text-opacity-90 uppercase bg-black bg-opacity-20 px-3 py-1 rounded-full">Official Entry Ticket</span>
+                            <h3 class="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">${escapeHtml(evt.title || 'Community Event')}</h3>
                         </div>
-                        <span class="px-3 py-1 ${isFree ? 'bg-green-500 text-white' : 'bg-black bg-opacity-30 text-white'} text-xs font-bold rounded-lg border border-white border-opacity-30">${escapeHtml(amountDisplay)}</span>
+                        <span class="px-4 py-1.5 ${isFree ? 'bg-emerald-500 text-white shadow-lg' : 'bg-black bg-opacity-40 text-white'} text-sm font-black rounded-xl border border-white border-opacity-30 tracking-wider">${escapeHtml(amountDisplay)}</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="text-xs text-white text-opacity-80 block">Event Name</span>
-                            <span class="font-bold text-white">${escapeHtml(evt.title || 'Community Event')}</span>
-                        </div>
-                        <div class="flex items-center gap-3 col-span-2 sm:col-span-1">
-                            ${reg.photo_url ? `<img src="${escapeHtml(reg.photo_url)}" alt="Attendee Photo" class="attendee-photo">` : ''}
-                            <div>
-                                <span class="text-xs text-white text-opacity-80 block">Attendee Name & Email</span>
-                                <span class="font-bold text-white block">${escapeHtml(reg.attendee_name || currentUserProfile?.full_name || 'Valued Attendee')}</span>
-                                <span class="text-xs text-white text-opacity-90 block">${escapeHtml(reg.attendee_email || loggedInUser.email)}</span>
+                    <!-- Event & Attendee Details Grid (Structured Above Barcode Section) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-black bg-opacity-15 p-5 rounded-2xl border border-white border-opacity-15 backdrop-blur-sm text-sm">
+                        <!-- Attendee Details -->
+                        <div class="flex items-center gap-4 col-span-full sm:col-span-1 border-b sm:border-b-0 sm:border-r border-white border-opacity-15 pb-4 sm:pb-0 sm:pr-4">
+                            ${reg.photo_url ? `<img src="${escapeHtml(reg.photo_url)}" alt="Attendee Photo" class="attendee-photo">` : `<div class="attendee-photo flex items-center justify-center bg-blue-800 text-white font-bold text-xl"><i class="fas fa-user"></i></div>`}
+                            <div class="space-y-0.5">
+                                <span class="text-xs font-bold uppercase tracking-wider text-white text-opacity-80 block">Attendee Name</span>
+                                <span class="font-extrabold text-white text-base block">${escapeHtml(reg.attendee_name || currentUserProfile?.full_name || 'Valued Attendee')}</span>
+                                <span class="text-xs text-white text-opacity-90 font-mono block">${escapeHtml(reg.attendee_email || loggedInUser.email)}</span>
                             </div>
                         </div>
-                        <div>
-                            <span class="text-xs text-white text-opacity-80 block">Date & Time</span>
-                            <span class="font-medium text-white text-opacity-95">${escapeHtml(eventDate)}</span>
-                        </div>
-                        <div>
-                            <span class="text-xs text-white text-opacity-80 block">Location</span>
-                            <span class="font-medium text-white text-opacity-95">${escapeHtml(evt.location || 'Main Venue')}</span>
+
+                        <!-- Date, Time & Venue Details -->
+                        <div class="space-y-4 col-span-full sm:col-span-1 flex flex-col justify-center">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-white text-opacity-80 block">Date & Time</span>
+                                <span class="font-bold text-white text-sm flex items-center gap-1.5 mt-0.5">
+                                    <i class="fas fa-calendar-alt opacity-80"></i> ${escapeHtml(eventDate)}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-white text-opacity-80 block">Location / Venue</span>
+                                <span class="font-bold text-white text-sm flex items-center gap-1.5 mt-0.5">
+                                    <i class="fas fa-map-marker-alt opacity-80"></i> ${escapeHtml(evt.location || 'Main Venue')}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bg-white text-gray-900 rounded-xl p-4 flex flex-col items-center justify-center space-y-1 shadow-inner" style="text-shadow: none !important;">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Unique Coupon Number</span>
-                        <div class="text-2xl font-mono font-black tracking-widest text-gray-900">${escapeHtml(reg.coupon_number || 'CPN-XXXX')}</div>
-                        <div class="w-full h-8 bg-gray-900 mt-2 rounded flex items-center justify-center font-mono text-white text-xs tracking-[8px] opacity-90 select-none">||| | |||| || | ||||</div>
+                    <!-- Barcode & Coupon Code Footer Section -->
+                    <div class="bg-white text-gray-900 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-xl border border-gray-100" style="text-shadow: none !important;">
+                        <span class="text-xs font-extrabold text-gray-400 uppercase tracking-widest">Unique Admission Coupon Code</span>
+                        <div class="text-3xl font-mono font-black tracking-widest text-gray-900">${escapeHtml(reg.coupon_number || 'CPN-XXXX')}</div>
+                        <div class="w-full h-10 bg-gray-900 mt-2 rounded-lg flex items-center justify-center font-mono text-white text-sm tracking-[10px] opacity-95 select-none shadow-inner">||| | |||| || | |||| || |</div>
                     </div>
 
-                    <div class="flex justify-end pt-2">
-                        <button onclick="window.print()" class="px-5 py-2.5 bg-white text-gray-900 hover:bg-gray-100 font-bold rounded-xl text-sm transition shadow flex items-center gap-2" style="text-shadow: none !important;">
+                    <!-- Print Button Container -->
+                    <div class="flex justify-end pt-1">
+                        <button onclick="window.print()" class="no-print px-6 py-3 bg-white text-gray-900 hover:bg-gray-100 font-extrabold rounded-2xl text-sm transition shadow-lg flex items-center gap-2.5 transform hover:-translate-y-0.5" style="text-shadow: none !important;">
                             <span>🖨️</span> Print / Download Coupon Card
                         </button>
                     </div>
