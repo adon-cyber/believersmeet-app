@@ -171,10 +171,37 @@
             }
 
             currentUserProfile = profile;
-            userChurchId = profile.church_id;
+
+            // --- DUAL ACCESS LOGIC ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const overrideChurchId = urlParams.get('church_id');
+
+            if (overrideChurchId && profile.role === 'super_admin') {
+                userChurchId = overrideChurchId;
+                
+                // Inject Super Admin Banner
+                const mainContainer = document.querySelector('main');
+                if (mainContainer) {
+                    const bannerHTML = `
+                        <div class="bg-blue-900 border-l-4 border-blue-500 p-4 mb-6 rounded shadow-md flex justify-between items-center">
+                            <p class="text-blue-100 text-sm font-medium">
+                                <span class="mr-2">🛡️</span> Viewing Church Dashboard as Super Admin
+                            </p>
+                            <a href="admin.html" class="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded transition font-medium">
+                                &larr; Back to Super Admin Panel
+                            </a>
+                        </div>
+                    `;
+                    mainContainer.insertAdjacentHTML('afterbegin', bannerHTML);
+                }
+            } else {
+                // Fallback for regular Church Admins
+                userChurchId = profile.church_id;
+            }
+            // -------------------------
 
             if (!userChurchId) {
-                alert("No church assigned to this account.");
+                alert("No church assigned to this account/view.");
                 return;
             }
 
