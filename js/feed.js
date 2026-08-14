@@ -9,6 +9,17 @@ let activeFilter = 'All';
 let discoveryProfiles = [];
 let currentDiscoveryIndex = 0;
 
+// Utility function to sanitize strings and prevent XSS
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     enforceLoginAndLoad().catch(err => console.error("Initialization error:", err));
 });
