@@ -16,7 +16,7 @@
             if (window.sbClient) {
                 const { data: { user } } = await window.sbClient.auth.getUser();
                 if (user) {
-                    const isSuperAdmin = user.email === 'adoniakasango@gmail.com';
+                    const isSuperAdmin = user.email === 'adonstance@gmail.com';
                     const { data: profile } = await window.sbClient
                         .from('profiles')
                         .select('role, church_id')
@@ -53,6 +53,9 @@
             { href: 'profile.html', label: 'Profile' }
         ];
 
+        if (isSuperAdmin) {
+            options.push({ href: 'super-admin.html', label: '🛡️ Super Admin' });
+        }
         if (isAdminOrLeader) {
             options.push({ href: 'admin.html', label: '⚙️ Admin Panel' });
         }

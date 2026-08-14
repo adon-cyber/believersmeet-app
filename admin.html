@@ -312,21 +312,29 @@
             const btnDashboard = document.getElementById('tab-btn-dashboard');
 
             if (tab === 'global') {
-                globalView.classList.remove('hidden');
-                globalView.classList.add('block');
-                dashboardView.classList.remove('block');
-                dashboardView.classList.add('hidden');
+                if (globalView) {
+                    globalView.classList.remove('hidden');
+                    globalView.classList.add('block');
+                }
+                if (dashboardView) {
+                    dashboardView.classList.remove('block');
+                    dashboardView.classList.add('hidden');
+                }
 
-                btnGlobal.className = "py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none";
-                btnDashboard.className = "py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none";
+                if (btnGlobal) btnGlobal.className = "py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none";
+                if (btnDashboard) btnDashboard.className = "py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none";
             } else if (tab === 'dashboard') {
-                globalView.classList.remove('block');
-                globalView.classList.add('hidden');
-                dashboardView.classList.remove('hidden');
-                dashboardView.classList.add('block');
+                if (globalView) {
+                    globalView.classList.remove('block');
+                    globalView.classList.add('hidden');
+                }
+                if (dashboardView) {
+                    dashboardView.classList.remove('hidden');
+                    dashboardView.classList.add('block');
+                }
 
-                btnGlobal.className = "py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none";
-                btnDashboard.className = "py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none";
+                if (btnGlobal) btnGlobal.className = "py-2 px-4 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none";
+                if (btnDashboard) btnDashboard.className = "py-2 px-4 text-sm font-bold text-blue-500 border-b-2 border-blue-500 focus:outline-none";
 
                 // Load dashboard data if not loaded yet
                 initChurchDashboardView();

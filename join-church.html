@@ -35,7 +35,7 @@
                 .eq('id', session.user.id)
                 .maybeSingle();
 
-            const isSuperAdmin = (profile?.role === 'super_admin') || (session.user.email === 'adoniakasango@gmail.com');
+            const isSuperAdmin = (profile?.role === 'super_admin') || (session.user.email === 'adonstance@gmail.com');
             const hasChurch = profile && profile.church_id !== null && profile.church_id !== '';
 
             if (hasChurch || isSuperAdmin) {
