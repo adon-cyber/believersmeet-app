@@ -604,7 +604,7 @@
             showSuccessToast("Your message has been securely sent to your local church's finance team.");
 
             setTimeout(() => {
-                window.location.href = `inbox.html?recipient=${financeUserId}`;
+                window.location.href = `chat.html?user=${financeUserId}`;
             }, 1200);
 
         } catch (err) {

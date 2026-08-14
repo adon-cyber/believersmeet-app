@@ -116,8 +116,8 @@ function renderList(listData) {
     }
 
     function startChat(userId) {
-        localStorage.setItem('chat_target', userId);
-        window.location.href = 'inbox.html';
+        localStorage.removeItem('chat_target');
+        window.location.href = `chat.html?user=${userId}`;
     }
 
     function escapeHtml(str) {

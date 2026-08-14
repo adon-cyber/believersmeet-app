@@ -39,7 +39,7 @@
 
       function updateBadgeUI(count) {
         // Find all inbox links and update/inject badge
-        const inboxLinks = document.querySelectorAll('a[href="inbox.html"], a[href="./inbox.html"]');
+        const inboxLinks = document.querySelectorAll('a[href="chat.html"], a[href="./chat.html"]');
         inboxLinks.forEach(link => {
           let badge = link.querySelector('.notification-badge');
           if (count > 0) {

@@ -272,25 +272,49 @@ async function enforceLoginAndLoad() {
         postForm.addEventListener('submit', handleOutboundPostSubmit);
     }
     
-    const inboxForm = document.getElementById('leadership-inbox-form');
-    if (inboxForm) {
-        inboxForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUserProfile) return;
-            const textInput = document.getElementById('inbox-message-text');
-            if (!textInput) return;
-            const { error } = await window.sbClient.from('inbox').insert([{
-                sender_name: currentUserProfile.full_name,
-                message: textInput.value,
-                church_id: currentUserProfile.church_id
-            }]);
-            if (!error) {
-                alert("Inquiry successfully delivered to leadership dashboards!");
-                textInput.value = '';
-            } else {
-                alert("Error sending message: " + error.message);
+    // Conditional rendering of Private Leadership Inbox widget based on user role
+    const inboxContainer = document.getElementById('leadership-inbox-widget-container');
+    if (inboxContainer && currentUserProfile) {
+        const isAdmin = currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin';
+        if (isAdmin) {
+            inboxContainer.innerHTML = `
+                <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
+                <div class="text-center py-4">
+                    <p class="text-sm font-medium text-gray-700 mb-3">You are logged in as an Administrator.</p>
+                    <a href="chat.html" class="inline-block w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-bold text-center hover:bg-blue-700 transition shadow">View Leadership Inbox</a>
+                </div>
+            `;
+        } else {
+            // Render standard member form
+            inboxContainer.innerHTML = `
+                <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
+                <form id="leadership-inbox-form">
+                    <textarea id="inbox-message-text" rows="3" placeholder="Send a private message to the Church Admin panel..." required class="w-full p-2.5 mb-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"></textarea>
+                    <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Send Secure Inquiry</button>
+                </form>
+            `;
+            
+            const inboxForm = document.getElementById('leadership-inbox-form');
+            if (inboxForm) {
+                inboxForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!currentUserProfile) return;
+                    const textInput = document.getElementById('inbox-message-text');
+                    if (!textInput) return;
+                    const { error } = await window.sbClient.from('inbox').insert([{
+                        sender_name: currentUserProfile.full_name,
+                        message: textInput.value,
+                        church_id: currentUserProfile.church_id
+                    }]);
+                    if (!error) {
+                        alert("Inquiry successfully delivered to leadership dashboards!");
+                        textInput.value = '';
+                    } else {
+                        alert("Error sending message: " + error.message);
+                    }
+                });
             }
-        });
+        }
     }
 
     const bodyEl = document.body;
