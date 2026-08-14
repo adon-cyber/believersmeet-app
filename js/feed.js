@@ -127,11 +127,11 @@ async function renderCurrentDiscoveryCard() {
             console.error("Error checking connection status for card:", e);
         }
 
-        let buttonHTML = `<button onclick="handleConnectProfile('${profile.id}', '${escapeHTML(profile.full_name || 'Believer')}')" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-lg text-xs transition shadow">🤝 Connect</button>`;
+        let buttonHTML = `<button onclick="sendFriendRequest('${profile.id}', this)" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">🤝 Connect</button>`;
         if (connectionState === 'pending') {
-            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-gray-400 text-white font-bold rounded-lg text-xs cursor-not-allowed shadow-none">⏳ Pending</button>`;
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 shadow-sm">⏳ Request Pending</button>`;
         } else if (connectionState === 'accepted') {
-            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-green-600 text-white font-bold rounded-lg text-xs cursor-not-allowed shadow-none">✓ Connected</button>`;
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-green-600 text-white font-bold rounded-lg text-xs cursor-not-allowed shadow-none flex items-center justify-center gap-1.5">✓ Connected</button>`;
         }
 
         container.innerHTML = `
@@ -169,51 +169,46 @@ async function handlePassProfile(targetUserId) {
     renderCurrentDiscoveryCard();
 }
 
-async function handleConnectProfile(recipientId, targetName) {
-    if (!loggedInUser) return;
-
-    if (recipientId === loggedInUser.id) {
-        alert("You cannot send a connection request to yourself.");
+async function sendFriendRequest(receiverId, buttonElement) {
+    if (!buttonElement) {
+        console.error("Button element not passed to sendFriendRequest");
         return;
     }
 
-    try {
-        const { data: existing } = await window.sbClient
-            .from('connections')
-            .select('*')
-            .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${recipientId}),and(requester_id.eq.${recipientId},recipient_id.eq.${loggedInUser.id})`);
+    // Preserve original content in case of error
+    const originalHtml = buttonElement.innerHTML;
+    const originalClass = buttonElement.className;
 
-        if (existing && existing.length > 0) {
-            alert("A connection or request already exists with this user.");
-            currentDiscoveryIndex++;
-            renderCurrentDiscoveryCard();
-            return;
-        }
+    // 1. Immediately update UI to Pending state
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = `<span>⏳ Request Pending</span>`;
+    buttonElement.className = "px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 transition-all shadow-sm";
 
-        const { error: insertError } = await window.sbClient
-            .from('connections')
-            .insert([
-                { requester_id: loggedInUser.id, recipient_id: recipientId, status: 'pending' }
-            ]);
+    // 2. Perform Supabase database insert
+    const client = window.sbClient || window.supabase;
+    const { data: { user } } = await client.auth.getUser();
 
-        if (insertError) {
-            if (insertError.code === '23505') {
-                alert("Connection request already sent!");
-            } else {
-                console.error("Connection error:", insertError.message);
-                alert("Could not send connection request: " + insertError.message);
-            }
-        } else {
-            alert("Connection request sent successfully!");
-        }
-    } catch (err) {
-        console.error("Unexpected error during connection:", err);
-        if (err.code === '23505' || (err.message && err.message.includes('unique constraint'))) {
-            alert("Connection request already sent!");
-        }
-    } finally {
-        currentDiscoveryIndex++;
-        renderCurrentDiscoveryCard();
+    if (!user) {
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalHtml;
+        buttonElement.className = originalClass;
+        alert('Please log in to send friend requests.');
+        return;
+    }
+
+    const { error } = await client
+        .from('connections')
+        .insert([
+            { requester_id: user.id, recipient_id: receiverId, status: 'pending' }
+        ]);
+
+    if (error) {
+        console.error('Error sending friend request:', error);
+        // Revert UI if the request failed
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalHtml;
+        buttonElement.className = originalClass;
+        alert('Could not send request. Please try again.');
     }
 }
 
