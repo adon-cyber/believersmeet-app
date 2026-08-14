@@ -51,10 +51,10 @@
         
         <!-- 1. TAB NAVIGATION -->
         <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden">
-            <button id="tab-btn-global" onclick="switchAdminTab('global')" class="py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition">
+            <button id="tab-btn-global" onclick="switchAdminTab('global')" class="py-2.5 px-5 text-sm font-bold border-b-2 focus:outline-none transition border-blue-500 text-blue-400">
                 🌐 Global System Admin
             </button>
-            <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2.5 px-5 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none transition">
+            <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-400 hover:text-slate-200">
                 ⛪ Church Dashboard
             </button>
         </div>
@@ -224,9 +224,9 @@
         <!-- 3. CHURCH DASHBOARD VIEW -->
         <div id="church-dashboard-view" class="hidden space-y-8">
             <!-- Super Admin Church Selector -->
-            <div id="super-admin-church-selector" class="mb-6 bg-slate-800/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/70 shadow-xl hidden">
+            <div id="super-admin-church-selector" class="mb-6 bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl hidden">
                 <label class="block text-sm font-medium text-slate-300 mb-2">Select Church to Manage:</label>
-                <select id="active-church-select" onchange="changeManagedChurch(this.value)" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                <select id="active-church-select" onchange="changeManagedChurch(this.value)" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                     <option value="">Loading churches...</option>
                 </select>
             </div>
@@ -236,20 +236,20 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
                 <div class="space-y-8 lg:col-span-1">
-                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
                         <h3 class="text-lg font-bold text-white mb-4">📅 Add New Programme</h3>
                         <div class="space-y-4">
-                            <input type="text" id="p-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
-                            <input type="time" id="p-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
-                            <textarea id="p-desc" rows="3" placeholder="Description" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm resize-y"></textarea>
+                            <input type="text" id="p-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <input type="time" id="p-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <textarea id="p-desc" rows="3" placeholder="Description" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-y"></textarea>
                             <button id="add-btn" onclick="addProgramme()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition">Publish</button>
                         </div>
                     </div>
-                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
                         <h3 class="text-lg font-bold text-white mb-4">📍 Update Location</h3>
                         <div class="space-y-4">
-                            <input type="text" id="lat" placeholder="Latitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
-                            <input type="text" id="lng" placeholder="Longitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                            <input type="text" id="lat" placeholder="Latitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <input type="text" id="lng" placeholder="Longitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             <button onclick="updateLocation()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition">Save Coordinates</button>
                             <button onclick="detectAndSaveLocation()" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl transition">Use Current GPS</button>
                             <p id="gps-status" class="text-xs text-slate-400 text-center mt-2"></p>
@@ -258,11 +258,11 @@
                 </div>
                 <!-- Right Column -->
                 <div class="space-y-8 lg:col-span-2">
-                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
                         <h3 class="text-lg font-bold text-white mb-4">👥 Members in Church</h3>
                         <div id="member-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load members.</p></div>
                     </div>
-                    <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 shadow-xl rounded-2xl p-6">
+                    <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
                         <h3 class="text-lg font-bold text-white mb-4">📋 Published Programmes</h3>
                         <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load programmes.</p></div>
                     </div>
