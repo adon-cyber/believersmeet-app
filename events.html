@@ -540,7 +540,7 @@
         }
 
         const userId = loggedInUser.id;
-        let hasRsvp = evt.event_registrations.some(r => r.profile_id === userId || r.user_id === userId);
+        let hasRsvp = evt.event_registrations.some(r => r.profile_id === userId);
 
         if (hasRsvp) {
             // --- OPT OUT LOGIC (DELETE) ---
@@ -554,7 +554,7 @@
                 .from('event_registrations')
                 .delete()
                 .eq('event_id', eventId)
-                .or(`profile_id.eq.${userId},user_id.eq.${userId}`);
+                .eq('profile_id', userId);
 
             if (deleteError) {
                 console.error('Failed to opt out:', deleteError);
@@ -563,7 +563,7 @@
                 return;
             }
 
-            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== userId && r.user_id !== userId);
+            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== userId);
             const newCount = evt.event_registrations.length;
 
             if (countSpan) {
@@ -588,7 +588,6 @@
             const payload = {
                 event_id: eventId,
                 profile_id: userId,
-                user_id: userId,
                 attendee_name: currentUserProfile?.full_name || loggedInUser.email || 'Member',
                 attendee_email: loggedInUser.email,
                 coupon_number: randomCoupon,
@@ -612,7 +611,7 @@
                 return;
             }
 
-            evt.event_registrations.push({ profile_id: userId, user_id: userId });
+            evt.event_registrations.push({ profile_id: userId });
             const newCount = evt.event_registrations.length;
 
             if (countSpan) {
