@@ -12,41 +12,38 @@
 </head>
 <body class="bg-slate-900 bg-cover bg-center bg-fixed min-h-screen text-slate-200" 
       style="background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1920&q=80');">
-    <!-- Navigation Bar -->
-    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-                <div class="flex overflow-x-auto shrink-0 whitespace-nowrap space-x-3 py-2 px-4 w-full [-webkit-overflow-scrolling:touch]">
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                    <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                    <a href="admin.html" id="admin-nav-link" class="text-xs sm:text-sm font-bold text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
-                </div>
-                <!-- Light / Dark Mode Toggle Button -->
-                <button onclick="window.toggleTheme()" 
-                        class="flex items-center justify-center p-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-amber-400 dark:text-blue-300 hover:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 transition-all shadow-sm focus:outline-none flex-shrink-0 ml-3"
-                        title="Toggle Light/Dark Theme"
-                        aria-label="Toggle Theme">
-                    
-                    <!-- Sun Icon (Visible in Dark Mode) -->
-                    <svg class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-
-                    <!-- Moon Icon (Visible in Light Mode) -->
-                    <svg class="w-5 h-5 block dark:hidden text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                    </svg>
-                </button>
+    <nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-8">
+            <span class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                ⛪ BelieversMeet
+            </span>
+            <div class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-300">
+                <a href="feed.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">My Feed</a>
+                <a href="giving.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Giving</a>
+                <a href="sermons.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Sermons</a>
+                <a href="groups.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Small Groups</a>
+                <a href="prayer-wall.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Prayer Wall</a>
+                <a href="testimonies.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Testimonies</a>
+                <a href="inboxx.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Inbox</a>
+                <a href="events.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Events</a>
+                <a href="profile.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Profile</a>
             </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <a href="admin.html" class="px-3.5 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-semibold flex items-center gap-1.5">
+                ⚙️ Admin Panel
+            </a>
+            <a href="super-admin.html" id="nav-super-admin" class="hidden px-3.5 py-1.5 rounded-lg bg-purple-600/20 text-purple-300 border border-purple-500/30 text-sm font-semibold hover:bg-purple-600/30 transition items-center gap-1.5">
+                🛡️ Super Admin
+            </a>
+            <!-- Light/Dark Mode Switcher -->
+            <button onclick="window.toggleTheme()" class="p-2 rounded-xl bg-slate-800 text-amber-400 border border-slate-700">
+                ☀️
+            </button>
+            <button onclick="logoutUser(event)" class="text-sm font-medium text-slate-400 hover:text-red-400 transition ml-2">
+                Logout
+            </button>
         </div>
     </nav>
 
@@ -380,9 +377,14 @@
             if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church') {
                 
                 // Check if user is super admin or admin to show tabs
-                if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com') {
+                if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com' || user.email === 'adonstance@gmail.com') {
                     const tabsEl = document.getElementById('admin-tabs');
                     if (tabsEl) tabsEl.classList.remove('hidden');
+                    const superAdminNav = document.getElementById('nav-super-admin');
+                    if (superAdminNav) {
+                        superAdminNav.classList.remove('hidden');
+                        superAdminNav.classList.add('flex');
+                    }
                 }
 
                 if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin') {
