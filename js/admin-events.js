@@ -69,36 +69,141 @@ async function inviteMember(memberId, eventId) {
     return true;
 }
 
-async function fetchAttendees(eventId) {
-    // Step 1: Fetch all user_ids registered for this event
+async function fetchEventRegistrationsDetailed(eventId) {
+    // Step 1: Fetch registrations for this event including registration id, profile_id, attendee details, etc.
     const { data: registrations, error: regError } = await window.sbClient
-      .from('event_registrations')
-      .select('user_id')
-      .eq('event_id', eventId);
+        .from('event_registrations')
+        .select('id, profile_id, attendee_name, attendee_email, coupon_number, amount_paid, is_free, photo_url, created_at')
+        .eq('event_id', eventId);
 
     if (regError) {
-      console.error("Error fetching registrations:", regError);
-      return [];
+        console.error("Error fetching registrations:", regError);
+        return [];
     }
 
-    const userIds = (registrations || []).map(reg => reg.user_id).filter(Boolean);
-
-    if (userIds.length === 0) {
-      return [];
+    if (!registrations || registrations.length === 0) {
+        return [];
     }
 
-    // Step 2: Fetch the profiles for those user_ids
-    const { data: attendees, error: profileError } = await window.sbClient
-      .from('profiles')
-      .select('id, full_name, avatar_url, role')
-      .in('id', userIds);
+    // Collect profile IDs
+    const profileIds = registrations.map(r => r.profile_id).filter(Boolean);
 
-    if (profileError) {
-      console.error("Error fetching attendee profiles:", profileError);
-      return [];
+    // Step 2: Fetch profiles for these profile IDs
+    let profilesMap = {};
+    if (profileIds.length > 0) {
+        const { data: profiles, error: profError } = await window.sbClient
+            .from('profiles')
+            .select('id, full_name, email, avatar_url')
+            .in('id', profileIds);
+
+        if (!profError && profiles) {
+            profiles.forEach(p => {
+                profilesMap[p.id] = p;
+            });
+        }
     }
 
-    return attendees || [];
+    // Merge registration info with profile info
+    return registrations.map(reg => {
+        const profile = profilesMap[reg.profile_id] || {};
+        return {
+            registration_id: reg.id,
+            profile_id: reg.profile_id,
+            full_name: reg.attendee_name || profile.full_name || 'Valued Attendee',
+            email: reg.attendee_email || profile.email || 'N/A',
+            avatar_url: reg.photo_url || profile.avatar_url || null,
+            coupon_number: reg.coupon_number || 'N/A',
+            amount_paid: reg.amount_paid || 0,
+            is_free: reg.is_free,
+            created_at: reg.created_at
+        };
+    });
+}
+
+async function removeAttendeeRegistration(registrationId, eventId) {
+    if (!confirm('Are you sure you want to remove this member from the event?')) {
+        return;
+    }
+
+    const { error } = await window.sbClient
+        .from('event_registrations')
+        .delete()
+        .eq('id', registrationId);
+
+    if (error) {
+        console.error('Error removing attendee registration:', error);
+        alert('Failed to remove attendee: ' + error.message);
+        return;
+    }
+
+    alert('Attendee successfully removed from event.');
+    // Refresh admin modal or event list
+    openAttendeesModal(eventId);
+    await loadAdminEvents();
+}
+
+async function openAttendeesModal(eventId) {
+    let modal = document.getElementById('admin-attendees-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'admin-attendees-modal';
+        modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fas fa-users text-blue-600"></i> Event Attendees Management
+                </h3>
+                <button onclick="document.getElementById('admin-attendees-modal').remove()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="admin-attendees-modal-content" class="overflow-y-auto flex-grow space-y-3 pr-1">
+                <div class="text-center py-8 text-gray-400 italic">Loading attendee list...</div>
+            </div>
+        </div>
+    `;
+
+    const attendeesListContainer = document.getElementById('admin-attendees-modal-content');
+    const attendees = await fetchEventRegistrationsDetailed(eventId);
+
+    if (attendees.length === 0) {
+        attendeesListContainer.innerHTML = '<div class="text-center py-8 text-gray-500 italic">No attendees registered for this event yet.</div>';
+        return;
+    }
+
+    attendeesListContainer.innerHTML = `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Attendee</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Coupon</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${attendees.map(att => `
+                        <tr>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-3">
+                                <img src="${escapeHtml(att.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80')}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border">
+                                <span>${escapeHtml(att.full_name)}</span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${escapeHtml(att.email)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-mono text-blue-600 font-bold">${escapeHtml(att.coupon_number)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="removeAttendeeRegistration('${att.registration_id}', '${eventId}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-red-200 flex items-center gap-1 ml-auto">
+                                    <i class="fas fa-trash-alt"></i> Remove
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
 }
 
 async function loadAdminEvents() {
@@ -141,7 +246,7 @@ async function loadAdminEvents() {
 
     let html = '';
     for (const evt of events) {
-        const attendees = await fetchAttendees(evt.id);
+        const attendees = await fetchEventRegistrationsDetailed(evt.id);
         const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'TBD';
         const invitedChurchIds = evt.invited_church_ids || [];
 
@@ -153,19 +258,24 @@ async function loadAdminEvents() {
                     <p class="text-sm text-gray-500"><i class="fas fa-calendar-alt mr-1 text-blue-600"></i> ${escapeHtml(eventDate)}</p>
                     ${evt.description ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(evt.description)}</p>` : ''}
                 </div>
-                <div class="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-200">
-                    Host Church: ${escapeHtml(churchesMap[evt.church_id || evt.host_church_id]?.name || 'Primary Church')}
+                <div class="flex items-center gap-3">
+                    <button onclick="openAttendeesModal('${evt.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-xl border border-blue-200 text-xs transition flex items-center gap-2 shadow-sm">
+                        <i class="fas fa-users"></i> View Attendees (${attendees.length})
+                    </button>
+                    <div class="bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-2 rounded-xl border border-gray-200">
+                        Host: ${escapeHtml(churchesMap[evt.church_id || evt.host_church_id]?.name || 'Primary Church')}
+                    </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Current Attendees / Invited Churches Section -->
+                <!-- Current Invited Churches Section -->
                 <div>
                     <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fas id-card text-blue-600"></i> Invited Churches (${invitedChurchIds.length})
+                        <i class="fas fa-church text-blue-600"></i> Invited Churches (${invitedChurchIds.length})
                     </h4>
                     <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 max-h-48 overflow-y-auto space-y-2">
-                        ${invitedChurchIds.length === 0 ? '<p class="text-sm text-gray-400 italic">No other churches invited.</p>' : 
+                        ${invitedChurchIds.length === 0 ? '<p class="text-sm text-gray-400 italic">No other churches invited.</p>' :
                             invitedChurchIds.map(cId => {
                                 const church = churchesMap[cId];
                                 return `
@@ -184,7 +294,7 @@ async function loadAdminEvents() {
                 <!-- Invite Church Form -->
                 <div>
                     <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fas fa-church text-blue-600"></i> Invite Church
+                        <i class="fas fa-paper-plane text-blue-600"></i> Invite Church
                     </h4>
                     <form onsubmit="handleChurchInviteSubmit(event, '${evt.id}')" class="space-y-3">
                         <div>
