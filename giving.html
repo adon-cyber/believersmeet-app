@@ -605,7 +605,7 @@
 
             setTimeout(() => {
                 const prefillMsg = encodeURIComponent("Hello Finance Team, I need assistance with my giving/transaction.");
-                window.location.href = `chat.html?department=finance&prefill=${prefillMsg}`;
+                window.location.href = `chat.html?department=finance&prefill=${prefillMsg}&autoSend=true`;
             }, 1200);
 
         } catch (err) {

@@ -643,8 +643,83 @@
         const initialUserId = urlParams.get('user');
         const prefillParam = urlParams.get('prefill');
         const deptParam = urlParams.get('department');
+        const autoSendParam = urlParams.get('autoSend');
 
-        if (deptParam === 'finance' && !initialUserId && (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin')) {
+        if (deptParam === 'finance' && !initialUserId && currentUser.church_id) {
+            // Find the finance admin or church admin for the user's church to auto-select and auto-send to
+            try {
+                let financeUser = null;
+                const { data: financeProfiles } = await window.sbClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('role', 'finance')
+                    .eq('church_id', currentUser.church_id)
+                    .limit(1);
+
+                if (financeProfiles && financeProfiles.length > 0) {
+                    financeUser = financeProfiles[0];
+                } else {
+                    const { data: adminProfiles } = await window.sbClient
+                        .from('profiles')
+                        .select('id')
+                        .or('role.eq.admin,role.eq.super_admin')
+                        .eq('church_id', currentUser.church_id)
+                        .limit(1);
+                    if (adminProfiles && adminProfiles.length > 0) {
+                        financeUser = adminProfiles[0];
+                    }
+                }
+
+                if (financeUser) {
+                    // Select the finance user / admin first
+                    await selectUser(financeUser.id, 'finance');
+
+                    if (autoSendParam === 'true' && prefillParam) {
+                        const decodedContent = decodeURIComponent(prefillParam);
+                        const { error: insertError } = await window.sbClient
+                            .from('messages')
+                            .insert([{
+                                sender_id: currentUser.id,
+                                receiver_id: financeUser.id,
+                                recipient_id: financeUser.id,
+                                content: decodedContent,
+                                department: 'finance',
+                                church_id: currentUser.church_id
+                            }]);
+
+                        if (!insertError) {
+                            // Display immediately in chat UI
+                            const container = document.getElementById('messages-container');
+                            if (container.querySelector('.text-center')) {
+                                container.innerHTML = '';
+                            }
+                            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            container.innerHTML += `
+                                <div class="flex flex-col items-end" data-content="${escapeHTML(decodedContent)}">
+                                    <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words bg-blue-600 text-white rounded-br-none shadow-sm" style="background-color: #007bff;">
+                                        ${escapeHTML(decodedContent)}
+                                    </div>
+                                    <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
+                                </div>
+                            `;
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    }
+
+                    // Prevent duplicate submissions on refresh by stripping prefill and autoSend
+                    window.history.replaceState({}, document.title, window.location.pathname + "?department=finance");
+                } else {
+                    if (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin') {
+                        switchTab('finance');
+                    } else {
+                        applyResponsiveLayout();
+                    }
+                }
+            } catch (e) {
+                console.error("Error handling auto-send finance message:", e);
+                applyResponsiveLayout();
+            }
+        } else if (deptParam === 'finance' && !initialUserId && (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin')) {
             // If finance view without specific user, auto switch to finance tab
             switchTab('finance');
         } else if (initialUserId) {
@@ -653,8 +728,8 @@
             applyResponsiveLayout();
         }
 
-        // Handle prefill parameter if present
-        if (prefillParam) {
+        // Handle prefill parameter if present (when not auto-sent)
+        if (prefillParam && autoSendParam !== 'true') {
             const msgInput = document.getElementById('message-input');
             if (msgInput) {
                 msgInput.value = decodeURIComponent(prefillParam);
