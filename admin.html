@@ -34,9 +34,9 @@
             <a href="admin.html" class="px-3.5 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-semibold flex items-center gap-1.5">
                 ⚙️ Admin Panel
             </a>
-            <a href="super-admin.html" id="nav-super-admin" class="hidden px-3.5 py-1.5 rounded-lg bg-purple-600/20 text-purple-300 border border-purple-500/30 text-sm font-semibold hover:bg-purple-600/30 transition items-center gap-1.5">
+            <button id="nav-super-admin" onclick="window.location.href='super-admin.html'" class="nav-btn hidden px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors items-center gap-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300">
                 🛡️ Super Admin
-            </a>
+            </button>
             <!-- Light/Dark Mode Switcher -->
             <button onclick="window.toggleTheme()" class="p-2 rounded-xl bg-slate-800 text-amber-400 border border-slate-700">
                 ☀️
@@ -302,7 +302,7 @@
         let currentUserProfile = null;
         let activeDashboardChurchId = null;
 
-        function switchAdminTab(tab) {
+        window.switchAdminTab = function(tab) {
             const globalView = document.getElementById('global-admin-view');
             const dashboardView = document.getElementById('church-dashboard-view');
             const btnGlobal = document.getElementById('tab-btn-global');
@@ -336,7 +336,14 @@
                 // Load dashboard data if not loaded yet
                 initChurchDashboardView();
             }
-        }
+
+            // Ensure Super Admin navigation button stays persistently visible if user is super admin
+            const superAdminNav = document.getElementById('nav-super-admin');
+            if (superAdminNav && currentUserProfile && (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com')) {
+                superAdminNav.classList.remove('hidden');
+                superAdminNav.classList.add('flex');
+            }
+        };
 
         async function initPage() {
             console.log("Initializing Admin Dashboard...");
