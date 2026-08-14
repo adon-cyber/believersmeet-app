@@ -539,29 +539,31 @@
             evt.event_registrations = [];
         }
 
-        const hasRsvp = evt.event_registrations.some(r => r.profile_id === loggedInUser.id);
+        const userId = loggedInUser.id;
+        let hasRsvp = evt.event_registrations.some(r => r.profile_id === userId || r.user_id === userId);
 
         if (hasRsvp) {
-            // Opt Out state -> Delete registration
+            // --- OPT OUT LOGIC (DELETE) ---
             if (btn) {
                 btn.disabled = true;
-                btn.innerText = "Opting Out...";
+                btn.innerText = "Opting out...";
                 btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-gray-400 text-white cursor-not-allowed';
             }
 
-            const { error } = await window.sbClient
+            const { error: deleteError } = await window.sbClient
                 .from('event_registrations')
                 .delete()
                 .eq('event_id', eventId)
-                .eq('profile_id', loggedInUser.id);
+                .or(`profile_id.eq.${userId},user_id.eq.${userId}`);
 
-            if (error) {
-                showSuccessToast("Error opting out: " + error.message, true);
+            if (deleteError) {
+                console.error('Failed to opt out:', deleteError);
+                showSuccessToast("Could not cancel registration. Please try again.", true);
                 loadEvents();
                 return;
             }
 
-            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== loggedInUser.id);
+            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== userId && r.user_id !== userId);
             const newCount = evt.event_registrations.length;
 
             if (countSpan) {
@@ -574,7 +576,7 @@
             }
             showSuccessToast("Successfully opted out of event.");
         } else {
-            // Register state -> Insert registration
+            // --- REGISTER LOGIC (INSERT) ---
             if (btn) {
                 btn.disabled = true;
                 btn.innerText = "Registering...";
@@ -583,29 +585,34 @@
 
             const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
 
-            const { error } = await window.sbClient
-                .from('event_registrations')
-                .insert([{ 
-                    event_id: eventId, 
-                    profile_id: loggedInUser.id,
-                    attendee_name: currentUserProfile?.full_name || 'Attendee',
-                    attendee_email: loggedInUser.email,
-                    coupon_number: randomCoupon,
-                    amount_paid: 0.00,
-                    is_free: true
-                }]);
+            const payload = {
+                event_id: eventId,
+                profile_id: userId,
+                user_id: userId,
+                attendee_name: currentUserProfile?.full_name || loggedInUser.email || 'Member',
+                attendee_email: loggedInUser.email,
+                coupon_number: randomCoupon,
+                amount_paid: 0.00,
+                is_free: true
+            };
 
-            if (error) {
-                if (error.code === '23505' || error.status === 409 || (error.message && error.message.includes('duplicate key'))) {
+            const { error: insertError } = await window.sbClient
+                .from('event_registrations')
+                .insert([payload]);
+
+            if (insertError) {
+                if (insertError.code === '23505' || insertError.status === 409 || (insertError.message && insertError.message.includes('duplicate key'))) {
+                    console.warn('User is already registered for this event.');
                     showSuccessToast("You are already registered for this event!", true);
                 } else {
-                    showSuccessToast("Error registering: " + error.message, true);
+                    console.error('Registration failed:', insertError);
+                    showSuccessToast("Error registering: " + (insertError.message || 'Unknown error'), true);
                 }
                 loadEvents();
                 return;
             }
 
-            evt.event_registrations.push({ profile_id: loggedInUser.id });
+            evt.event_registrations.push({ profile_id: userId, user_id: userId });
             const newCount = evt.event_registrations.length;
 
             if (countSpan) {
