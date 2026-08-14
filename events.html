@@ -684,64 +684,88 @@
 
         container.innerHTML = regList.map(reg => {
             const evt = reg.events || {};
-            const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'TBD';
+            const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'Friday, Aug 14, 2026 @ 6:00 PM EAT';
             const isFree = reg.is_free || Number(reg.amount_paid || 0) === 0;
             const amountDisplay = isFree ? 'FREE' : `$${Number(reg.amount_paid || 0).toFixed(2)}`;
             const couponBgColor = evt.coupon_color || '#2563eb';
 
             return `
-                <div id="couponCard" style="background-color: ${couponBgColor}; text-shadow: 0 1px 2px rgba(0,0,0,0.4);" class="text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden space-y-6 border border-white border-opacity-30 my-6">
+                <div id="couponCard" style="background-color: ${couponBgColor}; text-shadow: 0 1px 2px rgba(0,0,0,0.4);" class="text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden space-y-8 border border-white border-opacity-30 my-6">
                     <div class="absolute -right-12 -top-12 w-48 h-48 bg-white opacity-15 rounded-full blur-3xl"></div>
                     
                     <!-- Header Section: Event Title & Price / Pass Badge -->
-                    <div class="flex justify-between items-start border-b border-white border-opacity-25 pb-4">
+                    <div class="flex justify-between items-start border-b border-white border-opacity-25 pb-6">
                         <div>
-                            <span class="text-xs font-black tracking-widest text-white text-opacity-90 uppercase bg-black bg-opacity-20 px-3 py-1 rounded-full">Official Entry Ticket</span>
-                            <h3 class="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight drop-shadow-md">${escapeHtml(evt.title || 'Community Event')}</h3>
+                            <span class="text-xs font-black tracking-widest text-white text-opacity-90 uppercase bg-black bg-opacity-25 px-3.5 py-1.5 rounded-full shadow-sm">OFFICIAL ENTRY PASS</span>
+                            <h3 class="text-3xl sm:text-4xl font-black text-white mt-3 tracking-tight drop-shadow-md">${escapeHtml(evt.title || 'Singing Festival')}</h3>
                         </div>
-                        <span class="px-4 py-1.5 ${isFree ? 'bg-emerald-500 text-white shadow-lg' : 'bg-black bg-opacity-40 text-white'} text-sm font-black rounded-xl border border-white border-opacity-30 tracking-wider">${escapeHtml(amountDisplay)}</span>
+                        <span class="px-4 py-2 ${isFree ? 'bg-emerald-500 text-white shadow-lg' : 'bg-black bg-opacity-40 text-white'} text-sm font-black rounded-xl border border-white border-opacity-30 tracking-wider">${escapeHtml(amountDisplay)}</span>
                     </div>
 
-                    <!-- Event & Attendee Details Grid (Structured Above Barcode Section) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-black bg-opacity-15 p-5 rounded-2xl border border-white border-opacity-15 backdrop-blur-sm text-sm">
-                        <!-- Attendee Details -->
-                        <div class="flex items-center gap-4 col-span-full sm:col-span-1 border-b sm:border-b-0 sm:border-r border-white border-opacity-15 pb-4 sm:pb-0 sm:pr-4">
-                            ${reg.photo_url ? `<img src="${escapeHtml(reg.photo_url)}" alt="Attendee Photo" class="attendee-photo">` : `<div class="attendee-photo flex items-center justify-center bg-blue-800 text-white font-bold text-xl"><i class="fas fa-user"></i></div>`}
-                            <div class="space-y-0.5">
-                                <span class="text-xs font-bold uppercase tracking-wider text-white text-opacity-80 block">Attendee Name</span>
-                                <span class="font-extrabold text-white text-base block">${escapeHtml(reg.attendee_name || currentUserProfile?.full_name || 'Valued Attendee')}</span>
-                                <span class="text-xs text-white text-opacity-90 font-mono block">${escapeHtml(reg.attendee_email || loggedInUser.email)}</span>
+                    <!-- Event & Attendee Details Expanded Logistical Section -->
+                    <div class="space-y-6 bg-black bg-opacity-20 p-6 sm:p-8 rounded-2xl border border-white border-opacity-20 backdrop-blur-sm text-sm sm:text-base">
+                        
+                        <!-- Attendee Section -->
+                        <div class="flex items-center gap-5 border-b border-white border-opacity-15 pb-6">
+                            ${reg.photo_url ? `<img src="${escapeHtml(reg.photo_url)}" alt="Attendee Photo" class="attendee-photo">` : `<div class="attendee-photo flex items-center justify-center bg-blue-800 text-white font-bold text-2xl shadow-inner"><i class="fas fa-user"></i></div>`}
+                            <div class="space-y-1">
+                                <span class="text-xs font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Attendee Details</span>
+                                <span class="font-extrabold text-white text-lg sm:text-xl block">${escapeHtml(reg.attendee_name || currentUserProfile?.full_name || 'Kasango Adonia')}</span>
+                                <span class="text-xs sm:text-sm text-white text-opacity-90 font-mono block">${escapeHtml(reg.attendee_email || loggedInUser.email)}</span>
                             </div>
                         </div>
 
-                        <!-- Date, Time & Venue Details -->
-                        <div class="space-y-4 col-span-full sm:col-span-1 flex flex-col justify-center">
-                            <div>
-                                <span class="text-xs font-bold uppercase tracking-wider text-white text-opacity-80 block">Date & Time</span>
-                                <span class="font-bold text-white text-sm flex items-center gap-1.5 mt-0.5">
-                                    <i class="fas fa-calendar-alt opacity-80"></i> ${escapeHtml(eventDate)}
-                                </span>
+                        <!-- Distinct Logistical Rows -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                            <!-- Date & Time Row -->
+                            <div class="flex items-start gap-3.5 bg-black bg-opacity-15 p-4 rounded-xl border border-white border-opacity-10">
+                                <div class="text-xl text-blue-200 mt-0.5"><i class="fas fa-calendar-alt"></i></div>
+                                <div>
+                                    <span class="text-xs font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Date & Time</span>
+                                    <span class="font-extrabold text-white text-sm sm:text-base block mt-0.5">${escapeHtml(eventDate)}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-xs font-bold uppercase tracking-wider text-white text-opacity-80 block">Location / Venue</span>
-                                <span class="font-bold text-white text-sm flex items-center gap-1.5 mt-0.5">
-                                    <i class="fas fa-map-marker-alt opacity-80"></i> ${escapeHtml(evt.location || 'Main Venue')}
-                                </span>
+
+                            <!-- Location Row -->
+                            <div class="flex items-start gap-3.5 bg-black bg-opacity-15 p-4 rounded-xl border border-white border-opacity-10">
+                                <div class="text-xl text-blue-200 mt-0.5"><i class="fas fa-map-marker-alt"></i></div>
+                                <div>
+                                    <span class="text-xs font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Location / Venue</span>
+                                    <span class="font-extrabold text-white text-sm sm:text-base block mt-0.5">${escapeHtml(evt.location || 'Jinja Main Hall')}</span>
+                                </div>
+                            </div>
+
+                            <!-- Ticket Type Row -->
+                            <div class="flex items-start gap-3.5 bg-black bg-opacity-15 p-4 rounded-xl border border-white border-opacity-10 col-span-full sm:col-span-1">
+                                <div class="text-xl text-blue-200 mt-0.5"><i class="fas fa-ticket-alt"></i></div>
+                                <div>
+                                    <span class="text-xs font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Ticket Type</span>
+                                    <span class="font-extrabold text-white text-sm sm:text-base block mt-0.5">${isFree ? 'Standard Entry' : 'VIP Pass'} (${isFree ? 'FREE' : amountDisplay})</span>
+                                </div>
+                            </div>
+
+                            <!-- Category / Access Row -->
+                            <div class="flex items-start gap-3.5 bg-black bg-opacity-15 p-4 rounded-xl border border-white border-opacity-10 col-span-full sm:col-span-1">
+                                <div class="text-xl text-blue-200 mt-0.5"><i class="fas fa-shield-alt"></i></div>
+                                <div>
+                                    <span class="text-xs font-extrabold uppercase tracking-widest text-white text-opacity-80 block">Category</span>
+                                    <span class="font-extrabold text-white text-sm sm:text-base block mt-0.5">${escapeHtml(evt.category || 'Fellowship Gathering')}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Barcode & Coupon Code Footer Section -->
-                    <div class="bg-white text-gray-900 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-xl border border-gray-100" style="text-shadow: none !important;">
-                        <span class="text-xs font-extrabold text-gray-400 uppercase tracking-widest">Unique Admission Coupon Code</span>
-                        <div class="text-3xl font-mono font-black tracking-widest text-gray-900">${escapeHtml(reg.coupon_number || 'CPN-XXXX')}</div>
-                        <div class="w-full h-10 bg-gray-900 mt-2 rounded-lg flex items-center justify-center font-mono text-white text-sm tracking-[10px] opacity-95 select-none shadow-inner">||| | |||| || | |||| || |</div>
+                    <!-- Dedicated Barcode & Coupon Code Bottom Block (Takes ~25% height) -->
+                    <div class="bg-white text-gray-900 rounded-2xl p-6 sm:p-7 flex flex-col items-center justify-center space-y-3 shadow-2xl border border-gray-200" style="text-shadow: none !important;">
+                        <span class="text-xs font-extrabold text-gray-500 uppercase tracking-widest">Unique Admission Coupon Code</span>
+                        <div class="text-3xl sm:text-4xl font-mono font-black tracking-widest text-gray-900">${escapeHtml(reg.coupon_number || 'CPN-SINGING-001')}</div>
+                        <div class="w-full h-12 bg-gray-900 mt-2 rounded-xl flex items-center justify-center font-mono text-white text-sm sm:text-base tracking-[12px] opacity-95 select-none shadow-inner">||| | |||| || | |||| || | |||</div>
                     </div>
 
                     <!-- Print Button Container -->
-                    <div class="flex justify-end pt-1">
-                        <button onclick="window.print()" class="no-print px-6 py-3 bg-white text-gray-900 hover:bg-gray-100 font-extrabold rounded-2xl text-sm transition shadow-lg flex items-center gap-2.5 transform hover:-translate-y-0.5" style="text-shadow: none !important;">
-                            <span>🖨️</span> Print / Download Coupon Card
+                    <div class="flex justify-end pt-2">
+                        <button onclick="window.print()" class="no-print px-7 py-3.5 bg-white text-gray-900 hover:bg-gray-100 font-extrabold rounded-2xl text-sm transition shadow-xl flex items-center gap-2.5 transform hover:-translate-y-0.5" style="text-shadow: none !important;">
+                            <span>🖨️</span> Print / Download Official Pass
                         </button>
                     </div>
                 </div>
