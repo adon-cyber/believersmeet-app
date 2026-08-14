@@ -117,7 +117,7 @@
             <button onclick="openCouponModal()" class="px-5 py-2.5 bg-white bg-opacity-20 backdrop-blur text-white font-bold rounded-xl shadow hover:bg-opacity-30 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2 border border-white border-opacity-30">
                 <span>🎟️</span> Find / Download Coupon
             </button>
-            <button onclick="openEventModal()" id="host-event-btn" class="px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl shadow hover:bg-blue-50 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2">
+            <button onclick="openEventModal()" id="createEventBtn" style="display: none;" class="px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl shadow hover:bg-blue-50 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2">
                 <span>+</span> Host an Event
             </button>
         </div>
@@ -305,12 +305,17 @@
         currentUserProfile = profile;
 
         if (profile) {
+            const createEventBtn = document.getElementById('createEventBtn');
             if (profile.role === 'admin' || profile.role === 'super_admin') {
                 const adminLink = document.getElementById('admin-nav-link');
                 if (adminLink) adminLink.classList.remove('hidden');
 
                 const adminSection = document.getElementById('admin-coupon-section');
                 if (adminSection) adminSection.classList.remove('hidden');
+
+                if (createEventBtn) createEventBtn.style.display = 'flex';
+            } else {
+                if (createEventBtn) createEventBtn.style.display = 'none';
             }
         }
 
@@ -746,6 +751,12 @@
 
     async function handleCreateEvent(e) {
         e.preventDefault();
+        if (currentUserProfile?.role !== 'admin' && currentUserProfile?.role !== 'super_admin') {
+            console.error("Unauthorized: Only admins can create events.");
+            alert("Only administrators can host events.");
+            return;
+        }
+
         const title = document.getElementById('event-title').value.trim();
         const category = document.getElementById('event-category').value;
         const eventDate = document.getElementById('event-date').value;
