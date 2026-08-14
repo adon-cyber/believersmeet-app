@@ -73,7 +73,7 @@ async function fetchEventRegistrationsDetailed(eventId) {
     // Step 1: Fetch registrations for this event including registration id, profile_id, attendee details, etc.
     const { data: registrations, error: regError } = await window.sbClient
         .from('event_registrations')
-        .select('id, profile_id, attendee_name, attendee_email, coupon_number, amount_paid, is_free, photo_url, created_at')
+        .select('*') // Swapped to wildcard to prevent 400 schema mismatch errors
         .eq('event_id', eventId);
 
     if (regError) {
@@ -188,11 +188,11 @@ async function openAttendeesModal(eventId) {
                     ${attendees.map(att => `
                         <tr>
                             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-3">
-                                <img src="${escapeHtml(att.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80')}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border">
-                                <span>${escapeHtml(att.full_name)}</span>
+                                <img src="${escapeHTML(att.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80')}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border">
+                                <span>${escapeHTML(att.full_name)}</span>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${escapeHtml(att.email)}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-mono text-blue-600 font-bold">${escapeHtml(att.coupon_number)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${escapeHTML(att.email)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-mono text-blue-600 font-bold">${escapeHTML(att.coupon_number)}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                                 <button onclick="removeAttendeeRegistration('${att.registration_id}', '${eventId}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-red-200 flex items-center gap-1 ml-auto">
                                     <i class="fas fa-trash-alt"></i> Remove
@@ -217,7 +217,7 @@ async function loadAdminEvents() {
         .order('event_date', { ascending: true });
 
     if (eventsError) {
-        container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500 shadow-sm">Error loading events: ${escapeHtml(eventsError.message)}</div>`;
+        container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500 shadow-sm">Error loading events: ${escapeHTML(eventsError.message)}</div>`;
         return;
     }
 
@@ -254,16 +254,16 @@ async function loadAdminEvents() {
         <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 border-b pb-4">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900">${escapeHtml(evt.title)}</h3>
-                    <p class="text-sm text-gray-500"><i class="fas fa-calendar-alt mr-1 text-blue-600"></i> ${escapeHtml(eventDate)}</p>
-                    ${evt.description ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(evt.description)}</p>` : ''}
+                    <h3 class="text-xl font-bold text-gray-900">${escapeHTML(evt.title)}</h3>
+                    <p class="text-sm text-gray-500"><i class="fas fa-calendar-alt mr-1 text-blue-600"></i> ${escapeHTML(eventDate)}</p>
+                    ${evt.description ? `<p class="text-sm text-gray-600 mt-1">${escapeHTML(evt.description)}</p>` : ''}
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="openAttendeesModal('${evt.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-xl border border-blue-200 text-xs transition flex items-center gap-2 shadow-sm">
                         <i class="fas fa-users"></i> View Attendees (${attendees.length})
                     </button>
                     <div class="bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-2 rounded-xl border border-gray-200">
-                        Host: ${escapeHtml(churchesMap[evt.church_id || evt.host_church_id]?.name || 'Primary Church')}
+                        Host: ${escapeHTML(churchesMap[evt.church_id || evt.host_church_id]?.name || 'Primary Church')}
                     </div>
                 </div>
             </div>
@@ -281,8 +281,8 @@ async function loadAdminEvents() {
                                 return `
                                 <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-200 text-sm">
                                     <div>
-                                        <p class="font-medium text-gray-800">${escapeHtml(church ? church.name : 'Church ID: ' + cId.substring(0,8))}</p>
-                                        <p class="text-xs text-gray-500">Code: ${escapeHtml(church?.code || church?.join_code || 'N/A')}</p>
+                                        <p class="font-medium text-gray-800">${escapeHTML(church ? church.name : 'Church ID: ' + cId.substring(0,8))}</p>
+                                        <p class="text-xs text-gray-500">Code: ${escapeHTML(church?.code || church?.join_code || 'N/A')}</p>
                                     </div>
                                     <span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-medium">Invited</span>
                                 </div>`;
@@ -301,7 +301,7 @@ async function loadAdminEvents() {
                             <label class="block text-xs font-medium text-gray-700 mb-1">Search/Select Church (Code or Name)</label>
                             <select id="invite-church-select-${evt.id}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
                                 <option value="">Choose church code...</option>
-                                ${churchesList.map(c => `<option value="${c.id}">${escapeHtml(c.name)} (${escapeHtml(c.code || c.join_code || 'No Code')})</option>`).join('')}
+                                ${churchesList.map(c => `<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.code || c.join_code || 'No Code')})</option>`).join('')}
                             </select>
                         </div>
                         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition-all flex items-center justify-center gap-2">
@@ -320,7 +320,7 @@ async function loadAdminEvents() {
                             <label class="block text-xs font-medium text-gray-700 mb-1">Select Member</label>
                             <select id="invite-member-select-${evt.id}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
                                 <option value="">Choose member...</option>
-                                ${profilesList.map(p => `<option value="${p.id}">${escapeHtml(p.full_name || p.email || p.id)}</option>`).join('')}
+                                ${profilesList.map(p => `<option value="${p.id}">${escapeHTML(p.full_name || p.email || p.id)}</option>`).join('')}
                             </select>
                         </div>
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition-all flex items-center justify-center gap-2">
