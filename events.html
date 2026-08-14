@@ -515,8 +515,8 @@
                             <button onclick="openEventReportModal('${evt.id}', '${escapeHtml(evt.title).replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 text-xs transition" title="Report Event Violation">
                                 <i class="fas fa-flag"></i>
                             </button>
-                            <button id="rsvp-btn-${evt.id}" onclick="toggleRsvp('${evt.id}', ${hasRsvp})" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-green-600 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}" ${hasRsvp ? 'disabled' : ''}>
-                                ${hasRsvp ? 'Registered' : 'RSVP'}
+                            <button id="rsvp-btn-${evt.id}" onclick="toggleRsvp('${evt.id}')" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-blue-600 text-white hover:bg-blue-700'}">
+                                ${hasRsvp ? 'Opt Out' : 'Register'}
                             </button>
                         </div>
                     </div>
@@ -525,11 +525,10 @@
         }).join('');
     }
 
-    async function toggleRsvp(eventId, hasRsvp) {
+    async function toggleRsvp(eventId) {
         const btn = document.getElementById(`rsvp-btn-${eventId}`);
         const countSpan = document.getElementById(`attendee-count-${eventId}`);
         
-        // Find current event object in allEvents
         const evt = allEvents.find(e => e.id === eventId);
         if (!evt) {
             loadEvents();
@@ -540,18 +539,14 @@
             evt.event_registrations = [];
         }
 
+        const hasRsvp = evt.event_registrations.some(r => r.profile_id === loggedInUser.id);
+
         if (hasRsvp) {
-            // Optimistic DOM update for cancellation
-            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== loggedInUser.id);
-            const newCount = evt.event_registrations.length;
-            
-            if (countSpan) {
-                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
-            }
+            // Opt Out state -> Delete registration
             if (btn) {
-                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
-                btn.innerText = 'RSVP';
-                btn.setAttribute('onclick', `toggleRsvp('${eventId}', false)`);
+                btn.disabled = true;
+                btn.innerText = "Opting Out...";
+                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-gray-400 text-white cursor-not-allowed';
             }
 
             const { error } = await window.sbClient
@@ -561,11 +556,25 @@
                 .eq('profile_id', loggedInUser.id);
 
             if (error) {
-                showSuccessToast("Error cancelling RSVP: " + error.message, true);
-                loadEvents(); // Revert on error
+                showSuccessToast("Error opting out: " + error.message, true);
+                loadEvents();
+                return;
             }
+
+            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== loggedInUser.id);
+            const newCount = evt.event_registrations.length;
+
+            if (countSpan) {
+                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
+                btn.innerText = 'Register';
+            }
+            showSuccessToast("Successfully opted out of event.");
         } else {
-            // UI Level Double Submission Prevention & Loading State
+            // Register state -> Insert registration
             if (btn) {
                 btn.disabled = true;
                 btn.innerText = "Registering...";
@@ -574,75 +583,40 @@
 
             const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
 
-            try {
-                const { error } = await window.sbClient
-                    .from('event_registrations')
-                    .insert([{ 
-                        event_id: eventId, 
-                        profile_id: loggedInUser.id,
-                        attendee_name: currentUserProfile?.full_name || 'Attendee',
-                        attendee_email: loggedInUser.email,
-                        coupon_number: randomCoupon,
-                        amount_paid: 0.00,
-                        is_free: true
-                    }]);
+            const { error } = await window.sbClient
+                .from('event_registrations')
+                .insert([{ 
+                    event_id: eventId, 
+                    profile_id: loggedInUser.id,
+                    attendee_name: currentUserProfile?.full_name || 'Attendee',
+                    attendee_email: loggedInUser.email,
+                    coupon_number: randomCoupon,
+                    amount_paid: 0.00,
+                    is_free: true
+                }]);
 
-                if (error) {
-                    if (error.code === '23505' || error.status === 409 || (error.message && error.message.includes('duplicate key'))) {
-                        showSuccessToast("You are already registered for this event!", true);
-                        if (btn) {
-                            btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
-                            btn.innerText = 'Registered';
-                            btn.disabled = true;
-                            btn.removeAttribute('onclick');
-                        }
-                        loadEvents();
-                        return;
-                    }
-                    throw error;
-                }
-
-                // Optimistic DOM update for RSVP success
-                evt.event_registrations.push({ profile_id: loggedInUser.id });
-                const newCount = evt.event_registrations.length;
-
-                if (countSpan) {
-                    countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
-                }
-                if (btn) {
-                    btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
-                    btn.innerText = 'Registered';
-                    btn.disabled = true;
-                    btn.removeAttribute('onclick');
-                }
-
-                showSuccessToast(`RSVP successful! Your entry coupon is ${randomCoupon}`);
-            } catch (err) {
-                if (err.code === '23505' || err.status === 409 || (err.message && err.message.includes('duplicate key'))) {
+            if (error) {
+                if (error.code === '23505' || error.status === 409 || (error.message && error.message.includes('duplicate key'))) {
                     showSuccessToast("You are already registered for this event!", true);
-                    if (btn) {
-                        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
-                        btn.innerText = 'Registered';
-                        btn.disabled = true;
-                        btn.removeAttribute('onclick');
-                    }
                 } else {
-                    showSuccessToast("Error: " + err.message, true);
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
-                        btn.innerText = 'RSVP';
-                    }
+                    showSuccessToast("Error registering: " + error.message, true);
                 }
-                loadEvents(); // Revert/refresh on error
-            } finally {
-                // Ensure button is re-enabled if not successfully registered/disabled
-                if (btn && btn.innerText === "Registering...") {
-                    btn.disabled = false;
-                    btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
-                    btn.innerText = 'RSVP';
-                }
+                loadEvents();
+                return;
             }
+
+            evt.event_registrations.push({ profile_id: loggedInUser.id });
+            const newCount = evt.event_registrations.length;
+
+            if (countSpan) {
+                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-red-600 text-white hover:bg-red-700';
+                btn.innerText = 'Opt Out';
+            }
+            showSuccessToast(`Successfully registered! Coupon: ${randomCoupon}`);
         }
     }
 

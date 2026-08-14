@@ -207,7 +207,7 @@ async function openAttendeesModal(eventId) {
 }
 
 async function loadAdminEvents() {
-    const container = document.getElementById('admin-events-container');
+    const container = document.getElementById('admin-events-list') || document.getElementById('admin-events-container');
     if (!container) return;
 
     // Fetch all events

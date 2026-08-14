@@ -68,6 +68,13 @@
             </div>
         </div>
 
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6 max-w-4xl mx-auto mb-8">
+            <h3 class="text-xl font-bold mb-4 text-blue-700">📅 Manage Event Attendees</h3>
+            <div id="admin-events-list" class="space-y-4">
+                <!-- JS will populate events and attendees here -->
+            </div>
+        </div>
+
         <!-- Upload Gallery Memory Section -->
         <div id="gallery-upload-section" class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto mb-8">
             <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -111,6 +118,8 @@
                 </button>
             </form>
         </div>
+
+        <script src="js/admin-events.js"></script>
 
         <!-- Grid Section: Publish Announcement & Schedule Event -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 max-w-4xl mx-auto">
@@ -244,6 +253,7 @@
                 loadInboxInquiries();
                 loadAllMembers();
                 loadChurchJoinCode();
+                if (typeof loadAdminEvents === 'function') loadAdminEvents();
             } else {
                 alert("Unauthorized: Admin privileges required.");
                 window.location.replace('feed.html');
