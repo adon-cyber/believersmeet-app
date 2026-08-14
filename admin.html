@@ -7,25 +7,26 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/theme.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Upgraded to Tailwind v3 to support slate colors, backdrop-blur, and arbitrary variants -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-200 flex flex-col">
     <nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
     <div class="flex items-center gap-8">
-        <span class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+        <span class="text-xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
             ⛪ BelieversMeet
         </span>
         <div class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-300">
-            <a href="feed.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">My Feed</a>
-            <a href="giving.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Giving</a>
-            <a href="sermons.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Sermons</a>
-            <a href="groups.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Small Groups</a>
-            <a href="prayer.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Prayer Wall</a>
-            <a href="testimonies.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Testimonies</a>
-            <a href="inbox.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Inbox</a>
-            <a href="events.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Events</a>
-            <a href="profile.html" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition">Profile</a>
+            <a href="feed.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">My Feed</a>
+            <a href="giving.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Giving</a>
+            <a href="sermons.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Sermons</a>
+            <a href="groups.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Small Groups</a>
+            <a href="prayer.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Prayer Wall</a>
+            <a href="testimonies.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Testimonies</a>
+            <a href="inbox.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Inbox</a>
+            <a href="events.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Events</a>
+            <a href="profile.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Profile</a>
         </div>
     </div>
     
@@ -40,7 +41,7 @@
         <button onclick="window.toggleTheme()" class="p-2 rounded-xl bg-slate-800 text-amber-400 border border-slate-700">
             ☀️
         </button>
-        <button onclick="logoutUser(event)" class="text-sm font-medium text-slate-400 hover:text-red-400 transition ml-2">
+        <button onclick="logoutUser(event)" class="text-sm font-medium text-slate-500 hover:text-red-400 transition ml-2">
             Logout
         </button>
     </div>
@@ -54,7 +55,7 @@
             <button id="tab-btn-global" onclick="switchAdminTab('global')" class="py-2.5 px-5 text-sm font-bold border-b-2 focus:outline-none transition border-blue-500 text-blue-400">
                 🌐 Global System Admin
             </button>
-            <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-400 hover:text-slate-200">
+            <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
                 ⛪ Church Dashboard
             </button>
         </div>
@@ -64,7 +65,7 @@
             <!-- Page Header Section -->
             <div class="bg-gradient-to-r from-blue-900/80 to-slate-900/80 border border-slate-800 p-8 rounded-2xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-white mb-2">Church Management Dashboard</h1>
+                    <h1 class="text-3xl font-bold text-slate-100 mb-2">Church Management Dashboard</h1>
                     <p class="text-slate-300 text-base">Manage announcements, fellowship groups, church events, inquiries, and member roles.</p>
                 </div>
             </div>
@@ -73,8 +74,8 @@
             <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div class="space-y-1 text-center sm:text-left">
                     <span class="text-xs font-bold tracking-wider text-blue-400 uppercase bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">Church Workspace Join Code</span>
-                    <div class="text-3xl sm:text-4xl font-mono font-extrabold text-white tracking-wider mt-3" id="church-join-code">CHURCH-....</div>
-                    <p class="text-sm text-slate-400 mt-2">Share this code with your members so they can connect to your church workspace during registration.</p>
+                    <div class="text-3xl sm:text-4xl font-mono font-extrabold text-slate-100 tracking-wider mt-3" id="church-join-code">CHURCH-....</div>
+                    <p class="text-sm text-slate-500 mt-2">Share this code with your members so they can connect to your church workspace during registration.</p>
                 </div>
                 <div class="flex-shrink-0">
                     <button onclick="copyJoinCode()" id="copy-join-code-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
@@ -86,16 +87,16 @@
 
             <!-- User Management Section (Super Admin Only) -->
             <div id="user-management-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl hidden">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                     <i class="fas fa-users text-blue-400"></i> Manage Profiles & Members
                 </h3>
                 <div id="admin-list" class="divide-y divide-slate-800">
-                    <p class="text-slate-400 py-4">Loading members...</p>
+                    <p class="text-slate-500 py-4">Loading members...</p>
                 </div>
             </div>
 
             <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 p-8 rounded-2xl shadow-xl">
-                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                <h3 class="text-xl font-bold mb-6 text-slate-100 flex items-center gap-2">
                     <i class="fas fa-calendar-check text-blue-400"></i> Manage Event Attendees
                 </h3>
                 <div id="admin-events-list" class="space-y-4">
@@ -105,7 +106,7 @@
 
             <!-- Upload Gallery Memory Section -->
             <div id="gallery-upload-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                     <i class="fas fa-images text-blue-400"></i> Upload Gallery Memory
                 </h3>
                 <form id="gallery-upload-form" class="space-y-5">
@@ -115,7 +116,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Caption (Optional)</label>
-                        <input type="text" id="gallery-caption-input" placeholder="Enter a caption or description for this memory..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                        <input type="text" id="gallery-caption-input" placeholder="Enter a caption or description for this memory..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
                     <button id="gallery-upload-btn" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                         <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload Photo</span>
@@ -125,17 +126,17 @@
 
             <!-- Upload Song Form Section (Admin Only) -->
             <div id="music-upload-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                     <i class="fas fa-music text-blue-400"></i> Upload Worship Song
                 </h3>
                 <form id="music-upload-form" class="space-y-5">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Song Title</label>
-                        <input type="text" id="song-title-input" placeholder="Enter song title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                        <input type="text" id="song-title-input" placeholder="Enter song title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Artist / Ensemble</label>
-                        <input type="text" id="song-artist-input" placeholder="Enter artist name..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                        <input type="text" id="song-artist-input" placeholder="Enter artist name..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Audio File (MP3 / WAV)</label>
@@ -147,14 +148,12 @@
                 </form>
             </div>
 
-            <script src="js/admin-events.js"></script>
-
             <!-- Grid Section: Publish Announcement & Schedule Event -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Publish Announcement -->
                 <div id="publish-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl hidden flex flex-col justify-between">
                     <div>
-                        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                             <i class="fas fa-bullhorn text-blue-400"></i> Publish Announcement
                         </h3>
                         <form id="announcement-form" class="space-y-5">
@@ -180,7 +179,7 @@
                 <!-- Schedule Event -->
                 <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl flex flex-col justify-between">
                     <div>
-                        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-blue-400"></i> Schedule New Event
                         </h3>
                         <form id="event-form" class="space-y-5">
@@ -204,20 +203,20 @@
 
             <!-- Leadership Inbox & Inquiries -->
             <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                     <i class="fas fa-inbox text-blue-400"></i> Leadership Inbox & Inquiries
                 </h3>
                 <div id="inbox-messages-container" class="space-y-3">
-                    <p class="text-slate-400 py-4">Loading inquiries...</p>
+                    <p class="text-slate-500 py-4">Loading inquiries...</p>
                 </div>
             </div>
 
             <!-- Active Board Bulletins -->
             <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                     <i class="fas fa-clipboard-list text-blue-400"></i> Active Board Bulletins
                 </h3>
-                <div id="announcements-container" class="mt-4 space-y-3"><p class="text-slate-400 italic text-sm">Loading...</p></div>
+                <div id="announcements-container" class="mt-4 space-y-3"><p class="text-slate-500 italic text-sm">Loading...</p></div>
             </div>
         </div>
 
@@ -237,7 +236,7 @@
                 <!-- Left Column -->
                 <div class="space-y-8 lg:col-span-1">
                     <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4">📅 Add New Programme</h3>
+                        <h3 class="text-lg font-bold text-slate-100 mb-4">📅 Add New Programme</h3>
                         <div class="space-y-4">
                             <input type="text" id="p-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             <input type="time" id="p-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
@@ -246,25 +245,25 @@
                         </div>
                     </div>
                     <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4">📍 Update Location</h3>
+                        <h3 class="text-lg font-bold text-slate-100 mb-4">📍 Update Location</h3>
                         <div class="space-y-4">
                             <input type="text" id="lat" placeholder="Latitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             <input type="text" id="lng" placeholder="Longitude" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             <button onclick="updateLocation()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition">Save Coordinates</button>
                             <button onclick="detectAndSaveLocation()" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl transition">Use Current GPS</button>
-                            <p id="gps-status" class="text-xs text-slate-400 text-center mt-2"></p>
+                            <p id="gps-status" class="text-xs text-slate-500 text-center mt-2"></p>
                         </div>
                     </div>
                 </div>
                 <!-- Right Column -->
                 <div class="space-y-8 lg:col-span-2">
                     <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4">👥 Members in Church</h3>
-                        <div id="member-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load members.</p></div>
+                        <h3 class="text-lg font-bold text-slate-100 mb-4">👥 Members in Church</h3>
+                        <div id="member-list" class="divide-y divide-slate-800"><p class="text-slate-500">Select a church to load members.</p></div>
                     </div>
                     <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4">📋 Published Programmes</h3>
-                        <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-400">Select a church to load programmes.</p></div>
+                        <h3 class="text-lg font-bold text-slate-100 mb-4">📋 Published Programmes</h3>
+                        <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-500">Select a church to load programmes.</p></div>
                     </div>
                 </div>
             </div>
@@ -273,15 +272,14 @@
 
     <!-- Footer -->
     <footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-400 space-y-2">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500 space-y-2">
         <div>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</div>
         <div>
           <a href="https://wa.me/256777778443" 
              target="_blank" 
              rel="noopener noreferrer" 
-             class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors duration-200 font-medium"
+             class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-400 transition-colors duration-200 font-medium"
              title="Chat with Developer on WhatsApp">
-              <!-- WhatsApp SVG Icon -->
               <svg class="w-4 h-4 fill-current text-emerald-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
               </svg>
@@ -320,7 +318,7 @@
                 }
 
                 if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
-                if (btnDashboard) btnDashboard.className = "py-2.5 px-5 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none transition";
+                if (btnDashboard) btnDashboard.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             } else if (tab === 'dashboard') {
                 if (globalView) {
                     globalView.classList.remove('block');
@@ -331,31 +329,26 @@
                     dashboardView.classList.add('block');
                 }
 
-                if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-400 hover:text-slate-200 focus:outline-none transition";
+                if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
                 if (btnDashboard) btnDashboard.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
 
-                // Load dashboard data if not loaded yet
                 initChurchDashboardView();
             }
 
-            // Ensure Super Admin navigation button stays persistently visible if user is super admin
             const superAdminNav = document.getElementById('nav-super-admin');
-            if (superAdminNav && currentUserProfile && (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com')) {
+            if (superAdminNav && currentUserProfile && (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com')) {
                 superAdminNav.classList.remove('hidden');
                 superAdminNav.classList.add('flex');
             }
         };
 
         async function initPage() {
-            console.log("Initializing Admin Dashboard...");
-            
             let attempts = 0;
             while (!window.sbClient && attempts < 15) { 
                 await new Promise(r => setTimeout(r, 200)); 
                 attempts++; 
             }
             if (!window.sbClient) {
-                console.error("Supabase client engine initialization timed out.");
                 alert("Failed to connect to Supabase backend configuration.");
                 return;
             }
@@ -373,19 +366,15 @@
                 .maybeSingle(); 
 
             if (profileError || !profile) {
-                console.error("Profile check error or missing profile entry.", profileError);
                 alert("Authorized administrative profile context missing.");
                 return;
             }
             
             currentUserProfile = profile;
-            console.log("Access authorized. Role:", currentUserProfile.role);
 
-            // UI Access Management Configurations
             if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church') {
                 
-                // Check if user is super admin or admin to show tabs
-                if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com' || user.email === 'adonstance@gmail.com') {
+                if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com' || user.email === 'adoniakasango@gmail.com') {
                     const tabsEl = document.getElementById('admin-tabs');
                     if (tabsEl) tabsEl.classList.remove('hidden');
                     const superAdminNav = document.getElementById('nav-super-admin');
@@ -406,7 +395,6 @@
                     if (typeof loadAdminEvents === 'function') loadAdminEvents();
                 }
 
-                // Check URL params for direct church_id view or default tab
                 const urlParams = new URLSearchParams(window.location.search);
                 const overrideChurchId = urlParams.get('church_id');
                 const initialTab = urlParams.get('tab');
@@ -417,7 +405,6 @@
                 } else if (initialTab === 'dashboard') {
                     switchAdminTab('dashboard');
                 } else if (currentUserProfile.role === 'church' && currentUserProfile.church_id) {
-                    // If strictly a church admin, default to church dashboard view
                     activeDashboardChurchId = currentUserProfile.church_id;
                     switchAdminTab('dashboard');
                 }
@@ -431,9 +418,8 @@
             loadAnnouncements(currentUserProfile.church_id);
         }
 
-        // --- CHURCH DASHBOARD LOGIC ---
         async function initChurchDashboardView() {
-            if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adonstance@gmail.com') {
+            if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com') {
                 const selectorContainer = document.getElementById('super-admin-church-selector');
                 if (selectorContainer) selectorContainer.classList.remove('hidden');
                 await loadChurchesDropdown();
@@ -517,8 +503,8 @@
                             <div class="flex items-center gap-3">
                                 <span class="${iconBg}">⏳</span>
                                 <div>
-                                    <span class="font-semibold text-white">${titleText}</span>
-                                    <p class="text-xs text-slate-400">Expires on <strong class="text-slate-200">${formattedExpiry}</strong> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</p>
+                                    <span class="font-semibold text-slate-100">${titleText}</span>
+                                    <p class="text-xs text-slate-500">Expires on <strong class="text-slate-200">${formattedExpiry}</strong> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</p>
                                 </div>
                             </div>
                             <span class="${badgeClasses}">${diffDays > 0 ? 'Active Plan' : 'Expired'}</span>
@@ -584,12 +570,12 @@
             container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => `
                 <div class="py-3 flex items-center justify-between">
                     <div>
-                        <h4 class="text-sm font-semibold text-white">${escapeHTML(p.title)} <span class="text-xs font-normal text-slate-400 ml-2">(${escapeHTML(p.start_time)})</span></h4>
+                        <h4 class="text-sm font-semibold text-slate-100">${escapeHTML(p.title)} <span class="text-xs font-normal text-slate-500 ml-2">(${escapeHTML(p.start_time)})</span></h4>
                         ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
                     </div>
                     <button onclick="deleteChurchProgramme('${p.id}')" class="text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 px-3 py-1 rounded-lg font-medium ml-4 transition">Delete</button>
                 </div>
-            `).join('') : '<p class="text-slate-400 py-3">No programmes published yet.</p>';
+            `).join('') : '<p class="text-slate-500 py-3">No programmes published yet.</p>';
         }
 
         async function deleteChurchProgramme(id) {
@@ -617,10 +603,10 @@
 
             container.innerHTML = members && members.length > 0 ? members.map(m => `
                 <div class="py-3 flex items-center justify-between">
-                    <span class="text-sm font-medium text-white">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
+                    <span class="text-sm font-medium text-slate-100">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
                     <span class="px-2.5 py-1 text-xs rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 font-medium">${escapeHTML(m.role || 'member')}</span>
                 </div>
-            `).join('') : '<p class="text-slate-400 py-3">No members joined your church yet.</p>';
+            `).join('') : '<p class="text-slate-500 py-3">No members joined your church yet.</p>';
         }
 
         async function updateLocation() {
@@ -683,7 +669,6 @@
                 alert("Geolocation error: " + err.message);
             });
         }
-        // ---------------------------
 
         // --- ANNOUNCEMENT HANDLERS ---
         document.getElementById('announcement-form').addEventListener('submit', async (e) => {
@@ -721,10 +706,10 @@
             const { data: announcements, error } = await window.sbClient.from('announcements').select('*').eq('church_id', churchId).order('created_at', { ascending: false });
             if (error) throw error;
             if (!announcements || announcements.length === 0) {
-              container.innerHTML = '<p class="text-slate-400 italic text-sm p-2">No active bulletins posted yet.</p>';
+              container.innerHTML = '<p class="text-slate-500 italic text-sm p-2">No active bulletins posted yet.</p>';
               return;
             }
-            container.innerHTML = announcements.map(a => `<div class="p-4 bg-slate-800/60 border border-slate-700 rounded-xl shadow-lg mb-3 flex justify-between items-start"><div><h4 class="font-bold text-white text-sm">${escapeHTML(a.title || 'Bulletin')}</h4><p class="text-sm text-slate-300 mt-1">${escapeHTML(a.content || '')}</p></div><button onclick="deleteAnnouncement('${a.id}')" class="text-red-400 hover:text-red-300 text-xs font-semibold p-1 transition" title="Delete Bulletin"><i class="fas fa-trash"></i></button></div>`).join('');
+            container.innerHTML = announcements.map(a => `<div class="p-4 bg-slate-800/60 border border-slate-700 rounded-xl shadow-lg mb-3 flex justify-between items-start"><div><h4 class="font-bold text-slate-100 text-sm">${escapeHTML(a.title || 'Bulletin')}</h4><p class="text-sm text-slate-300 mt-1">${escapeHTML(a.content || '')}</p></div><button onclick="deleteAnnouncement('${a.id}')" class="text-red-400 hover:text-red-300 text-xs font-semibold p-1 transition" title="Delete Bulletin"><i class="fas fa-trash"></i></button></div>`).join('');
           } catch (err) {
             console.error('Failed to render announcements:', err);
             container.innerHTML = `<p class="text-red-400 text-xs">Error loading bulletins: ${escapeHTML(err.message)}</p>`;
@@ -747,18 +732,18 @@
             container.innerHTML = messages && messages.length > 0 ? messages.map(m => `
                 <div class="p-4 bg-blue-900/20 border-l-4 border-blue-500 rounded-r-xl border border-blue-500/20">
                     <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-                        <strong class="text-white font-semibold">From: ${escapeHTML(m.sender_name || 'Anonymous Member')}</strong>
+                        <strong class="text-slate-100 font-semibold">From: ${escapeHTML(m.sender_name || 'Anonymous Member')}</strong>
                         <span>${new Date(m.created_at).toLocaleDateString()}</span>
                     </div>
                     <p class="text-sm text-slate-300 m-0">${escapeHTML(m.message)}</p>
                 </div>
-            `).join('') : '<p class="text-slate-400 py-3">Your leadership inbox is currently empty.</p>';
+            `).join('') : '<p class="text-slate-500 py-3">Your leadership inbox is currently empty.</p>';
         }
 
         // --- USER MANAGEMENT HANDLERS ---
         async function loadAllMembers() {
             const container = document.getElementById('admin-list');
-            container.innerHTML = '<p class="text-slate-400 py-4">Loading user profiles...</p>';
+            container.innerHTML = '<p class="text-slate-500 py-4">Loading user profiles...</p>';
             
             const { data: profiles, error } = await window.sbClient
                 .from('profiles')
@@ -771,7 +756,7 @@
             }
 
             if (!profiles || profiles.length === 0) {
-                container.innerHTML = '<p class="text-slate-400 py-4">No user profiles found in this church.</p>';
+                container.innerHTML = '<p class="text-slate-500 py-4">No user profiles found in this church.</p>';
                 return;
             }
 
@@ -789,10 +774,10 @@
                         <tbody class="divide-y divide-slate-800">
                             ${profiles.map(p => `
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-100">
                                         ${escapeHTML(p.full_name || 'Unnamed Member')}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                         ${escapeHTML(p.email || p.id)}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
@@ -802,7 +787,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center justify-end space-x-2">
-                                            <select id="role-select-${p.id}" class="text-sm border border-slate-700 bg-slate-800 text-white rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <select id="role-select-${p.id}" class="text-sm border border-slate-700 bg-slate-800 text-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                 <option value="user" ${p.role === 'user' ? 'selected' : ''}>user</option>
                                                 <option value="finance" ${p.role === 'finance' ? 'selected' : ''}>finance</option>
                                                 <option value="admin" ${p.role === 'admin' ? 'selected' : ''}>admin</option>
@@ -862,7 +847,6 @@
                 const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                 const filePath = `${fileName}`;
 
-                // Upload to Supabase Storage bucket 'music-uploads'
                 const { data: uploadData, error: uploadError } = await window.sbClient.storage
                     .from('music-uploads')
                     .upload(filePath, file);
@@ -871,12 +855,10 @@
                     throw new Error("Music storage upload failed: " + uploadError.message);
                 }
 
-                // Get Public URL
                 const { data: { publicUrl } } = window.sbClient.storage
                     .from('music-uploads')
                     .getPublicUrl(filePath);
 
-                // Insert into worship_songs table
                 const insertPayload = {
                     title: titleInput.value.trim(),
                     artist: artistInput.value.trim(),
@@ -926,7 +908,6 @@
                 const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                 const filePath = `${fileName}`;
 
-                // Upload to Supabase Storage bucket 'gallery'
                 const { data: uploadData, error: uploadError } = await window.sbClient.storage
                     .from('gallery')
                     .upload(filePath, file);
@@ -935,12 +916,10 @@
                     throw new Error("Storage upload failed: " + uploadError.message);
                 }
 
-                // Get Public URL
                 const { data: { publicUrl } } = window.sbClient.storage
                     .from('gallery')
                     .getPublicUrl(filePath);
 
-                // Insert into gallery_images table
                 const { data: authData } = await window.sbClient.auth.getUser();
                 const user = authData?.user || {};
                 const { error: dbError } = await window.sbClient.from('gallery_images').insert([{
@@ -1012,7 +991,6 @@
             window.location.replace('login.html');
         }
 
-        // Fetch church join code from Supabase
         async function loadChurchJoinCode() {
             const { data: { user } } = await window.sbClient.auth.getUser();
             if (!user) return;
@@ -1057,6 +1035,7 @@
 
         initPage();
     </script>
-  <script src="js/notifications.js"></script>
+    <script src="js/admin-events.js"></script>
+    <script src="js/notifications.js"></script>
 </body>
 </html>
