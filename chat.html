@@ -63,6 +63,9 @@
             <button id="tab-other-churches" onclick="switchTab('other')" class="flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors">
                 <i class="fas fa-globe"></i> Other Churches
             </button>
+            <button id="tab-finance-inquiries" onclick="switchTab('finance')" class="hidden flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors" title="Finance Inquiries">
+                <i class="fas fa-wallet"></i> Finance
+            </button>
         </div>
 
         <!-- Scrollable Contacts List -->
@@ -188,16 +191,102 @@
         activeTab = tab;
         const fellowBtn = document.getElementById('tab-fellow-members');
         const otherBtn = document.getElementById('tab-other-churches');
+        const financeBtn = document.getElementById('tab-finance-inquiries');
+
+        fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+        otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+        if (financeBtn) {
+            financeBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+        }
 
         if (tab === 'fellow') {
             fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
-            otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
-        } else {
+            loadUserDirectory();
+        } else if (tab === 'other') {
             otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
-            fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+            loadUserDirectory();
+        } else if (tab === 'finance') {
+            if (financeBtn) {
+                financeBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
+            }
+            loadFinanceInquiries();
         }
+    }
 
-        loadUserDirectory();
+    async function loadFinanceInquiries() {
+        if (!currentUser) return;
+        const directoryEl = document.getElementById('users-directory');
+
+        try {
+            // Fetch messages with department = 'finance'
+            const { data: messages, error } = await window.sbClient
+                .from('messages')
+                .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, email, avatar_url, church_id, churches!profiles_church_id_fkey(name))')
+                .eq('department', 'finance')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!messages || messages.length === 0) {
+                directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No finance inquiries found.</div>`;
+                return;
+            }
+
+            // Group by unique sender_id or conversation threads
+            const threadsMap = new Map();
+            messages.forEach(msg => {
+                const sId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+                // If I am the finance admin viewing inquiries, show senders who are not me
+                const senderProfile = msg.sender_id === currentUser.id ? null : msg.sender;
+                const contactId = msg.sender_id === currentUser.id ? (msg.receiver_id || msg.recipient_id) : msg.sender_id;
+
+                if (contactId && !threadsMap.has(contactId)) {
+                    threadsMap.set(contactId, {
+                        contactId: contactId,
+                        profile: senderProfile || { full_name: 'Church Member', email: '' },
+                        lastMessage: msg.content,
+                        created_at: msg.created_at
+                    });
+                }
+            });
+
+            const threads = Array.from(threadsMap.values());
+
+            if (threads.length === 0) {
+                directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No finance inquiries found.</div>`;
+                return;
+            }
+
+            directoryEl.innerHTML = threads.map(t => {
+                const displayName = escapeHTML(t.profile.full_name || t.profile.email || 'Member');
+                const initial = displayName.charAt(0).toUpperCase();
+                const churchName = t.profile.churches?.name ? t.profile.churches.name : 'Finance Inquiry';
+                const isSelected = targetUser && targetUser.id === t.contactId;
+
+                return `
+                    <div id="user-row-${t.contactId}" onclick="selectFinanceUser('${t.contactId}')" class="p-3.5 hover:bg-blue-50/60 cursor-pointer transition flex items-center gap-3 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600 font-semibold' : ''}">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                            <i class="fas fa-wallet text-xs"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold text-gray-900 truncate">${displayName}</span>
+                                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium">Finance</span>
+                            </div>
+                            <p class="text-xs text-gray-500 truncate mt-0.5">${escapeHTML(t.lastMessage)}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (e) {
+            console.error("Error loading finance inquiries:", e);
+            directoryEl.innerHTML = `<div class="p-6 text-center text-red-500 text-sm">Error loading finance inquiries.</div>`;
+        }
+    }
+
+    async function selectFinanceUser(userId) {
+        await selectUser(userId, 'finance');
     }
 
     async function loadUserDirectory() {
@@ -268,7 +357,7 @@
         }
     }
 
-    async function selectUser(userId) {
+    async function selectUser(userId, departmentOverride = null) {
         if (!userId) return;
         
         // Fetch profile
@@ -279,7 +368,14 @@
         }
 
         targetUser = profile;
-        window.history.pushState({}, '', `?user=${userId}`);
+        const urlParams = new URLSearchParams(window.location.search);
+        const dept = departmentOverride || urlParams.get('department');
+        
+        if (dept === 'finance') {
+            window.history.pushState({}, '', `?user=${userId}&department=finance`);
+        } else {
+            window.history.pushState({}, '', `?user=${userId}`);
+        }
 
         // Update UI highlights
         document.querySelectorAll('[id^="user-row-"]').forEach(el => el.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-600'));
@@ -289,19 +385,30 @@
         // Toggle mobile/desktop view
         applyResponsiveLayout();
 
-        // Populate Chat Header
-        document.getElementById('target-name').textContent = targetUser.full_name || 'Member';
-        document.getElementById('target-church-sub').textContent = targetUser.churches?.name ? targetUser.churches.name : 'Direct Message';
+        // Populate Chat Header with Department support
+        if (dept === 'finance') {
+            document.getElementById('target-name').textContent = 'Finance Department';
+            document.getElementById('target-church-sub').textContent = targetUser.churches?.name ? `${targetUser.churches.name} - Giving & Finance` : 'Giving & Finance';
+        } else {
+            document.getElementById('target-name').textContent = targetUser.full_name || 'Member';
+            document.getElementById('target-church-sub').textContent = targetUser.churches?.name ? targetUser.churches.name : 'Direct Message';
+        }
 
         const avatarImg = document.getElementById('target-avatar');
         const avatarPlaceholder = document.getElementById('target-avatar-placeholder');
-        if (targetUser.avatar_url) {
+        if (dept === 'finance') {
+            avatarImg.classList.add('hidden');
+            avatarPlaceholder.classList.remove('hidden');
+            avatarPlaceholder.className = "w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm";
+            avatarPlaceholder.innerHTML = '<i class="fas fa-wallet"></i>';
+        } else if (targetUser.avatar_url) {
             avatarImg.src = targetUser.avatar_url;
             avatarImg.classList.remove('hidden');
             avatarPlaceholder.classList.add('hidden');
         } else {
             avatarImg.classList.add('hidden');
             avatarPlaceholder.classList.remove('hidden');
+            avatarPlaceholder.className = "w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm";
             avatarPlaceholder.textContent = (targetUser.full_name || 'U').charAt(0).toUpperCase();
         }
 
@@ -424,14 +531,20 @@
 
         input.value = '';
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const dept = urlParams.get('department') || 'general';
+
         try {
+            const insertPayload = {
+                sender_id: currentUser.id,
+                receiver_id: targetUser.id,
+                content: content,
+                department: dept
+            };
+
             const { error } = await window.sbClient
                 .from('messages')
-                .insert([{
-                    sender_id: currentUser.id,
-                    receiver_id: targetUser.id,
-                    content: content
-                }]);
+                .insert([insertPayload]);
 
             if (error) {
                 alert("Failed to send message: " + error.message);
@@ -516,16 +629,36 @@
         const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
         currentUser = { ...user, role: profile?.role, church_id: profile?.church_id };
 
+        // Show finance tab if user has finance or admin/super_admin role
+        const financeBtn = document.getElementById('tab-finance-inquiries');
+        if (financeBtn && currentUser && (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin')) {
+            financeBtn.classList.remove('hidden');
+        }
+
         await loadChurchLogo();
         await loadUserDirectory();
 
-        // Check URL parameter ?user=ID on load
+        // Check URL parameter ?user=ID and prefill/department on load
         const urlParams = new URLSearchParams(window.location.search);
         const initialUserId = urlParams.get('user');
-        if (initialUserId) {
+        const prefillParam = urlParams.get('prefill');
+        const deptParam = urlParams.get('department');
+
+        if (deptParam === 'finance' && !initialUserId && (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin')) {
+            // If finance view without specific user, auto switch to finance tab
+            switchTab('finance');
+        } else if (initialUserId) {
             await selectUser(initialUserId);
         } else {
             applyResponsiveLayout();
+        }
+
+        // Handle prefill parameter if present
+        if (prefillParam) {
+            const msgInput = document.getElementById('message-input');
+            if (msgInput) {
+                msgInput.value = decodeURIComponent(prefillParam);
+            }
         }
     })();
 </script>

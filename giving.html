@@ -604,7 +604,8 @@
             showSuccessToast("Your message has been securely sent to your local church's finance team.");
 
             setTimeout(() => {
-                window.location.href = `chat.html?user=${financeUserId}`;
+                const prefillMsg = encodeURIComponent("Hello Finance Team, I need assistance with my giving/transaction.");
+                window.location.href = `chat.html?department=finance&prefill=${prefillMsg}`;
             }, 1200);
 
         } catch (err) {

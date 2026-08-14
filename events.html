@@ -504,8 +504,8 @@
                             <button onclick="openEventReportModal('${evt.id}', '${escapeHtml(evt.title).replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 text-xs transition" title="Report Event Violation">
                                 <i class="fas fa-flag"></i>
                             </button>
-                            <button id="rsvp-btn-${evt.id}" onclick="toggleRsvp('${evt.id}', ${hasRsvp})" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-green-600 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}">
-                                ${hasRsvp ? '✓ RSVP\'d' : 'RSVP'}
+                            <button id="rsvp-btn-${evt.id}" onclick="toggleRsvp('${evt.id}', ${hasRsvp})" class="px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${hasRsvp ? 'bg-green-600 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}" ${hasRsvp ? 'disabled' : ''}>
+                                ${hasRsvp ? 'Registered' : 'RSVP'}
                             </button>
                         </div>
                     </div>
@@ -550,46 +550,87 @@
                 .eq('profile_id', loggedInUser.id);
 
             if (error) {
-                alert("Error cancelling RSVP: " + error.message);
+                showSuccessToast("Error cancelling RSVP: " + error.message, true);
                 loadEvents(); // Revert on error
             }
         } else {
-            const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
-            
-            // Optimistic DOM update for RSVP success
-            evt.event_registrations.push({ profile_id: loggedInUser.id });
-            const newCount = evt.event_registrations.length;
-
-            if (countSpan) {
-                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
-            }
+            // UI Level Double Submission Prevention & Loading State
             if (btn) {
-                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
-                btn.innerText = '✓ RSVP\'d';
-                btn.setAttribute('onclick', `toggleRsvp('${eventId}', true)`);
+                btn.disabled = true;
+                btn.innerText = "Registering...";
+                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-gray-400 text-white cursor-not-allowed';
             }
 
-            const { error } = await window.sbClient
-                .from('event_registrations')
-                .insert([{ 
-                    event_id: eventId, 
-                    profile_id: loggedInUser.id,
-                    attendee_name: currentUserProfile?.full_name || 'Attendee',
-                    attendee_email: loggedInUser.email,
-                    coupon_number: randomCoupon,
-                    amount_paid: 0.00,
-                    is_free: true
-                }]);
+            const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
 
-            if (error) {
-                if (error.code === '23505') {
-                    alert("You have already RSVP'd for this event.");
-                } else {
-                    alert("Error: " + error.message);
+            try {
+                const { error } = await window.sbClient
+                    .from('event_registrations')
+                    .insert([{ 
+                        event_id: eventId, 
+                        profile_id: loggedInUser.id,
+                        attendee_name: currentUserProfile?.full_name || 'Attendee',
+                        attendee_email: loggedInUser.email,
+                        coupon_number: randomCoupon,
+                        amount_paid: 0.00,
+                        is_free: true
+                    }]);
+
+                if (error) {
+                    if (error.code === '23505' || error.status === 409 || (error.message && error.message.includes('duplicate key'))) {
+                        showSuccessToast("You are already registered for this event!", true);
+                        if (btn) {
+                            btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
+                            btn.innerText = 'Registered';
+                            btn.disabled = true;
+                            btn.removeAttribute('onclick');
+                        }
+                        loadEvents();
+                        return;
+                    }
+                    throw error;
                 }
-                loadEvents(); // Revert on error
-            } else {
-                alert(`RSVP successful! Your entry coupon is ${randomCoupon}`);
+
+                // Optimistic DOM update for RSVP success
+                evt.event_registrations.push({ profile_id: loggedInUser.id });
+                const newCount = evt.event_registrations.length;
+
+                if (countSpan) {
+                    countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
+                }
+                if (btn) {
+                    btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
+                    btn.innerText = 'Registered';
+                    btn.disabled = true;
+                    btn.removeAttribute('onclick');
+                }
+
+                showSuccessToast(`RSVP successful! Your entry coupon is ${randomCoupon}`);
+            } catch (err) {
+                if (err.code === '23505' || err.status === 409 || (err.message && err.message.includes('duplicate key'))) {
+                    showSuccessToast("You are already registered for this event!", true);
+                    if (btn) {
+                        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-green-600 text-white cursor-default';
+                        btn.innerText = 'Registered';
+                        btn.disabled = true;
+                        btn.removeAttribute('onclick');
+                    }
+                } else {
+                    showSuccessToast("Error: " + err.message, true);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
+                        btn.innerText = 'RSVP';
+                    }
+                }
+                loadEvents(); // Revert/refresh on error
+            } finally {
+                // Ensure button is re-enabled if not successfully registered/disabled
+                if (btn && btn.innerText === "Registering...") {
+                    btn.disabled = false;
+                    btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
+                    btn.innerText = 'RSVP';
+                }
             }
         }
     }
@@ -818,11 +859,28 @@
         }
     }
 
-    function logoutUser(e) { 
-        e.preventDefault(); 
-        window.sbClient.auth.signOut(); 
-        window.location.replace('login.html'); 
-    }
+        function showSuccessToast(message, isInfo = false) {
+            let toast = document.getElementById('success-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'success-toast';
+                toast.className = 'fixed top-20 right-5 z-50 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-0';
+                toast.innerHTML = `<i id="success-toast-icon" class="fas fa-check-circle text-xl"></i><span id="success-toast-msg" class="font-medium text-sm"></span>`;
+                document.body.appendChild(toast);
+            }
+            const msgEl = document.getElementById('success-toast-msg');
+            const iconEl = document.getElementById('success-toast-icon');
+            if (msgEl) msgEl.innerText = message;
+            if (iconEl) {
+                iconEl.className = isInfo ? 'fas fa-info-circle text-xl' : 'fas fa-check-circle text-xl';
+            }
+            toast.className = `fixed top-20 right-5 z-50 ${isInfo ? 'bg-amber-600' : 'bg-blue-600'} text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-0`;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3500);
+        }
 
     initApp();
 </script>

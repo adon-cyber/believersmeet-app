@@ -70,16 +70,35 @@ async function inviteMember(memberId, eventId) {
 }
 
 async function fetchAttendees(eventId) {
-    const { data, error } = await window.sbClient
-        .from('event_invitations')
-        .select('*, profiles(full_name, email)')
-        .eq('event_id', eventId);
+    // Step 1: Fetch all user_ids registered for this event
+    const { data: registrations, error: regError } = await window.sbClient
+      .from('event_registrations')
+      .select('user_id')
+      .eq('event_id', eventId);
 
-    if (error) {
-        console.error('Error fetching attendees:', error);
-        return [];
+    if (regError) {
+      console.error("Error fetching registrations:", regError);
+      return [];
     }
-    return data || [];
+
+    const userIds = (registrations || []).map(reg => reg.user_id).filter(Boolean);
+
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    // Step 2: Fetch the profiles for those user_ids
+    const { data: attendees, error: profileError } = await window.sbClient
+      .from('profiles')
+      .select('id, full_name, avatar_url, role')
+      .in('id', userIds);
+
+    if (profileError) {
+      console.error("Error fetching attendee profiles:", profileError);
+      return [];
+    }
+
+    return attendees || [];
 }
 
 async function loadAdminEvents() {
