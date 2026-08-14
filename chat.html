@@ -39,7 +39,9 @@
                 <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
                 <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
                 <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors">Inbox</a>
+                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1.5">
+                    Inbox <span id="unread-badge" class="badge bg-danger hidden">0</span>
+                </a>
                 <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
                 <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
                 <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
@@ -355,6 +357,20 @@
         applyResponsiveLayout();
     });
 
+    async function markMessagesAsRead(senderId) {
+        if (!currentUser || !senderId) return;
+        try {
+            await window.sbClient
+                .from('messages')
+                .update({ is_read: true })
+                .eq('sender_id', senderId)
+                .eq('recipient_id', currentUser.id)
+                .eq('is_read', false);
+        } catch (e) {
+            console.error("Error marking messages as read:", e);
+        }
+    }
+
     async function fetchMessages() {
         if (!currentUser || !targetUser) return;
         const container = document.getElementById('messages-container');
@@ -368,6 +384,9 @@
 
             if (error) throw error;
             renderMessages(messages || []);
+
+            // Mark incoming messages from targetUser as read
+            await markMessagesAsRead(targetUser.id);
         } catch (e) {
             console.error("Error fetching messages:", e);
             container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages.</div>`;
