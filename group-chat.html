@@ -186,11 +186,45 @@
         const container = document.getElementById('messages-container');
         try {
             // Fetch messages specifically queried by group_id with sender profile join
-            const { data: messages, error } = await window.sbClient
+            let { data: messages, error } = await window.sbClient
                 .from('messages')
-                .select('*, sender:profiles!sender_id(id, full_name, avatar_url)')
+                .select(`
+                    id,
+                    content,
+                    created_at,
+                    sender_id,
+                    department,
+                    profiles:sender_id (full_name, avatar_url)
+                `)
                 .eq('group_id', groupId)
                 .order('created_at', { ascending: true });
+
+            if (error) {
+                console.warn("Foreign key join failed, falling back to 2-step fetch:", error.message);
+                const res = await window.sbClient
+                    .from('messages')
+                    .select('*')
+                    .eq('group_id', groupId)
+                    .order('created_at', { ascending: true });
+                messages = res.data;
+                error = res.error;
+
+                if (!error && messages && messages.length > 0) {
+                    const senderIds = [...new Set(messages.map(m => m.sender_id).filter(Boolean))];
+                    if (senderIds.length > 0) {
+                        const { data: profilesData } = await window.sbClient
+                            .from('profiles')
+                            .select('id, full_name, avatar_url')
+                            .in('id', senderIds);
+                        
+                        const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
+                        messages = messages.map(m => ({
+                            ...m,
+                            profiles: profileMap.get(m.sender_id) || { full_name: 'Member', avatar_url: null }
+                        }));
+                    }
+                }
+            }
 
             if (error) {
                 console.error("Error fetching group messages:", error.message);
@@ -205,6 +239,18 @@
         }
     }
 
+    function formatMessageDate(isoString) {
+        if (!isoString) return '';
+        const date = new Date(isoString);
+        return date.toLocaleDateString(undefined, { 
+            month: 'short', 
+            day: 'numeric' 
+        }) + ' at ' + date.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    }
+
     function renderGroupMessages(messages) {
         const container = document.getElementById('messages-container');
         if (messages.length === 0) {
@@ -214,18 +260,46 @@
 
         container.innerHTML = messages.map(msg => {
             const isMe = msg.sender_id === currentUser.id;
-            const senderName = msg.sender?.full_name || 'Group Member';
-            const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            return `
-                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                    ${!isMe ? `<span class="text-xs font-bold text-gray-600 mb-1 px-1">${escapeHTML(senderName)}</span>` : ''}
-                    <div class="max-w-[85%] sm:max-w-md px-4 py-2 rounded-lg text-sm break-words ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-900 rounded-bl-none'}" ${isMe ? 'style="background-color: #007bff;"' : ''}>
-                        ${escapeHTML(msg.content)}
+            const sender = msg.profiles || {};
+            const senderName = sender.full_name || 'Group Member';
+            const avatarUrl = sender.avatar_url || 'assets/default-avatar.png';
+            const timeStr = formatMessageDate(msg.created_at);
+
+            if (isMe) {
+                return `
+                    <div class="flex flex-col items-end w-full">
+                        <div class="flex items-end justify-end space-x-2 max-w-[85%] sm:max-w-md">
+                            <div class="flex flex-col items-end">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-[11px] text-gray-400">${timeStr}</span>
+                                    <span class="text-xs font-bold text-gray-700">${escapeHTML(senderName)}</span>
+                                </div>
+                                <div class="px-4 py-2.5 rounded-2xl text-sm break-words bg-blue-600 text-white rounded-br-none shadow-sm" style="background-color: #007bff;">
+                                    ${escapeHTML(msg.content)}
+                                </div>
+                            </div>
+                            <img src="${escapeHTML(avatarUrl)}" class="w-8 h-8 rounded-full flex-shrink-0 object-cover shadow-sm" alt="${escapeHTML(senderName)}" onerror="this.src='images/BELIEVERS.LOGO.png'">
+                        </div>
                     </div>
-                    <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
-                </div>
-            `;
+                `;
+            } else {
+                return `
+                    <div class="flex flex-col items-start w-full">
+                        <div class="flex items-end justify-start space-x-2 max-w-[85%] sm:max-w-md">
+                            <img src="${escapeHTML(avatarUrl)}" class="w-8 h-8 rounded-full flex-shrink-0 object-cover shadow-sm" alt="${escapeHTML(senderName)}" onerror="this.src='images/BELIEVERS.LOGO.png'">
+                            <div class="flex flex-col items-start">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-xs font-bold text-gray-900">${escapeHTML(senderName)}</span>
+                                    <span class="text-[11px] text-gray-400">${timeStr}</span>
+                                </div>
+                                <div class="px-4 py-2.5 rounded-2xl text-sm break-words bg-white text-gray-900 border border-gray-200 rounded-bl-none shadow-sm">
+                                    ${escapeHTML(msg.content)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }).join('');
 
         container.scrollTop = container.scrollHeight;
