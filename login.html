@@ -112,24 +112,22 @@
                 if (error) throw error;
 
                 if (data.user) {
-                    const isSuperAdmin = data.user.email === 'adoniakasango@gmail.com';
-                    if (isSuperAdmin) {
-                        window.location.replace('super-admin.html');
-                        return;
-                    }
-
-                    const { data: profile, error: profileError } = await sb
+                    // 1. Fetch user profile from Supabase
+                    const { data: profile } = await sb
                         .from('profiles')
                         .select('church_id, role')
                         .eq('id', data.user.id)
                         .maybeSingle();
 
-                    if (profile && profile.role === 'super_admin') {
+                    // 2. Direct routing based on Super Admin status
+                    const isSuperAdmin = data.user.email === 'adonstance@gmail.com' || profile?.role === 'super_admin' || profile?.role === 'super-admin';
+
+                    if (isSuperAdmin) {
                         window.location.replace('super-admin.html');
                         return;
                     }
 
-                    if (profileError || !profile || !profile.church_id) {
+                    if (!profile || !profile.church_id) {
                         if (profile && profile.role === 'admin') {
                             window.location.replace('register-church.html');
                         } else {
