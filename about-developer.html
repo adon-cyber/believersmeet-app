@@ -5,8 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About the Developer - Kasango Adonia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/theme.js"></script>
 </head>
-<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6 font-sans text-slate-200">
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6 font-sans text-slate-200 relative">
+    
+    <!-- Light / Dark Mode Toggle Button (Top Right) -->
+    <div class="absolute top-6 right-6">
+        <button onclick="window.toggleTheme()" 
+                class="flex items-center justify-center p-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-amber-400 dark:text-blue-300 hover:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 transition-all shadow-sm focus:outline-none"
+                title="Toggle Light/Dark Theme"
+                aria-label="Toggle Theme">
+            
+            <!-- Sun Icon (Visible in Dark Mode) -->
+            <svg class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+
+            <!-- Moon Icon (Visible in Light Mode) -->
+            <svg class="w-5 h-5 block dark:hidden text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+        </button>
+    </div>
 
     <div class="max-w-3xl w-full bg-slate-800/80 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
         <!-- Header Banner -->
@@ -28,30 +48,37 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
                 
                 <!-- Main Bio (Left Column) -->
-                <div class="md:col-span-2 space-y-4 text-slate-300 leading-relaxed text-sm md:text-base">
+                <div class="md:col-span-2 space-y-4">
                     <p class="text-slate-300 leading-relaxed text-sm md:text-base">
                         Hi, I'm Kasango. As the Head of Sales and Distribution at <strong>REOSTEC</strong>, I drive our commercial outreach, market expansion, and strategic partnerships. I lead our sales operations and client onboarding, ensuring our digital platforms deliver real-world efficiency and long-term value to the organizations we serve.
                     </p>
 
+                    <p class="text-slate-300 leading-relaxed text-sm md:text-base">
+                        At REOSTEC, I oversee the distribution and client integration strategies across our core software product ecosystem:
+                    </p>
+
                     <div class="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 my-4">
-                        <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wider">Our Product Ecosystem</h3>
                         <ul class="space-y-2 text-sm text-slate-300">
                             <li class="flex items-start gap-2">
-                                <span class="text-base">🎓</span> <span><strong>Scoasoft:</strong> Comprehensive management for educational institutions, paired with integrated payment tools like Scoa Pay.</span>
+                                <span>🎓</span> <span><strong>Scoasoft:</strong> Comprehensive management for educational institutions (including integrated school payment solutions like Scoa Pay).</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <span class="text-base">💼</span> <span><strong>Select:</strong> Enterprise operational and management solutions for businesses.</span>
+                                <span>💼</span> <span><strong>Select:</strong> Enterprise operational and inventory management for businesses.</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <span class="text-base">🏥</span> <span><strong>Reocare:</strong> Complete management software for healthcare facilities and hospitals.</span>
+                                <span>🏥</span> <span><strong>Reocare:</strong> Practice management and patient care software for healthcare facilities and hospitals.</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <span class="text-base">🏢</span> <span><strong>Reorent:</strong> Property management and tenant tracking for rentals and real estate.</span>
+                                <span>🏢</span> <span><strong>Reorent:</strong> Property management and automation for real estate and rental operators.</span>
                             </li>
                         </ul>
                     </div>
 
                     <p class="text-slate-300 leading-relaxed text-sm md:text-base">
+                        My focus is on building lasting business relationships, simplifying platform adoption, and leading digital transformation across schools, enterprises, healthcare providers, and real estate.
+                    </p>
+
+                    <p class="text-slate-300 leading-relaxed text-sm md:text-base pt-2 border-t border-slate-700/60">
                         My life and work are firmly rooted in my faith. I am a dedicated End-Time Message believer, and I joyfully fellowship with the brethren at <strong>Inner Veil Ministries</strong> in Jinja, Uganda. Above all my professional pursuits, my greatest joy is sharing this journey with my beautiful wife, <strong>Ageno Patience</strong>.
                     </p>
                 </div>
