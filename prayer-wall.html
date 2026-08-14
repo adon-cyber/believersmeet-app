@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
+    <script src="js/bible-service.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -208,7 +209,7 @@
                             ${isPriv ? '<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full"><i class="fas fa-lock text-xs"></i> Private</span>' : ''}
                         </div>
                     </div>
-                    <p class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${escapeHTML(p.content || p.request_text || '')}</p>
+                    <p class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${linkifyBibleReferences(escapeHTML(p.content || p.request_text || ''))}</p>
                     
                     <!-- Responses List Section -->
                     <div class="space-y-3 mb-4 responses-list" id="responses-list-${p.id}">

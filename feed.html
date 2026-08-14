@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
+    <script src="js/bible-service.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -515,7 +516,7 @@
                     </div>
                     
                     <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border mb-3 ${badgeClass}">${escapeHTML(rawCategory)}</span>
-                    <div class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${escapeHTML(post.content)}</div>
+                    <div class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${linkifyBibleReferences(escapeHTML(post.content))}</div>
                     
                     ${post.bible_link ? `<div class="mb-3"><a href="${escapeHTML(post.bible_link)}" target="_blank" class="text-blue-600 hover:text-blue-700 font-bold text-sm inline-flex items-center gap-1">📖 Read Scripture</a></div>` : ''}
                     

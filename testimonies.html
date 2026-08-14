@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
+    <script src="js/bible-service.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -248,7 +249,7 @@
                             <span class="text-xs text-gray-400 font-medium">${formattedDate}</span>
                         </div>
                         <h3 class="text-lg font-bold text-gray-900">${escapeHTML(testimonyTitle)}</h3>
-                        <p class="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">${escapeHTML(t.content)}</p>
+                        <p class="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">${linkifyBibleReferences(escapeHTML(t.content))}</p>
                     </div>
 
                     <!-- Replies Section -->

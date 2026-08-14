@@ -445,19 +445,30 @@
                     .getPublicUrl(filePath);
 
                 // Insert into worship_songs table
-                const { error: dbError } = await window.sbClient.from('worship_songs').insert([{
+                const insertPayload = {
                     title: titleInput.value.trim(),
                     artist: artistInput.value.trim(),
-                    audio_url: publicUrl,
-                    church_id: currentUserProfile?.church_id || null
-                }]);
+                    audio_url: publicUrl
+                };
+                if (currentUserProfile && currentUserProfile.church_id) {
+                    insertPayload.church_id = currentUserProfile.church_id;
+                } else {
+                    insertPayload.church_id = null;
+                }
+
+                const { error: dbError } = await window.sbClient.from('worship_songs').insert([insertPayload]);
 
                 if (dbError) throw dbError;
 
                 showNotification("Worship song uploaded and published successfully!", "success");
                 e.target.reset();
             } catch (err) {
-                showNotification("Error: " + err.message, "error");
+                console.error("Music upload error:", err);
+                let errorMessage = err.message || "Failed to upload song.";
+                if (errorMessage.toLowerCase().includes('column') || errorMessage.toLowerCase().includes('schema') || errorMessage.toLowerCase().includes('does not exist')) {
+                    errorMessage = "Database table column mismatch detected: " + errorMessage;
+                }
+                showNotification(errorMessage, "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
