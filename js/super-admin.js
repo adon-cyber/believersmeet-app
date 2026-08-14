@@ -285,7 +285,7 @@ function renderUsersTable(users) {
         if (user.church_id && churchData) {
             const trialEnd = churchData.trial_ends_at ? new Date(churchData.trial_ends_at) : null;
             const isTrialActive = trialEnd && trialEnd > new Date();
-            const trialFormatted = trialEnd ? trialEnd.toLocaleDateString() : 'Not Set';
+            const trialFormatted = trialEnd ? trialEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not Set';
             
             trialHtml = `
                 <div class="mt-1 text-xs flex items-center gap-1">

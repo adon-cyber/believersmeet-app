@@ -45,6 +45,8 @@
             <p class="text-sm text-slate-300 mt-1">Manage weekly programmes, view congregation members, and update church coordinates.</p>
         </div>
 
+        <div id="trial-banner-container" class="mb-6"></div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column: Add Programme & Update Location -->
             <div class="space-y-8 lg:col-span-1">
@@ -187,6 +189,28 @@
             if (church) {
                 if (church.latitude) document.getElementById('lat').value = church.latitude;
                 if (church.longitude) document.getElementById('lng').value = church.longitude;
+
+                // Render trial banner
+                const trialBannerContainer = document.getElementById('trial-banner-container');
+                if (trialBannerContainer && church.trial_ends_at) {
+                    const trialEnd = new Date(church.trial_ends_at);
+                    const formattedExpiry = trialEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    const now = new Date();
+                    const diffTime = trialEnd.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let bannerClasses = "bg-blue-50 border-l-4 border-blue-500 p-3 text-xs text-blue-700 flex justify-between items-center my-2 rounded shadow-sm";
+                    if (diffDays <= 30) {
+                        bannerClasses = "bg-yellow-50 border-l-4 border-yellow-500 p-3 text-xs text-yellow-800 flex justify-between items-center my-2 rounded shadow-sm";
+                    }
+
+                    trialBannerContainer.innerHTML = `
+                        <div id="trial-info-banner" class="${bannerClasses}">
+                            <span><strong>6-Month Free Trial:</strong> Expires on <span id="church-trial-expiry" class="font-bold underline">${formattedExpiry}</span> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</span>
+                        </div>
+                    `;
+                }
             }
         }
 
