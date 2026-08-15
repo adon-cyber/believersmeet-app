@@ -361,6 +361,23 @@
             return;
         }
 
+        // Get current logged-in user's ID
+        let userRegisteredEventIds = [];
+        try {
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (user) {
+                const { data: regs, error: regError } = await window.sbClient
+                    .from('event_registrations')
+                    .select('event_id')
+                    .eq('profile_id', user.id);
+                if (!regError && regs) {
+                    userRegisteredEventIds = regs.map(r => r.event_id);
+                }
+            }
+        } catch (e) {
+            console.error('Error fetching user registrations:', e);
+        }
+
         // Filter events based on logged-in user's church_id against host_church_id (or church_id) and invited_church_ids array.
         // Super admins or users without a church can see all events, or filter as appropriate.
         const userChurchId = currentUserProfile?.church_id;
@@ -379,7 +396,11 @@
             return !hostId || hostId === '';
         });
 
-        allEvents = filteredEvents;
+        // Attach userRegisteredEventIds to events or store globally/locally for rendering
+        allEvents = filteredEvents.map(evt => ({
+            ...evt,
+            is_user_registered: userRegisteredEventIds.includes(evt.id)
+        }));
         renderFilteredEvents();
     }
 
@@ -477,9 +498,7 @@
         }
 
         container.innerHTML = filtered.map(evt => {
-            const regs = evt.event_registrations || [];
-            const rsvpCount = regs.length;
-            const hasRsvp = regs.some(r => r.profile_id === loggedInUser.id);
+            const isRegistered = evt.is_user_registered;
             const category = evt.category || 'Fellowship';
             const imageUrl = evt.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80';
             const eventDate = new Date(evt.event_date);
@@ -487,13 +506,20 @@
             const dayStr = eventDate.getDate();
 
             return `
-                <div class="event-card bg-slate-900 border border-slate-800 p-4 rounded shadow" data-event-id="${evt.id}">
-                    <h3 class="text-lg font-bold text-white">${escapeHtml(evt.title)}</h3>
-                    <p class="text-slate-400 mb-4">Date: ${eventDate.toLocaleString()}</p>
-                    
-                    <!-- ATTENDANCE BUTTONS -->
-                    <button class="register-btn bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition mt-2 ${hasRsvp ? 'hidden' : ''}" onclick="window.toggleAttendance('${evt.id}', 'registered')">Register</button>
-                    <button class="optout-btn bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded transition mt-2 ${hasRsvp ? '' : 'hidden'}" onclick="window.toggleAttendance('${evt.id}', 'opted_out')">Opt Out</button>
+                <div class="event-card bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col" data-event-id="${evt.id}">
+                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(evt.title)}" class="w-full h-48 object-cover rounded-t-lg">
+                    <div class="p-4 flex flex-col flex-1">
+                        <h3 class="text-lg font-bold text-white">${escapeHtml(evt.title)}</h3>
+                        <p class="text-slate-400 mb-4 text-sm">Date: ${eventDate.toLocaleString()}</p>
+                        
+                        <!-- ATTENDANCE BUTTONS -->
+                        <div class="mt-auto">
+                            ${isRegistered 
+                                ? `<button disabled class="bg-gray-500 cursor-not-allowed text-white px-4 py-2 rounded transition mt-2 w-full">Registered</button>`
+                                : `<button class="register-btn bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition mt-2 w-full" onclick="window.toggleAttendance('${evt.id}', 'registered')">Register</button>`
+                            }
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');

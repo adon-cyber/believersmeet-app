@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Counseling Requests | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="display: none;" class="min-h-screen flex flex-col font-sans text-slate-100 bg-slate-950 antialiased">
+
+<!-- Navigation Bar -->
+<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <a href="admin.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet Admin</a>
+            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
+                <a href="admin.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Dashboard</a>
+                <a href="admin-events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                <a href="admin-bulletins.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Bulletins</a>
+                <a href="admin-counseling.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Counseling</a>
+                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #bfdbfe !important;">Exit to App</a>
+                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full space-y-6">
+    
+    <!-- Banner -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Counseling Appointment Requests</h1>
+            <p class="text-blue-100 mt-1 text-sm sm:text-base">Review, approve, or reschedule member counseling requests with the pastor.</p>
+        </div>
+        <div class="flex gap-2">
+            <span class="px-4 py-2 bg-white bg-opacity-20 backdrop-blur rounded-xl text-sm font-bold border border-white border-opacity-30">
+                🛡️ Admin Portal
+            </span>
+        </div>
+    </div>
+
+    <!-- Requests Table / Grid Section -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <span>📋</span> All Member Requests
+            </h2>
+            <button onclick="loadAdminAppointments()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <div id="admin-appointments-container" class="overflow-x-auto">
+            <div class="text-center py-8 text-slate-400 text-sm">Loading appointment requests...</div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-400">
+    &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
+  </div>
+</footer>
+
+<script>
+    let loggedInUser = null;
+
+    async function initAdminCounseling() {
+        let attempts = 0;
+        while (!window.sbClient && attempts < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
+        if (!window.sbClient) {
+            alert("Failed to initialize Supabase client.");
+            return;
+        }
+
+        const { data: { user } } = await window.sbClient.auth.getUser();
+        if (!user) {
+            window.location.replace('login.html');
+            return;
+        }
+        loggedInUser = user;
+
+        const { data: profile } = await window.sbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+            alert("Unauthorized: Administrator access required.");
+            window.location.replace('feed.html');
+            return;
+        }
+
+        loadAdminAppointments();
+    }
+
+    async function loadAdminAppointments() {
+        const container = document.getElementById('admin-appointments-container');
+        if (!container) return;
+
+        container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">Loading requests...</div>';
+
+        const { data, error } = await window.sbClient
+            .from('counseling_appointments')
+            .select('*')
+            .order('appointment_date', { ascending: true });
+
+        if (error) {
+            container.innerHTML = `<div class="bg-red-950 text-red-200 p-4 rounded-xl text-center text-sm font-medium border border-red-800">Error loading appointments: ${escapeHtml(error.message)}</div>`;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div class="bg-slate-800 p-8 rounded-xl text-center text-slate-400 text-sm">No counseling requests found.</div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                        <th class="p-3">Member</th>
+                        <th class="p-3">Date & Time</th>
+                        <th class="p-3">Reason / Topic</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 text-sm">
+                    ${data.map(app => {
+                        const statusColor = app.status === 'Approved' ? 'bg-emerald-500 text-white' : app.status === 'Declined' ? 'bg-red-500 text-white' : 'bg-amber-500 text-slate-950 font-bold';
+                        return `
+                            <tr class="hover:bg-slate-800 transition">
+                                <td class="p-3 align-top">
+                                    <div class="font-bold text-white">${escapeHtml(app.member_name)}</div>
+                                    <div class="text-xs text-slate-400">${escapeHtml(app.member_email)}</div>
+                                </td>
+                                <td class="p-3 align-top whitespace-nowrap">
+                                    <div class="font-medium text-white">${escapeHtml(app.appointment_date)}</div>
+                                    <div class="text-xs text-slate-400">${escapeHtml(app.appointment_time)}</div>
+                                </td>
+                                <td class="p-3 align-top max-w-xs text-slate-300">
+                                    <p class="truncate">${escapeHtml(app.reason)}</p>
+                                </td>
+                                <td class="p-3 align-top whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-full text-xs ${statusColor}">${escapeHtml(app.status)}</span>
+                                </td>
+                                <td class="p-3 align-top text-right whitespace-nowrap space-x-2">
+                                    <button onclick="updateStatus('${app.id}', 'Approved')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow">Approve</button>
+                                    <button onclick="updateStatus('${app.id}', 'Declined')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow">Decline</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    async function updateStatus(id, newStatus) {
+        const { error } = await window.sbClient
+            .from('counseling_appointments')
+            .update({ status: newStatus })
+            .eq('id', id);
+
+        if (error) {
+            alert("Failed to update status: " + error.message);
+        } else {
+            alert(`Appointment status updated to ${newStatus}.`);
+            loadAdminAppointments();
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    }
+
+    initAdminCounseling();
+</script>
+<script src="js/notifications.js"></script>
+</body>
+</html>
