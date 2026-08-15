@@ -1918,10 +1918,7 @@
 
             const { data, error } = await window.sbClient
                 .from('business_directory')
-                .select(`
-                    *,
-                    profiles:user_id (full_name, email)
-                `)
+                .select('*')
                 .eq('church_id', churchId)
                 .eq('is_approved', false)
                 .order('created_at', { ascending: false });
@@ -1949,7 +1946,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-800 text-sm">
                         ${data.map(b => {
-                            const ownerName = b.profiles?.full_name || b.profiles?.email || 'Church Member';
+                            const ownerName = b.user_id ? 'Church Member' : 'Church Member';
                             return `
                                 <tr id="biz-row-${b.id}" class="hover:bg-slate-800/50 transition">
                                     <td class="p-3 align-top">
