@@ -115,6 +115,13 @@
 
         <form id="donation-form" onsubmit="handleProceedToGive(event)" class="space-y-6">
             <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Select Church</label>
+                <select id="giving-church-select" onchange="onChurchSelectionChange(this.value)" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-medium" required>
+                    <option value="">Loading churches...</option>
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">Select Giving Category</label>
                 <select id="giving-category" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-medium">
                     <option value="Tithes">Tithes</option>
@@ -424,7 +431,43 @@
         }
 
         await fetchGivingSettings();
+        await loadChurchesDropdown(profile?.church_id);
         await checkPesapalCallback();
+    }
+
+    async function loadChurchesDropdown(selectedChurchId) {
+        try {
+            const { data: churches, error } = await window.sbClient
+                .from('churches')
+                .select('id, name')
+                .order('name', { ascending: true });
+
+            const selectEl = document.getElementById('giving-church-select');
+            if (!selectEl) return;
+
+            if (error || !churches || churches.length === 0) {
+                selectEl.innerHTML = '<option value="">No churches available</option>';
+                return;
+            }
+
+            selectEl.innerHTML = '<option value="">Select a church</option>';
+            churches.forEach(church => {
+                const opt = document.createElement('option');
+                opt.value = church.id;
+                opt.textContent = church.name;
+                if (church.id === selectedChurchId) {
+                    opt.selected = true;
+                }
+                selectEl.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Error loading churches dropdown:", err);
+        }
+    }
+
+    function onChurchSelectionChange(churchId) {
+        // Can be used if giving details change per church
+        console.log("Active church context changed to:", churchId);
     }
 
     function selectPresetAmount(amount, btnElement) {
@@ -473,6 +516,12 @@
             const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
             const transactionReference = `BM-GIVE-${timestamp}-${randomStr}`;
 
+            // Retrieve church_id dynamically from the active church selection on the page
+            const selectedChurchId = document.getElementById('giving-church-select')?.value;
+            if (!selectedChurchId) {
+                throw new Error("Please select a church before proceeding with your donation.");
+            }
+
             // 2. Make POST request to our new /api/pesapal-checkout route
             const response = await fetch('/api/pesapal-checkout', {
                 method: 'POST',
@@ -482,9 +531,10 @@
                 },
                 body: JSON.stringify({
                     amount: finalAmount,
-                    currency: 'KES', // Default or configurable currency
+                    currency: 'KES',
                     email: loggedInUser.email || 'donor@believersmeet.com',
                     userId: loggedInUser.id,
+                    church_id: selectedChurchId,
                     description: `BelieversMeet Giving - ${category}`
                 })
             });

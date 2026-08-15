@@ -91,6 +91,31 @@
                         <p id="gps-status" class="text-xs text-slate-400 text-center mt-2"></p>
                     </div>
                 </div>
+
+                <!-- Pesapal Payment Settings Card -->
+                <div class="bg-slate-900 border border-slate-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                        <span class="mr-2">💳</span> Pesapal Payment Setup
+                    </h3>
+                    <form id="pesapal-settings-form" onsubmit="savePesapalSettings(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Pesapal Consumer Key</label>
+                            <input type="text" id="pesapal-key" placeholder="Enter Consumer Key" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Pesapal Consumer Secret</label>
+                            <input type="password" id="pesapal-secret" placeholder="Enter Consumer Secret" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Environment Mode</label>
+                            <select id="pesapal-env" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="sandbox">Sandbox (Testing - cybqa.pesapal.com)</option>
+                                <option value="live">Live (Production - pay.pesapal.com)</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="save-pesapal-btn" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition">Save Pesapal Settings</button>
+                    </form>
+                </div>
             </div>
 
             <!-- Right Column: Members List & Programmes List -->
@@ -216,6 +241,10 @@
             if (church) {
                 if (church.latitude) document.getElementById('lat').value = church.latitude;
                 if (church.longitude) document.getElementById('lng').value = church.longitude;
+
+                if (church.pesapal_consumer_key) document.getElementById('pesapal-key').value = church.pesapal_consumer_key;
+                if (church.pesapal_consumer_secret) document.getElementById('pesapal-secret').value = church.pesapal_consumer_secret;
+                if (church.pesapal_env) document.getElementById('pesapal-env').value = church.pesapal_env;
 
                 // Render trial banner
                 const trialBannerContainer = document.getElementById('trial-banner-container');
