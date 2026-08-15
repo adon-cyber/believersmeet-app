@@ -16,21 +16,31 @@
     <!-- Navigation Header -->
     <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-3 shrink-0">
                 <a href="index.html" class="flex items-center space-x-2">
                     <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
                     <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
                 </a>
             </div>
+            <!-- Desktop Navigation Links -->
             <nav class="hidden md:flex items-center space-x-6">
-                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition">Feed</a>
-                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition">Events</a>
-                <a href="sermons.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition">Sermons & Media</a>
-                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition">Giving</a>
-                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition">Groups</a>
-                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden">Admin Console</a>
+                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
+                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+                <a href="sermons.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap">Sermons & Media</a>
+                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
+                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
             </nav>
-            <div class="flex items-center space-x-3">
+            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
+                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+                <a href="sermons.html" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0">Sermons & Media</a>
+                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
+                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
                 <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
                     <i class="fas fa-user"></i>
                 </a>
@@ -58,28 +68,22 @@
         </div>
 
         <!-- Filter Controls: Church Scope & Media Category Tabs -->
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-            <!-- Church Scope Tabs -->
-            <div class="flex border border-gray-100 bg-gray-50 rounded-xl p-1 w-full sm:w-auto">
-                <button id="tab-fellow-members" onclick="switchScopeTab('fellow')" class="flex-1 sm:flex-none px-5 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white text-blue-600 shadow-sm transition flex items-center justify-center gap-2">
-                    <i class="fas fa-church"></i> Fellow Church Members
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 w-full bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+            <!-- Left Tabs: Scrollable or stacked -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <button id="tab-fellow-members" onclick="switchScopeTab('fellow')" class="whitespace-nowrap flex-1 sm:flex-none px-5 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2">
+                    <i class="fas fa-church"></i>Fellow Church Members
                 </button>
-                <button id="tab-other-churches" onclick="switchScopeTab('other')" class="flex-1 sm:flex-none px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-globe"></i> Other Churches
+                <button id="tab-other-churches" onclick="switchScopeTab('other')" class="whitespace-nowrap flex-1 sm:flex-none px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-50 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-globe"></i>Other Churches
                 </button>
             </div>
 
-            <!-- Media Category Filter Tabs -->
-            <div class="flex border border-gray-100 bg-gray-50 rounded-xl p-1 w-full sm:w-auto overflow-x-auto">
-                <button id="cat-tab-all" onclick="switchCategoryTab('All')" class="px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition">
-                    All Media
-                </button>
-                <button id="cat-tab-sermon" onclick="switchCategoryTab('Sermon')" class="px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition">
-                    Sermons
-                </button>
-                <button id="cat-tab-gospel" onclick="switchCategoryTab('Gospel Song')" class="px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition">
-                    Gospel Songs
-                </button>
+            <!-- Right Filter Buttons -->
+            <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <button id="cat-tab-all" onclick="switchCategoryTab('All')" class="whitespace-nowrap px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition">All Media</button>
+                <button id="cat-tab-sermon" onclick="switchCategoryTab('Sermon')" class="whitespace-nowrap px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition">Sermons</button>
+                <button id="cat-tab-gospel" onclick="switchCategoryTab('Gospel Song')" class="whitespace-nowrap px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition">Gospel Songs</button>
             </div>
         </div>
 
@@ -152,6 +156,7 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/supabase.js"></script>
     <script>
@@ -217,11 +222,11 @@
             const otherBtn = document.getElementById('tab-other-churches');
 
             if (tab === 'fellow') {
-                fellowBtn.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white text-blue-600 shadow-sm transition flex items-center justify-center gap-2";
-                otherBtn.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition flex items-center justify-center gap-2";
+                fellowBtn.className = "whitespace-nowrap flex-1 sm:flex-none px-5 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2";
+                otherBtn.className = "whitespace-nowrap flex-1 sm:flex-none px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-50 transition flex items-center justify-center gap-2";
             } else {
-                otherBtn.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg font-bold text-xs sm:text-sm bg-white text-blue-600 shadow-sm transition flex items-center justify-center gap-2";
-                fellowBtn.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition flex items-center justify-center gap-2";
+                otherBtn.className = "whitespace-nowrap flex-1 sm:flex-none px-5 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2";
+                fellowBtn.className = "whitespace-nowrap flex-1 sm:flex-none px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-50 transition flex items-center justify-center gap-2";
             }
 
             renderMediaCards();
@@ -234,15 +239,15 @@
             const gospelBtn = document.getElementById('cat-tab-gospel');
 
             [allBtn, sermonBtn, gospelBtn].forEach(btn => {
-                btn.className = "px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition";
+                btn.className = "whitespace-nowrap px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition";
             });
 
             if (category === 'All') {
-                allBtn.className = "px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition";
+                allBtn.className = "whitespace-nowrap px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition";
             } else if (category === 'Sermon') {
-                sermonBtn.className = "px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition";
+                sermonBtn.className = "whitespace-nowrap px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition";
             } else if (category === 'Gospel Song') {
-                gospelBtn.className = "px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition";
+                gospelBtn.className = "whitespace-nowrap px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition";
             }
 
             renderMediaCards();
