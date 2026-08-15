@@ -549,6 +549,12 @@
             if (error) {
                 alert("Failed to send message: " + error.message);
             } else {
+                // Trigger notification for recipient
+                if (typeof window.sendNotification === 'function') {
+                    const senderName = currentUser.user_metadata?.full_name || currentUser.email || 'Someone';
+                    await window.sendNotification(targetUser.id, 'New Direct Message', `${senderName}: ${content.substring(0, 50)}...`);
+                }
+
                 const container = document.getElementById('messages-container');
                 if (container.querySelector('.text-center')) {
                     container.innerHTML = '';

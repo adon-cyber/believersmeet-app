@@ -1264,6 +1264,12 @@
         }
 
         async function updateCounselingStatus(id, newStatus) {
+            const { data: appData, error: fetchErr } = await window.sbClient
+                .from('counseling_appointments')
+                .select('*')
+                .eq('id', id)
+                .single();
+
             const { error } = await window.sbClient
                 .from('counseling_appointments')
                 .update({ status: newStatus })
@@ -1273,6 +1279,13 @@
                 showNotification("Failed to update status: " + error.message, "error");
             } else {
                 showNotification(`Appointment status updated to ${newStatus}.`, "success");
+
+                if (appData && appData.user_id && typeof window.sendNotification === 'function') {
+                    const title = `Counseling Request ${newStatus}`;
+                    const message = `Your counseling appointment request for ${appData.appointment_date || 'scheduled date'} has been ${newStatus.toLowerCase()}.`;
+                    await window.sendNotification(appData.user_id, title, message);
+                }
+
                 loadAdminAppointments();
             }
         }

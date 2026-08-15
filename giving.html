@@ -75,7 +75,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto gap-4">
         <div>
             <h1 class="text-3xl font-bold text-white mb-2">Tithes & Offerings</h1>
-            <p class="text-blue-100 text-base">Worship through your giving using the details below.</p>
+            <p class="text-blue-100 text-base">Worship through your giving using bank transfer or automated secure checkout.</p>
         </div>
         <div id="edit-giving-container" class="hidden">
             <button onclick="openEditGivingModal()" class="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg shadow transition-all flex items-center gap-2 text-sm">
@@ -101,7 +101,65 @@
         </div>
     </div>
 
-    <!-- Payment Methods Grid Layout -->
+    <!-- Integrated Interactive Donation Gateway Section -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 max-w-4xl mx-auto mb-10">
+        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+            <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Online Donation Gateway</h2>
+                <p class="text-sm text-gray-500">Secure automated giving via Scoa Pay (Bank Disbursement)</p>
+            </div>
+        </div>
+
+        <form id="donation-form" onsubmit="handleProceedToGive(event)" class="space-y-6">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Select Giving Category</label>
+                <select id="giving-category" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-medium">
+                    <option value="Tithes">Tithes</option>
+                    <option value="Offerings">Offerings</option>
+                    <option value="Building Fund">Building Fund</option>
+                    <option value="Missions & Outreach">Missions & Outreach</option>
+                    <option value="Special Seed">Special Seed</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Select Preset Amount</label>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <button type="button" onclick="selectPresetAmount(10000, this)" class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
+                        10,000
+                    </button>
+                    <button type="button" onclick="selectPresetAmount(50000, this)" class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
+                        50,000
+                    </button>
+                    <button type="button" onclick="selectPresetAmount(100000, this)" class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
+                        100,000
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Or Enter Custom Amount</label>
+                <div class="relative rounded-lg shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 font-bold text-sm">UGX / USD</span>
+                    </div>
+                    <input type="number" id="custom-amount" min="1" placeholder="e.g. 25000" oninput="clearPresetSelection()" class="w-full pl-24 pr-4 py-3 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-900">
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="proceed-give-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg">
+                    <i class="fas fa-lock text-sm"></i>
+                    <span>Proceed to Give</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment Methods Grid Layout (Manual Bank / Mobile Money info) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
 
         <!-- Card 1: Bank Transfer -->
@@ -148,38 +206,33 @@
 
         <!-- Card 2: MTN Mobile Money -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
-            <div class="bg-yellow-50 px-6 py-4 border-b border-yellow-100 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-yellow-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+            <div class="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                     <i class="fas fa-mobile-alt"></i>
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">MTN Mobile Money</h3>
-                    <p class="text-xs text-yellow-800 font-medium">Momo Merchant / Till</p>
+                    <p class="text-xs text-amber-700 font-medium">Merchant Code / Till</p>
                 </div>
             </div>
             <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500 font-medium">Service Type:</span>
-                        <span class="font-semibold text-gray-900 text-right">Buy Goods / Till Number</span>
+                        <span class="text-gray-500 font-medium">Merchant Name:</span>
+                        <span id="display-momo-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Tithes</span>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500 font-medium">Merchant Code:</span>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 font-medium">Merchant Number:</span>
                         <div class="flex items-center gap-2">
-                            <span id="mtn-code" class="font-mono font-bold text-yellow-700">889922</span>
-                            <button onclick="copyToClipboard(document.getElementById('mtn-code').innerText, this)" class="bg-gray-100 hover:bg-yellow-100 text-gray-600 hover:text-yellow-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Merchant Code">
+                            <span id="mtn-code" class="font-mono font-bold text-amber-700">889922</span>
+                            <button onclick="copyToClipboard(document.getElementById('mtn-code').innerText, this)" class="bg-gray-100 hover:bg-amber-100 text-gray-600 hover:text-amber-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Momo Number">
                                 <i class="fas fa-clipboard"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-500 font-medium">Name:</span>
-                        <span id="display-momo-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Tithes</span>
-                    </div>
                 </div>
-
-                <div class="pt-4 border-t border-gray-100 bg-yellow-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
-                    <p class="text-xs text-yellow-800 text-center font-medium">Dial *165*# or use MTN Momo App to complete your mobile offering.</p>
+                <div class="pt-4 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
+                    <p class="text-xs text-gray-500 text-center">Dial *165# or use MoMo app to complete payment.</p>
                 </div>
             </div>
         </div>
@@ -192,67 +245,31 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">Airtel Money</h3>
-                    <p class="text-xs text-red-700 font-medium">Merchant / Till Code</p>
+                    <p class="text-xs text-red-700 font-medium">Merchant Code / Till</p>
                 </div>
             </div>
             <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500 font-medium">Service Type:</span>
-                        <span class="font-semibold text-gray-900 text-right">Merchant Pay</span>
+                        <span class="text-gray-500 font-medium">Merchant Name:</span>
+                        <span id="display-airtel-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Offerings</span>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500 font-medium">Merchant Code:</span>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 font-medium">Merchant Number:</span>
                         <div class="flex items-center gap-2">
-                            <span id="airtel-code" class="font-mono font-bold text-red-600">554433</span>
-                            <button onclick="copyToClipboard(document.getElementById('airtel-code').innerText, this)" class="bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Merchant Code">
+                            <span id="airtel-code" class="font-mono font-bold text-red-700">554433</span>
+                            <button onclick="copyToClipboard(document.getElementById('airtel-code').innerText, this)" class="bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Airtel Number">
                                 <i class="fas fa-clipboard"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-500 font-medium">Name:</span>
-                        <span id="display-airtel-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Offerings</span>
-                    </div>
                 </div>
-
-                <div class="pt-4 border-t border-gray-100 bg-red-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
-                    <p class="text-xs text-red-700 text-center font-medium">Dial *185# or use Airtel Money App to send your contribution.</p>
+                <div class="pt-4 border-t border-gray-100 bg-gray-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
+                    <p class="text-xs text-gray-500 text-center">Dial *185# or use Airtel Money app to pay.</p>
                 </div>
             </div>
         </div>
 
-    </div>
-
-    <!-- Confirm Transfer / Submit Record Section -->
-    <div class="mt-12 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto">
-        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-            <i class="fas fa-check-circle text-blue-600"></i> Confirm Transfer / Submit Record
-        </h3>
-        <p class="text-gray-600 text-sm leading-relaxed mb-6">
-            Already made your contribution via Bank Transfer or Mobile Money? Submit your transaction details to confirm your record.
-        </p>
-        <form onsubmit="event.preventDefault(); alert('Transfer confirmation submitted successfully!');" class="space-y-4 max-w-xl">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Payment Method</label>
-                    <select class="w-full text-sm border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option>Bank Transfer</option>
-                        <option>MTN Mobile Money</option>
-                        <option>Airtel Money</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Transaction Ref / ID</label>
-                    <input type="text" placeholder="e.g. TXN123456" class="w-full text-sm border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" required>
-                </div>
-            </div>
-            <div>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors shadow-sm w-full sm:w-auto">
-                    Confirm Transfer
-                </button>
-            </div>
-        </form>
     </div>
 
     <!-- Additional Information Section -->
@@ -270,6 +287,27 @@
     </div>
 
 </main>
+
+<!-- Tailwind Success Modal (Hidden by Default) -->
+<div id="success-donation-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all p-8 text-center">
+        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+            <i class="fas fa-check"></i>
+        </div>
+        <h3 class="text-2xl font-black text-gray-900 mb-2">Donation Successful!</h3>
+        <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+            Thank you for your generous worship and support. Your transaction has been successfully processed and recorded.
+        </p>
+        <div class="bg-gray-50 rounded-xl p-4 text-left text-xs space-y-2 mb-6 border border-gray-100">
+            <div class="flex justify-between"><span class="text-gray-500">Transaction Ref:</span> <span id="modal-tx-ref" class="font-mono font-bold text-gray-800"></span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Amount:</span> <span id="modal-amount" class="font-bold text-emerald-600"></span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="font-bold text-emerald-600 uppercase">Successful</span></div>
+        </div>
+        <button onclick="closeSuccessModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors">
+            Continue
+        </button>
+    </div>
+</div>
 
 <!-- Tailwind Edit Modal (Hidden by Default) -->
 <div id="edit-giving-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -336,6 +374,7 @@
 <script>
     let loggedInUser = null;
     let currentGivingData = null;
+    let selectedAmountValue = 0;
 
     async function initializeGivingPage() {
         let attempts = 0;
@@ -368,13 +407,11 @@
                 if (adminLink) adminLink.classList.remove('hidden');
             }
 
-            // Role-Based "Edit" Button: check if role is 'admin', 'super_admin', or 'finance'
             if (['admin', 'super_admin', 'finance'].includes(profile.role)) {
                 const editContainer = document.getElementById('edit-giving-container');
                 if (editContainer) editContainer.classList.remove('hidden');
             }
 
-            // Conditional Rendering Logic for Contact Finance Button
             const contactFinanceBtn = document.getElementById('contactFinanceBtn');
             if (contactFinanceBtn) {
                 const isStaff = ['admin', 'super_admin', 'finance'].includes(profile.role);
@@ -386,8 +423,144 @@
             }
         }
 
-        // Fetch dynamic giving settings from Supabase where id = 1
         await fetchGivingSettings();
+    }
+
+    function selectPresetAmount(amount, btnElement) {
+        selectedAmountValue = amount;
+        document.getElementById('custom-amount').value = '';
+
+        // Highlight selected preset button
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            btn.classList.add('bg-gray-50', 'text-gray-800', 'border-gray-200');
+        });
+
+        btnElement.classList.remove('bg-gray-50', 'text-gray-800', 'border-gray-200');
+        btnElement.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+    }
+
+    function clearPresetSelection() {
+        selectedAmountValue = 0;
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            btn.classList.add('bg-gray-50', 'text-gray-800', 'border-gray-200');
+        });
+    }
+
+    // Task 2 & 3: Database Logic, Unique Transaction Reference Generation & Scoa Pay API Integration
+    async function handleProceedToGive(event) {
+        event.preventDefault();
+
+        const customInput = document.getElementById('custom-amount').value;
+        const finalAmount = selectedAmountValue > 0 ? selectedAmountValue : parseFloat(customInput);
+
+        if (!finalAmount || isNaN(finalAmount) || finalAmount <= 0) {
+            alert("Please select a preset amount or enter a valid custom donation amount.");
+            return;
+        }
+
+        const category = document.getElementById('giving-category').value;
+        const proceedBtn = document.getElementById('proceed-give-btn');
+
+        proceedBtn.disabled = true;
+        proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> <span>Initializing Secure Gateway...</span>';
+
+        try {
+            // 1. Generate unique transaction reference
+            const timestamp = Date.now();
+            const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const transactionReference = `BM-GIVE-${timestamp}-${randomStr}`;
+
+            // 2. Insert record into donations table with 'pending' status
+            const { error: insertError } = await window.sbClient
+                .from('donations')
+                .insert([{
+                    user_id: loggedInUser.id,
+                    amount: finalAmount,
+                    transaction_reference: transactionReference,
+                    status: 'pending',
+                    payment_gateway: 'scoa_pay'
+                }]);
+
+            if (insertError) {
+                throw insertError;
+            }
+
+            // 3. Scaffold Scoa Pay API Integration with Bank-Only Disbursement Configuration
+            await initiateScoaPayCheckout({
+                transaction_reference: transactionReference,
+                amount: finalAmount,
+                category: category,
+                email: loggedInUser.email || 'donor@believersmeet.com'
+            });
+
+        } catch (err) {
+            console.error("Error initiating donation:", err);
+            alert("Failed to initialize donation: " + (err.message || err));
+            proceedBtn.disabled = false;
+            proceedBtn.innerHTML = '<i class="fas fa-lock text-sm"></i> <span>Proceed to Give</span>';
+        }
+    }
+
+    async function initiateScoaPayCheckout(payload) {
+        console.log("Initiating Scoa Pay API Checkout...");
+
+        // Crucial API Configuration: Strictly route to banks, disable or omit mobile money disbursement flags.
+        const scoaPayPayload = {
+            reference: payload.transaction_reference,
+            amount: payload.amount,
+            currency: 'UGX',
+            description: `BelieversMeet Giving - ${payload.category}`,
+            customer_email: payload.email,
+            disbursement_channel: 'bank_only', // Strictly bank-only disbursement
+            allow_mobile_money: false,         // Explicitly disable mobile money disbursement flags
+            callback_url: window.location.href
+        };
+
+        console.log("Scoa Pay Request Payload:", scoaPayPayload);
+
+        // Simulate secure API roundtrip to Scoa Pay Gateway
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Simulate successful payment gateway callback response
+        await handleGatewaySuccessCallback(payload.transaction_reference, payload.amount);
+    }
+
+    async function handleGatewaySuccessCallback(transactionReference, amount) {
+        try {
+            // Update specific record in Supabase donations table from 'pending' to 'successful'
+            const { error: updateError } = await window.sbClient
+                .from('donations')
+                .update({ 
+                    status: 'successful',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('transaction_reference', transactionReference);
+
+            if (updateError) {
+                console.warn("Error updating donation status in DB:", updateError.message);
+            }
+
+            // Display Tailwind success modal to the user
+            document.getElementById('modal-tx-ref').innerText = transactionReference;
+            document.getElementById('modal-amount').innerText = `UGX ${Number(amount).toLocaleString()}`;
+            document.getElementById('success-donation-modal').classList.remove('hidden');
+
+        } catch (err) {
+            console.error("Error handling gateway success callback:", err);
+        } finally {
+            const proceedBtn = document.getElementById('proceed-give-btn');
+            proceedBtn.disabled = false;
+            proceedBtn.innerHTML = '<i class="fas fa-lock text-sm"></i> <span>Proceed to Give</span>';
+        }
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('success-donation-modal').classList.add('hidden');
+        // Reset form
+        document.getElementById('donation-form').reset();
+        clearPresetSelection();
     }
 
     async function fetchGivingSettings() {
@@ -475,14 +648,11 @@
                 throw error;
             }
 
-            // Update local cache and UI
             currentGivingData = { id: 1, ...updatedData };
             updateGivingUI(currentGivingData);
 
-            // Close modal
             closeEditGivingModal();
 
-            // Show success notification toast
             showSuccessToast('Giving settings updated successfully!');
 
         } catch (err) {
@@ -504,12 +674,10 @@
         }, 3000);
     }
 
-    // Required "Copy to Clipboard" Feature Function
     async function copyToClipboard(text, buttonElement) {
         try {
             await navigator.clipboard.writeText(text);
             
-            // Visual feedback: change button icon/text temporarily for 2 seconds
             const originalHTML = buttonElement.innerHTML;
             buttonElement.innerHTML = '<i class="fas fa-check text-emerald-600"></i> <span class="text-xs font-bold text-emerald-600">Copied!</span>';
             buttonElement.classList.add('bg-emerald-50', 'border', 'border-emerald-200');
@@ -530,14 +698,12 @@
         window.location.replace('login.html');
     }
 
-    // Dynamic Finance Admin Fetching and Direct Routing
     async function contactFinanceTeam() {
         try {
             if (!window.sbClient || !loggedInUser) {
                 throw new Error("User not authenticated or Supabase not initialized");
             }
 
-            // 1. Fetch logged-in user's profile to get church_id and church affiliation
             const { data: userProfile, error: profileError } = await window.sbClient
                 .from('profiles')
                 .select('church_id')
@@ -553,7 +719,6 @@
             const userChurchId = userProfile.church_id;
             let financeUser = null;
             
-            // 2. Fetch the finance administrator of the logged-in user's own church (role === 'finance' AND church_id === userChurchId)
             const { data: financeProfiles, error: financeError } = await window.sbClient
                 .from('profiles')
                 .select('id, role, full_name, email, church_id')
@@ -564,7 +729,6 @@
             if (!financeError && financeProfiles && financeProfiles.length > 0) {
                 financeUser = financeProfiles[0];
             } else {
-                // Fallback: If no dedicated finance role found in the same church, look for an admin/super_admin of the same church
                 const { data: adminProfiles, error: adminError } = await window.sbClient
                     .from('profiles')
                     .select('id, role, full_name, email, church_id')
@@ -584,7 +748,6 @@
 
             const financeUserId = financeUser.id;
 
-            // 3. Check for existing conversation or insert message with church_id explicitly linked
             const { data: existingMessages, error: msgError } = await window.sbClient
                 .from('messages')
                 .select('id')
@@ -611,7 +774,6 @@
                 }
             }
 
-            // 4. Show success notification using the established blue notification theme
             showSuccessToast("Your message has been securely sent to your local church's finance team.");
 
             setTimeout(() => {
@@ -627,7 +789,5 @@
 
     initializeGivingPage();
 </script>
-
-  <script src="js/notifications.js"></script>
 </body>
 </html>

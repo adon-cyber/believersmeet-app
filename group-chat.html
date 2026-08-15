@@ -324,6 +324,25 @@
 
             if (error) {
                 alert("Failed to send message: " + error.message);
+            } else {
+                // Notify group members or fetch group members to notify
+                try {
+                    const { data: members } = await window.sbClient
+                        .from('group_members')
+                        .select('member_id')
+                        .eq('group_id', groupId);
+
+                    if (members && typeof window.sendNotification === 'function') {
+                        const senderName = currentUser.user_metadata?.full_name || currentUser.email || 'Someone';
+                        for (const mem of members) {
+                            if (mem.member_id !== currentUser.id) {
+                                await window.sendNotification(mem.member_id, 'New Group Message', `${senderName}: ${content.substring(0, 50)}...`);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Could not send group notifications:", err);
+                }
             }
         } catch (e) {
             console.error("Error sending group message:", e);
