@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Library | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col font-sans text-slate-100 bg-slate-950">
+    <script src="js/notifications.js"></script>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
+                <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
+                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
+                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
+                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
+                    <a href="documents.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Resource Library</a>
+                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
+                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
+                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
+                    <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
+                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
+                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
+                    <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full space-y-8">
+        
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-8 sm:p-10 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="space-y-2">
+                <span class="text-xs font-extrabold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">Church Archives & Resources</span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Resource Library</h1>
+                <p class="text-blue-100 text-base sm:text-lg max-w-2xl">Access important documents, spiritual guides, church bulletins, and official notices shared by leadership.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="loadDocuments()" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition border border-white/20 flex items-center gap-2 backdrop-blur-md">
+                    <i class="fas fa-sync-alt"></i> Refresh Library
+                </button>
+            </div>
+        </div>
+
+        <!-- Documents Cards Container -->
+        <div id="documents-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-16 text-slate-400">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
+                <p class="text-sm font-medium">Loading resource library documents...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500 space-y-2">
+        <div>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</div>
+      </div>
+    </footer>
+
+    <!-- Script Logic -->
+    <script>
+        function escapeHTML(str) {
+          if (!str) return '';
+          return str.toString().replace(/[&<>'"]/g, function(tag) {
+            const chars = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+            return chars[tag] || tag;
+          });
+        }
+
+        async function initPage() {
+            let attempts = 0;
+            while (!window.sbClient && attempts < 15) { 
+                await new Promise(r => setTimeout(r, 200)); 
+                attempts++; 
+            }
+            if (!window.sbClient) {
+                console.error("Supabase client not initialized.");
+                return;
+            }
+
+            // Check admin role for navbar link
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (user) {
+                const { data: profile } = await window.sbClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin' || profile.role === 'church' || user.email === 'adoniakasango@gmail.com')) {
+                    const adminNav = document.getElementById('admin-nav-link');
+                    if (adminNav) adminNav.classList.remove('hidden');
+                }
+            }
+
+            loadDocuments();
+        }
+
+        async function loadDocuments() {
+            const container = document.getElementById('documents-grid-container');
+            if (!container) return;
+
+            try {
+                const { data: docs, error } = await window.sbClient
+                    .from('important_documents')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!docs || docs.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full bg-slate-900/60 border border-slate-800 rounded-3xl p-12 text-center space-y-3 shadow-xl">
+                            <div class="text-4xl">📁</div>
+                            <h3 class="text-lg font-bold text-slate-200">No Documents Available</h3>
+                            <p class="text-slate-400 text-sm max-w-md mx-auto">There are no important documents published in the resource library yet. Check back later!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = docs.map(doc => {
+                    const dateFormatted = doc.created_at ? new Date(doc.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+                    return `
+                        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-blue-500/50 transition-all group">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                        <i class="fas fa-file-alt"></i> Document
+                                    </span>
+                                    <span class="text-xs text-slate-400 font-medium">${escapeHTML(dateFormatted)}</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors">${escapeHTML(doc.title)}</h3>
+                                <p class="text-sm text-slate-400 line-clamp-3">${escapeHTML(doc.description || 'No description provided.')}</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                                <a href="${doc.file_url}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all">
+                                    <i class="fas fa-download"></i> Download / View File
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error("Error loading resource library documents:", err);
+                container.innerHTML = `
+                    <div class="col-span-full bg-red-950/20 border border-red-500/30 rounded-3xl p-8 text-center text-red-400 text-sm">
+                        Failed to load resource library: ${escapeHTML(err.message)}
+                    </div>
+                `;
+            }
+        }
+
+        initPage();
+    </script>
+</body>
+</html>
