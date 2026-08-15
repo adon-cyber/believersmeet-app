@@ -1978,6 +1978,19 @@
         }
 
         async function approveBusiness(id) {
+            // First fetch the business record to get owner user_id and church_id
+            const { data: businessData, error: fetchErr } = await window.sbClient
+                .from('business_directory')
+                .select('*')
+                .eq('id', id)
+                .maybeSingle();
+
+            if (fetchErr || !businessData) {
+                console.error('Error fetching business details:', fetchErr);
+                showNotification("Failed to fetch business details.", "error");
+                return;
+            }
+
             const { error } = await window.sbClient
                 .from('business_directory')
                 .update({ is_approved: true })
@@ -1989,6 +2002,22 @@
                 return;
             }
 
+            // Send notification to the business owner if user_id exists
+            if (businessData.user_id) {
+                try {
+                    await window.sbClient.from('notifications').insert([{
+                        user_id: businessData.user_id,
+                        church_id: businessData.church_id || activeDashboardChurchId || currentUserProfile?.church_id,
+                        title: 'Business Approved! 🎉',
+                        message: 'Your business has been approved and is now live in the directory.',
+                        type: 'business_approval',
+                        is_read: false
+                    }]);
+                } catch (notifErr) {
+                    console.error('Error sending business approval notification:', notifErr);
+                }
+            }
+
             // Remove item from UI list with success toast
             const row = document.getElementById(`biz-row-${id}`);
             if (row) {
@@ -1997,7 +2026,7 @@
                 setTimeout(() => row.remove(), 300);
             }
 
-            showNotification("Business successfully approved and published to directory!", "success");
+            showNotification("Business approved and user notified!", "success");
 
             // Check if list is now empty
             setTimeout(() => {
