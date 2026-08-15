@@ -241,23 +241,44 @@
             <!-- Upload Song Form Section (Admin Only) -->
             <div id="music-upload-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
                 <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
-                    <i class="fas fa-music text-blue-400"></i> Upload Worship Song
+                    <i class="fas id-badge text-blue-400"></i> Upload Sermons & Worship Media
                 </h3>
                 <form id="music-upload-form" class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Song Title</label>
-                        <input type="text" id="song-title-input" placeholder="Enter song title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Media Title</label>
+                        <input type="text" id="song-title-input" placeholder="Enter title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Artist / Ensemble</label>
-                        <input type="text" id="song-artist-input" placeholder="Enter artist name..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Preacher / Artist</label>
+                        <input type="text" id="song-artist-input" placeholder="Enter preacher or artist name..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Audio File (MP3 / WAV)</label>
-                        <input type="file" id="song-file-input" accept="audio/mp3, audio/wav, audio/mpeg" required class="w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 file:cursor-pointer transition">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Media Type</label>
+                            <select id="media-type-input" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" onchange="toggleMediaInputType()">
+                                <option value="audio">Audio</option>
+                                <option value="video">Video</option>
+                                <option value="youtube">YouTube Link</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Category</label>
+                            <select id="media-category-input" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option value="Sermon">Sermon</option>
+                                <option value="Gospel Song">Gospel Song</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="file-upload-container">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Media File (Audio/Video)</label>
+                        <input type="file" id="song-file-input" accept="audio/*, video/*" class="w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 file:cursor-pointer transition">
+                    </div>
+                    <div id="youtube-url-container" class="hidden">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">YouTube URL</label>
+                        <input type="url" id="youtube-url-input" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <button id="music-upload-btn" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
-                        <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload & Publish Song</span>
+                        <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload & Publish Media</span>
                     </button>
                 </form>
             </div>
@@ -1099,44 +1120,84 @@
             }
         });
 
+        function toggleMediaInputType() {
+            const mediaType = document.getElementById('media-type-input').value;
+            const fileContainer = document.getElementById('file-upload-container');
+            const youtubeContainer = document.getElementById('youtube-url-container');
+            const fileInput = document.getElementById('song-file-input');
+            const youtubeInput = document.getElementById('youtube-url-input');
+
+            if (mediaType === 'youtube') {
+                fileContainer.classList.add('hidden');
+                youtubeContainer.classList.remove('hidden');
+                fileInput.required = false;
+                youtubeInput.required = true;
+            } else {
+                fileContainer.classList.remove('hidden');
+                youtubeContainer.classList.add('hidden');
+                fileInput.required = true;
+                youtubeInput.required = false;
+                if (mediaType === 'audio') {
+                    fileInput.accept = 'audio/*';
+                } else if (mediaType === 'video') {
+                    fileInput.accept = 'video/*';
+                }
+            }
+        }
+
         // --- MUSIC UPLOAD HANDLER ---
         document.getElementById('music-upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('music-upload-btn');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading Song...`;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading Media...`;
 
             try {
                 const titleInput = document.getElementById('song-title-input');
                 const artistInput = document.getElementById('song-artist-input');
+                const mediaTypeInput = document.getElementById('media-type-input');
+                const categoryInput = document.getElementById('media-category-input');
                 const fileInput = document.getElementById('song-file-input');
+                const youtubeInput = document.getElementById('youtube-url-input');
 
-                if (!fileInput.files || fileInput.files.length === 0) {
-                    throw new Error("Please select an audio file to upload.");
+                const mediaType = mediaTypeInput.value;
+                const category = categoryInput.value;
+                let mediaUrl = '';
+
+                if (mediaType === 'youtube') {
+                    mediaUrl = youtubeInput.value.trim();
+                    if (!mediaUrl) throw new Error("Please enter a valid YouTube URL.");
+                } else {
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        throw new Error("Please select a media file to upload.");
+                    }
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                    const filePath = `${fileName}`;
+
+                    const { data: uploadData, error: uploadError } = await window.sbClient.storage
+                        .from('music-uploads')
+                        .upload(filePath, file);
+
+                    if (uploadError) {
+                        throw new Error("Storage upload failed: " + uploadError.message);
+                    }
+
+                    const { data: { publicUrl } } = window.sbClient.storage
+                        .from('music-uploads')
+                        .getPublicUrl(filePath);
+                    mediaUrl = publicUrl;
                 }
-
-                const file = fileInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-                const filePath = `${fileName}`;
-
-                const { data: uploadData, error: uploadError } = await window.sbClient.storage
-                    .from('music-uploads')
-                    .upload(filePath, file);
-
-                if (uploadError) {
-                    throw new Error("Music storage upload failed: " + uploadError.message);
-                }
-
-                const { data: { publicUrl } } = window.sbClient.storage
-                    .from('music-uploads')
-                    .getPublicUrl(filePath);
 
                 const insertPayload = {
                     title: titleInput.value.trim(),
-                    artist: artistInput.value.trim(),
-                    audio_url: publicUrl
+                    preacher: artistInput.value.trim(),
+                    audio_url: mediaUrl,
+                    media_url: mediaUrl,
+                    media_type: mediaType,
+                    category: category
                 };
                 if (currentUserProfile && currentUserProfile.church_id) {
                     insertPayload.church_id = currentUserProfile.church_id;
@@ -1144,18 +1205,16 @@
                     insertPayload.church_id = null;
                 }
 
-                const { error: dbError } = await window.sbClient.from('worship_songs').insert([insertPayload]);
+                const { error: dbError } = await window.sbClient.from('sermons').insert([insertPayload]);
 
                 if (dbError) throw dbError;
 
-                showNotification("Worship song uploaded and published successfully!", "success");
+                showNotification("Media uploaded and published successfully to sermons table!", "success");
                 e.target.reset();
+                toggleMediaInputType();
             } catch (err) {
-                console.error("Music upload error:", err);
-                let errorMessage = err.message || "Failed to upload song.";
-                if (errorMessage.toLowerCase().includes('column') || errorMessage.toLowerCase().includes('schema') || errorMessage.toLowerCase().includes('does not exist')) {
-                    errorMessage = "Database table column mismatch detected: " + errorMessage;
-                }
+                console.error("Media upload error:", err);
+                let errorMessage = err.message || "Failed to upload media.";
                 showNotification(errorMessage, "error");
             } finally {
                 btn.disabled = false;
@@ -1362,7 +1421,7 @@
             try {
                 const { data: slots, error } = await window.sbClient
                     .from('volunteer_roster')
-                    .select('*, profiles:assigned_user_id (id, full_name, email)')
+                    .select('*')
                     .order('event_date', { ascending: true });
 
                 if (error) throw error;
@@ -1386,9 +1445,8 @@
                             ${slots.map(slot => {
                                 const dateStr = slot.event_date ? new Date(slot.event_date).toLocaleString() : 'N/A';
                                 const isAssigned = !!slot.assigned_user_id;
-                                const assignedName = slot.profiles?.full_name || slot.profiles?.email || slot.assigned_user_id;
                                 const statusBadge = isAssigned 
-                                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold">Status: Filled (${escapeHTML(assignedName)})</span>`
+                                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold">Status: Filled</span>`
                                     : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold">Status: Open</span>`;
 
                                 return `
