@@ -523,7 +523,9 @@
 
         } catch (err) {
             console.error("Error initiating donation:", err);
-            alert("Failed to initialize donation: " + (err.message || err));
+            const errorMessage = err.message || JSON.stringify(err);
+            alert("Failed to initialize donation: " + errorMessage);
+            console.error(err);
             proceedBtn.disabled = false;
             proceedBtn.innerHTML = '<i class="fas fa-lock text-sm"></i> <span>Proceed to Give</span>';
         }
