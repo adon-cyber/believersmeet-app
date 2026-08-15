@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const BASE_URL = process.env.PESAPAL_ENV === 'live' 
   ? 'https://pay.pesapal.com/v3' 
-  : 'https://cyb3r.pesapal.com/pesapalv3';
+  : 'https://cybqa.pesapal.com/pesapalv3';
 
 // Initialize Supabase Admin Client using service role key to bypass RLS securely in serverless function
 const getSupabaseAdmin = () => {
