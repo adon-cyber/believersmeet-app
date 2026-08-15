@@ -58,6 +58,9 @@
             <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
                 ⛪ Church Dashboard
             </button>
+            <button id="tab-btn-counseling" onclick="switchAdminTab('counseling')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
+                💬 Counseling Requests
+            </button>
         </div>
 
         <!-- 2. GLOBAL VIEW -->
@@ -211,6 +214,21 @@
                 </div>
             </div>
 
+            <!-- Counseling Requests Section -->
+            <div id="admin-counseling-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fas fa-comments text-blue-400"></i> Counseling Requests
+                    </h3>
+                    <button onclick="loadAdminAppointments()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700">
+                        🔄 Refresh
+                    </button>
+                </div>
+                <div id="admin-appointments-container" class="overflow-x-auto">
+                    <div class="text-center py-8 text-slate-500 text-sm">Loading counseling requests...</div>
+                </div>
+            </div>
+
             <!-- Active Board Bulletins -->
             <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
                 <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
@@ -304,35 +322,41 @@
         window.switchAdminTab = function(tab) {
             const globalView = document.getElementById('global-admin-view');
             const dashboardView = document.getElementById('church-dashboard-view');
+            const counselingView = document.getElementById('admin-counseling-section');
             const btnGlobal = document.getElementById('tab-btn-global');
             const btnDashboard = document.getElementById('tab-btn-dashboard');
+            const btnCounseling = document.getElementById('tab-btn-counseling');
+
+            // Hide all views by default
+            if (globalView) { globalView.classList.remove('block'); globalView.classList.add('hidden'); }
+            if (dashboardView) { dashboardView.classList.remove('block'); dashboardView.classList.add('hidden'); }
+            if (counselingView) { counselingView.classList.remove('block'); counselingView.classList.add('hidden'); }
+
+            // Reset tab styles
+            if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnDashboard) btnDashboard.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnCounseling) btnCounseling.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
 
             if (tab === 'global') {
                 if (globalView) {
                     globalView.classList.remove('hidden');
                     globalView.classList.add('block');
                 }
-                if (dashboardView) {
-                    dashboardView.classList.remove('block');
-                    dashboardView.classList.add('hidden');
-                }
-
                 if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
-                if (btnDashboard) btnDashboard.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             } else if (tab === 'dashboard') {
-                if (globalView) {
-                    globalView.classList.remove('block');
-                    globalView.classList.add('hidden');
-                }
                 if (dashboardView) {
                     dashboardView.classList.remove('hidden');
                     dashboardView.classList.add('block');
                 }
-
-                if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
                 if (btnDashboard) btnDashboard.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
-
                 initChurchDashboardView();
+            } else if (tab === 'counseling') {
+                if (counselingView) {
+                    counselingView.classList.remove('hidden');
+                    counselingView.classList.add('block');
+                }
+                if (btnCounseling) btnCounseling.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
+                if (typeof loadAdminAppointments === 'function') loadAdminAppointments();
             }
 
             const superAdminNav = document.getElementById('nav-super-admin');
@@ -991,6 +1015,82 @@
             window.location.replace('login.html');
         }
 
+        async function loadAdminAppointments() {
+            const container = document.getElementById('admin-appointments-container');
+            if (!container) return;
+
+            container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">Loading requests...</div>';
+
+            const { data, error } = await window.sbClient
+                .from('counseling_appointments')
+                .select('*')
+                .order('appointment_date', { ascending: true });
+
+            if (error) {
+                container.innerHTML = `<div class="bg-red-950 text-red-200 p-4 rounded-xl text-center text-sm font-medium border border-red-800">Error loading appointments: ${escapeHTML(error.message)}</div>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No counseling requests found.</div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                            <th class="p-3">Member</th>
+                            <th class="p-3">Date & Time</th>
+                            <th class="p-3">Reason / Topic</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-sm">
+                        ${data.map(app => {
+                            const statusColor = app.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : app.status === 'Declined' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold';
+                            return `
+                                <tr class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3 align-top">
+                                        <div class="font-bold text-white">${escapeHTML(app.member_name)}</div>
+                                        <div class="text-xs text-slate-400">${escapeHTML(app.member_email)}</div>
+                                    </td>
+                                    <td class="p-3 align-top whitespace-nowrap">
+                                        <div class="font-medium text-white">${escapeHTML(app.appointment_date)}</div>
+                                        <div class="text-xs text-slate-400">${escapeHTML(app.appointment_time)}</div>
+                                    </td>
+                                    <td class="p-3 align-top max-w-xs text-slate-300">
+                                        <p class="truncate">${escapeHTML(app.reason)}</p>
+                                    </td>
+                                    <td class="p-3 align-top whitespace-nowrap">
+                                        <span class="px-2.5 py-1 rounded-full text-xs ${statusColor}">${escapeHTML(app.status)}</span>
+                                    </td>
+                                    <td class="p-3 align-top text-right whitespace-nowrap space-x-2">
+                                        <button onclick="updateCounselingStatus('${app.id}', 'Approved')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow">Approve</button>
+                                        <button onclick="updateCounselingStatus('${app.id}', 'Declined')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow">Decline</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function updateCounselingStatus(id, newStatus) {
+            const { error } = await window.sbClient
+                .from('counseling_appointments')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (error) {
+                showNotification("Failed to update status: " + error.message, "error");
+            } else {
+                showNotification(`Appointment status updated to ${newStatus}.`, "success");
+                loadAdminAppointments();
+            }
+        }
         async function loadChurchJoinCode() {
             const { data: { user } } = await window.sbClient.auth.getUser();
             if (!user) return;
