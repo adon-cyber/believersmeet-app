@@ -468,33 +468,58 @@
         proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> <span>Initializing Secure Gateway...</span>';
 
         try {
-            // 1. Generate unique transaction reference
+            // 1. Generate unique transaction reference (UUID or transaction ref)
             const timestamp = Date.now();
             const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
             const transactionReference = `BM-GIVE-${timestamp}-${randomStr}`;
 
-            // 2. Insert record into donations table with 'pending' status and payment_gateway: 'pesapal'
+            // 2. Make POST request to our new /api/pesapal-checkout route
+            const response = await fetch('/api/pesapal-checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: finalAmount,
+                    currency: 'KES', // Default or configurable currency
+                    email: loggedInUser.email || 'donor@believersmeet.com',
+                    userId: loggedInUser.id,
+                    description: `BelieversMeet Giving - ${category}`
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success || !data.redirect_url) {
+                throw new Error(data.error || 'Failed to create Pesapal checkout session');
+            }
+
+            const { redirect_url, order_tracking_id, merchant_reference } = data;
+
+            // 3. Insert 'pending' record into Supabase donations table including pesapal_tracking_id
             const { error: insertError } = await window.sbClient
                 .from('donations')
                 .insert([{
                     user_id: loggedInUser.id,
                     amount: finalAmount,
-                    transaction_reference: transactionReference,
+                    transaction_reference: merchant_reference || transactionReference,
+                    pesapal_tracking_id: order_tracking_id,
                     status: 'pending',
-                    payment_gateway: 'pesapal'
+                    payment_gateway: 'pesapal',
+                    currency: 'KES',
+                    email: loggedInUser.email || 'donor@believersmeet.com',
+                    description: `BelieversMeet Giving - ${category}`
                 }]);
 
             if (insertError) {
-                throw insertError;
+                console.warn("Database insert warning:", insertError.message);
             }
 
-            // 3. Scaffold Pesapal v3.0 API Checkout Integration
-            await initiatePesapalCheckout({
-                transaction_reference: transactionReference,
-                amount: finalAmount,
-                category: category,
-                email: loggedInUser.email || 'donor@believersmeet.com'
-            });
+            console.log("Redirecting to Pesapal Hosted Checkout:", redirect_url);
+
+            // 4. Finally, redirect user's browser to the redirect_url so they can complete payment securely
+            window.location.href = redirect_url;
 
         } catch (err) {
             console.error("Error initiating donation:", err);
@@ -505,40 +530,11 @@
     }
 
     async function initiatePesapalCheckout(payload) {
-        console.log("Initializing Pesapal v3.0 API Checkout...");
-
-        // Pesapal v3.0 Request Payload Structure
-        const pesapalPayload = {
-            id: payload.transaction_reference,
-            currency: 'UGX',
-            amount: payload.amount,
-            description: `BelieversMeet Giving - ${payload.category}`,
-            callback_url: window.location.href.split('?')[0] + `?OrderTrackingId=PESAPAL-MOCK-${Math.random().toString(36).substring(2, 8).toUpperCase()}&OrderMerchantReference=${payload.transaction_reference}`,
-            notification_id: "pesapal-ipn-uuid-mock",
-            billing_address: {
-                email_address: payload.email,
-                phone_number: "",
-                country_code: "UG",
-                first_name: "Believers",
-                last_name: "Donor"
-            }
-        };
-
-        console.log("Pesapal v3.0 Request Payload:", pesapalPayload);
-
-        // Simulate secure API roundtrip to obtain OrderTrackingId and redirect URL
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const mockOrderTrackingId = "pesapal-tracking-" + Math.random().toString(36).substring(2, 10);
-        const mockRedirectUrl = window.location.href.split('?')[0] + `?OrderTrackingId=${mockOrderTrackingId}&OrderMerchantReference=${payload.transaction_reference}`;
-
-        console.log("Redirecting to Pesapal Hosted Checkout URL:", mockRedirectUrl);
-
-        // Redirect user to Pesapal checkout (simulated by reloading with return parameters)
-        window.location.href = mockRedirectUrl;
+        // Kept for backward compatibility if called elsewhere
+        return;
     }
 
-    // Check for Pesapal return parameters on page load
+    // Check for Pesapal return parameters on callback page or return
     async function checkPesapalCallback() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderTrackingId = urlParams.get('OrderTrackingId');
@@ -547,7 +543,7 @@
         if (orderTrackingId && orderMerchantReference) {
             console.log("Pesapal callback detected. OrderTrackingId:", orderTrackingId, "Reference:", orderMerchantReference);
             
-            // Clean URL parameters immediately to prevent duplicate triggers on reload
+            // Clean URL parameters immediately
             window.history.replaceState({}, document.title, window.location.pathname);
 
             await handlePesapalSuccessCallback(orderMerchantReference, orderTrackingId);
