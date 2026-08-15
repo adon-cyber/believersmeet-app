@@ -45,6 +45,7 @@
             { href: 'giving.html', label: 'Giving' },
             { href: 'sermons.html', label: 'Sermons' },
             { href: 'groups.html', label: 'Small Groups' },
+            { href: 'directory.html', label: 'Directory' },
             { href: 'prayer-wall.html', label: 'Prayer Wall' },
             { href: 'testimonies.html', label: 'Testimonies' },
             { href: 'inboxx.html', label: 'Inbox' },
