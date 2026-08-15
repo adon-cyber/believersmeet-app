@@ -1,13 +1,8 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Helper to get Pesapal Base URL based on environment (Sandbox vs Live)
-// PESAPAL_ENV can be 'live' or 'sandbox'. Default to sandbox for safety.
-const getPesapalBaseUrl = () => {
-    const env = process.env.PESAPAL_ENV || 'sandbox';
-    return env === 'live' 
-        ? 'https://pay.pesapal.com/v3' 
-        : 'https://cybqa.pesapal.com/v3';
-};
+const BASE_URL = process.env.PESAPAL_ENV === 'live' 
+  ? 'https://pay.pesapal.com/v3' 
+  : 'https://cyb3r.pesapal.com/pesapalv3';
 
 // Initialize Supabase Admin Client using service role key to bypass RLS securely in serverless function
 const getSupabaseAdmin = () => {
@@ -32,7 +27,7 @@ async function getPesapalToken() {
         throw new Error('Missing PESAPAL_CONSUMER_KEY or PESAPAL_CONSUMER_SECRET environment variables');
     }
 
-    const response = await fetch(`${getPesapalBaseUrl()}/api/Auth/RequestToken`, {
+    const pesapalRes = await fetch(`${BASE_URL}/api/Auth/RequestToken`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -44,17 +39,26 @@ async function getPesapalToken() {
         })
     });
 
-    const data = await response.json();
-    if (!response.ok || !data.token) {
-        throw new Error(data.message || 'Failed to authenticate with Pesapal');
+    const pesapalText = await pesapalRes.text();
+
+    let pesapalData;
+    try {
+        pesapalData = JSON.parse(pesapalText);
+    } catch (e) {
+        console.error("Pesapal returned non-JSON response:", pesapalText);
+        throw new Error("Pesapal API Error: " + pesapalText);
     }
 
-    return data.token;
+    if (!pesapalRes.ok || pesapalData.status !== "200") {
+        throw new Error(pesapalData.message || 'Failed to authenticate with Pesapal');
+    }
+
+    return pesapalData.token;
 }
 
 // Helper to register IPN URL if not already registered or cached
 async function registerIPN(token, callbackUrl) {
-    const response = await fetch(`${getPesapalBaseUrl()}/api/URLSetup/RegisterIPN`, {
+    const pesapalRes = await fetch(`${BASE_URL}/api/URLSetup/RegisterIPN`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -67,15 +71,26 @@ async function registerIPN(token, callbackUrl) {
         })
     });
 
-    const data = await response.json();
-    if (!response.ok || !data.ipn_id) {
-        throw new Error(data.message || 'Failed to register Pesapal IPN URL');
+    const pesapalText = await pesapalRes.text();
+
+    let pesapalData;
+    try {
+        pesapalData = JSON.parse(pesapalText);
+    } catch (e) {
+        console.error("Pesapal returned non-JSON response:", pesapalText);
+        throw new Error("Pesapal API Error: " + pesapalText);
     }
 
-    return data.ipn_id;
+    if (!pesapalRes.ok || pesapalData.status !== "200") {
+        throw new Error(pesapalData.message || 'Failed to register Pesapal IPN URL');
+    }
+
+    return pesapalData.ipn_id;
 }
 
 export default async function handler(req, res) {
+    console.log("Using Pesapal Base URL:", BASE_URL);
+
     // Enable CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -108,7 +123,6 @@ export default async function handler(req, res) {
         const token = await getPesapalToken();
 
         // 2. Register IPN URL
-        // Construct base URL from request headers or environment
         const host = req.headers['x-forwarded-host'] || req.headers.host;
         const protocol = req.headers['x-forwarded-proto'] || 'https';
         const ipnUrl = process.env.PESAPAL_IPN_URL || `${protocol}://${host}/api/pesapal-ipn`;
@@ -133,7 +147,7 @@ export default async function handler(req, res) {
             }
         };
 
-        const orderResponse = await fetch(`${getPesapalBaseUrl()}/api/Transactions/SubmitOrderRequest`, {
+        const pesapalRes = await fetch(`${BASE_URL}/api/Transactions/SubmitOrderRequest`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -143,10 +157,21 @@ export default async function handler(req, res) {
             body: JSON.stringify(orderPayload)
         });
 
-        const orderData = await orderResponse.json();
+        const pesapalText = await pesapalRes.text();
 
-        if (!orderResponse.ok || !orderData.redirect_url) {
-            throw new Error(orderData.message || 'Failed to submit order request to Pesapal');
+        let orderData;
+        try {
+            orderData = JSON.parse(pesapalText);
+        } catch (e) {
+            console.error("Pesapal returned non-JSON response:", pesapalText);
+            return res.status(502).json({ 
+                error: "Pesapal API Error", 
+                details: pesapalText 
+            });
+        }
+
+        if (!pesapalRes.ok || orderData.status !== "200" || !orderData.redirect_url) {
+            return res.status(pesapalRes.status || 400).json(orderData);
         }
 
         // Return redirect_url, order_tracking_id, and merchant_reference to frontend
