@@ -70,6 +70,9 @@
             <button id="tab-btn-pesapal" onclick="switchAdminTab('pesapal')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
                 💳 Pesapal Settings
             </button>
+            <button id="tab-btn-businesses" onclick="switchAdminTab('businesses')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
+                🏢 Business Approvals
+            </button>
         </div>
 
         <!-- COUNSELING CONTENT CONTAINER -->
@@ -214,6 +217,23 @@
                     <div id="admin-roster-container" class="overflow-x-auto">
                         <div class="text-center py-8 text-slate-500 text-sm">Loading serving slots...</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BUSINESS APPROVALS CONTENT CONTAINER -->
+        <div id="businesses-content" class="hidden space-y-8">
+            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fas fa-store text-blue-400"></i> Business Approvals
+                    </h3>
+                    <button onclick="loadPendingBusinesses()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700">
+                        🔄 Refresh
+                    </button>
+                </div>
+                <div id="admin-businesses-container" class="overflow-x-auto">
+                    <div class="text-center py-8 text-slate-500 text-sm">Loading pending business submissions...</div>
                 </div>
             </div>
         </div>
@@ -543,12 +563,14 @@
             const documentsView = document.getElementById('document-content');
             const rosterView = document.getElementById('roster-content');
             const pesapalView = document.getElementById('pesapal-content');
+            const businessesView = document.getElementById('businesses-content');
             const btnGlobal = document.getElementById('tab-btn-global');
             const btnDashboard = document.getElementById('tab-btn-dashboard');
             const btnCounseling = document.getElementById('tab-btn-counseling');
             const btnDocuments = document.getElementById('tab-btn-documents');
             const btnRoster = document.getElementById('tab-btn-roster');
             const btnPesapal = document.getElementById('tab-btn-pesapal');
+            const btnBusinesses = document.getElementById('tab-btn-businesses');
 
             // Hide all views by default
             if (globalView) { globalView.classList.remove('block'); globalView.classList.add('hidden'); }
@@ -557,6 +579,7 @@
             if (documentsView) { documentsView.classList.remove('block'); documentsView.classList.add('hidden'); }
             if (rosterView) { rosterView.classList.remove('block'); rosterView.classList.add('hidden'); }
             if (pesapalView) { pesapalView.classList.remove('block'); pesapalView.classList.add('hidden'); }
+            if (businessesView) { businessesView.classList.remove('block'); businessesView.classList.add('hidden'); }
 
             // Reset tab styles
             if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
@@ -565,6 +588,7 @@
             if (btnDocuments) btnDocuments.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnRoster) btnRoster.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
 
             if (tab === 'global') {
                 if (globalView) {
@@ -589,6 +613,7 @@
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
                 if (btnCounseling) btnCounseling.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminAppointments === 'function') loadAdminAppointments();
             } else if (tab === 'documents') {
@@ -601,6 +626,7 @@
                 if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
                 if (btnDocuments) btnDocuments.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminDocuments === 'function') loadAdminDocuments();
             } else if (tab === 'roster') {
@@ -613,6 +639,7 @@
                 if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
                 if (btnRoster) btnRoster.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminRosterSlots === 'function') loadAdminRosterSlots();
             } else if (tab === 'pesapal') {
@@ -625,8 +652,22 @@
                 if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
                 if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadPesapalSettings === 'function') loadPesapalSettings();
+            } else if (tab === 'businesses') {
+                if (businessesView) {
+                    businessesView.classList.remove('hidden');
+                    businessesView.classList.add('block');
+                }
+                if (dashboardView) { dashboardView.classList.add('hidden'); dashboardView.classList.remove('block'); }
+                if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
+                if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
+                if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
+                if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
+                if (typeof loadPendingBusinesses === 'function') loadPendingBusinesses();
             }
 
             const superAdminNav = document.getElementById('nav-super-admin');
@@ -1853,6 +1894,121 @@
             } catch (err) {
                 showNotification("Failed to copy join code.", "error");
             }
+        }
+
+        // --- BUSINESS APPROVALS HANDLERS ---
+        async function loadPendingBusinesses() {
+            const container = document.getElementById('admin-businesses-container');
+            if (!container) return;
+
+            let churchId = activeDashboardChurchId || currentUserProfile?.church_id;
+            if (!churchId) {
+                const selectEl = document.getElementById('active-church-select');
+                if (selectEl && selectEl.value) {
+                    churchId = selectEl.value;
+                }
+            }
+
+            if (!churchId) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Please select a church to view pending businesses.</div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Loading pending businesses...</div>`;
+
+            const { data, error } = await window.sbClient
+                .from('business_directory')
+                .select(`
+                    *,
+                    profiles:user_id (full_name, email)
+                `)
+                .eq('church_id', churchId)
+                .eq('is_approved', false)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching pending businesses:', error);
+                container.innerHTML = `<div class="bg-red-950 text-red-200 p-4 rounded-xl text-center text-sm font-medium border border-red-800">Error loading unapproved businesses: ${escapeHTML(error.message)}</div>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No pending business approvals found. All submissions are approved!</div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                            <th class="p-3">Business Name & Category</th>
+                            <th class="p-3">Description</th>
+                            <th class="p-3">Submitted By</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-sm">
+                        ${data.map(b => {
+                            const ownerName = b.profiles?.full_name || b.profiles?.email || 'Church Member';
+                            return `
+                                <tr id="biz-row-${b.id}" class="hover:bg-slate-800/50 transition">
+                                    <td class="p-3 align-top">
+                                        <div class="font-bold text-white text-base">${escapeHTML(b.business_name)}</div>
+                                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 mt-1">${escapeHTML(b.category)}</span>
+                                    </td>
+                                    <td class="p-3 align-top max-w-xs text-slate-300 text-xs">
+                                        <p class="line-clamp-2">${escapeHTML(b.description || 'No description')}</p>
+                                        <div class="mt-1 text-[11px] text-slate-400">
+                                            ${b.phone ? `<div>📞 ${escapeHTML(b.phone)}</div>` : ''}
+                                            ${b.email ? `<div>✉️ ${escapeHTML(b.email)}</div>` : ''}
+                                            ${b.website_url ? `<div>🌐 <a href="${escapeHTML(b.website_url)}" target="_blank" class="text-blue-400 hover:underline truncate">${escapeHTML(b.website_url)}</a></div>` : ''}
+                                        </div>
+                                    </td>
+                                    <td class="p-3 align-top whitespace-nowrap text-slate-300">
+                                        <div class="font-medium">${escapeHTML(ownerName)}</div>
+                                    </td>
+                                    <td class="p-3 align-top text-right whitespace-nowrap">
+                                        <button onclick="approveBusiness('${b.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5 ml-auto">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function approveBusiness(id) {
+            const { error } = await window.sbClient
+                .from('business_directory')
+                .update({ is_approved: true })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error approving business:', error);
+                showNotification("Failed to approve business: " + error.message, "error");
+                return;
+            }
+
+            // Remove item from UI list with success toast
+            const row = document.getElementById(`biz-row-${id}`);
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+
+            showNotification("Business successfully approved and published to directory!", "success");
+
+            // Check if list is now empty
+            setTimeout(() => {
+                const container = document.getElementById('admin-businesses-container');
+                if (container && container.querySelector('tbody') && container.querySelector('tbody').children.length === 0) {
+                    container.innerHTML = `<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No pending business approvals found. All submissions are approved!</div>`;
+                }
+            }, 350);
         }
 
         initPage();
