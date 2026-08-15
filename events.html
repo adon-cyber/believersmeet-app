@@ -868,18 +868,10 @@
             const currentChurchId = currentUserProfile?.church_id;
             const nowIso = new Date().toISOString();
 
-            let query = window.sbClient
+            const { data: slots, error } = await window.sbClient
                 .from('volunteer_roster')
-                .select('*, event:events(title, date, church_id)')
-                .is('assigned_user_id', null)
-                .gte('event_date', nowIso)
-                .order('event_date', { ascending: true });
-
-            if (currentChurchId) {
-                query = query.eq('church_id', currentChurchId);
-            }
-
-            const { data: slots, error } = await query;
+                .select('*')
+                .eq('church_id', currentChurchId);
             if (error) throw error;
 
             if (!slots || slots.length === 0) {
@@ -897,20 +889,21 @@
                 const dateObj = new Date(slot.event_date);
                 const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const eventTitle = slot.event?.title || 'Church Service / Event';
+                const roleName = slot.role || 'Usher';
+                const spotsNeeded = slot.total_spots || 1;
 
                 return `
                     <div id="slot-card-${slot.id}" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
                         <div class="space-y-3">
                             <div class="flex justify-between items-start gap-2">
-                                <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">Open Slot</span>
+                                <span class="text-xs font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">${escapeHtml(roleName)}</span>
                                 <span class="text-xs font-medium text-slate-400"><i class="far fa-calendar-alt mr-1"></i> ${escapeHtml(dateStr)}</span>
                             </div>
                             <h3 class="text-xl font-bold text-white">${escapeHtml(slot.title)}</h3>
-                            <p class="text-xs text-blue-400 font-semibold"><i class="fas fa-church mr-1"></i> Event: ${escapeHtml(eventTitle)}</p>
                             <p class="text-sm text-slate-300 leading-relaxed">${escapeHtml(slot.description || 'No additional description provided.')}</p>
-                            <div class="text-xs font-medium text-slate-400 flex items-center gap-1.5 pt-2">
-                                <i class="far fa-clock"></i> Time: ${escapeHtml(timeStr)}
+                            <div class="flex items-center justify-between text-xs font-medium text-slate-400 pt-2">
+                                <span><i class="far fa-clock mr-1"></i> Time: ${escapeHtml(timeStr)}</span>
+                                <span class="text-amber-400"><i class="fas fa-users mr-1"></i> Spots Needed: ${spotsNeeded}</span>
                             </div>
                         </div>
                         <button onclick="signUpForVolunteerSlot('${slot.id}', '${escapeHtml(slot.title).replace(/'/g, "\\'")}', '${escapeHtml(dateStr)}')" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
