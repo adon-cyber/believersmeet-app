@@ -67,6 +67,9 @@
             <button id="tab-btn-roster" onclick="switchAdminTab('roster')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
                 🤝 Volunteer Roster
             </button>
+            <button id="tab-btn-pesapal" onclick="switchAdminTab('pesapal')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300">
+                💳 Pesapal Settings
+            </button>
         </div>
 
         <!-- COUNSELING CONTENT CONTAINER -->
@@ -125,6 +128,47 @@
                     <div id="admin-documents-container" class="overflow-x-auto">
                         <div class="text-center py-8 text-slate-500 text-sm">Loading documents...</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESAPAL SETTINGS CONTENT CONTAINER -->
+        <div id="pesapal-content" class="hidden space-y-8">
+            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
+                        <i class="fas fa-credit-card text-blue-400"></i> Pesapal Integration Settings
+                    </h3>
+                    <p class="text-slate-400 text-sm mb-6">Configure your church's Pesapal payment gateway credentials for secure online giving, tithes, and event registrations.</p>
+                    
+                    <form id="pesapal-settings-form" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Pesapal Consumer Key (#pesapalKey)</label>
+                            <input type="text" id="pesapalKey" placeholder="Enter Pesapal Consumer Key..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm font-mono">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Pesapal Consumer Secret (#pesapalSecret)</label>
+                            <div class="relative">
+                                <input type="password" id="pesapalSecret" placeholder="Enter Pesapal Consumer Secret..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 pr-12 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm font-mono">
+                                <button type="button" onclick="togglePesapalSecretVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 focus:outline-none text-sm" title="Show/Hide Secret">
+                                    <i id="pesapal-eye-icon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Environment Mode (#pesapalEnv)</label>
+                            <select id="pesapalEnv" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option value="sandbox">Sandbox (Testing)</option>
+                                <option value="live">Live (Production)</option>
+                            </select>
+                        </div>
+
+                        <button id="savePesapalBtn" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+                            <span><i class="fas fa-save mr-1"></i> Save Settings</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -498,11 +542,13 @@
             const counselingView = document.getElementById('counseling-content');
             const documentsView = document.getElementById('document-content');
             const rosterView = document.getElementById('roster-content');
+            const pesapalView = document.getElementById('pesapal-content');
             const btnGlobal = document.getElementById('tab-btn-global');
             const btnDashboard = document.getElementById('tab-btn-dashboard');
             const btnCounseling = document.getElementById('tab-btn-counseling');
             const btnDocuments = document.getElementById('tab-btn-documents');
             const btnRoster = document.getElementById('tab-btn-roster');
+            const btnPesapal = document.getElementById('tab-btn-pesapal');
 
             // Hide all views by default
             if (globalView) { globalView.classList.remove('block'); globalView.classList.add('hidden'); }
@@ -510,6 +556,7 @@
             if (counselingView) { counselingView.classList.remove('block'); counselingView.classList.add('hidden'); }
             if (documentsView) { documentsView.classList.remove('block'); documentsView.classList.add('hidden'); }
             if (rosterView) { rosterView.classList.remove('block'); rosterView.classList.add('hidden'); }
+            if (pesapalView) { pesapalView.classList.remove('block'); pesapalView.classList.add('hidden'); }
 
             // Reset tab styles
             if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
@@ -517,6 +564,7 @@
             if (btnCounseling) btnCounseling.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnDocuments) btnDocuments.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnRoster) btnRoster.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
 
             if (tab === 'global') {
                 if (globalView) {
@@ -540,6 +588,7 @@
                 if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (btnCounseling) btnCounseling.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminAppointments === 'function') loadAdminAppointments();
             } else if (tab === 'documents') {
@@ -551,6 +600,7 @@
                 if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
                 if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (btnDocuments) btnDocuments.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminDocuments === 'function') loadAdminDocuments();
             } else if (tab === 'roster') {
@@ -562,8 +612,21 @@
                 if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
                 if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (btnRoster) btnRoster.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminRosterSlots === 'function') loadAdminRosterSlots();
+            } else if (tab === 'pesapal') {
+                if (pesapalView) {
+                    pesapalView.classList.remove('hidden');
+                    pesapalView.classList.add('block');
+                }
+                if (dashboardView) { dashboardView.classList.add('hidden'); dashboardView.classList.remove('block'); }
+                if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
+                if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
+                if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
+                if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
+                if (typeof loadPesapalSettings === 'function') loadPesapalSettings();
             }
 
             const superAdminNav = document.getElementById('nav-super-admin');
@@ -1663,6 +1726,111 @@
                 codeDisplay.innerText = joinCode;
             }
         }
+
+        function togglePesapalSecretVisibility() {
+            const secretInput = document.getElementById('pesapalSecret');
+            const eyeIcon = document.getElementById('pesapal-eye-icon');
+            if (!secretInput || !eyeIcon) return;
+            if (secretInput.type === 'password') {
+                secretInput.type = 'text';
+                eyeIcon.className = 'fas fa-eye-slash';
+            } else {
+                secretInput.type = 'password';
+                eyeIcon.className = 'fas fa-eye';
+            }
+        }
+
+        async function loadPesapalSettings() {
+            try {
+                let churchId = activeDashboardChurchId || currentUserProfile?.church_id;
+                if (!churchId) {
+                    // Try to fetch from profiles table or active church select if super admin
+                    const selectEl = document.getElementById('active-church-select');
+                    if (selectEl && selectEl.value) {
+                        churchId = selectEl.value;
+                    }
+                }
+
+                if (!churchId) return;
+
+                const { data: church, error } = await window.sbClient
+                    .from('churches')
+                    .select('pesapal_consumer_key, pesapal_consumer_secret, pesapal_env')
+                    .eq('id', churchId)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Error loading Pesapal settings:", error);
+                    return;
+                }
+
+                if (church) {
+                    const keyInput = document.getElementById('pesapalKey');
+                    const secretInput = document.getElementById('pesapalSecret');
+                    const envSelect = document.getElementById('pesapalEnv');
+
+                    if (keyInput) keyInput.value = church.pesapal_consumer_key || '';
+                    if (secretInput) secretInput.value = church.pesapal_consumer_secret || '';
+                    if (envSelect) envSelect.value = church.pesapal_env || 'sandbox';
+                }
+            } catch (err) {
+                console.error("Failed to load Pesapal settings:", err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pesapalForm = document.getElementById('pesapal-settings-form');
+            if (pesapalForm) {
+                pesapalForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const saveBtn = document.getElementById('savePesapalBtn');
+                    const originalHTML = saveBtn ? saveBtn.innerHTML : '';
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Saving...`;
+                    }
+
+                    try {
+                        let churchId = activeDashboardChurchId || currentUserProfile?.church_id;
+                        if (!churchId) {
+                            const selectEl = document.getElementById('active-church-select');
+                            if (selectEl && selectEl.value) {
+                                churchId = selectEl.value;
+                            }
+                        }
+
+                        if (!churchId) {
+                            throw new Error("No active church ID found for this session.");
+                        }
+
+                        const pesapalKey = document.getElementById('pesapalKey').value.trim();
+                        const pesapalSecret = document.getElementById('pesapalSecret').value.trim();
+                        const pesapalEnv = document.getElementById('pesapalEnv').value;
+
+                        const { error } = await window.sbClient
+                            .from('churches')
+                            .update({
+                                pesapal_consumer_key: pesapalKey,
+                                pesapal_consumer_secret: pesapalSecret,
+                                pesapal_env: pesapalEnv
+                            })
+                            .eq('id', churchId);
+
+                        if (error) throw error;
+
+                        showNotification("Pesapal settings saved successfully!", "success");
+                    } catch (err) {
+                        console.error("Error saving Pesapal settings:", err);
+                        showNotification("Failed to save Pesapal settings: " + err.message, "error");
+                    } finally {
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = originalHTML;
+                        }
+                    }
+                });
+            }
+        });
 
         async function copyJoinCode() {
             const codeDisplay = document.getElementById('church-join-code');
