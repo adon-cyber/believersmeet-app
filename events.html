@@ -868,11 +868,10 @@
             const currentChurchId = currentUserProfile?.church_id;
             const nowIso = new Date().toISOString();
 
-            const { data: slots, error } = await window.sbClient
-                .from('volunteer_roster')
-                .select('*')
-                .eq('church_id', currentChurchId);
-            if (error) throw error;
+            const { data, error } = await window.sbClient.from('volunteer_roster').select('*');
+            console.log('Roster data fetched:', data);
+            console.log('Roster fetch error:', error);
+            const slots = data;
 
             if (!slots || slots.length === 0) {
                 container.innerHTML = `
