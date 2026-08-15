@@ -20,14 +20,14 @@ const getSupabaseAdmin = () => {
 
 // Helper to get Pesapal Bearer Token
 async function getPesapalToken() {
-    const consumerKey = process.env.PESAPAL_CONSUMER_KEY;
-    const consumerSecret = process.env.PESAPAL_CONSUMER_SECRET;
+    const consumerKey = process.env.PESAPAL_CONSUMER_KEY?.trim();
+    const consumerSecret = process.env.PESAPAL_CONSUMER_SECRET?.trim();
 
     if (!consumerKey || !consumerSecret) {
         throw new Error('Missing PESAPAL_CONSUMER_KEY or PESAPAL_CONSUMER_SECRET environment variables');
     }
 
-    const pesapalRes = await fetch(`${BASE_URL}/api/Auth/RequestToken`, {
+    const authRes = await fetch(`${BASE_URL}/api/Auth/RequestToken`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -39,21 +39,15 @@ async function getPesapalToken() {
         })
     });
 
-    const pesapalText = await pesapalRes.text();
+    const authData = await authRes.json();
+    console.log("Pesapal Auth Response Status:", authRes.status);
+    console.log("Pesapal Auth Response Data:", JSON.stringify(authData));
 
-    let pesapalData;
-    try {
-        pesapalData = JSON.parse(pesapalText);
-    } catch (e) {
-        console.error("Pesapal returned non-JSON response:", pesapalText);
-        throw new Error("Pesapal API Error: " + pesapalText);
+    if (!authRes.ok || authData.status !== "200" || !authData.token) {
+        throw new Error(authData.message || 'Failed to authenticate with Pesapal');
     }
 
-    if (!pesapalRes.ok || pesapalData.status !== "200") {
-        throw new Error(pesapalData.message || 'Failed to authenticate with Pesapal');
-    }
-
-    return pesapalData.token;
+    return authData.token;
 }
 
 // Helper to register IPN URL if not already registered or cached
