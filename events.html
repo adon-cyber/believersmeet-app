@@ -178,19 +178,45 @@
         </form>
     </div>
 
-    <!-- Category Filter Tabs -->
-    <div class="flex overflow-x-auto pb-2 gap-2 no-scrollbar">
-        <button onclick="filterCategory('All', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-blue-600 text-white shadow-sm transition">All</button>
-        <button onclick="filterCategory('Fellowship', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Fellowship</button>
-        <button onclick="filterCategory('Bible Study', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Bible Study</button>
-        <button onclick="filterCategory('Singles Meetup', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Singles Meetup</button>
-        <button onclick="filterCategory('Conference', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Conference</button>
-        <button onclick="filterCategory('Outreach', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Outreach</button>
+    <!-- Category Filter Tabs & Volunteer Toggle -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex overflow-x-auto pb-2 gap-2 no-scrollbar w-full sm:w-auto">
+            <button onclick="filterCategory('All', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-blue-600 text-white shadow-sm transition">All</button>
+            <button onclick="filterCategory('Fellowship', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Fellowship</button>
+            <button onclick="filterCategory('Bible Study', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Bible Study</button>
+            <button onclick="filterCategory('Singles Meetup', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Singles Meetup</button>
+            <button onclick="filterCategory('Conference', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Conference</button>
+            <button onclick="filterCategory('Outreach', this)" class="category-btn px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition">Outreach</button>
+        </div>
+        <button onclick="toggleViewMode('events')" id="view-events-btn" class="hidden px-4 py-2 bg-slate-800 text-slate-200 rounded-full text-sm font-semibold border border-slate-700 hover:bg-slate-700 transition">📋 Events View</button>
+        <button onclick="toggleViewMode('roster')" id="view-roster-btn" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-sm font-semibold shadow hover:from-blue-500 hover:to-indigo-500 transition flex items-center gap-2">
+            <span>🤝</span> Volunteer Roster / Serve
+        </button>
     </div>
 
-    <!-- Events Grid -->
-    <div id="events-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading events...</div>
+    <!-- Events Grid Section -->
+    <div id="events-section" class="space-y-6">
+        <div id="events-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading events...</div>
+        </div>
+    </div>
+
+    <!-- Volunteer Roster Section -->
+    <div id="volunteer-roster-section" class="hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 to-blue-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fas fa-hands-helping text-blue-400"></i> Open Volunteer & Serving Roster Slots
+                </h2>
+                <p class="text-slate-300 text-sm mt-1">Browse open ministry slots matching your church community and sign up to serve.</p>
+            </div>
+            <button onclick="loadVolunteerRoster()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition border border-slate-700 flex items-center gap-2">
+                🔄 Refresh Roster
+            </button>
+        </div>
+        <div id="volunteer-roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center text-slate-400 text-sm">Loading open volunteer slots...</div>
+        </div>
     </div>
 </main>
 
@@ -812,13 +838,134 @@
         document.getElementById('event-modal').classList.add('hidden');
     }
 
-    function openCouponModal() {
-        document.getElementById('coupon-modal').classList.remove('hidden');
-        loadUserCoupons();
+    function toggleViewMode(mode) {
+        const eventsSection = document.getElementById('events-section');
+        const rosterSection = document.getElementById('volunteer-roster-section');
+        const viewEventsBtn = document.getElementById('view-events-btn');
+        const viewRosterBtn = document.getElementById('view-roster-btn');
+
+        if (mode === 'roster') {
+            if (eventsSection) eventsSection.classList.add('hidden');
+            if (rosterSection) rosterSection.classList.remove('hidden');
+            if (viewEventsBtn) viewEventsBtn.classList.remove('hidden');
+            if (viewRosterBtn) viewRosterBtn.classList.add('hidden');
+            loadVolunteerRoster();
+        } else {
+            if (eventsSection) eventsSection.classList.remove('hidden');
+            if (rosterSection) rosterSection.classList.add('hidden');
+            if (viewEventsBtn) viewEventsBtn.classList.add('hidden');
+            if (viewRosterBtn) viewRosterBtn.classList.remove('hidden');
+        }
     }
 
-    function closeCouponModal() {
-        document.getElementById('coupon-modal').classList.add('hidden');
+    async function loadVolunteerRoster() {
+        const container = document.getElementById('volunteer-roster-container');
+        if (!container) return;
+
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 text-sm">Loading open volunteer slots...</div>';
+
+        try {
+            const currentChurchId = currentUserProfile?.church_id;
+            const nowIso = new Date().toISOString();
+
+            let query = window.sbClient
+                .from('volunteer_roster')
+                .select('*, event:events(title, date, church_id)')
+                .is('assigned_user_id', null)
+                .gte('event_date', nowIso)
+                .order('event_date', { ascending: true });
+
+            if (currentChurchId) {
+                query = query.eq('church_id', currentChurchId);
+            }
+
+            const { data: slots, error } = await query;
+            if (error) throw error;
+
+            if (!slots || slots.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
+                        <div class="text-3xl">🌿</div>
+                        <h3 class="text-lg font-bold text-slate-200">No Open Volunteer Slots Right Now</h3>
+                        <p class="text-sm text-slate-400">Check back later for new ministry serving opportunities!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = slots.map(slot => {
+                const dateObj = new Date(slot.event_date);
+                const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const eventTitle = slot.event?.title || 'Church Service / Event';
+
+                return `
+                    <div id="slot-card-${slot.id}" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start gap-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">Open Slot</span>
+                                <span class="text-xs font-medium text-slate-400"><i class="far fa-calendar-alt mr-1"></i> ${escapeHtml(dateStr)}</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-white">${escapeHtml(slot.title)}</h3>
+                            <p class="text-xs text-blue-400 font-semibold"><i class="fas fa-church mr-1"></i> Event: ${escapeHtml(eventTitle)}</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">${escapeHtml(slot.description || 'No additional description provided.')}</p>
+                            <div class="text-xs font-medium text-slate-400 flex items-center gap-1.5 pt-2">
+                                <i class="far fa-clock"></i> Time: ${escapeHtml(timeStr)}
+                            </div>
+                        </div>
+                        <button onclick="signUpForVolunteerSlot('${slot.id}', '${escapeHtml(slot.title).replace(/'/g, "\\'")}', '${escapeHtml(dateStr)}')" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+                            <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error("Error loading volunteer roster:", err);
+            container.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 text-sm">Failed to load volunteer slots: ${escapeHtml(err.message)}</div>`;
+        }
+    }
+
+    async function signUpForVolunteerSlot(slotId, slotTitle, slotDate) {
+        if (!loggedInUser) {
+            alert("You must be logged in to sign up.");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to sign up to serve as '${slotTitle}' on ${slotDate}?`)) {
+            return;
+        }
+
+        try {
+            const { error } = await window.sbClient
+                .from('volunteer_roster')
+                .update({ assigned_user_id: loggedInUser.id })
+                .eq('id', slotId)
+                .is('assigned_user_id', null);
+
+            if (error) throw error;
+
+            const cardEl = document.getElementById(`slot-card-${slotId}`);
+            if (cardEl) {
+                cardEl.style.transition = 'all 0.3s ease';
+                cardEl.style.opacity = '0';
+                cardEl.style.transform = 'scale(0.95)';
+                setTimeout(() => cardEl.remove(), 300);
+            }
+
+            if (typeof window.sendNotification === 'function') {
+                await window.sendNotification(
+                    loggedInUser.id,
+                    'Volunteer Signup Confirmed!',
+                    `You have successfully signed up to serve as ${slotTitle} on ${slotDate}. Thank you for your heart for ministry!`
+                );
+            }
+
+            showSuccessToast(`Successfully signed up to serve as ${slotTitle}!`);
+        } catch (err) {
+            console.error("Volunteer sign up error:", err);
+            alert("Failed to sign up for slot. It may have already been filled by another user.");
+            loadVolunteerRoster();
+        }
     }
 
     async function loadUserCoupons() {
