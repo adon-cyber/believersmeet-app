@@ -185,6 +185,25 @@
             submitBtn.innerHTML = '<span>✨</span> Submit Appointment Request';
         } else {
             alert("Counseling appointment booked successfully! The pastor or admin will review your request.");
+            
+            // Notify church admins / super admins about the new counseling request
+            try {
+                // Find admins or super_admins for this church or global admins
+                let churchId = loggedInUser?.church_id;
+                let adminQuery = window.sbClient.from('profiles').select('id').or('role.eq.admin,role.eq.super_admin,role.eq.super-admin');
+                if (churchId && churchId !== 'global-fellowship') {
+                    adminQuery = adminQuery.eq('church_id', churchId);
+                }
+                const { data: admins } = await adminQuery;
+                if (admins && admins.length > 0 && typeof window.sendNotification === 'function') {
+                    for (const admin of admins) {
+                        await window.sendNotification(admin.id, 'New Counseling Request', `${memberName || 'A member'} has requested a counseling session for ${appointmentDate}.`);
+                    }
+                }
+            } catch (notifErr) {
+                console.error("Error triggering notification for counseling request:", notifErr);
+            }
+
             document.getElementById('counseling-form').reset();
             document.getElementById('member_email').value = user.email || '';
             submitBtn.disabled = false;

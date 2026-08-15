@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Board | BelieversMeet</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-200 flex flex-col">
+    <div id="navbar"></div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
+        <div class="bg-gradient-to-r from-blue-900/80 to-slate-900/80 border border-slate-800 p-8 rounded-2xl shadow-xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-2">
+                    <i class="fas fa-hands-helping text-blue-400"></i> Volunteer & Serving Board
+                </h1>
+                <p class="text-slate-300 text-base">Step up and serve! Browse available upcoming ministry and event slots and sign up to serve.</p>
+            </div>
+            <button onclick="loadOpenSlots()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold transition border border-slate-700 flex items-center gap-2">
+                🔄 Refresh Open Slots
+            </button>
+        </div>
+
+        <div id="open-slots-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12 text-slate-500 text-sm">Loading open volunteer slots...</div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in duration-200">
+            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-100">Thank You for Serving!</h3>
+            <p id="success-modal-message" class="text-slate-300 text-sm">You have successfully signed up to serve. We appreciate your heart for ministry!</p>
+            <button onclick="closeSuccessModal()" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-500 transition shadow-lg shadow-blue-500/20">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500 space-y-2">
+        <div>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</div>
+      </div>
+    </footer>
+
+    <script src="js/nav.js"></script>
+    <script src="js/notifications.js"></script>
+    <script>
+        let currentUser = null;
+
+        async function initPage() {
+            let attempts = 0;
+            while (!window.sbClient && attempts < 15) {
+                await new Promise(r => setTimeout(r, 200));
+                attempts++;
+            }
+            if (!window.sbClient) {
+                alert("Failed to connect to Supabase backend configuration.");
+                return;
+            }
+
+            const { data: { user }, error } = await window.sbClient.auth.getUser();
+            if (error || !user) {
+                window.location.replace('login.html');
+                return;
+            }
+            currentUser = user;
+
+            loadOpenSlots();
+        }
+
+        async function loadOpenSlots() {
+            const container = document.getElementById('open-slots-container');
+            if (!container) return;
+
+            try {
+                const nowIso = new Date().toISOString();
+                const { data: slots, error } = await window.sbClient
+                    .from('volunteer_roster')
+                    .select('*')
+                    .is('assigned_user_id', null)
+                    .gte('event_date', nowIso)
+                    .order('event_date', { ascending: true });
+
+                if (error) throw error;
+
+                if (!slots || slots.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full bg-slate-800/50 border border-slate-700/60 rounded-2xl p-12 text-center space-y-3">
+                            <div class="text-3xl">🌿</div>
+                            <h3 class="text-lg font-bold text-slate-200">No Open Volunteer Slots Right Now</h3>
+                            <p class="text-sm text-slate-400">Check back later for new ministry serving opportunities!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = slots.map(slot => {
+                    const dateObj = new Date(slot.event_date);
+                    const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    return `
+                        <div id="slot-card-${slot.id}" class="bg-slate-800/70 backdrop-blur-md border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-start gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">Status: Open</span>
+                                    <span class="text-xs font-medium text-slate-400"><i class="far fa-calendar-alt mr-1"></i> ${escapeHTML(dateStr)}</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-100">${escapeHTML(slot.title)}</h3>
+                                <p class="text-sm text-slate-300 leading-relaxed">${escapeHTML(slot.description || 'No additional description provided.')}</p>
+                                <div class="text-xs font-medium text-blue-400 flex items-center gap-1.5 pt-2">
+                                    <i class="far fa-clock"></i> Time: ${escapeHTML(timeStr)}
+                                </div>
+                            </div>
+                            <button onclick="signUpForSlot('${slot.id}', '${escapeHTML(slot.title).replace(/'/g, "\\'")}', '${escapeHTML(dateStr)}')" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+                                <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Error loading open volunteer slots:", err);
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 text-sm">Failed to load slots: ${escapeHTML(err.message)}</div>`;
+            }
+        }
+
+        async function signUpForSlot(slotId, slotTitle, slotDate) {
+            if (!currentUser) {
+                alert("You must be logged in to sign up.");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to sign up to serve as '${slotTitle}' on ${slotDate}?`)) {
+                return;
+            }
+
+            try {
+                const { error } = await window.sbClient
+                    .from('volunteer_roster')
+                    .update({ assigned_user_id: currentUser.id })
+                    .eq('id', slotId)
+                    .is('assigned_user_id', null);
+
+                if (error) throw error;
+
+                // Immediately remove card from UI
+                const cardEl = document.getElementById(`slot-card-${slotId}`);
+                if (cardEl) {
+                    cardEl.style.transition = 'all 0.3s ease';
+                    cardEl.style.opacity = '0';
+                    cardEl.style.transform = 'scale(0.95)';
+                    setTimeout(() => cardEl.remove(), 300);
+                }
+
+                // Trigger automated thank-you notification
+                if (typeof window.sendNotification === 'function') {
+                    await window.sendNotification(
+                        currentUser.id,
+                        'Thank You!',
+                        `You have successfully signed up to serve as ${slotTitle} on ${slotDate}.`
+                    );
+                }
+
+                // Show success modal
+                const msgEl = document.getElementById('success-modal-message');
+                if (msgEl) {
+                    msgEl.innerText = `You have successfully signed up to serve as ${slotTitle} on ${slotDate}. We have also sent a confirmation notification to your inbox!`;
+                }
+                const modalEl = document.getElementById('success-modal');
+                if (modalEl) {
+                    modalEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Sign up error:", err);
+                alert("Failed to sign up for slot. It may have already been filled by another user.");
+                loadOpenSlots();
+            }
+        }
+
+        function closeSuccessModal() {
+            const modalEl = document.getElementById('success-modal');
+            if (modalEl) {
+                modalEl.classList.add('hidden');
+            }
+            loadOpenSlots();
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        initPage();
+    </script>
+</body>
+</html>

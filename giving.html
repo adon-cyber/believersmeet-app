@@ -109,7 +109,7 @@
             </div>
             <div>
                 <h2 class="text-2xl font-bold text-gray-900">Online Donation Gateway</h2>
-                <p class="text-sm text-gray-500">Secure automated giving via Scoa Pay (Bank Disbursement)</p>
+                <p class="text-sm text-gray-500">Secure automated giving via Pesapal</p>
             </div>
         </div>
 
@@ -424,6 +424,7 @@
         }
 
         await fetchGivingSettings();
+        await checkPesapalCallback();
     }
 
     function selectPresetAmount(amount, btnElement) {
@@ -448,7 +449,7 @@
         });
     }
 
-    // Task 2 & 3: Database Logic, Unique Transaction Reference Generation & Scoa Pay API Integration
+    // Task 2 & 3: Database Logic, Unique Transaction Reference Generation & Pesapal v3.0 API Integration
     async function handleProceedToGive(event) {
         event.preventDefault();
 
@@ -472,7 +473,7 @@
             const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
             const transactionReference = `BM-GIVE-${timestamp}-${randomStr}`;
 
-            // 2. Insert record into donations table with 'pending' status
+            // 2. Insert record into donations table with 'pending' status and payment_gateway: 'pesapal'
             const { error: insertError } = await window.sbClient
                 .from('donations')
                 .insert([{
@@ -480,15 +481,15 @@
                     amount: finalAmount,
                     transaction_reference: transactionReference,
                     status: 'pending',
-                    payment_gateway: 'scoa_pay'
+                    payment_gateway: 'pesapal'
                 }]);
 
             if (insertError) {
                 throw insertError;
             }
 
-            // 3. Scaffold Scoa Pay API Integration with Bank-Only Disbursement Configuration
-            await initiateScoaPayCheckout({
+            // 3. Scaffold Pesapal v3.0 API Checkout Integration
+            await initiatePesapalCheckout({
                 transaction_reference: transactionReference,
                 amount: finalAmount,
                 category: category,
@@ -503,31 +504,57 @@
         }
     }
 
-    async function initiateScoaPayCheckout(payload) {
-        console.log("Initiating Scoa Pay API Checkout...");
+    async function initiatePesapalCheckout(payload) {
+        console.log("Initializing Pesapal v3.0 API Checkout...");
 
-        // Crucial API Configuration: Strictly route to banks, disable or omit mobile money disbursement flags.
-        const scoaPayPayload = {
-            reference: payload.transaction_reference,
-            amount: payload.amount,
+        // Pesapal v3.0 Request Payload Structure
+        const pesapalPayload = {
+            id: payload.transaction_reference,
             currency: 'UGX',
+            amount: payload.amount,
             description: `BelieversMeet Giving - ${payload.category}`,
-            customer_email: payload.email,
-            disbursement_channel: 'bank_only', // Strictly bank-only disbursement
-            allow_mobile_money: false,         // Explicitly disable mobile money disbursement flags
-            callback_url: window.location.href
+            callback_url: window.location.href.split('?')[0] + `?OrderTrackingId=PESAPAL-MOCK-${Math.random().toString(36).substring(2, 8).toUpperCase()}&OrderMerchantReference=${payload.transaction_reference}`,
+            notification_id: "pesapal-ipn-uuid-mock",
+            billing_address: {
+                email_address: payload.email,
+                phone_number: "",
+                country_code: "UG",
+                first_name: "Believers",
+                last_name: "Donor"
+            }
         };
 
-        console.log("Scoa Pay Request Payload:", scoaPayPayload);
+        console.log("Pesapal v3.0 Request Payload:", pesapalPayload);
 
-        // Simulate secure API roundtrip to Scoa Pay Gateway
+        // Simulate secure API roundtrip to obtain OrderTrackingId and redirect URL
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        // Simulate successful payment gateway callback response
-        await handleGatewaySuccessCallback(payload.transaction_reference, payload.amount);
+        const mockOrderTrackingId = "pesapal-tracking-" + Math.random().toString(36).substring(2, 10);
+        const mockRedirectUrl = window.location.href.split('?')[0] + `?OrderTrackingId=${mockOrderTrackingId}&OrderMerchantReference=${payload.transaction_reference}`;
+
+        console.log("Redirecting to Pesapal Hosted Checkout URL:", mockRedirectUrl);
+
+        // Redirect user to Pesapal checkout (simulated by reloading with return parameters)
+        window.location.href = mockRedirectUrl;
     }
 
-    async function handleGatewaySuccessCallback(transactionReference, amount) {
+    // Check for Pesapal return parameters on page load
+    async function checkPesapalCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderTrackingId = urlParams.get('OrderTrackingId');
+        const orderMerchantReference = urlParams.get('OrderMerchantReference');
+
+        if (orderTrackingId && orderMerchantReference) {
+            console.log("Pesapal callback detected. OrderTrackingId:", orderTrackingId, "Reference:", orderMerchantReference);
+            
+            // Clean URL parameters immediately to prevent duplicate triggers on reload
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            await handlePesapalSuccessCallback(orderMerchantReference, orderTrackingId);
+        }
+    }
+
+    async function handlePesapalSuccessCallback(transactionReference, orderTrackingId) {
         try {
             // Update specific record in Supabase donations table from 'pending' to 'successful'
             const { error: updateError } = await window.sbClient
@@ -542,17 +569,22 @@
                 console.warn("Error updating donation status in DB:", updateError.message);
             }
 
+            // Fetch amount for modal display
+            const { data: donationRecord } = await window.sbClient
+                .from('donations')
+                .select('amount')
+                .eq('transaction_reference', transactionReference)
+                .maybeSingle();
+
+            const displayedAmount = donationRecord ? donationRecord.amount : 0;
+
             // Display Tailwind success modal to the user
             document.getElementById('modal-tx-ref').innerText = transactionReference;
-            document.getElementById('modal-amount').innerText = `UGX ${Number(amount).toLocaleString()}`;
+            document.getElementById('modal-amount').innerText = `UGX ${Number(displayedAmount).toLocaleString()}`;
             document.getElementById('success-donation-modal').classList.remove('hidden');
 
         } catch (err) {
-            console.error("Error handling gateway success callback:", err);
-        } finally {
-            const proceedBtn = document.getElementById('proceed-give-btn');
-            proceedBtn.disabled = false;
-            proceedBtn.innerHTML = '<i class="fas fa-lock text-sm"></i> <span>Proceed to Give</span>';
+            console.error("Error handling Pesapal success callback:", err);
         }
     }
 
