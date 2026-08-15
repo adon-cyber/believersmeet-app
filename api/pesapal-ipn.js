@@ -4,7 +4,7 @@ const getPesapalBaseUrl = () => {
     const env = process.env.PESAPAL_ENV || 'sandbox';
     return env === 'live' 
         ? 'https://pay.pesapal.com/v3' 
-        : 'https://cybqa.pesapal.com/v3';
+        : 'https://cybqa.pesapal.com/pesapalv3';
 };
 
 const getSupabaseAdmin = () => {
