@@ -754,8 +754,10 @@ async function fetchAndRenderWidgetVerse(query) {
             `;
         } else {
             // Keyword Search Fallback using Bolls Life API
-            const res = await fetch(`https://bolls.life/search/NKJV/?q=${encodeURIComponent(trimmedQuery)}`);
-            if (!res.ok) throw new Error('Search failed');
+            const res = await fetch(`https://bolls.life/search/KJV/?q=${encodeURIComponent(trimmedQuery)}`);
+            if (!res.ok) {
+              throw new Error('Keyword search is currently unavailable.');
+            }
             const data = await res.json();
 
             if (data && Array.isArray(data) && data.length > 0) {
@@ -766,13 +768,13 @@ async function fetchAndRenderWidgetVerse(query) {
                 currentFetchedVerse = {
                     reference: ref,
                     text: text,
-                    translation: 'NKJV (Bolls Life)'
+                    translation: 'KJV (Bolls Life)'
                 };
 
                 container.innerHTML = `
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <h4 class="text-xs font-bold text-indigo-700">Search result for: <span class="text-emerald-700">"${escapeHTML(trimmedQuery)}"</span> &rarr; ${escapeHTML(ref)} <span class="text-[10px] text-gray-500 font-normal">(NKJV)</span></h4>
+                            <h4 class="text-xs font-bold text-indigo-700">Search result for: <span class="text-emerald-700">"${escapeHTML(trimmedQuery)}"</span> &rarr; ${escapeHTML(ref)} <span class="text-[10px] text-gray-500 font-normal">(KJV)</span></h4>
                         </div>
                         <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
                         ${data.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${data.length} matches.</p>` : ''}
@@ -781,7 +783,7 @@ async function fetchAndRenderWidgetVerse(query) {
             } else {
                 container.innerHTML = `
                     <div class="py-2 text-center">
-                        <p class="text-xs text-gray-600 font-semibold">No verses found for '${escapeHTML(trimmedQuery)}'.</p>
+                        <p class="text-xs text-gray-600 font-semibold">No matching scripture found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference like 'John 3:16'</p>
                     </div>
                 `;
             }
@@ -790,7 +792,7 @@ async function fetchAndRenderWidgetVerse(query) {
         console.error("Bible widget lookup error:", err);
         container.innerHTML = `
             <div class="py-2 text-center">
-                <p class="text-xs text-red-600 font-semibold">Unable to fetch scripture right now. Please try again.</p>
+                <p class="text-xs text-red-600 font-semibold">No matching scripture found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference like 'John 3:16'</p>
             </div>
         `;
     }
