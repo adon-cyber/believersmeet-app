@@ -32,6 +32,7 @@
                 <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
                 <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
                 <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
+                <button onclick="shareChurchProfile()" id="share-church-profile-btn" class="hidden text-xs sm:text-sm font-bold text-amber-200 hover:text-white px-2.5 py-1 rounded-md transition-colors bg-blue-700/50 border border-blue-400/30">🔗 Share Church Profile</button>
                 <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
             </div>
             <!-- Light / Dark Mode Toggle Button -->
@@ -164,6 +165,11 @@
                 
                 <!-- Quick Search Input & Lookup Button -->
                 <div class="flex gap-2 mb-4">
+                    <select id="bible-version" onchange="handleBibleVersionChange()" class="px-2.5 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="kjv">KJV</option>
+                        <option value="web" selected>WEB</option>
+                        <option value="bbe">BBE</option>
+                    </select>
                     <input type="text" id="bible-search-input" placeholder="e.g. John 3:16, Psalm 23 or grace" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     <button type="button" onclick="lookupWidgetScripture()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Lookup</button>
                 </div>

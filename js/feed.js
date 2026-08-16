@@ -249,6 +249,10 @@ async function enforceLoginAndLoad() {
         if (adminNavLink && (profile.role === 'admin' || profile.role === 'super_admin')) {
             adminNavLink.style.display = 'inline-block';
         }
+        const shareProfileBtn = document.getElementById('share-church-profile-btn');
+        if (shareProfileBtn && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {
+            shareProfileBtn.classList.remove('hidden');
+        }
     } else {
         console.warn("Public profile row missing. Utilizing safe global fallback.");
         currentUserProfile = {
@@ -710,10 +714,13 @@ async function fetchAndRenderWidgetVerse(query) {
     const container = document.getElementById('bible-widget-container');
     if (!container) return;
 
+    const versionSelect = document.getElementById('bible-version');
+    const version = versionSelect ? versionSelect.value : 'web';
+
     container.innerHTML = `
         <div class="flex items-center justify-center py-4 space-x-2">
             <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs text-gray-500 font-medium">Looking up "${escapeHTML(query)}"...</span>
+            <span class="text-xs text-gray-500 font-medium">Looking up "${escapeHTML(query)}" (${version.toUpperCase()})...</span>
         </div>
     `;
 
@@ -722,13 +729,14 @@ async function fetchAndRenderWidgetVerse(query) {
 
     try {
         if (isReference) {
-            const res = await fetch(`https://bible-api.com/${encodeURIComponent(trimmedQuery)}`);
+            const url = `https://bible-api.com/${encodeURIComponent(trimmedQuery)}?translation=${version}`;
+            const res = await fetch(url);
             if (!res.ok) throw new Error('Scripture reference not found');
             const data = await res.json();
             
             let passageText = '';
             let officialRef = data.reference || trimmedQuery;
-            let translationName = data.translation_name || 'World English Bible';
+            let translationName = data.translation_name || version.toUpperCase();
 
             if (data.verses && data.verses.length > 0) {
                 passageText = data.verses.map(v => `${v.verse}. ${v.text.trim()}`).join(' ');
@@ -741,7 +749,8 @@ async function fetchAndRenderWidgetVerse(query) {
             currentFetchedVerse = {
                 reference: officialRef,
                 text: passageText,
-                translation: translationName
+                translation: translationName,
+                version: version
             };
 
             container.innerHTML = `
@@ -753,37 +762,59 @@ async function fetchAndRenderWidgetVerse(query) {
                 </div>
             `;
         } else {
-            // Keyword Search Fallback using Bolls Life API
-            const res = await fetch(`https://bolls.life/search/KJV/?q=${encodeURIComponent(trimmedQuery)}`);
-            if (!res.ok) {
-              throw new Error('Keyword search is currently unavailable.');
-            }
-            const data = await res.json();
+            // Keyword Search using Bolls Life API POST request
+            try {
+                const response = await fetch('https://bolls.life/search/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        search: trimmedQuery,
+                        translations: [version.toUpperCase()]
+                    })
+                });
 
-            if (data && Array.isArray(data) && data.length > 0) {
-                const topResult = data[0];
-                const ref = `${topResult.book_name} ${topResult.chapter}:${topResult.verse}`;
-                const text = topResult.text ? topResult.text.replace(/<[^>]*>/g, '').trim() : '';
+                if (!response.ok) {
+                    throw new Error('Keyword search failed');
+                }
 
-                currentFetchedVerse = {
-                    reference: ref,
-                    text: text,
-                    translation: 'KJV (Bolls Life)'
-                };
+                const data = await response.json();
+                const results = data.results || (Array.isArray(data) ? data : []);
 
-                container.innerHTML = `
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-xs font-bold text-indigo-700">Search result for: <span class="text-emerald-700">"${escapeHTML(trimmedQuery)}"</span> &rarr; ${escapeHTML(ref)} <span class="text-[10px] text-gray-500 font-normal">(KJV)</span></h4>
+                if (results.length > 0) {
+                    const topResult = results[0];
+                    const ref = topResult.reference || `${topResult.book_name || ''} ${topResult.chapter || ''}:${topResult.verse || ''}`.trim();
+                    const text = topResult.text ? topResult.text.replace(/<[^>]*>/g, '').trim() : '';
+
+                    currentFetchedVerse = {
+                        reference: ref,
+                        text: text,
+                        translation: `${version.toUpperCase()} (Bolls Life)`,
+                        version: version
+                    };
+
+                    container.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-indigo-700">Search result: <span class="text-emerald-700">"${escapeHTML(ref)}"</span> <span class="text-[10px] text-gray-500 font-normal">(${version.toUpperCase()})</span></h4>
+                            </div>
+                            <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
+                            ${results.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${results.length} matches.</p>` : ''}
                         </div>
-                        <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
-                        ${data.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${data.length} matches.</p>` : ''}
-                    </div>
-                `;
-            } else {
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="py-2 text-center">
+                            <p class="text-xs text-gray-600 font-semibold">No scripture results found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference (e.g., 'John 3:16').</p>
+                        </div>
+                    `;
+                }
+            } catch (searchErr) {
+                console.error("Keyword search error:", searchErr);
                 container.innerHTML = `
                     <div class="py-2 text-center">
-                        <p class="text-xs text-gray-600 font-semibold">No matching scripture found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference like 'John 3:16'</p>
+                        <p class="text-xs text-red-600 font-semibold">No scripture results found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference (e.g., 'John 3:16').</p>
                     </div>
                 `;
             }
@@ -796,6 +827,16 @@ async function fetchAndRenderWidgetVerse(query) {
             </div>
         `;
     }
+}
+
+function handleBibleVersionChange() {
+    // Automatically re-fetch the current query when translation changes
+    const input = document.getElementById('bible-search-input');
+    const query = (input && input.value.trim()) ? input.value.trim() : (currentFetchedVerse ? currentFetchedVerse.reference : 'John 3:16');
+    if (input && !input.value.trim()) {
+        input.value = query;
+    }
+    fetchAndRenderWidgetVerse(query);
 }
 
 function lookupWidgetScripture() {
@@ -847,3 +888,38 @@ function shareVerseToFeed() {
     postRawText.scrollIntoView({ behavior: 'smooth', block: 'center' });
     postRawText.focus();
 }
+
+async function shareChurchProfile() {
+    let churchId = currentUserProfile?.church_id;
+    
+    if (!churchId || churchId === 'global-fellowship') {
+        try {
+            const { data: churchData } = await window.sbClient.from('churches').select('id').limit(1).maybeSingle();
+            if (churchData) {
+                churchId = churchData.id;
+            }
+        } catch (e) {
+            console.error("Error finding church ID for sharing:", e);
+        }
+    }
+
+    const publicUrl = window.location.origin + '/public-church.html' + (churchId ? `?id=${churchId}` : '');
+    
+    try {
+        await navigator.clipboard.writeText(publicUrl);
+        alert("Public link copied to clipboard! You can now share this on WhatsApp, Facebook, etc.");
+    } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = publicUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert("Public link copied to clipboard! You can now share this on WhatsApp, Facebook, etc.");
+        } catch (fallbackErr) {
+            alert("Copy failed. Here is your public link: " + publicUrl);
+        }
+        document.body.removeChild(textArea);
+    }
+}
+
