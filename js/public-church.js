@@ -8,6 +8,12 @@ const churchIdParam = urlParams.get('id');
 const churchCodeParam = urlParams.get('code');
 
 let currentChurchId = null;
+let currentFetchedVerse = {
+    reference: 'John 3:16',
+    text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
+    translation: 'WEB',
+    version: 'web'
+};
 
 // Initialize Supabase Client with public anon key for anonymous access
 let publicSupabase = null;
@@ -27,6 +33,9 @@ async function initPublicChurch() {
 
         await fetchChurchDetails();
         await fetchChurchActivities();
+
+        // 3. Initialization: trigger default verse when public-church.html first loads
+        await fetchAndRenderWidgetVerse('John 3:16');
     } catch (err) {
         console.error("Error initializing public church profile:", err);
         document.getElementById('church-name').textContent = "Church Profile Not Found";
@@ -80,6 +89,58 @@ function renderChurch(church) {
     const logoEl = document.getElementById('church-logo');
     if (logoEl && church.logo_url) {
         logoEl.src = church.logo_url;
+    }
+
+    // 1. Dynamic Plan a Visit Section Updates:
+    // Update physical address text
+    const planVisitAddressEl = document.getElementById('plan-visit-address');
+    if (planVisitAddressEl) {
+        planVisitAddressEl.textContent = address;
+    }
+
+    // Update 'Get Directions' button link dynamically with church address query
+    const getDirectionsBtn = document.getElementById('get-directions-btn');
+    if (getDirectionsBtn) {
+        getDirectionsBtn.href = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+    }
+
+    // Update Map Iframe src
+    if (church.physical_address) {
+        const baseUrl = "https://maps.google.com/maps?q=";
+        const urlParams = "&t=&z=15&ie=UTF8&iwloc=&output=embed";
+        const mapSrc = baseUrl + encodeURIComponent(church.physical_address) + urlParams;
+        
+        const mapIframe = document.getElementById("church-map-iframe");
+        if (mapIframe) {
+            mapIframe.src = mapSrc;
+            mapIframe.style.display = "block";
+        }
+    } else {
+        const mapIframe = document.getElementById("church-map-iframe");
+        if (mapIframe) {
+            mapIframe.style.display = "none";
+        }
+    }
+
+    // Update Service Schedule list if database schema has a service_times column or JSON array
+    // DATABASE SCHEMA NOTE: Once a dedicated `service_times` column or related table is added,
+    // parse and render the dynamic schedule here. Example:
+    // if (church.service_times && Array.isArray(church.service_times)) { renderServiceTimes(church.service_times); }
+    if (church.service_times && Array.isArray(church.service_times)) {
+        const scheduleContainer = document.getElementById('service-schedule-container');
+        if (scheduleContainer) {
+            scheduleContainer.innerHTML = church.service_times.map(service => `
+                <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-900 text-sm">${escapeHTML(service.title || service.name || 'Worship Service')}</h4>
+                        <p class="text-xs text-gray-600 mt-0.5">${escapeHTML(service.time || service.schedule || '')}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
     }
 }
 
@@ -155,6 +216,167 @@ function renderActivities(items) {
     }).join('');
 }
 
+// 2. Replicate the Bible Fetching Logic
+async function fetchAndRenderWidgetVerse(query) {
+    const container = document.getElementById('bible-widget-container');
+    if (!container) return;
+
+    const versionSelect = document.getElementById('bible-version');
+    const version = versionSelect ? versionSelect.value : 'web';
+
+    container.innerHTML = `
+        <div class="flex items-center justify-center py-4 space-x-2">
+            <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs text-gray-500 font-medium">Looking up "${escapeHTML(query)}" (${version.toUpperCase()})...</span>
+        </div>
+    `;
+
+    const trimmedQuery = query.trim();
+    const isReference = /[a-z]+\s*\d+/i.test(trimmedQuery);
+
+    try {
+        if (isReference) {
+            const url = `https://bible-api.com/${encodeURIComponent(trimmedQuery)}?translation=${version}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Scripture reference not found');
+            const data = await res.json();
+            
+            let passageText = '';
+            let officialRef = data.reference || trimmedQuery;
+            let translationName = data.translation_name || version.toUpperCase();
+
+            if (data.verses && data.verses.length > 0) {
+                passageText = data.verses.map(v => `${v.verse}. ${v.text.trim()}`).join(' ');
+            } else if (data.text) {
+                passageText = data.text.trim();
+            } else {
+                throw new Error('Scripture reference not found');
+            }
+
+            currentFetchedVerse = {
+                reference: officialRef,
+                text: passageText,
+                translation: translationName,
+                version: version
+            };
+
+            container.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-indigo-700">${escapeHTML(officialRef)} <span class="text-[10px] text-gray-500 font-normal">(${escapeHTML(translationName)})</span></h4>
+                    </div>
+                    <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(passageText)}"</p>
+                </div>
+            `;
+        } else {
+            // Keyword Search using Bolls Life API POST request
+            try {
+                const response = await fetch('https://bolls.life/search/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        search: trimmedQuery,
+                        translations: [version.toUpperCase()]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Keyword search failed');
+                }
+
+                const data = await response.json();
+                const results = data.results || (Array.isArray(data) ? data : []);
+
+                if (results.length > 0) {
+                    const topResult = results[0];
+                    const ref = topResult.reference || `${topResult.book_name || ''} ${topResult.chapter || ''}:${topResult.verse || ''}`.trim();
+                    const text = topResult.text ? topResult.text.replace(/<[^>]*>/g, '').trim() : '';
+
+                    currentFetchedVerse = {
+                        reference: ref,
+                        text: text,
+                        translation: `${version.toUpperCase()} (Bolls Life)`,
+                        version: version
+                    };
+
+                    container.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-indigo-700">Search result: <span class="text-emerald-700">"${escapeHTML(ref)}"</span> <span class="text-[10px] text-gray-500 font-normal">(${version.toUpperCase()})</span></h4>
+                            </div>
+                            <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
+                            ${results.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${results.length} matches.</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="py-2 text-center">
+                            <p class="text-xs text-gray-600 font-semibold">No scripture results found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference (e.g., 'John 3:16').</p>
+                        </div>
+                    `;
+                }
+            } catch (searchErr) {
+                console.error("Keyword search error:", searchErr);
+                container.innerHTML = `
+                    <div class="py-2 text-center">
+                        <p class="text-xs text-red-600 font-semibold">No scripture results found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference (e.g., 'John 3:16').</p>
+                    </div>
+                `;
+            }
+        }
+    } catch (err) {
+        console.error("Bible widget lookup error:", err);
+        container.innerHTML = `
+            <div class="py-2 text-center">
+                <p class="text-xs text-red-600 font-semibold">No matching scripture found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference like 'John 3:16'</p>
+            </div>
+        `;
+    }
+}
+
+function handleBibleVersionChange() {
+    const input = document.getElementById('bible-search-input');
+    const query = (input && input.value.trim()) ? input.value.trim() : (currentFetchedVerse ? currentFetchedVerse.reference : 'John 3:16');
+    if (input && !input.value.trim()) {
+        input.value = query;
+    }
+    fetchAndRenderWidgetVerse(query);
+}
+
+function lookupWidgetScripture() {
+    const input = document.getElementById('bible-search-input');
+    if (!input) return;
+    const ref = input.value.trim();
+    if (!ref) {
+        alert("Please enter a scripture reference or keyword (e.g. John 3:16 or grace).");
+        return;
+    }
+    fetchAndRenderWidgetVerse(ref);
+}
+
+function navigateWidgetVerse(direction) {
+    const match = currentFetchedVerse.reference.match(/^((?:[1-3]\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)*)\s+(\d+)(?::(\d+))?/);
+    if (!match) {
+        fetchAndRenderWidgetVerse('John 3:16');
+        return;
+    }
+
+    const book = match[1];
+    const chapter = parseInt(match[2], 10);
+    let verse = match[3] ? parseInt(match[3], 10) : 1;
+
+    verse += direction;
+    if (verse < 1) verse = 1;
+
+    const newRef = `${book} ${chapter}:${verse}`;
+    const input = document.getElementById('bible-search-input');
+    if (input) input.value = newRef;
+
+    fetchAndRenderWidgetVerse(newRef);
+}
+
 // Handle 'Get Converted' Form Submission
 const conversionForm = document.getElementById('conversion-form');
 if (conversionForm) {
@@ -203,6 +425,68 @@ if (conversionForm) {
             submitBtn.innerHTML = `<span>Submit Request</span> <i class="fas fa-paper-plane"></i>`;
         }
     });
+}
+
+// Handle 'Need Prayer?' Form Submission
+const prayerForm = document.getElementById('prayer-form');
+if (prayerForm) {
+    prayerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!currentChurchId) {
+            alert("Church identification error. Please reload the page.");
+            return;
+        }
+
+        const fullName = document.getElementById('prayer-full-name').value.trim();
+        const contactInfo = document.getElementById('prayer-contact-info').value.trim();
+        const prayerRequestText = document.getElementById('prayer-request-text').value.trim();
+        const prayerSubmitBtn = document.getElementById('prayer-submit-btn');
+
+        if (!fullName || !prayerRequestText) {
+            alert("Please fill in your name and your prayer request.");
+            return;
+        }
+
+        prayerSubmitBtn.disabled = true;
+        prayerSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...`;
+
+        try {
+            const { error } = await publicSupabase.from('prayer_requests').insert({
+                church_id: currentChurchId,
+                full_name: fullName,
+                contact_info: contactInfo || null,
+                prayer_request: prayerRequestText
+            });
+
+            if (error) throw error;
+
+            // Show success message and hide form
+            document.getElementById('prayer-success-message').classList.remove('hidden');
+            prayerForm.reset();
+            prayerForm.classList.add('hidden');
+        } catch (err) {
+            console.error("Prayer request submission error:", err);
+            alert("Failed to submit prayer request: " + (err.message || 'Please try again later.'));
+            prayerSubmitBtn.disabled = false;
+            prayerSubmitBtn.innerHTML = `<i class="fas fa-hands-praying mr-1"></i><span>Submit Prayer Request</span>`;
+        }
+    });
+}
+
+// Handle Online Giving via Scoa pay
+function handleOnlineGiving() {
+    // Admin Note: Replace the placeholder URL below with your actual Scoa pay merchant checkout link or integrate the Scoa pay payment modal SDK.
+    const scoaPayCheckoutUrl = "https://checkout.scoapay.com/pay/placeholder-merchant";
+
+    // Open a modal or redirect the user to the Scoa pay checkout URL
+    if (confirm("You are about to proceed to the secure Scoa pay checkout to support the ministry. Would you like to continue?")) {
+        // Option 1: Open in a new tab / redirect
+        window.open(scoaPayCheckoutUrl, '_blank');
+        
+        // Alternatively, if you wish to record the giving attempt in Supabase or handle local modal state:
+        console.log("Redirecting to Scoa pay for church ID:", currentChurchId);
+    }
 }
 
 function escapeHTML(str) {
