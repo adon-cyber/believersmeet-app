@@ -36,6 +36,9 @@ async function initPublicChurch() {
 
         // 3. Initialization: trigger default verse when public-church.html first loads
         await fetchAndRenderWidgetVerse('John 3:16');
+
+        // Initialize gallery sequential entrance animation
+        initGalleryAnimation();
     } catch (err) {
         console.error("Error initializing public church profile:", err);
         document.getElementById('church-name').textContent = "Church Profile Not Found";
@@ -474,18 +477,18 @@ if (prayerForm) {
     });
 }
 
-// Handle Online Giving via Scoa pay
+// Handle Online Giving via Pesapal
 function handleOnlineGiving() {
-    // Admin Note: Replace the placeholder URL below with your actual Scoa pay merchant checkout link or integrate the Scoa pay payment modal SDK.
-    const scoaPayCheckoutUrl = "https://checkout.scoapay.com/pay/placeholder-merchant";
+    // Admin Note: Replace the placeholder URL below with your actual Pesapal merchant checkout link or integrate the Pesapal payment modal SDK.
+    const pesapalCheckoutUrl = "https://checkout.pesapal.com/pay/placeholder-merchant";
 
-    // Open a modal or redirect the user to the Scoa pay checkout URL
-    if (confirm("You are about to proceed to the secure Scoa pay checkout to support the ministry. Would you like to continue?")) {
+    // Open a modal or redirect the user to the Pesapal checkout URL
+    if (confirm("You are about to proceed to the secure Pesapal checkout to support the ministry. Would you like to continue?")) {
         // Option 1: Open in a new tab / redirect
-        window.open(scoaPayCheckoutUrl, '_blank');
+        window.open(pesapalCheckoutUrl, '_blank');
         
         // Alternatively, if you wish to record the giving attempt in Supabase or handle local modal state:
-        console.log("Redirecting to Scoa pay for church ID:", currentChurchId);
+        console.log("Redirecting to Pesapal for church ID:", currentChurchId);
     }
 }
 
@@ -498,6 +501,35 @@ function escapeHTML(str) {
         "'": '&#39;',
         '"': '&quot;'
     }[tag] || tag));
+}
+
+// Initialize Gallery Staggered Animation
+function initGalleryAnimation() {
+    if (typeof window.initAnimatedGallery === 'function') {
+        window.initAnimatedGallery('gallery-section');
+    } else {
+        const gallerySection = document.getElementById('gallery-section');
+        if (!gallerySection) return;
+
+        const observer = new IntersectionObserver((entries, observerInstance) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const imgItems = gallerySection.querySelectorAll('.gallery-img-item');
+                    imgItems.forEach((item, index) => {
+                        setTimeout(() => {
+                            item.classList.remove('opacity-0', 'translate-y-10');
+                            item.classList.add('opacity-100', 'translate-y-0');
+                        }, index * 150);
+                    });
+                    observerInstance.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        observer.observe(gallerySection);
+    }
 }
 
 // Run initialization

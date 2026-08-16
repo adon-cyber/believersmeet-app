@@ -11,6 +11,7 @@
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/app-utils.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
 
@@ -203,6 +204,44 @@
             </div>
         </section>
 
+        <!-- Gallery Section -->
+        <section id="gallery-section" class="space-y-8">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <div class="inline-block bg-blue-50 text-blue-600 font-semibold px-4 py-1 rounded-full text-xs tracking-wider uppercase">
+                    Photo Gallery
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900">Moments of Fellowship</h2>
+                <p class="text-gray-600">A glimpse into our worship services, community gatherings, and joyful fellowship.</p>
+            </div>
+
+            <div id="gallery-container" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- Gallery Image 1 -->
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
+                    <img src="images/meet2.jpg" alt="Church Fellowship" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+                <!-- Gallery Image 2 -->
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
+                    <img src="images/adon-73308cbf.jpg" alt="Worship Gathering" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+                <!-- Gallery Image 3 -->
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
+                    <img src="images/roo-background.jpg.png" alt="Community Outreach" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+                <!-- Gallery Image 4 -->
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
+                    <img src="images/meet2.jpg" alt="Bible Study" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+                <!-- Gallery Image 5 -->
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
+                    <img src="images/adon-73308cbf.jpg" alt="Youth Service" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+                <!-- Gallery Image 6 -->
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
+                    <img src="images/roo-background.jpg.png" alt="Prayer Meeting" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+            </div>
+        </section>
+
         <!-- Call to Action Section: Get Converted / Join Church -->
         <section id="join-section" class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden max-w-3xl mx-auto">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8 text-white text-center space-y-2">
@@ -322,7 +361,7 @@
             <div class="space-y-4 pt-2">
                 <button type="button" onclick="handleOnlineGiving()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-3 text-base sm:text-lg">
                     <i class="fas fa-shield-heart"></i>
-                    <span>Give Online via Scoa pay</span>
+                    <span>Give Online via Pesapal</span>
                 </button>
 
                 <p class="text-xs text-center text-gray-500 max-w-md mx-auto leading-relaxed">

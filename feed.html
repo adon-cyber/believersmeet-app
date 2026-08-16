@@ -9,6 +9,7 @@
     <script src="js/theme.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="js/bible-service.js"></script>
+    <script src="js/app-utils.js"></script>
     <script src="js/feed.js" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -56,126 +57,217 @@
     </div>
 </nav>
 
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Community Fellowship Feed</h2>
-        <a href="counseling.html" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-sm">
-            <i class="fas fa-comments"></i> Request Counseling
-        </a>
-    </div>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Add My Business Button -->
-            <button id="openBusinessModalBtn" onclick="openBusinessModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow mb-6 flex items-center justify-center gap-2 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              Add Your Business to the Directory
-            </button>
+<main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow">
+    <!-- Column 1: Main Feed (spans 8 columns) -->
+    <div class="lg:col-span-8 space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+            <h2 class="text-2xl font-bold text-gray-900">Community Fellowship Feed</h2>
+            <a href="counseling.html" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-sm">
+                <i class="fas fa-comments"></i> Request Counseling
+            </a>
+        </div>
 
-            <!-- My Directory Submissions Tracker -->
-            <div class="bg-white rounded-xl shadow-sm p-5 mb-6 border border-slate-200">
-                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    My Directory Submissions
-                </h3>
-                <div id="myBusinessesList" class="space-y-3">
-                    <p class="text-sm text-slate-500">Loading your submissions...</p>
+        <!-- Create Post Input Box/Card -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <form id="post-composition-form" class="space-y-4">
+                <textarea id="post-raw-text" rows="3" placeholder="Share something with the church family..." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"></textarea>
+                
+                <select id="post-category-input" class="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <option value="Encouragement">🕊️ Word of Encouragement</option>
+                    <option value="Prayer Request">🙏 Prayer Request</option>
+                    <option value="Testimony">🙌 Testimony</option>
+                </select>
+
+                <input type="url" id="bible-link-input" placeholder="Add a Bible link (optional)..." class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow">Publish Post</button>
+            </form>
+        </div>
+
+        <!-- Gallery Memories Section -->
+        <div id="gallery-section" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">📸 Gallery Memories</h3>
+                <div class="flex items-center gap-3">
+                    <button onclick="handleSecureDownload('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop', 'church-media-set.zip', true)" class="border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white px-4 py-2 rounded-md font-bold text-xs transition flex items-center gap-2">
+                        <i class="fas fa-download"></i> DOWNLOAD MEDIA SET
+                    </button>
+                    <a href="gallery.html" class="text-xs text-blue-600 hover:text-blue-800 font-bold">View All Gallery &rarr;</a>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <form id="post-composition-form" class="space-y-4">
-                    <textarea id="post-raw-text" rows="3" placeholder="Share something with the church family..." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"></textarea>
-                    
-                    <select id="post-category-input" class="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        <option value="Encouragement">🕊️ Word of Encouragement</option>
-                        <option value="Prayer Request">🙏 Prayer Request</option>
-                        <option value="Testimony">🙌 Testimony</option>
-                    </select>
-
-                    <input type="url" id="bible-link-input" placeholder="Add a Bible link (optional)..." class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow">Publish Post</button>
+            <!-- Admin Upload Media Form & Button (Visible to admins/leaders) -->
+            <div id="admin-gallery-upload-wrapper" class="mb-5 hidden p-4 bg-blue-50/60 rounded-xl border border-blue-100">
+                <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Upload Church Media / Gallery Memory
+                </h4>
+                <form id="admin-gallery-upload-form" class="space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Select Image / Media File</label>
+                            <input type="file" id="gallery-file-input" accept="image/*,video/*" required class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer bg-white border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Caption / Title</label>
+                            <input type="text" id="gallery-caption-input" placeholder="e.g. Sunday Worship Celebration" required class="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" id="gallery-upload-submit-btn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow flex items-center gap-1.5">
+                            <i class="fas fa-upload"></i> Upload Media
+                        </button>
+                    </div>
                 </form>
             </div>
 
-            <!-- Believer Fellowship Connect & Discovery Matchmaking Widget -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-gray-100">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">🤝 Believer Fellowship Connect</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Discover and fellowship with members in your congregation.</p>
-                    </div>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <select id="discovery-filter-cell" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
-                            <option value="All">🏡 All Home Cells</option>
-                        </select>
-                        <select id="discovery-filter-role" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
-                            <option value="All">👤 All Roles</option>
-                            <option value="member">Member</option>
-                            <option value="admin">Leadership</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="discovery-card-container" class="relative min-h-[280px] flex items-center justify-center">
-                    <p class="text-gray-400 text-sm animate-pulse">Loading fellowship profiles...</p>
-                </div>
+            <div id="feed-gallery-container" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <p class="col-span-full text-center text-gray-400 text-sm py-4">Loading gallery memories...</p>
             </div>
-
-            <!-- Gallery Memories Widget -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">📸 Gallery Memories</h3>
-                    <a href="gallery.html" class="text-xs text-blue-600 hover:text-blue-800 font-bold">View All Gallery &rarr;</a>
-                </div>
-                <div id="feed-gallery-container" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    <p class="col-span-full text-center text-gray-400 text-sm py-4">Loading gallery memories...</p>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap gap-2 pb-2 border-b border-gray-200">
-                <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white transition" onclick="filterTimeline('All', this)">🌍 All Posts</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Encouragement', this)">🕊️ Encouragements</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Prayer Request', this)">🙏 Prayer Requests</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Testimony', this)">🙌 Testimonies</button>
-            </div>
-
-            <div id="feed-wall-stream" class="space-y-4">Loading feed...</div>
         </div>
 
-        <!-- Ministry Requests Section (Admin Dashboard) -->
-        <div id="ministry-requests-section" class="hidden lg:col-span-2 space-y-8 mt-8 border-t border-gray-200 pt-8">
-            <div class="flex items-center justify-between">
+        <!-- Believer Fellowship Connect & Discovery Matchmaking Widget -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-gray-100">
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">🙏 Ministry Requests Dashboard</h3>
-                    <p class="text-sm text-gray-500 mt-1">Manage conversion commitments, new believer forms, and church prayer requests.</p>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">🤝 Believer Fellowship Connect</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Discover and fellowship with members in your congregation.</p>
                 </div>
-                <button onclick="fetchMinistryRequests()" class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-100 transition flex items-center gap-2">
-                    <i class="fas fa-sync-alt"></i> Refresh Requests
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="discovery-filter-cell" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
+                        <option value="All">🏡 All Home Cells</option>
+                    </select>
+                    <select id="discovery-filter-role" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
+                        <option value="All">👤 All Roles</option>
+                        <option value="member">Member</option>
+                        <option value="admin">Leadership</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="discovery-card-container" class="relative min-h-[280px] flex items-center justify-center">
+                <p class="text-gray-400 text-sm animate-pulse">Loading fellowship profiles...</p>
+            </div>
+        </div>
+
+        <!-- Post Filters -->
+        <div class="flex flex-wrap gap-2 pb-2 border-b border-gray-200">
+            <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white transition" onclick="filterTimeline('All', this)">🌍 All Posts</button>
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Encouragement', this)">🕊️ Encouragements</button>
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Prayer Request', this)">🙏 Prayer Requests</button>
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Testimony', this)">🙌 Testimonies</button>
+        </div>
+
+        <!-- Main feed container where posts actually render -->
+        <div id="feed-wall-stream" class="space-y-4">Loading feed...</div>
+    </div>
+
+    <!-- Column 2: Sidebar/Widgets (spans 4 columns) -->
+    <div class="lg:col-span-4 space-y-6">
+        <!-- Add Your Business to the Directory Button -->
+        <button id="openBusinessModalBtn" onclick="openBusinessModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          Add Your Business to the Directory
+        </button>
+
+        <!-- My Directory Submissions Card -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                My Directory Submissions
+            </h3>
+            <div id="myBusinessesList" class="space-y-3">
+                <p class="text-sm text-slate-500">Loading your submissions...</p>
+            </div>
+        </div>
+
+        <!-- Worship Playlist Player -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h3 class="text-md font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-headphones-alt text-indigo-600"></i> Worship Playlist
+            </h3>
+            
+            <!-- This container will hold the dynamically loaded songs -->
+            <div id="music-playlist-container" class="space-y-3">
+                <div class="text-sm text-gray-500 italic">Loading tracks...</div>
+            </div>
+
+            <!-- Global Hidden Audio Player -->
+            <audio id="global-audio-player" class="hidden"></audio>
+        </div>
+
+        <!-- Bible Search Widget -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h3 class="text-md font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span>📖</span> Daily Scripture & Bible Reader
+            </h3>
+            
+            <!-- Quick Search Input & Lookup Button -->
+            <div class="flex gap-2 mb-4">
+                <select id="bible-version" onchange="handleBibleVersionChange()" class="px-2.5 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="kjv">KJV</option>
+                    <option value="web" selected>WEB</option>
+                    <option value="bbe">BBE</option>
+                </select>
+                <input type="text" id="bible-search-input" placeholder="e.g. John 3:16, Psalm 23 or grace" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="button" onclick="lookupWidgetScripture()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Lookup</button>
+            </div>
+
+            <!-- Verse Container -->
+            <div id="bible-widget-container" class="p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-gray-800 mb-3">
+                <div class="flex items-center justify-center py-4 space-x-2">
+                    <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-xs text-gray-500 font-medium">Loading Verse of the Day...</span>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons: Previous / Next -->
+            <div class="flex items-center justify-between mb-3 gap-2">
+                <button type="button" onclick="navigateWidgetVerse(-1)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition flex items-center justify-center gap-1 shadow-sm">
+                    <i class="fas fa-arrow-left text-xs"></i> Previous
+                </button>
+                <button type="button" onclick="navigateWidgetVerse(1)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition flex items-center justify-center gap-1 shadow-sm">
+                    Next <i class="fas fa-arrow-right text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Share to Feed Button -->
+            <button type="button" onclick="shareVerseToFeed()" class="w-full py-2 px-4 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2">
+                <i class="fas fa-share-alt"></i> Share to Feed
+            </button>
+        </div>
+
+        <!-- Ministry Requests Dashboard (Admin) -->
+        <div id="ministry-requests-section" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-6">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">🙏 Ministry Requests</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Admin panel tool.</p>
+                </div>
+                <button onclick="fetchMinistryRequests()" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex items-center gap-1.5">
+                    <i class="fas fa-sync-alt"></i> Refresh
                 </button>
             </div>
 
             <!-- Table 1: New Believers & Join Requests (Conversion Requests) -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                    <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <span>✨</span> New Believers & Join Requests (Conversion Requests)
+            <div class="space-y-3">
+                <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <h4 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                        <span>✨</span> New Believers & Join Requests
                     </h4>
-                    <p class="text-xs text-gray-600 mt-0.5">Submissions from public conversion and church connection forms.</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold tracking-wider border-b border-gray-200">
-                                <th class="py-3 px-4">Date</th>
-                                <th class="py-3 px-4">Name</th>
-                                <th class="py-3 px-4">Contact Info</th>
-                                <th class="py-3 px-4">Message</th>
-                                <th class="py-3 px-4 text-center">Status / Action</th>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-[10px] font-semibold tracking-wider border-b border-gray-200">
+                                <th class="py-2 px-3">Date</th>
+                                <th class="py-2 px-3">Name</th>
+                                <th class="py-2 px-3">Contact</th>
+                                <th class="py-2 px-3 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="conversion-requests-tbody" class="divide-y divide-gray-200 text-sm text-gray-800">
+                        <tbody id="conversion-requests-tbody" class="divide-y divide-gray-200 text-xs text-gray-800">
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-gray-400 italic">Loading conversion requests...</td>
+                                <td colspan="4" class="py-4 text-center text-gray-400 italic">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -183,103 +275,43 @@
             </div>
 
             <!-- Table 2: Prayer Requests -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-5 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
-                    <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <div class="space-y-3 pt-2">
+                <div class="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                    <h4 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
                         <span>🙏</span> Prayer Requests
                     </h4>
-                    <p class="text-xs text-gray-600 mt-0.5">Prayer intentions submitted by members and visitors.</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold tracking-wider border-b border-gray-200">
-                                <th class="py-3 px-4">Date</th>
-                                <th class="py-3 px-4">Name</th>
-                                <th class="py-3 px-4">Contact Info</th>
-                                <th class="py-3 px-4">Message</th>
-                                <th class="py-3 px-4 text-center">Status / Action</th>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-[10px] font-semibold tracking-wider border-b border-gray-200">
+                                <th class="py-2 px-3">Date</th>
+                                <th class="py-2 px-3">Name</th>
+                                <th class="py-2 px-3">Message</th>
+                                <th class="py-2 px-3 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="prayer-requests-tbody" class="divide-y divide-gray-200 text-sm text-gray-800">
+                        <tbody id="prayer-requests-tbody" class="divide-y divide-gray-200 text-xs text-gray-800">
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-gray-400 italic">Loading prayer requests...</td>
+                                <td colspan="4" class="py-4 text-center text-gray-400 italic">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        
-        <div class="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
-            <!-- Music Playlist Widget -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-                <h3 class="text-md font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <i class="fas fa-headphones-alt text-indigo-600"></i> Worship Playlist
-                </h3>
-                
-                <!-- This container will hold the dynamically loaded songs -->
-                <div id="music-playlist-container" class="space-y-3">
-                    <div class="text-sm text-gray-500 italic">Loading tracks...</div>
-                </div>
 
-                <!-- Global Hidden Audio Player -->
-                <audio id="global-audio-player" class="hidden"></audio>
-            </div>
+        <div id="leadership-inbox-widget-container" class="bg-slate-50 p-5 rounded-xl border border-gray-200 shadow-sm">
+            <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
+            <form id="leadership-inbox-form">
+                <textarea id="inbox-message-text" rows="3" placeholder="Send a private message to the Church Admin panel..." required class="w-full p-2.5 mb-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"></textarea>
+                <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Send Secure Inquiry</button>
+            </form>
+        </div>
 
-            <!-- Bible & Verse Reader Widget -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-                <h3 class="text-md font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span>📖</span> Daily Scripture & Bible Reader
-                </h3>
-                
-                <!-- Quick Search Input & Lookup Button -->
-                <div class="flex gap-2 mb-4">
-                    <select id="bible-version" onchange="handleBibleVersionChange()" class="px-2.5 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                        <option value="kjv">KJV</option>
-                        <option value="web" selected>WEB</option>
-                        <option value="bbe">BBE</option>
-                    </select>
-                    <input type="text" id="bible-search-input" placeholder="e.g. John 3:16, Psalm 23 or grace" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <button type="button" onclick="lookupWidgetScripture()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Lookup</button>
-                </div>
-
-                <!-- Verse Container -->
-                <div id="bible-widget-container" class="p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-gray-800 mb-3">
-                    <div class="flex items-center justify-center py-4 space-x-2">
-                        <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span class="text-xs text-gray-500 font-medium">Loading Verse of the Day...</span>
-                    </div>
-                </div>
-
-                <!-- Navigation Buttons: Previous / Next -->
-                <div class="flex items-center justify-between mb-3 gap-2">
-                    <button type="button" onclick="navigateWidgetVerse(-1)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition flex items-center justify-center gap-1 shadow-sm">
-                        <i class="fas fa-arrow-left text-xs"></i> Previous
-                    </button>
-                    <button type="button" onclick="navigateWidgetVerse(1)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition flex items-center justify-center gap-1 shadow-sm">
-                        Next <i class="fas fa-arrow-right text-xs"></i>
-                    </button>
-                </div>
-
-                <!-- Share to Feed Button -->
-                <button type="button" onclick="shareVerseToFeed()" class="w-full py-2 px-4 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2">
-                    <i class="fas fa-share-alt"></i> Share to Feed
-                </button>
-            </div>
-
-            <div id="leadership-inbox-widget-container" class="bg-slate-50 p-5 rounded-xl border border-gray-200 shadow-sm">
-                <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
-                <form id="leadership-inbox-form">
-                    <textarea id="inbox-message-text" rows="3" placeholder="Send a private message to the Church Admin panel..." required class="w-full p-2.5 mb-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"></textarea>
-                    <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Send Secure Inquiry</button>
-                </form>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <h3 class="text-lg font-bold text-gray-900 mb-3">📢 Official Church Bulletins</h3>
-                <div id="announcements-container" class="space-y-3 text-sm"></div>
-            </div>
+        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+            <h3 class="text-lg font-bold text-gray-900 mb-3">📢 Official Church Bulletins</h3>
+            <div id="announcements-container" class="space-y-3 text-sm"></div>
         </div>
     </div>
 </main>
