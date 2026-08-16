@@ -109,26 +109,139 @@
         }
     };
 
-    async function fetchAndRenderNotifications() {
-        if (!sbClient || !currentUser) return;
+    /**
+     * Aggregates unread notifications from multiple Supabase tables:
+     * - New Chat messages (messages table)
+     * - New Ministry/Prayer Requests (conversion_requests / prayer_requests tables for admins)
+     * - Approval alerts (business_directory / profile approval updates)
+     */
+    window.fetchGlobalNotifications = async function() {
+        if (!sbClient || !currentUser) return [];
+
+        let aggregated = [];
+
         try {
-            const { data, error } = await sbClient
+            // 1. Fetch unread system notifications from the notifications table
+            const { data: sysNotifs, error: sysErr } = await sbClient
                 .from('notifications')
                 .select('*')
                 .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false })
-                .limit(20);
+                .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Error fetching notifications:', error);
-                return;
+            if (!sysErr && sysNotifs) {
+                aggregated.push(...sysNotifs);
             }
 
-            renderNotificationsList(data || []);
+            // 2. Fetch unread chat messages
+            const { data: chatMsgs, error: chatErr } = await sbClient
+                .from('messages')
+                .select('id, content, created_at, sender_id')
+                .eq('recipient_id', currentUser.id)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (!chatErr && chatMsgs && chatMsgs.length > 0) {
+                chatMsgs.forEach(msg => {
+                    aggregated.push({
+                        id: 'chat-' + msg.id,
+                        user_id: currentUser.id,
+                        title: 'New Chat Message',
+                        message: msg.content ? (msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : '')) : 'You received a new message.',
+                        is_read: false,
+                        created_at: msg.created_at,
+                        type: 'chat'
+                    });
+                });
+            }
+
+            // 3. If user is admin/leader, check for pending ministry / prayer requests
+            const { data: profile } = await sbClient
+                .from('profiles')
+                .select('role, church_id')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            if (profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {
+                const churchId = profile.church_id;
+                if (churchId) {
+                    const { data: pendingConversions } = await sbClient
+                        .from('conversion_requests')
+                        .select('id, full_name, created_at')
+                        .eq('church_id', churchId)
+                        .eq('status', 'pending')
+                        .limit(5);
+
+                    if (pendingConversions && pendingConversions.length > 0) {
+                        pendingConversions.forEach(c => {
+                            aggregated.push({
+                                id: 'conversion-' + c.id,
+                                user_id: currentUser.id,
+                                title: 'New Join / Conversion Request',
+                                message: `${c.full_name || 'A believer'} submitted a conversion/join request.`,
+                                is_read: false,
+                                created_at: c.created_at,
+                                type: 'ministry'
+                            });
+                        });
+                    }
+
+                    const { data: pendingPrayers } = await sbClient
+                        .from('prayer_requests')
+                        .select('id, full_name, created_at')
+                        .eq('church_id', churchId)
+                        .eq('status', 'pending')
+                        .limit(5);
+
+                    if (pendingPrayers && pendingPrayers.length > 0) {
+                        pendingPrayers.forEach(p => {
+                            aggregated.push({
+                                id: 'prayer-' + p.id,
+                                user_id: currentUser.id,
+                                title: 'New Prayer Request',
+                                message: `${p.full_name || 'Someone'} submitted a prayer request.`,
+                                is_read: false,
+                                created_at: p.created_at,
+                                type: 'ministry'
+                            });
+                        });
+                    }
+                }
+            }
+
+            // 4. Check directory approvals for regular users
+            const { data: myBiz } = await sbClient
+                .from('business_directory')
+                .select('id, business_name, status, is_approved, updated_at')
+                .eq('user_id', currentUser.id)
+                .limit(5);
+
+            if (myBiz && myBiz.length > 0) {
+                myBiz.forEach(b => {
+                    const status = b.status || (b.is_approved ? 'approved' : 'pending');
+                    if (status === 'approved' || status === 'rejected') {
+                        aggregated.push({
+                            id: 'biz-' + b.id,
+                            user_id: currentUser.id,
+                            title: `Business Listing ${status.toUpperCase()}`,
+                            message: `Your business "${b.business_name}" status has been updated to ${status}.`,
+                            is_read: true, // Marked read or unread depending on preference
+                            created_at: b.updated_at || new Date().toISOString(),
+                            type: 'approval'
+                        });
+                    }
+                });
+            }
+
+            // Sort aggregated by created_at descending
+            aggregated.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            renderNotificationsList(aggregated);
+            return aggregated;
         } catch (err) {
-            console.error('Error in fetchAndRenderNotifications:', err);
+            console.error('Error in fetchGlobalNotifications:', err);
+            return [];
         }
-    }
+    };
 
     function renderNotificationsList(notifications) {
         const listContainer = document.getElementById('notification-list');

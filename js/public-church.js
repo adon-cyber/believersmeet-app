@@ -8,6 +8,7 @@ const churchIdParam = urlParams.get('id');
 const churchCodeParam = urlParams.get('code');
 
 let currentChurchId = null;
+let currentPesapalPaymentLink = null;
 let currentFetchedVerse = {
     reference: 'John 3:16',
     text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
@@ -83,6 +84,7 @@ async function fetchChurchDetails() {
 
 function renderChurch(church) {
     currentChurchId = church.id;
+    currentPesapalPaymentLink = church.pesapal_payment_link || church.pesapal_link || null;
     const churchName = church.name || 'Our Church';
     const address = church.address || church.location || 'Location not specified';
     const logoUrl = church.logo_url || 'images/BELIEVERS.LOGO.png';
@@ -95,6 +97,55 @@ function renderChurch(church) {
     const logoEl = document.getElementById('church-logo');
     if (logoEl && church.logo_url) {
         logoEl.src = church.logo_url;
+    }
+
+    // 3. Inject and Conditionally Render Direct Giving Details (Bank & Mobile Money)
+    const bankNameEl = document.getElementById('bank-name');
+    const bankAccountNameEl = document.getElementById('bank-account-name');
+    const bankAccountNumberEl = document.getElementById('bank-account-number');
+    const bankDetailsCard = document.getElementById('bank-details-card');
+
+    const momoProviderEl = document.getElementById('momo-provider');
+    const momoNumberEl = document.getElementById('momo-number');
+    const momoNameEl = document.getElementById('momo-name');
+    const momoDetailsCard = document.getElementById('momo-details-card');
+    const directGivingDivider = document.getElementById('direct-giving-divider');
+
+    const bankName = church.bank_name;
+    const bankAccountName = church.account_name;
+    const bankAccountNumber = church.account_number;
+
+    const momoProvider = church.momo_provider;
+    const momoNumber = church.momo_number;
+    const momoRegisteredName = church.momo_registered_name;
+
+    let hasBank = false;
+    let hasMomo = false;
+
+    if (bankName || bankAccountName || bankAccountNumber) {
+        if (bankNameEl) bankNameEl.textContent = bankName || 'Not specified';
+        if (bankAccountNameEl) bankAccountNameEl.textContent = bankAccountName || 'Not specified';
+        if (bankAccountNumberEl) bankAccountNumberEl.textContent = bankAccountNumber || 'Not specified';
+        if (bankDetailsCard) bankDetailsCard.classList.remove('hidden');
+        hasBank = true;
+    } else {
+        if (bankDetailsCard) bankDetailsCard.classList.add('hidden');
+    }
+
+    if (momoProvider || momoNumber || momoRegisteredName) {
+        if (momoProviderEl) momoProviderEl.textContent = momoProvider || 'Not specified';
+        if (momoNumberEl) momoNumberEl.textContent = momoNumber || 'Not specified';
+        if (momoNameEl) momoNameEl.textContent = momoRegisteredName || 'Not specified';
+        if (momoDetailsCard) momoDetailsCard.classList.remove('hidden');
+        hasMomo = true;
+    } else {
+        if (momoDetailsCard) momoDetailsCard.classList.add('hidden');
+    }
+
+    if (!hasBank && !hasMomo) {
+        if (directGivingDivider) directGivingDivider.classList.add('hidden');
+    } else {
+        if (directGivingDivider) directGivingDivider.classList.remove('hidden');
     }
 
     // 1. Dynamic Plan a Visit Section Updates:
@@ -482,18 +533,25 @@ if (prayerForm) {
 
 // Handle Online Giving via Pesapal
 function handleOnlineGiving() {
-    // Admin Note: Replace the placeholder URL below with your actual Pesapal merchant checkout link or integrate the Pesapal payment modal SDK.
-    const pesapalCheckoutUrl = "https://checkout.pesapal.com/pay/placeholder-merchant";
-
-    // Open a modal or redirect the user to the Pesapal checkout URL
-    if (confirm("You are about to proceed to the secure Pesapal checkout to support the ministry. Would you like to continue?")) {
-        // Option 1: Open in a new tab / redirect
-        window.open(pesapalCheckoutUrl, '_blank');
-        
-        // Alternatively, if you wish to record the giving attempt in Supabase or handle local modal state:
-        console.log("Redirecting to Pesapal for church ID:", currentChurchId);
+    if (currentPesapalPaymentLink && currentPesapalPaymentLink.trim() !== '') {
+        if (confirm("You are about to proceed to the secure Pesapal checkout to support the ministry. Would you like to continue?")) {
+            window.location.href = currentPesapalPaymentLink;
+        }
+    } else {
+        alert("Online giving is currently being set up for this ministry. Please check back soon!");
     }
 }
+
+// Attach event listener on DOMContentLoaded or directly
+document.addEventListener('DOMContentLoaded', () => {
+    const pesapalBtn = document.getElementById('pesapal-giving-btn');
+    if (pesapalBtn) {
+        pesapalBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleOnlineGiving();
+        });
+    }
+});
 
 function escapeHTML(str) {
     if (!str) return '';
