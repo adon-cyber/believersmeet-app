@@ -249,6 +249,15 @@ async function enforceLoginAndLoad() {
         if (adminNavLink && (profile.role === 'admin' || profile.role === 'super_admin')) {
             adminNavLink.style.display = 'inline-block';
         }
+        const ministryRequestsNavTab = document.getElementById('ministry-requests-nav-tab');
+        if (ministryRequestsNavTab && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {
+            ministryRequestsNavTab.classList.remove('hidden');
+            const ministrySection = document.getElementById('ministry-requests-section');
+            if (ministrySection) {
+                ministrySection.classList.remove('hidden');
+            }
+            fetchMinistryRequests();
+        }
         const shareProfileBtn = document.getElementById('share-church-profile-btn');
         if (shareProfileBtn && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {
             shareProfileBtn.classList.remove('hidden');
@@ -920,6 +929,130 @@ async function shareChurchProfile() {
             alert("Copy failed. Here is your public link: " + publicUrl);
         }
         document.body.removeChild(textArea);
+    }
+}
+
+async function fetchMinistryRequests() {
+    if (!currentUserProfile || !currentUserProfile.church_id) return;
+    const churchId = currentUserProfile.church_id;
+
+    const conversionTbody = document.getElementById('conversion-requests-tbody');
+    const prayerTbody = document.getElementById('prayer-requests-tbody');
+
+    if (conversionTbody) {
+        conversionTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">Loading conversion requests...</td></tr>`;
+    }
+    if (prayerTbody) {
+        prayerTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">Loading prayer requests...</td></tr>`;
+    }
+
+    try {
+        // 1. Fetch Conversion Requests
+        const { data: conversionData, error: conversionError } = await window.sbClient
+            .from('conversion_requests')
+            .select('*')
+            .eq('church_id', churchId)
+            .order('created_at', { ascending: false });
+
+        if (conversionError) throw conversionError;
+
+        if (conversionTbody) {
+            if (!conversionData || conversionData.length === 0) {
+                conversionTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No new conversion requests at this time.</td></tr>`;
+            } else {
+                conversionTbody.innerHTML = conversionData.map(req => {
+                    const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+                    const isContacted = req.status === 'contacted' || req.status === 'dismissed';
+                    const statusBadge = req.status === 'contacted' 
+                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Contacted</span>' 
+                        : (req.status === 'dismissed' ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Dismissed</span>' : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">New</span>');
+
+                    return `
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <td class="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
+                            <td class="py-3 px-4 font-semibold text-gray-900">${escapeHTML(req.full_name || req.name || 'Anonymous')}</td>
+                            <td class="py-3 px-4 text-xs text-blue-600">
+                                ${req.phone ? `<div>📞 ${escapeHTML(req.phone)}</div>` : ''}
+                                ${req.email ? `<div>✉️ ${escapeHTML(req.email)}</div>` : (!req.phone ? 'N/A' : '')}
+                            </td>
+                            <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(req.message || req.testimony || '')}">${escapeHTML(req.message || req.testimony || 'No additional message.')}</td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-2">
+                                    ${statusBadge}
+                                    <button onclick="updateMinistryRequestStatus('conversion_requests', '${req.id}', 'contacted')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Mark as Contacted">✓</button>
+                                    <button onclick="updateMinistryRequestStatus('conversion_requests', '${req.id}', 'dismissed')" class="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded transition" title="Dismiss">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // 2. Fetch Prayer Requests
+        const { data: prayerData, error: prayerError } = await window.sbClient
+            .from('prayer_requests')
+            .select('*')
+            .eq('church_id', churchId)
+            .order('created_at', { ascending: false });
+
+        if (prayerError) throw prayerError;
+
+        if (prayerTbody) {
+            if (!prayerData || prayerData.length === 0) {
+                prayerTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No prayer requests at this time.</td></tr>`;
+            } else {
+                prayerTbody.innerHTML = prayerData.map(req => {
+                    const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+                    const statusBadge = req.status === 'contacted' 
+                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Prayed / Followed</span>' 
+                        : (req.status === 'dismissed' ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Dismissed</span>' : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Active</span>');
+
+                    return `
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <td class="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
+                            <td class="py-3 px-4 font-semibold text-gray-900">${escapeHTML(req.full_name || req.name || 'Anonymous')}</td>
+                            <td class="py-3 px-4 text-xs text-blue-600">
+                                ${req.phone ? `<div>📞 ${escapeHTML(req.phone)}</div>` : ''}
+                                ${req.email ? `<div>✉️ ${escapeHTML(req.email)}</div>` : (!req.phone ? 'N/A' : '')}
+                            </td>
+                            <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(req.prayer_request || req.message || '')}">${escapeHTML(req.prayer_request || req.message || 'No details provided.')}</td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-2">
+                                    ${statusBadge}
+                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'contacted')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Mark as Prayed / Contacted">✓</button>
+                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'dismissed')" class="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded transition" title="Dismiss">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+    } catch (err) {
+        console.error("Error fetching ministry requests:", err);
+        if (conversionTbody) conversionTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-500 text-xs">Error loading conversion requests: ${escapeHTML(err.message)}</td></tr>`;
+        if (prayerTbody) prayerTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-500 text-xs">Error loading prayer requests: ${escapeHTML(err.message)}</td></tr>`;
+    }
+}
+
+async function updateMinistryRequestStatus(tableName, recordId, newStatus) {
+    try {
+        const { error } = await window.sbClient
+            .from(tableName)
+            .update({ status: newStatus })
+            .eq('id', recordId);
+
+        if (error) throw error;
+
+        if (typeof showNotification === 'function') {
+            showNotification('Request status updated successfully!', 'success');
+        }
+        fetchMinistryRequests();
+    } catch (err) {
+        console.error("Error updating request status:", err);
+        alert('Failed to update status: ' + err.message);
     }
 }
 
