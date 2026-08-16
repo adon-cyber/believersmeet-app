@@ -262,6 +262,16 @@ async function enforceLoginAndLoad() {
         if (shareProfileBtn && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {
             shareProfileBtn.classList.remove('hidden');
         }
+
+        // Show Admin Upload form within the gallery section if user is admin / super_admin / leader
+        const adminGalleryUploadWrapper = document.getElementById('admin-gallery-upload-wrapper');
+        if (adminGalleryUploadWrapper && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin' || profile.role === 'leader')) {
+            adminGalleryUploadWrapper.classList.remove('hidden');
+            const uploadForm = document.getElementById('admin-gallery-upload-form');
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', handleAdminGalleryUpload);
+            }
+        }
     } else {
         console.warn("Public profile row missing. Utilizing safe global fallback.");
         currentUserProfile = {
@@ -364,10 +374,23 @@ function initTimelineRealtimeSync() {
 // --- FEED GALLERY MEMORIES ---
 async function loadFeedGallery() {
     const container = document.getElementById('feed-gallery-container');
+    if (!container) return;
+
+    if (!currentUserProfile || !currentUserProfile.church_id) {
+        container.innerHTML = '<p class="col-span-full text-center text-xs text-gray-500 py-4">Account pending church assignment...</p>';
+        return;
+    }
+
     try {
-        const { data: photos, error } = await window.sbClient
+        let query = window.sbClient
             .from('gallery_images')
-            .select('*')
+            .select('*');
+
+        if (currentUserProfile.church_id !== 'global-fellowship') {
+            query = query.eq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data: photos, error } = await query
             .order('created_at', { ascending: false })
             .limit(10);
 
@@ -375,15 +398,11 @@ async function loadFeedGallery() {
             renderFeedGallerySection(photos);
         } else {
             console.error("Error loading feed gallery:", error?.message);
-            if (container) {
-                container.innerHTML = '<p class="col-span-full text-center text-xs text-red-500 py-4">Unable to load gallery memories</p>';
-            }
+            container.innerHTML = '<p class="col-span-full text-center text-xs text-red-500 py-4">Unable to load gallery memories</p>';
         }
     } catch (err) {
         console.error("Exception loading feed gallery:", err);
-        if (container) {
-            container.innerHTML = '<p class="col-span-full text-center text-xs text-red-500 py-4">Unable to load gallery memories</p>';
-        }
+        container.innerHTML = '<p class="col-span-full text-center text-xs text-red-500 py-4">Unable to load gallery memories</p>';
     }
 }
 
@@ -396,14 +415,108 @@ function renderFeedGallerySection(photos) {
         return;
     }
 
-    container.innerHTML = photos.map(photo => `
-        <a href="gallery.html" class="block group relative aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200">
-            <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(photo.caption || 'Church Memory')}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-end p-2">
+    container.innerHTML = photos.map(photo => {
+        const isVideo = photo.image_url && (photo.image_url.endsWith('.mp4') || photo.image_url.endsWith('.webm') || photo.image_url.includes('video'));
+        return `
+        <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out block group relative aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200">
+            ${isVideo ? `
+                <video src="${escapeHTML(photo.image_url)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" preload="metadata"></video>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center text-white shadow-lg">
+                        <svg class="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+            ` : `
+                <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(photo.caption || 'Church Memory')}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+            `}
+            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-end p-2 justify-between">
                 <p class="text-white text-xs opacity-0 group-hover:opacity-100 transition truncate">${escapeHTML(photo.caption || '')}</p>
+                <button onclick="handleSecureDownload('${escapeHTML(photo.image_url)}', 'gallery-memory.jpg', true)" class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 hover:bg-white text-blue-600 rounded-full shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Download Item">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </button>
             </div>
-        </a>
-    `).join('');
+        </div>
+    `;
+    }).join('');
+
+    // Trigger animation strictly after injecting DOM elements
+    setTimeout(() => {
+        if (typeof window.initAnimatedGallery === 'function') {
+            window.initAnimatedGallery('gallery-section');
+        }
+    }, 50);
+}
+
+async function handleAdminGalleryUpload(e) {
+    e.preventDefault();
+    if (!currentUserProfile || !currentUserProfile.church_id) {
+        alert("Admin profile or church ID missing.");
+        return;
+    }
+
+    const fileInput = document.getElementById('gallery-file-input');
+    const captionInput = document.getElementById('gallery-caption-input');
+    const submitBtn = document.getElementById('gallery-upload-submit-btn');
+
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("Please select a file to upload.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const caption = captionInput ? captionInput.value : 'Church Memory';
+    const originalBtnText = submitBtn.innerHTML;
+
+    try {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const randStr = Math.random().toString(36).substring(2, 8);
+        const fileName = `${currentUserProfile.church_id}/${Date.now()}_${randStr}.${fileExt}`;
+        const bucketName = 'music-uploads'; // Approved public bucket used across the app
+
+        const { data: uploadData, error: uploadError } = await window.sbClient.storage
+            .from(bucketName)
+            .upload(fileName, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = window.sbClient.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+
+        if (!publicUrl) throw new Error("Could not retrieve public URL for uploaded file.");
+
+        const { error: insertError } = await window.sbClient
+            .from('gallery_images')
+            .insert([{
+                image_url: publicUrl,
+                caption: caption,
+                church_id: currentUserProfile.church_id,
+                uploader_name: currentUserProfile.full_name || 'Church Admin'
+            }]);
+
+        if (insertError) throw insertError;
+
+        alert("Gallery media successfully uploaded and published!");
+        if (fileInput) fileInput.value = '';
+        if (captionInput) captionInput.value = '';
+
+        // Reload gallery
+        await loadFeedGallery();
+
+    } catch (err) {
+        console.error("Gallery upload error:", err);
+        alert("Error uploading media: " + (err.message || err));
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    }
 }
 
 // --- TIMELINE FEED & BULLETIN HANDLERS ---
