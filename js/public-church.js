@@ -33,12 +33,15 @@ async function initPublicChurch() {
 
         await fetchChurchDetails();
         await fetchChurchActivities();
+        await renderLeadershipTeam();
+        await fetchFellowshipGallery();
 
         // 3. Initialization: trigger default verse when public-church.html first loads
         await fetchAndRenderWidgetVerse('John 3:16');
 
-        // Initialize gallery sequential entrance animation
+        // Initialize gallery and leadership entrance animations
         initGalleryAnimation();
+        initLeadershipAnimation();
     } catch (err) {
         console.error("Error initializing public church profile:", err);
         document.getElementById('church-name').textContent = "Church Profile Not Found";
@@ -503,33 +506,185 @@ function escapeHTML(str) {
     }[tag] || tag));
 }
 
-// Initialize Gallery Staggered Animation
-function initGalleryAnimation() {
-    if (typeof window.initAnimatedGallery === 'function') {
-        window.initAnimatedGallery('gallery-section');
-    } else {
-        const gallerySection = document.getElementById('gallery-section');
-        if (!gallerySection) return;
+// Fetch and render Moments of Fellowship gallery images from database
+async function fetchFellowshipGallery() {
+    const gridContainer = document.getElementById('fellowship-gallery-grid');
+    if (!gridContainer) return;
 
-        const observer = new IntersectionObserver((entries, observerInstance) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const imgItems = gallerySection.querySelectorAll('.gallery-img-item');
-                    imgItems.forEach((item, index) => {
-                        setTimeout(() => {
-                            item.classList.remove('opacity-0', 'translate-y-10');
-                            item.classList.add('opacity-100', 'translate-y-0');
-                        }, index * 150);
-                    });
-                    observerInstance.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-
-        observer.observe(gallerySection);
+    if (!currentChurchId) {
+        gridContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-yellow-500/70">
+                <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
+                <p class="text-sm">Church identification required to load gallery photos.</p>
+            </div>
+        `;
+        return;
     }
+
+    try {
+        // Query Supabase database for gallery images (checking gallery_images or gallery_media)
+        let photos = [];
+        
+        const { data, error } = await publicSupabase
+            .from('gallery_images')
+            .select('*')
+            .eq('church_id', currentChurchId)
+            .order('created_at', { ascending: false });
+
+        if (!error && data) {
+            photos = data;
+        } else {
+            // Fallback table check
+            const { data: mediaData, error: mediaErr } = await publicSupabase
+                .from('gallery_media')
+                .select('*')
+                .eq('church_id', currentChurchId)
+                .order('created_at', { ascending: false });
+            if (!mediaErr && mediaData) {
+                photos = mediaData;
+            }
+        }
+
+        if (!photos || photos.length === 0) {
+            gridContainer.innerHTML = `
+                <div class="col-span-full py-16 text-center text-yellow-500/70 space-y-3">
+                    <div class="w-16 h-16 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">No Fellowship Photos Yet</h3>
+                    <p class="text-xs text-gray-400 max-w-sm mx-auto">Church admin has not published any moments of fellowship to this gallery yet.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Loop through fetched database results and dynamically create HTML image elements
+        gridContainer.innerHTML = photos.map(photo => {
+            const imageUrl = photo.image_url || photo.url || 'images/meet2.jpg';
+            const caption = photo.caption || photo.title || 'Fellowship Moment';
+            const uploader = photo.uploader_name || 'Church Admin';
+            const dateStr = photo.created_at ? new Date(photo.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+
+            return `
+                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg bg-gray-900 border border-yellow-900/40 group">
+                    <div class="relative overflow-hidden h-64 bg-gray-950">
+                        <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(caption)}" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                            <span class="text-white text-xs font-medium"><i class="fas fa-heart text-yellow-400 mr-1.5"></i> ${escapeHTML(caption)}</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex items-center justify-between bg-gray-900">
+                        <div>
+                            <h4 class="font-bold text-white text-sm truncate max-w-[200px]">${escapeHTML(caption)}</h4>
+                            <p class="text-[11px] text-gray-400">By ${escapeHTML(uploader)} ${dateStr ? '• ' + dateStr : ''}</p>
+                        </div>
+                        <span class="text-[10px] text-yellow-400 font-semibold bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-1 rounded-full">Official</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error("Error fetching fellowship gallery:", err);
+        gridContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-red-400">
+                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                <p class="text-xs">Failed to load gallery photos. Please try again later.</p>
+            </div>
+        `;
+    } finally {
+        // Trigger the Animation
+        if (typeof window.initAnimatedGallery === 'function') {
+            window.initAnimatedGallery('gallery-section');
+        }
+    }
+}
+
+// Render Leadership Team from church_leaders table with fallback
+async function renderLeadershipTeam() {
+    const container = document.getElementById('leadership-container');
+    if (!container) return;
+
+    let leaders = [];
+    if (publicSupabase && currentChurchId) {
+        try {
+            const { data, error } = await publicSupabase
+                .from('church_leaders')
+                .select('*')
+                .eq('church_id', currentChurchId)
+                .order('created_at', { ascending: true });
+
+            if (!error && data && data.length > 0) {
+                leaders = data;
+            }
+        } catch (err) {
+            console.log("church_leaders table might not exist yet or query failed:", err);
+        }
+    }
+
+    // Fallback if no leaders found or table doesn't exist
+    if (!leaders || leaders.length === 0) {
+        leaders = [
+            {
+                name: 'Pastor David Anderson',
+                role: 'Senior Pastor',
+                bio: 'Dedicated to preaching the uncompromised Word of God and guiding our community in fervent prayer, love, and discipleship.',
+                image_url: 'images/meet2.jpg'
+            },
+            {
+                name: 'Pastor Sarah Williams',
+                role: 'Associate Pastor & Worship Director',
+                bio: 'Passionate about ushering congregations into the glorious presence of God through heartfelt worship and community fellowship.',
+                image_url: 'images/adon-73308cbf.jpg'
+            },
+            {
+                name: 'Elder Michael Johnson',
+                role: 'Director of Outreach & Pastoral Care',
+                bio: 'Committed to serving families, comforting the brokenhearted, and expanding our reach into the local neighborhood with Christ’s love.',
+                image_url: 'images/roo-background.jpg.png'
+            }
+        ];
+    }
+
+    container.innerHTML = leaders.map(leader => {
+        const name = leader.name || leader.full_name || 'Church Leader';
+        const role = leader.role || leader.title || 'Pastor / Minister';
+        const bio = leader.bio || leader.description || 'Serving faithfully to build up the body of Christ in grace and truth.';
+        const imageUrl = leader.image_url || leader.photo_url || 'images/meet2.jpg';
+
+        return `
+            <div class="bg-gray-900 border border-yellow-900/50 rounded-xl p-6 text-center hover:scale-105 transition-transform shadow-xl space-y-4 flex flex-col items-center">
+                <div class="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-yellow-500/40 shadow-md">
+                    <img src="${imageUrl}" alt="${escapeHTML(name)}" class="w-full h-full object-cover">
+                </div>
+                <div class="space-y-1">
+                    <h3 class="text-lg font-bold text-white tracking-wide">${escapeHTML(name)}</h3>
+                    <p class="text-xs font-semibold text-yellow-500 uppercase tracking-widest">${escapeHTML(role)}</p>
+                </div>
+                <p class="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">${escapeHTML(bio)}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+// Initialize Leadership Fade-in Animation on Scroll
+function initLeadershipAnimation() {
+    const leadershipSection = document.getElementById('leadership-section');
+    if (!leadershipSection) return;
+
+    const observer = new IntersectionObserver((entries, observerInstance) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                leadershipSection.classList.remove('opacity-0', 'translate-y-10');
+                leadershipSection.classList.add('opacity-100', 'translate-y-0');
+                observerInstance.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    observer.observe(leadershipSection);
 }
 
 // Run initialization

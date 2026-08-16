@@ -1996,7 +1996,7 @@
 
             const { error } = await window.sbClient
                 .from('business_directory')
-                .update({ is_approved: true })
+                .update({ is_approved: true, status: 'approved' })
                 .eq('id', id);
 
             if (error) {
