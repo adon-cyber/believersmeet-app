@@ -204,11 +204,20 @@ async function sendFriendRequest(receiverId, buttonElement) {
 
     if (error) {
         console.error('Connection request failed:', error);
-        // Revert UI if the request failed
-        buttonElement.disabled = false;
-        buttonElement.innerHTML = originalHtml;
-        buttonElement.className = originalClass;
-        alert('Error sending request: ' + error.message);
+        // Check if error is duplicate key violation (code '23505' or message contains 'duplicate key')
+        if (error.code === '23505' || (error.message && error.message.includes('duplicate key'))) {
+            // Keep button in disabled pending state as requested or friendly alert
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = `<span>⏳ Request Pending</span>`;
+            buttonElement.className = "px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 transition-all shadow-sm";
+            alert('You have already sent a request to this member!');
+        } else {
+            // Revert UI if any other error
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            buttonElement.className = originalClass;
+            alert('Error sending request: ' + error.message);
+        }
     }
 }
 
