@@ -718,7 +718,7 @@ async function fetchAndRenderWidgetVerse(query) {
     `;
 
     const trimmedQuery = query.trim();
-    const isReference = STANDARD_REF_REGEX.test(trimmedQuery);
+    const isReference = /[a-z]+\s*\d+/i.test(trimmedQuery);
 
     try {
         if (isReference) {
@@ -753,40 +753,44 @@ async function fetchAndRenderWidgetVerse(query) {
                 </div>
             `;
         } else {
-            // Keyword search endpoint using bible-api.com/search?q=... or fallback
-            const res = await fetch(`https://bible-api.com/?search=${encodeURIComponent(trimmedQuery)}`);
+            // Keyword Search Fallback using Bolls Life API
+            const res = await fetch(`https://bolls.life/search/NKJV/?q=${encodeURIComponent(trimmedQuery)}`);
             if (!res.ok) throw new Error('Search failed');
             const data = await res.json();
 
-            if (data.verses && data.verses.length > 0) {
-                const topVerse = data.verses[0];
-                const ref = `${topVerse.book_name} ${topVerse.chapter}:${topVerse.verse}`;
-                const text = topVerse.text.trim();
+            if (data && Array.isArray(data) && data.length > 0) {
+                const topResult = data[0];
+                const ref = `${topResult.book_name} ${topResult.chapter}:${topResult.verse}`;
+                const text = topResult.text ? topResult.text.replace(/<[^>]*>/g, '').trim() : '';
 
                 currentFetchedVerse = {
                     reference: ref,
                     text: text,
-                    translation: 'World English Bible'
+                    translation: 'NKJV (Bolls Life)'
                 };
 
                 container.innerHTML = `
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <h4 class="text-xs font-bold text-indigo-700">Search result for: <span class="text-emerald-700">"${escapeHTML(trimmedQuery)}"</span> &rarr; ${escapeHTML(ref)}</h4>
+                            <h4 class="text-xs font-bold text-indigo-700">Search result for: <span class="text-emerald-700">"${escapeHTML(trimmedQuery)}"</span> &rarr; ${escapeHTML(ref)} <span class="text-[10px] text-gray-500 font-normal">(NKJV)</span></h4>
                         </div>
                         <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
-                        ${data.verses.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${data.verses.length} matches.</p>` : ''}
+                        ${data.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${data.length} matches.</p>` : ''}
                     </div>
                 `;
             } else {
-                throw new Error('No verses found matching keyword');
+                container.innerHTML = `
+                    <div class="py-2 text-center">
+                        <p class="text-xs text-gray-600 font-semibold">No verses found for '${escapeHTML(trimmedQuery)}'.</p>
+                    </div>
+                `;
             }
         }
     } catch (err) {
         console.error("Bible widget lookup error:", err);
         container.innerHTML = `
             <div class="py-2 text-center">
-                <p class="text-xs text-red-600 font-semibold">No scripture found for "${escapeHTML(trimmedQuery)}". Try a valid reference (e.g., John 3:16) or keyword.</p>
+                <p class="text-xs text-red-600 font-semibold">Unable to fetch scripture right now. Please try again.</p>
             </div>
         `;
     }
