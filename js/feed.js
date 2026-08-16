@@ -703,55 +703,90 @@ let currentFetchedVerse = {
     text: 'For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish, but have eternal life.'
 };
 
-async function fetchAndRenderWidgetVerse(reference) {
+// Standard reference check regex: e.g., "John 3:16", "1 John 3:16-18", "Psalm 23", "Genesis 1:1"
+const STANDARD_REF_REGEX = /^\s*((?:[1-3]\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)*)\s+(\d+)(?::(\d+)(?:[–-](\d+))?)?\s*$/i;
+
+async function fetchAndRenderWidgetVerse(query) {
     const container = document.getElementById('bible-widget-container');
     if (!container) return;
 
     container.innerHTML = `
         <div class="flex items-center justify-center py-4 space-x-2">
             <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs text-gray-500 font-medium">Fetching ${escapeHTML(reference)}...</span>
+            <span class="text-xs text-gray-500 font-medium">Looking up "${escapeHTML(query)}"...</span>
         </div>
     `;
 
+    const trimmedQuery = query.trim();
+    const isReference = STANDARD_REF_REGEX.test(trimmedQuery);
+
     try {
-        const res = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}`);
-        if (!res.ok) {
-            throw new Error('Scripture reference not found');
-        }
-        const data = await res.json();
-        
-        let passageText = '';
-        let officialRef = data.reference || reference;
-        let translationName = data.translation_name || 'World English Bible';
+        if (isReference) {
+            const res = await fetch(`https://bible-api.com/${encodeURIComponent(trimmedQuery)}`);
+            if (!res.ok) throw new Error('Scripture reference not found');
+            const data = await res.json();
+            
+            let passageText = '';
+            let officialRef = data.reference || trimmedQuery;
+            let translationName = data.translation_name || 'World English Bible';
 
-        if (data.verses && data.verses.length > 0) {
-            passageText = data.verses.map(v => `${v.verse}. ${v.text.trim()}`).join(' ');
-        } else if (data.text) {
-            passageText = data.text.trim();
-        } else {
-            throw new Error('Scripture reference not found');
-        }
+            if (data.verses && data.verses.length > 0) {
+                passageText = data.verses.map(v => `${v.verse}. ${v.text.trim()}`).join(' ');
+            } else if (data.text) {
+                passageText = data.text.trim();
+            } else {
+                throw new Error('Scripture reference not found');
+            }
 
-        currentFetchedVerse = {
-            reference: officialRef,
-            text: passageText,
-            translation: translationName
-        };
+            currentFetchedVerse = {
+                reference: officialRef,
+                text: passageText,
+                translation: translationName
+            };
 
-        container.innerHTML = `
-            <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <h4 class="text-xs font-bold text-indigo-700">${escapeHTML(officialRef)} <span class="text-[10px] text-gray-500 font-normal">(${escapeHTML(translationName)})</span></h4>
+            container.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-indigo-700">${escapeHTML(officialRef)} <span class="text-[10px] text-gray-500 font-normal">(${escapeHTML(translationName)})</span></h4>
+                    </div>
+                    <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(passageText)}"</p>
                 </div>
-                <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(passageText)}"</p>
-            </div>
-        `;
+            `;
+        } else {
+            // Keyword search endpoint using bible-api.com/search?q=... or fallback
+            const res = await fetch(`https://bible-api.com/?search=${encodeURIComponent(trimmedQuery)}`);
+            if (!res.ok) throw new Error('Search failed');
+            const data = await res.json();
+
+            if (data.verses && data.verses.length > 0) {
+                const topVerse = data.verses[0];
+                const ref = `${topVerse.book_name} ${topVerse.chapter}:${topVerse.verse}`;
+                const text = topVerse.text.trim();
+
+                currentFetchedVerse = {
+                    reference: ref,
+                    text: text,
+                    translation: 'World English Bible'
+                };
+
+                container.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-indigo-700">Search result for: <span class="text-emerald-700">"${escapeHTML(trimmedQuery)}"</span> &rarr; ${escapeHTML(ref)}</h4>
+                        </div>
+                        <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
+                        ${data.verses.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${data.verses.length} matches.</p>` : ''}
+                    </div>
+                `;
+            } else {
+                throw new Error('No verses found matching keyword');
+            }
+        }
     } catch (err) {
         console.error("Bible widget lookup error:", err);
         container.innerHTML = `
             <div class="py-2 text-center">
-                <p class="text-xs text-red-600 font-semibold">No scripture loaded</p>
+                <p class="text-xs text-red-600 font-semibold">No scripture found for "${escapeHTML(trimmedQuery)}". Try a valid reference (e.g., John 3:16) or keyword.</p>
             </div>
         `;
     }
@@ -762,10 +797,32 @@ function lookupWidgetScripture() {
     if (!input) return;
     const ref = input.value.trim();
     if (!ref) {
-        alert("Please enter a scripture reference (e.g. John 3:16).");
+        alert("Please enter a scripture reference or keyword (e.g. John 3:16 or grace).");
         return;
     }
     fetchAndRenderWidgetVerse(ref);
+}
+
+function navigateWidgetVerse(direction) {
+    const match = currentFetchedVerse.reference.match(/^((?:[1-3]\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)*)\s+(\d+)(?::(\d+))?/);
+    if (!match) {
+        // If current reference format isn't simple book chapter:verse, fallback to default or prompt
+        fetchAndRenderWidgetVerse('John 3:16');
+        return;
+    }
+
+    const book = match[1];
+    const chapter = parseInt(match[2], 10);
+    let verse = match[3] ? parseInt(match[3], 10) : 1;
+
+    verse += direction;
+    if (verse < 1) verse = 1;
+
+    const newRef = `${book} ${chapter}:${verse}`;
+    const input = document.getElementById('bible-search-input');
+    if (input) input.value = newRef;
+
+    fetchAndRenderWidgetVerse(newRef);
 }
 
 function shareVerseToFeed() {
