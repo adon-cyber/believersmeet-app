@@ -404,9 +404,15 @@ async function loadMyBusinesses() {
     }
 
     myBusinessesList.innerHTML = data.map(biz => {
-      const statusBadge = biz.is_approved 
-        ? '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Approved</span>'
-        : '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Pending Review</span>';
+      const status = biz.status || (biz.is_approved ? 'approved' : 'pending');
+      let statusBadge = '';
+      if (status === 'approved') {
+        statusBadge = '<span class="px-3 py-1 text-sm text-green-700 bg-green-100 border border-green-300 rounded-full">Approved</span>';
+      } else if (status === 'rejected') {
+        statusBadge = '<span class="px-3 py-1 text-sm text-red-700 bg-red-100 border border-red-300 rounded-full">Rejected</span>';
+      } else {
+        statusBadge = '<span class="px-3 py-1 text-sm text-gray-600 bg-gray-100 border border-gray-300 rounded-full">Pending Review</span>';
+      }
         
       return `
         <div class="p-3.5 bg-slate-50 rounded-xl flex justify-between items-center border border-slate-200 shadow-sm">

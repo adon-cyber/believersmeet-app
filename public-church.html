@@ -204,40 +204,41 @@
             </div>
         </section>
 
-        <!-- Gallery Section -->
-        <section id="gallery-section" class="space-y-8">
-            <div class="text-center max-w-2xl mx-auto space-y-2">
-                <div class="inline-block bg-blue-50 text-blue-600 font-semibold px-4 py-1 rounded-full text-xs tracking-wider uppercase">
+        <!-- Gallery Section (Moments of Fellowship) -->
+        <section id="gallery-section" class="bg-gray-950 text-white rounded-3xl shadow-2xl border border-yellow-900/30 p-8 sm:p-12 space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-3">
+                <div class="inline-block bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-semibold px-4 py-1 rounded-full text-xs tracking-wider uppercase backdrop-blur-sm">
                     Photo Gallery
                 </div>
-                <h2 class="text-3xl font-bold text-gray-900">Moments of Fellowship</h2>
-                <p class="text-gray-600">A glimpse into our worship services, community gatherings, and joyful fellowship.</p>
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Moments of Fellowship</h2>
+                <p class="text-gray-400 text-sm sm:text-base">A glimpse into our worship services, community gatherings, and joyful fellowship published by our Church Admin.</p>
             </div>
 
-            <div id="gallery-container" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <!-- Gallery Image 1 -->
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
-                    <img src="images/meet2.jpg" alt="Church Fellowship" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+            <div id="fellowship-gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamically populated from database -->
+                <div class="col-span-full text-center py-12 text-yellow-500/70">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p class="text-sm">Loading fellowship moments...</p>
                 </div>
-                <!-- Gallery Image 2 -->
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
-                    <img src="images/adon-73308cbf.jpg" alt="Worship Gathering" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+            </div>
+        </section>
+
+        <!-- Meet the Leadership Section (Gold-on-Dark Aesthetic) -->
+        <section id="leadership-section" class="bg-gray-950 text-white rounded-3xl shadow-2xl border border-yellow-900/30 p-8 sm:p-12 space-y-10 opacity-0 translate-y-10 transition-all duration-1000 ease-out">
+            <div class="text-center max-w-2xl mx-auto space-y-3">
+                <div class="inline-block bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-semibold px-4 py-1 rounded-full text-xs tracking-wider uppercase backdrop-blur-sm">
+                    Shepherds & Ministers
                 </div>
-                <!-- Gallery Image 3 -->
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
-                    <img src="images/roo-background.jpg.png" alt="Community Outreach" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
-                </div>
-                <!-- Gallery Image 4 -->
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
-                    <img src="images/meet2.jpg" alt="Bible Study" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
-                </div>
-                <!-- Gallery Image 5 -->
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
-                    <img src="images/adon-73308cbf.jpg" alt="Youth Service" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
-                </div>
-                <!-- Gallery Image 6 -->
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg">
-                    <img src="images/roo-background.jpg.png" alt="Prayer Meeting" class="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300">
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Meet the Leadership</h2>
+                <p class="text-gray-400 text-sm sm:text-base">Dedicated servants called to guide, nurture, and build our spiritual family in faith and truth.</p>
+            </div>
+
+            <!-- Responsive Grid Container -->
+            <div id="leadership-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Dynamically populated by renderLeadershipTeam() with fallback -->
+                <div class="col-span-full text-center py-8 text-yellow-500/70">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p class="text-sm">Loading leadership team...</p>
                 </div>
             </div>
         </section>
