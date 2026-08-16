@@ -1909,19 +1909,22 @@
                 }
             }
 
-            if (!churchId) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Please select a church to view pending businesses.</div>`;
-                return;
-            }
-
             container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Loading pending businesses...</div>`;
 
-            const { data, error } = await window.sbClient
+            // Start the base query
+            let query = window.sbClient
                 .from('business_directory')
                 .select('*')
-                .eq('church_id', churchId)
-                .eq('is_approved', false)
-                .order('created_at', { ascending: false });
+                .eq('is_approved', false);
+
+            // Only filter by church_id if one actually exists in the current context
+            // This allows a Global Admin (without a specific church selected) to see all pending businesses
+            let currentChurchId = churchId;
+            if (typeof currentChurchId !== 'undefined' && currentChurchId) {
+                query = query.eq('church_id', currentChurchId);
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error fetching pending businesses:', error);

@@ -203,12 +203,12 @@ async function sendFriendRequest(receiverId, buttonElement) {
         ]);
 
     if (error) {
-        console.error('Error sending friend request:', error);
+        console.error('Connection request failed:', error);
         // Revert UI if the request failed
         buttonElement.disabled = false;
         buttonElement.innerHTML = originalHtml;
         buttonElement.className = originalClass;
-        alert('Could not send request. Please try again.');
+        alert('Error sending request: ' + error.message);
     }
 }
 
