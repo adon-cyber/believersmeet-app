@@ -246,6 +246,11 @@
                     <h1 class="text-3xl font-bold text-slate-100 mb-2">Church Management Dashboard</h1>
                     <p class="text-slate-300 text-base">Manage announcements, fellowship groups, church events, inquiries, and member roles.</p>
                 </div>
+                <div class="mt-2 sm:mt-0">
+                    <div class="badge bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-inner">
+                        <span>🏛️ Managing:</span> <span id="admin-church-name" class="text-white font-bold">Loading...</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Church Join Code Card -->
@@ -544,6 +549,21 @@
       </div>
     </footer>
 
+    <!-- Volunteer Members Modal -->
+    <div class="modal fade" id="volunteerMembersModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="volunteerModalTitle">Volunteers</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="volunteer-members-list">
+            <div class="text-center p-3">Loading volunteers...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Script Logic -->
     <script>
         function escapeHTML(str) {
@@ -694,9 +714,10 @@
                 return; 
             }
 
+            // 1. Fetch logged-in admin's church id and church name from Supabase
             const { data: profile, error: profileError } = await window.sbClient
                 .from('profiles')
-                .select('*')
+                .select('*, churches(name)')
                 .eq('id', user.id)
                 .maybeSingle(); 
 
@@ -707,9 +728,27 @@
             
             currentUserProfile = profile;
 
+            // Store adminChurchId
+            let adminChurchId = profile.church_id;
+
+            // 4. Super Admin Exception
+            const isSuperAdmin = currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com' || user.email === 'adoniakasango@gmail.com';
+
+            // 3. Update the UI - Display badge with church name
+            const churchNameEl = document.getElementById('admin-church-name');
+            if (churchNameEl) {
+                if (profile.churches && profile.churches.name) {
+                    churchNameEl.innerText = profile.churches.name;
+                } else if (isSuperAdmin) {
+                    churchNameEl.innerText = 'Global Super Admin (All Churches)';
+                } else {
+                    churchNameEl.innerText = 'Assigned Church';
+                }
+            }
+
             if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church') {
                 
-                if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com' || user.email === 'adoniakasango@gmail.com') {
+                if (isSuperAdmin) {
                     const tabsEl = document.getElementById('admin-tabs');
                     if (tabsEl) tabsEl.classList.remove('hidden');
                     const superAdminNav = document.getElementById('nav-super-admin');
@@ -717,6 +756,8 @@
                         superAdminNav.classList.remove('hidden');
                         superAdminNav.classList.add('flex');
                     }
+                    const selectorContainer = document.getElementById('super-admin-church-selector');
+                    if (selectorContainer) selectorContainer.classList.remove('hidden');
                 }
 
                 if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin') {
@@ -724,24 +765,29 @@
                     if (pubSec) pubSec.classList.remove('hidden');
                     const usrMgmt = document.getElementById('user-management-section');
                     if (usrMgmt) usrMgmt.classList.remove('hidden');
-                    loadInboxInquiries();
-                    loadAllMembers();
-                    loadChurchJoinCode();
-                    if (typeof loadAdminEvents === 'function') loadAdminEvents();
+                    
+                    // 2. Scope all admin queries to adminChurchId
+                    loadInboxInquiries(adminChurchId, isSuperAdmin);
+                    loadAllMembers(adminChurchId, isSuperAdmin);
+                    loadChurchJoinCode(adminChurchId);
+                    if (typeof loadAdminEvents === 'function') loadAdminEvents(adminChurchId, isSuperAdmin);
                 }
 
                 const urlParams = new URLSearchParams(window.location.search);
                 const overrideChurchId = urlParams.get('church_id');
                 const initialTab = urlParams.get('tab');
 
-                if (overrideChurchId && (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin')) {
+                if (overrideChurchId && isSuperAdmin) {
                     activeDashboardChurchId = overrideChurchId;
                     switchAdminTab('dashboard');
                 } else if (initialTab === 'dashboard') {
                     switchAdminTab('dashboard');
-                } else if (currentUserProfile.role === 'church' && currentUserProfile.church_id) {
-                    activeDashboardChurchId = currentUserProfile.church_id;
+                } else if (adminChurchId) {
+                    activeDashboardChurchId = adminChurchId;
                     switchAdminTab('dashboard');
+                } else if (isSuperAdmin) {
+                    // Default to first church or let super admin pick
+                    await loadChurchesDropdown();
                 }
 
             } else {
@@ -750,7 +796,7 @@
                 return;
             }
             
-            loadAnnouncements(currentUserProfile.church_id);
+            loadAnnouncements(adminChurchId, isSuperAdmin);
         }
 
         async function initChurchDashboardView() {
@@ -1058,9 +1104,13 @@
         }
 
         // --- INBOX HANDLERS ---
-        async function loadInboxInquiries() {
+        async function loadInboxInquiries(churchId, isSuperAdmin) {
             const container = document.getElementById('inbox-messages-container');
-            const { data: messages, error } = await window.sbClient.from('inbox').select('*').eq('church_id', currentUserProfile.church_id).order('created_at', {ascending: false});
+            let query = window.sbClient.from('inbox').select('*');
+            if (!isSuperAdmin && churchId) {
+                query = query.eq('church_id', churchId);
+            }
+            const { data: messages, error } = await query.order('created_at', {ascending: false});
             
             if (error) { container.innerHTML = "<p class='text-red-400 py-3'>Setup 'inbox' table in Supabase to view incoming mail records.</p>"; return; }
 
@@ -1076,14 +1126,15 @@
         }
 
         // --- USER MANAGEMENT HANDLERS ---
-        async function loadAllMembers() {
+        async function loadAllMembers(churchId, isSuperAdmin) {
             const container = document.getElementById('admin-list');
             container.innerHTML = '<p class="text-slate-500 py-4">Loading user profiles...</p>';
             
-            const { data: profiles, error } = await window.sbClient
-                .from('profiles')
-                .select('*')
-                .eq('church_id', currentUserProfile.church_id);
+            let query = window.sbClient.from('profiles').select('*');
+            if (!isSuperAdmin && churchId) {
+                query = query.eq('church_id', churchId);
+            }
+            const { data: profiles, error } = await query;
 
             if (error) {
                 container.innerHTML = `<p class="text-red-400 py-4">Error loading user profiles: ${escapeHTML(error.message)}</p>`;
@@ -1434,10 +1485,18 @@
 
             container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">Loading requests...</div>';
 
-            const { data, error } = await window.sbClient
+            let adminChurchId = currentUserProfile?.church_id;
+            let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+
+            let query = window.sbClient
                 .from('counseling_appointments')
-                .select('*')
-                .order('appointment_date', { ascending: true });
+                .select('*');
+
+            if (!isSuperAdmin && adminChurchId) {
+                query = query.eq('church_id', adminChurchId);
+            }
+
+            const { data, error } = await query.order('appointment_date', { ascending: true });
 
             if (error) {
                 container.innerHTML = `<div class="bg-red-950 text-red-200 p-4 rounded-xl text-center text-sm font-medium border border-red-800">Error loading appointments: ${escapeHTML(error.message)}</div>`;
@@ -1523,10 +1582,18 @@
             if (!container) return;
 
             try {
-                const { data: slots, error } = await window.sbClient
+                let adminChurchId = currentUserProfile?.church_id;
+                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+
+                let query = window.sbClient
                     .from('volunteer_roster')
-                    .select('*')
-                    .order('event_date', { ascending: true });
+                    .select('*');
+
+                if (!isSuperAdmin && adminChurchId) {
+                    query = query.eq('church_id', adminChurchId);
+                }
+
+                const { data: slots, error } = await query.order('event_date', { ascending: true });
 
                 if (error) throw error;
 
@@ -1556,7 +1623,9 @@
                                 return `
                                     <tr class="hover:bg-slate-800/40 transition">
                                         <td class="p-3 align-top">
-                                            <div class="font-bold text-slate-100">${escapeHTML(slot.title)}</div>
+                                            <div class="font-bold text-slate-100">
+                                             <h5 class="text-primary text-decoration-underline" style="cursor: pointer;" onclick="window.viewSlotMembers('${slot.id}', '${slot.title || slot.name}')">${slot.title || slot.name}</h5>
+                                         </div>
                                             <div class="text-xs text-slate-400 mt-0.5">${escapeHTML(slot.description || 'No description')}</div>
                                         </td>
                                         <td class="p-3 align-top text-slate-300 whitespace-nowrap text-xs">
@@ -2039,6 +2108,56 @@
                 }
             }, 350);
         }
+
+        window.viewSlotMembers = async function(slotId, slotName) {
+          const titleEl = document.getElementById('volunteerModalTitle');
+          const listEl = document.getElementById('volunteer-members-list');
+          
+          if (titleEl) titleEl.innerText = `Volunteers for ${slotName}`;
+          if (listEl) listEl.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading members...</p></div>';
+          
+          // Show Bootstrap Modal
+          const modalEl = document.getElementById('volunteerMembersModal');
+          const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          modal.show();
+
+          try {
+            const { data: signups, error } = await supabase
+              .from('volunteer_signups')
+              .select('*, profiles(full_name, email, phone)')
+              .eq('slot_id', slotId);
+
+            if (error) throw error;
+
+            if (!signups || signups.length === 0) {
+              listEl.innerHTML = '<div class="text-center text-muted p-4">No members have signed up for this slot yet.</div>';
+              return;
+            }
+
+            let html = '<ul class="list-group list-group-flush">';
+            signups.forEach(item => {
+              const name = item.profiles?.full_name || item.full_name || item.name || 'Anonymous Member';
+              const email = item.profiles?.email || item.email || item.contact_info || 'No email provided';
+              const phone = item.profiles?.phone || item.phone || '';
+              const date = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+
+              html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                  <div>
+                    <strong class="d-block">${name}</strong>
+                    <small class="text-muted">${email} ${phone ? '• ' + phone : ''}</small>
+                  </div>
+                  ${date ? `<span class="badge bg-light text-dark">${date}</span>` : ''}
+                </li>
+              `;
+            });
+            html += '</ul>';
+            listEl.innerHTML = html;
+          } catch (err) {
+            console.error('Error loading volunteers:', err);
+            listEl.innerHTML = `<div class="alert alert-danger">Failed to load volunteers: ${err.message}</div>`;
+          }
+        };
 
         initPage();
     </script>
