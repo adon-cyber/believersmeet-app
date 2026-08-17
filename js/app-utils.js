@@ -11,12 +11,12 @@ window.initAnimatedGallery = function(sectionId = 'gallery-section') {
     const observer = new IntersectionObserver((entries, observerInstance) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                const imgItems = gallerySection.querySelectorAll('.gallery-img-item');
+                const imgItems = gallerySection.querySelectorAll('.gallery-item-hide');
                 imgItems.forEach((item, index) => {
                     setTimeout(() => {
-                        item.classList.remove('opacity-0', 'translate-y-10');
-                        item.classList.add('opacity-100', 'translate-y-0');
-                    }, index * 150);
+                        item.classList.remove('gallery-item-hide');
+                        item.classList.add('gallery-item-show');
+                    }, index * 120);
                 });
                 observerInstance.unobserve(entry.target);
             }

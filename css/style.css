@@ -117,3 +117,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background: linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)), url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
   background-size: cover;
 }
+
+/* Unified Gallery & Leadership Cascading Animation System */
+.gallery-item-hide {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out, scale 0.5s ease-out;
+}
+
+.gallery-item-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out, scale 0.5s ease-out;
+}
+
