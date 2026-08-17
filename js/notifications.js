@@ -13,6 +13,46 @@
     let currentUser = null;
     let notificationsChannel = null;
 
+    async function updateNotificationCount() {
+        if (!sbClient || !currentUser) return;
+        try {
+            const { count, error } = await sbClient
+                .from('notifications')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_read', false)
+                .eq('user_id', currentUser.id);
+
+            if (error) {
+                console.error('Error getting notification count:', error);
+                return;
+            }
+
+            const badgeElements = document.querySelectorAll('#notification-badge, .notification-count, #notification-badge-count');
+            badgeElements.forEach(el => {
+                if (count > 0) {
+                    el.innerText = count > 99 ? '99+' : count;
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Also support the dot indicator if present
+            const badgeDot = document.getElementById('notification-badge-dot');
+            if (badgeDot) {
+                if (count > 0) {
+                    badgeDot.classList.remove('hidden');
+                } else {
+                    badgeDot.classList.add('hidden');
+                }
+            }
+        } catch (err) {
+            console.error('Error in updateNotificationCount:', err);
+        }
+    }
+
+    window.updateNotificationCount = updateNotificationCount;
+
     async function initInAppNotifications() {
         // Wait for Supabase client
         let attempts = 0;
@@ -31,8 +71,9 @@
             // 1. Inject Notification Bell UI into nav bars if not already present
             injectNotificationBellUI();
 
-            // 2. Fetch initial notifications
+            // 2. Fetch initial notifications & update count
             await loadNotifications();
+            await updateNotificationCount();
 
             // 3. Setup real-time subscription for new notifications
             setupRealtimeSubscription();
@@ -125,6 +166,9 @@
             if (!sysErr && sysNotifs) {
                 aggregated.push(...sysNotifs);
             }
+
+            // Also update live badge counter whenever notifications are loaded / fetched
+            await updateNotificationCount();
 
             // 2. Fetch unread chat messages
             const { data: chatMsgs, error: chatErr } = await sbClient
@@ -334,14 +378,16 @@
         }
 
         notificationsChannel = sbClient
-            .channel('public:notifications:' + currentUser.id)
+            .channel('notifications')
             .on('postgres_changes', {
-                event: '*',
+                event: 'INSERT',
                 schema: 'public',
-                table: 'notifications',
-                filter: `user_id=eq.${currentUser.id}`
+                table: 'notifications'
             }, payload => {
-                loadNotifications();
+                if (payload.new && payload.new.user_id === currentUser.id) {
+                    loadNotifications();
+                    updateNotificationCount();
+                }
             })
             .subscribe();
     }
