@@ -790,22 +790,23 @@ async function loadPublicProgrammes(churchId) {
     let html = '<div class="d-flex flex-column gap-3">';
     programmes.forEach(prog => {
       const title = prog.title || prog.name || 'Worship Service';
-      const time = prog.time || prog.schedule || prog.day || '';
+      const scheduleDisplay = prog.schedule_text || 
+        (prog.day_of_week ? `${prog.day_of_week} • ${prog.time || prog.start_time || ''}` : prog.time || (prog.day ? `${prog.day} • ${prog.start_time && prog.end_time ? `${prog.start_time} - ${prog.end_time}` : (prog.start_time || '')}` : 'Schedule TBA'));
       const location = prog.location || prog.venue || '';
       const description = prog.description || '';
 
       html += `
         <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center gap-3">
           <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle">
-            <i class="bi bi-calendar-event fs-4"></i>
+            🗓
           </div>
           <div>
-            <h6 class="fw-bold mb-1 text-dark">${title}</h6>
+            <h6 class="fw-bold mb-1 text-dark">${escapeHTML(title)}</h6>
             <p class="small text-muted mb-0">
-              ${time ? `<span>${time}</span>` : ''} 
-              ${location ? ` • <span>${location}</span>` : ''}
+              <span>🗓 ${escapeHTML(scheduleDisplay)}</span>
+              ${location ? ` • <span>${escapeHTML(location)}</span>` : ''}
             </p>
-            ${description ? `<small class="text-secondary d-block mt-1">${description}</small>` : ''}
+            ${description ? `<small class="text-secondary d-block mt-1">${escapeHTML(description)}</small>` : ''}
           </div>
         </div>
       `;

@@ -503,7 +503,34 @@
                         <h3 class="text-lg font-bold text-slate-100 mb-4">📅 Add New Programme</h3>
                         <div class="space-y-4">
                             <input type="text" id="p-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                            <input type="time" id="p-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            
+                            <!-- Day / Frequency Selection -->
+                            <div class="mb-3">
+                              <label class="block text-sm font-medium text-slate-300 mb-1">Frequency / Day</label>
+                              <select id="prog-day" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
+                                <option value="Every Sunday" selected>Every Sunday</option>
+                                <option value="Every Monday">Every Monday</option>
+                                <option value="Every Tuesday">Every Tuesday</option>
+                                <option value="Every Wednesday">Every Wednesday</option>
+                                <option value="Every Thursday">Every Thursday</option>
+                                <option value="Every Friday">Every Friday</option>
+                                <option value="Every Saturday">Every Saturday</option>
+                                <option value="Monthly Event">Monthly Event</option>
+                                <option value="Special Event">Special Event</option>
+                              </select>
+                            </div>
+
+                            <!-- Start Time & End Time -->
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                              <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
+                                <input type="time" id="prog-start-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value="10:00" required>
+                              </div>
+                              <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">End Time</label>
+                                <input type="time" id="prog-end-time" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value="12:00" required>
+                              </div>
+                            </div>
                             <textarea id="p-desc" rows="3" placeholder="Description" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-y"></textarea>
                             <button id="add-btn" onclick="addProgramme()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-lg transition">Publish</button>
                         </div>
@@ -913,29 +940,56 @@
             }
         }
 
+        // Helper function to format 24h time to 12h AM/PM format (e.g., 10:00 -> 10:00 AM, 14:30 -> 2:30 PM).
+        function format12HourTime(timeStr) {
+            if (!timeStr) return '';
+            const parts = timeStr.split(':');
+            if (parts.length < 2) return timeStr;
+            let hours = parseInt(parts[0], 10);
+            const minutes = parts[1];
+            if (isNaN(hours)) return timeStr;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
         async function addProgramme() {
             if (!activeDashboardChurchId) {
                 alert("Please select a church first.");
                 return;
             }
             const btn = document.getElementById('add-btn');
-            const title = document.getElementById('p-title').value.trim();
-            const time = document.getElementById('p-time').value;
-            const desc = document.getElementById('p-desc').value.trim();
+            const titleVal = document.getElementById('p-title').value.trim();
+            const dayVal = document.getElementById('prog-day').value;
+            const startTimeVal = document.getElementById('prog-start-time').value;
+            const endTimeVal = document.getElementById('prog-end-time').value;
+            const descVal = document.getElementById('p-desc').value.trim();
+            const locationVal = document.getElementById('lat') && document.getElementById('lng') ? `${document.getElementById('lat').value}, ${document.getElementById('lng').value}` : '';
 
-            if (!title || !time) {
-                alert("Please fill in Title and Time.");
+            if (!titleVal || !dayVal || !startTimeVal || !endTimeVal) {
+                alert("Please fill in Title, Frequency/Day, Start Time, and End Time.");
                 return;
             }
+
+            const formattedStart = format12HourTime(startTimeVal);
+            const formattedEnd = format12HourTime(endTimeVal);
+            const scheduleText = `${dayVal} • ${formattedStart} - ${formattedEnd}`;
+            const timeText = `${formattedStart} - ${formattedEnd}`;
 
             btn.disabled = true;
             btn.innerText = "Publishing...";
 
             const { error } = await window.sbClient.from('programmes').insert({
-                church_id: activeDashboardChurchId,
-                title,
-                description: desc,
-                start_time: time
+                title: titleVal,
+                description: descVal,
+                location: locationVal,
+                day_of_week: dayVal,
+                start_time: formattedStart,
+                end_time: formattedEnd,
+                schedule_text: scheduleText,
+                time: timeText,
+                church_id: activeDashboardChurchId
             });
 
             btn.disabled = false;
@@ -946,7 +1000,6 @@
             } else {
                 showNotification("Programme added successfully!", "success");
                 document.getElementById('p-title').value = '';
-                document.getElementById('p-time').value = '';
                 document.getElementById('p-desc').value = '';
                 loadChurchProgrammes(activeDashboardChurchId);
             }
@@ -966,15 +1019,21 @@
                 return;
             }
 
-            container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => `
-                <div class="py-3 flex items-center justify-between">
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-100">${escapeHTML(p.title)} <span class="text-xs font-normal text-slate-500 ml-2">(${escapeHTML(p.start_time)})</span></h4>
-                        ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+            container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => {
+                const dayStr = p.day || p.schedule || '';
+                const timeStr = p.start_time && p.end_time ? `${p.start_time} - ${p.end_time}` : (p.start_time || p.time || '');
+                const scheduleDisplay = [dayStr, timeStr].filter(Boolean).join(', ');
+
+                return `
+                    <div class="py-3 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-100">${escapeHTML(p.title)} ${scheduleDisplay ? `<span class="text-xs font-normal text-slate-400 ml-2">(${escapeHTML(scheduleDisplay)})</span>` : ''}</h4>
+                            ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+                        </div>
+                        <button onclick="deleteChurchProgramme('${p.id}')" class="text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 px-3 py-1 rounded-lg font-medium ml-4 transition">Delete</button>
                     </div>
-                    <button onclick="deleteChurchProgramme('${p.id}')" class="text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 px-3 py-1 rounded-lg font-medium ml-4 transition">Delete</button>
-                </div>
-            `).join('') : '<p class="text-slate-500 py-3">No programmes published yet.</p>';
+                `;
+            }).join('') : '<p class="text-slate-500 py-3">No programmes published yet.</p>';
         }
 
         async function deleteChurchProgramme(id) {
