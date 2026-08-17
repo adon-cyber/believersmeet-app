@@ -36,6 +36,7 @@ async function initPublicChurch() {
         }
 
         await fetchChurchDetails();
+        await loadPublicProgrammes(currentChurchId);
         await fetchChurchActivities();
         await renderLeadershipTeam();
         await fetchFellowshipGallery();
@@ -757,3 +758,64 @@ function initLeadershipAnimation() {
 
 // Run initialization
 initPublicChurch();
+
+async function loadPublicProgrammes(churchId) {
+  const container = document.getElementById('public-service-schedule');
+  if (!container) return;
+
+  container.innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading service schedule...</div>';
+
+  try {
+    // Build query - filter by church_id if available
+    let query = publicSupabase.from('programmes').select('*').order('created_at', { ascending: true });
+    if (churchId) {
+      query = query.eq('church_id', churchId);
+    }
+
+    const { data: programmes, error } = await query;
+    if (error) throw error;
+
+    console.log('Fetched public programmes:', programmes);
+
+    if (!programmes || programmes.length === 0) {
+      container.innerHTML = `
+        <div class="text-center text-muted p-4 border rounded bg-light">
+          <p class="mb-0">No active service schedules published yet for this church.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Render live programs
+    let html = '<div class="d-flex flex-column gap-3">';
+    programmes.forEach(prog => {
+      const title = prog.title || prog.name || 'Worship Service';
+      const time = prog.time || prog.schedule || prog.day || '';
+      const location = prog.location || prog.venue || '';
+      const description = prog.description || '';
+
+      html += `
+        <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center gap-3">
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle">
+            <i class="bi bi-calendar-event fs-4"></i>
+          </div>
+          <div>
+            <h6 class="fw-bold mb-1 text-dark">${title}</h6>
+            <p class="small text-muted mb-0">
+              ${time ? `<span>${time}</span>` : ''} 
+              ${location ? ` • <span>${location}</span>` : ''}
+            </p>
+            ${description ? `<small class="text-secondary d-block mt-1">${description}</small>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error('Error fetching public programmes:', err);
+    container.innerHTML = `<div class="alert alert-warning small py-2">Could not load schedule: ${err.message}</div>`;
+  }
+}
+
