@@ -23,7 +23,7 @@
                 <p class="text-slate-300 text-base">Step up and serve! Browse available ministry roles (Usher, Choir, Technical/Media, Hospitality, Greeter), check needed vs filled spots, and sign up.</p>
             </div>
             <button onclick="loadVolunteerSlots()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold transition border border-slate-700 flex items-center gap-2">
-                🔄 Refresh Slots
+                🔄 Refresh Roster
             </button>
         </div>
 
@@ -97,14 +97,22 @@
             if (!container) return;
 
             try {
-                const nowIso = new Date().toISOString();
-                const { data: slots, error } = await window.sbClient
+                // 1. Query volunteer_roster directly without strict date filters
+                let { data: slots, error } = await window.sbClient
                     .from('volunteer_roster')
                     .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))')
-                    .gte('event_date', nowIso)
-                    .order('event_date', { ascending: true });
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.warn('Fallback: checking volunteer_roster without relations...');
+                    const fallback = await window.sbClient.from('volunteer_roster').select('*').order('created_at', { ascending: false });
+                    slots = fallback.data;
+                    error = fallback.error;
+                }
 
                 if (error) throw error;
+
+                console.log('Fetched volunteer slots for members:', slots);
 
                 allSlots = slots || [];
                 renderSlots();
