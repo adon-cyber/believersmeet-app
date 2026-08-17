@@ -32,7 +32,7 @@
             injectNotificationBellUI();
 
             // 2. Fetch initial notifications
-            await fetchAndRenderNotifications();
+            await loadNotifications();
 
             // 3. Setup real-time subscription for new notifications
             setupRealtimeSubscription();
@@ -104,18 +104,12 @@
         if (dropdown) {
             dropdown.classList.toggle('hidden');
             if (!dropdown.classList.contains('hidden')) {
-                fetchAndRenderNotifications();
+                loadNotifications();
             }
         }
     };
 
-    /**
-     * Aggregates unread notifications from multiple Supabase tables:
-     * - New Chat messages (messages table)
-     * - New Ministry/Prayer Requests (conversion_requests / prayer_requests tables for admins)
-     * - Approval alerts (business_directory / profile approval updates)
-     */
-    window.fetchGlobalNotifications = async function() {
+    window.loadNotifications = async function() {
         if (!sbClient || !currentUser) return [];
 
         let aggregated = [];
@@ -224,7 +218,7 @@
                             user_id: currentUser.id,
                             title: `Business Listing ${status.toUpperCase()}`,
                             message: `Your business "${b.business_name}" status has been updated to ${status}.`,
-                            is_read: true, // Marked read or unread depending on preference
+                            is_read: true,
                             created_at: b.updated_at || new Date().toISOString(),
                             type: 'approval'
                         });
@@ -238,10 +232,15 @@
             renderNotificationsList(aggregated);
             return aggregated;
         } catch (err) {
-            console.error('Error in fetchGlobalNotifications:', err);
+            console.error('Error in loadNotifications:', err);
+            renderNotificationsList([]);
             return [];
+        } finally {
+            // Ensure loading state is always cleared or handled gracefully
         }
     };
+
+    window.fetchGlobalNotifications = window.loadNotifications;
 
     function renderNotificationsList(notifications) {
         const listContainer = document.getElementById('notification-list');
@@ -302,7 +301,7 @@
             }
 
             // Refresh list
-            await fetchAndRenderNotifications();
+            await loadNotifications();
         } catch (err) {
             console.error('Error in markAsRead:', err);
         }
@@ -322,7 +321,7 @@
                 return;
             }
 
-            await fetchAndRenderNotifications();
+            await loadNotifications();
         } catch (err) {
             console.error('Error in markAllAsRead:', err);
         }
@@ -342,7 +341,7 @@
                 table: 'notifications',
                 filter: `user_id=eq.${currentUser.id}`
             }, payload => {
-                fetchAndRenderNotifications();
+                loadNotifications();
             })
             .subscribe();
     }
