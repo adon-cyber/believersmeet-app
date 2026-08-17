@@ -61,8 +61,28 @@
                             <input type="text" id="p-title" placeholder="e.g. Sunday Service" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Time</label>
-                            <input type="time" id="p-time" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Frequency / Day</label>
+                            <select id="prog-day" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                              <option value="Every Sunday" selected>Every Sunday</option>
+                              <option value="Every Monday">Every Monday</option>
+                              <option value="Every Tuesday">Every Tuesday</option>
+                              <option value="Every Wednesday">Every Wednesday</option>
+                              <option value="Every Thursday">Every Thursday</option>
+                              <option value="Every Friday">Every Friday</option>
+                              <option value="Every Saturday">Every Saturday</option>
+                              <option value="Monthly Event">Monthly Event</option>
+                              <option value="Special Event">Special Event</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
+                                <input type="time" id="prog-start-time" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="10:00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">End Time</label>
+                                <input type="time" id="prog-end-time" class="w-full px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="12:00" required>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
@@ -273,11 +293,13 @@
         async function addProgramme() {
             const btn = document.getElementById('add-btn');
             const title = document.getElementById('p-title').value.trim();
-            const time = document.getElementById('p-time').value;
+            const day = document.getElementById('prog-day').value;
+            const startTime = document.getElementById('prog-start-time').value;
+            const endTime = document.getElementById('prog-end-time').value;
             const desc = document.getElementById('p-desc').value.trim();
 
-            if (!title || !time) {
-                alert("Please fill in Title and Time.");
+            if (!title || !day || !startTime || !endTime) {
+                alert("Please fill in Title, Frequency/Day, Start Time, and End Time.");
                 return;
             }
 
@@ -288,7 +310,9 @@
                 church_id: userChurchId,
                 title,
                 description: desc,
-                start_time: time
+                day,
+                start_time: startTime,
+                end_time: endTime
             });
 
             btn.disabled = false;
@@ -299,7 +323,6 @@
             } else {
                 alert("Programme added successfully!");
                 document.getElementById('p-title').value = '';
-                document.getElementById('p-time').value = '';
                 document.getElementById('p-desc').value = '';
                 loadProgrammes();
             }
@@ -318,15 +341,21 @@
                 return;
             }
 
-            container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => `
-                <div class="py-3 flex items-center justify-between">
-                    <div>
-                        <h4 class="text-sm font-semibold text-white">${escapeHTML(p.title)} <span class="text-xs font-normal text-slate-400 ml-2">(${escapeHTML(p.start_time)})</span></h4>
-                        ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+            container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => {
+                const dayStr = p.day || p.schedule || '';
+                const timeStr = p.start_time && p.end_time ? `${p.start_time} - ${p.end_time}` : (p.start_time || p.time || '');
+                const scheduleDisplay = [dayStr, timeStr].filter(Boolean).join(', ');
+
+                return `
+                    <div class="py-3 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-semibold text-white">${escapeHTML(p.title)} ${scheduleDisplay ? `<span class="text-xs font-normal text-slate-400 ml-2">(${escapeHTML(scheduleDisplay)})</span>` : ''}</h4>
+                            ${p.description ? `<p class="text-xs text-slate-300 mt-0.5">${escapeHTML(p.description)}</p>` : ''}
+                        </div>
+                        <button onclick="deleteProgramme('${p.id}')" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-medium ml-4 transition">Delete</button>
                     </div>
-                    <button onclick="deleteProgramme('${p.id}')" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-medium ml-4 transition">Delete</button>
-                </div>
-            `).join('') : '<p class="text-slate-400 py-3">No programmes published yet.</p>';
+                `;
+            }).join('') : '<p class="text-slate-400 py-3">No programmes published yet.</p>';
         }
 
         async function deleteProgramme(id) {
