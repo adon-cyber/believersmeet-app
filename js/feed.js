@@ -1085,30 +1085,40 @@ async function fetchMinistryRequests() {
         if (conversionError) throw conversionError;
 
         if (conversionTbody) {
-            if (!conversionData || conversionData.length === 0) {
-                conversionTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No new conversion requests at this time.</td></tr>`;
+            // Filter pending or null status submissions
+            const pendingConversions = (conversionData || []).filter(req => req.status === 'pending' || req.status === null || req.status === undefined || req.status === '');
+            
+            if (pendingConversions.length === 0) {
+                conversionTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No pending conversion requests at this time.</td></tr>`;
             } else {
-                conversionTbody.innerHTML = conversionData.map(req => {
+                conversionTbody.innerHTML = pendingConversions.map(req => {
                     const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-                    const isContacted = req.status === 'contacted' || req.status === 'dismissed';
-                    const statusBadge = req.status === 'contacted' 
-                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Contacted</span>' 
-                        : (req.status === 'dismissed' ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Dismissed</span>' : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">New</span>');
+                    
+                    const postContent = req.content || req.prayer_request || req.message || req.details || req.testimony || 'No content provided';
+                    const authorName = req.full_name || req.name || req.display_name || req.contact_info || (req.profiles ? req.profiles.full_name : 'Anonymous Guest');
+                    const contact = req.email || req.phone || req.contact_info || 'No contact provided';
+
+                    const statusBadge = (req.status === 'pending' || req.status === null || req.status === undefined || req.status === '')
+                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Pending</span>'
+                        : (req.status === 'contacted' || req.status === 'approved' 
+                            ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>' 
+                            : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>');
 
                     return `
                         <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
                             <td class="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
-                            <td class="py-3 px-4 font-semibold text-gray-900">${escapeHTML(req.full_name || req.name || 'Anonymous')}</td>
+                            <td class="py-3 px-4 font-semibold text-gray-900">${escapeHTML(authorName)}</td>
                             <td class="py-3 px-4 text-xs text-blue-600">
+                                <div>${escapeHTML(contact)}</div>
                                 ${req.phone ? `<div>📞 ${escapeHTML(req.phone)}</div>` : ''}
-                                ${req.email ? `<div>✉️ ${escapeHTML(req.email)}</div>` : (!req.phone ? 'N/A' : '')}
+                                ${req.email ? `<div>✉️ ${escapeHTML(req.email)}</div>` : ''}
                             </td>
-                            <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(req.message || req.testimony || '')}">${escapeHTML(req.message || req.testimony || 'No additional message.')}</td>
+                            <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(postContent)}">${escapeHTML(postContent)}</td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
                                     ${statusBadge}
-                                    <button onclick="updateMinistryRequestStatus('conversion_requests', '${req.id}', 'contacted')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Mark as Contacted">✓</button>
-                                    <button onclick="updateMinistryRequestStatus('conversion_requests', '${req.id}', 'dismissed')" class="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded transition" title="Dismiss">✕</button>
+                                    <button onclick="updateMinistryRequestStatus('conversion_requests', '${req.id}', 'approved')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Approve">Approve</button>
+                                    <button onclick="updateMinistryRequestStatus('conversion_requests', '${req.id}', 'rejected')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow transition" title="Reject">Reject</button>
                                 </div>
                             </td>
                         </tr>
@@ -1117,7 +1127,7 @@ async function fetchMinistryRequests() {
             }
         }
 
-        // 2. Fetch Prayer Requests
+        // 2. Fetch Prayer Requests (avoid hard inner joins, query pending explicitly or filter in memory)
         const { data: prayerData, error: prayerError } = await window.sbClient
             .from('prayer_requests')
             .select('*')
@@ -1127,29 +1137,39 @@ async function fetchMinistryRequests() {
         if (prayerError) throw prayerError;
 
         if (prayerTbody) {
-            if (!prayerData || prayerData.length === 0) {
-                prayerTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No prayer requests at this time.</td></tr>`;
+            const pendingPrayers = (prayerData || []).filter(req => req.status === 'pending' || req.status === null || req.status === undefined || req.status === '');
+
+            if (pendingPrayers.length === 0) {
+                prayerTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No pending prayer requests at this time.</td></tr>`;
             } else {
-                prayerTbody.innerHTML = prayerData.map(req => {
+                prayerTbody.innerHTML = pendingPrayers.map(req => {
                     const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-                    const statusBadge = req.status === 'contacted' 
-                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Prayed / Followed</span>' 
-                        : (req.status === 'dismissed' ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Dismissed</span>' : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Active</span>');
+                    
+                    const postContent = req.content || req.prayer_request || req.message || req.details || req.testimony || 'No content provided';
+                    const authorName = req.full_name || req.name || req.display_name || req.contact_info || (req.profiles ? req.profiles.full_name : 'Anonymous Guest');
+                    const contact = req.email || req.phone || req.contact_info || 'No contact provided';
+
+                    const statusBadge = (req.status === 'pending' || req.status === null || req.status === undefined || req.status === '')
+                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Pending</span>'
+                        : (req.status === 'approved' || req.status === 'contacted'
+                            ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>'
+                            : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>');
 
                     return `
                         <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
                             <td class="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
-                            <td class="py-3 px-4 font-semibold text-gray-900">${escapeHTML(req.full_name || req.name || 'Anonymous')}</td>
+                            <td class="py-3 px-4 font-semibold text-gray-900">${escapeHTML(authorName)}</td>
                             <td class="py-3 px-4 text-xs text-blue-600">
+                                <div>${escapeHTML(contact)}</div>
                                 ${req.phone ? `<div>📞 ${escapeHTML(req.phone)}</div>` : ''}
-                                ${req.email ? `<div>✉️ ${escapeHTML(req.email)}</div>` : (!req.phone ? 'N/A' : '')}
+                                ${req.email ? `<div>✉️ ${escapeHTML(req.email)}</div>` : ''}
                             </td>
-                            <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(req.prayer_request || req.message || '')}">${escapeHTML(req.prayer_request || req.message || 'No details provided.')}</td>
+                            <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(postContent)}">${escapeHTML(postContent)}</td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
                                     ${statusBadge}
-                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'contacted')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Mark as Prayed / Contacted">✓</button>
-                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'dismissed')" class="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded transition" title="Dismiss">✕</button>
+                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'approved')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Approve">Approve</button>
+                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'rejected')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow transition" title="Reject">Reject</button>
                                 </div>
                             </td>
                         </tr>
