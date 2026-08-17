@@ -468,6 +468,13 @@ if (conversionForm) {
 
             if (error) throw error;
 
+            console.log('Successfully submitted request:', { type: 'conversion_request', church_id: currentChurchId, full_name: fullName });
+            if (typeof showNotification === 'function') {
+                showNotification('Join/Conversion request successfully submitted!', 'success');
+            } else {
+                alert('Join/Conversion request successfully submitted!');
+            }
+
             document.getElementById('success-message').classList.remove('hidden');
             conversionForm.reset();
             conversionForm.classList.add('hidden');
@@ -509,10 +516,18 @@ if (prayerForm) {
                 church_id: currentChurchId,
                 full_name: fullName,
                 contact_info: contactInfo || null,
-                prayer_request: prayerRequestText
+                prayer_request: prayerRequestText,
+                status: 'pending'
             });
 
             if (error) throw error;
+
+            console.log('Successfully submitted request:', { type: 'prayer_request', church_id: currentChurchId, full_name: fullName });
+            if (typeof showNotification === 'function') {
+                showNotification('Prayer request successfully submitted!', 'success');
+            } else {
+                alert('Prayer request successfully submitted!');
+            }
 
             document.getElementById('prayer-success-message').classList.remove('hidden');
             prayerForm.reset();
