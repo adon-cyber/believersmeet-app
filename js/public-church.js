@@ -41,7 +41,11 @@ async function initPublicChurch() {
         await fetchAndRenderWidgetVerse('John 3:16');
 
         // Initialize gallery and leadership entrance animations
-        initGalleryAnimation();
+        if (typeof window.initAnimatedGallery === 'function') {
+            window.initAnimatedGallery('gallery-section');
+        } else if (typeof initGalleryAnimation === 'function') {
+            initGalleryAnimation();
+        }
         initLeadershipAnimation();
     } catch (err) {
         console.error("Error initializing public church profile:", err);
