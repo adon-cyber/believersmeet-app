@@ -526,13 +526,13 @@
                         <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-500">Select a church to load programmes.</p></div>
                     </div>
                     <!-- Volunteer Slots Card -->
-                    <div class="card bg-dark text-white border-secondary mb-4 shadow-sm">
-                      <div class="card-header border-secondary d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i> Volunteer Slots & Roster</h5>
-                        <button class="btn btn-sm btn-outline-primary" onclick="openCreateSlotModal()">+ Add Slot</button>
+                    <div class="card bg-dark text-white border-secondary mb-4 shadow-sm bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
+                      <div class="card-header border-secondary d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 fs-6 fw-bold"><i class="bi bi-person-badge me-2"></i> Volunteer Slots & Roster</h5>
+                        <button class="btn btn-sm btn-primary px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition" onclick="openCreateSlotModal()">+ Add Slot</button>
                       </div>
-                      <div class="card-body" id="volunteer-slots-container">
-                        <div class="text-center p-3 text-muted">Loading volunteers...</div>
+                      <div class="card-body p-3 mt-4" id="volunteer-slots-container">
+                        <div class="text-center p-3 text-muted text-slate-400">Loading volunteer slots...</div>
                       </div>
                     </div>
                 </div>
@@ -2176,13 +2176,12 @@
             if (!container) return;
 
             try {
-                const nowIso = new Date().toISOString();
+                // Query slots directly without failing on join errors
                 const { data: slots, error } = await window.sbClient
                     .from('volunteer_roster')
-                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))')
+                    .select('*')
                     .eq('church_id', churchId)
-                    .gte('event_date', nowIso)
-                    .order('event_date', { ascending: true });
+                    .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
@@ -2191,26 +2190,23 @@
                     return;
                 }
 
-                container.innerHTML = `
-                    <div class="space-y-3">
-                        ${slots.map(slot => {
-                            const dateStr = slot.event_date ? new Date(slot.event_date).toLocaleString() : 'N/A';
-                            const signupsCount = slot.volunteer_signups ? slot.volunteer_signups.length : 0;
-                            return `
-                                <div class="p-3 bg-slate-900/60 border border-slate-700/80 rounded-xl flex items-center justify-between">
-                                    <div>
-                                        <h6 class="font-bold text-white text-sm mb-0">${escapeHTML(slot.title || slot.name)}</h6>
-                                        <p class="text-xs text-slate-400 mb-0">${escapeHTML(slot.description || 'No description')} • <span class="text-blue-400">${escapeHTML(dateStr)}</span></p>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">${signupsCount} Volunteers</span>
-                                        <button onclick="window.viewSlotMembers('${slot.id}', '${escapeHTML(slot.title || slot.name)}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs transition font-medium">View Roster</button>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
+                let html = '<div class="list-group list-group-flush bg-transparent">';
+                slots.forEach(slot => {
+                    const dateStr = slot.event_date ? new Date(slot.event_date).toLocaleString() : 'N/A';
+                    html += `
+                        <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2 px-0">
+                          <div>
+                            <a href="javascript:void(0)" class="text-primary text-decoration-underline fw-bold" onclick="window.viewSlotMembers('${slot.id}', '${escapeHTML(slot.title || slot.name)}')">
+                              ${escapeHTML(slot.title || slot.name || 'Volunteer Slot')}
+                            </a>
+                            <small class="d-block text-muted">${escapeHTML(slot.description || '')} • <span class="text-info">${escapeHTML(dateStr)}</span></small>
+                          </div>
+                          <button class="btn btn-sm btn-outline-info" onclick="window.viewSlotMembers('${slot.id}', '${escapeHTML(slot.title || slot.name)}')">View Signups</button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
             } catch (err) {
                 console.error("Error loading volunteer slots for dashboard:", err);
                 container.innerHTML = `<div class="text-center p-3 text-red-400 text-sm">Failed to load volunteer slots: ${escapeHTML(err.message)}</div>`;
