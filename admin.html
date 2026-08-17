@@ -191,7 +191,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-300 mb-2">Event Date & Time</label>
-                                <input type="datetime-local" id="roster-date-input" required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                                <input type="datetime-local" id="slot-date" required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1769,22 +1769,22 @@
         document.getElementById('roster-create-form')?.addEventListener('submit', async function(e) {
             if (e) e.preventDefault();
             const titleInput = document.getElementById('roster-title-input');
-            const dateInput = document.getElementById('roster-date-input');
+            const dateInput = document.getElementById('slot-date');
             const descInput = document.getElementById('roster-description-input');
             const submitBtn = document.getElementById('roster-create-btn');
 
             const title = titleInput?.value?.trim() || 'New Volunteer Slot';
-            const eventDate = dateInput?.value ? new Date(dateInput.value).toISOString() : new Date().toISOString();
+            const slotDate = document.getElementById('slot-date')?.value || new Date().toISOString().split('T')[0];
             const description = descInput ? descInput.value.trim() : '';
             const maxCapacity = parseInt(document.getElementById('slot-capacity')?.value) || 5;
             const churchId = activeDashboardChurchId || (currentUserProfile ? currentUserProfile.church_id : null) || localStorage.getItem('church_id') || null;
 
             const payload = {
                 title,
-                event_date: eventDate,
                 description,
                 max_capacity: maxCapacity,
-                is_active: true
+                is_active: true,
+                event_date: slotDate
             };
             if (churchId) payload.church_id = churchId;
 
