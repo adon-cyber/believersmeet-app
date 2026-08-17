@@ -1658,19 +1658,32 @@
             const container = document.getElementById('admin-roster-container');
             if (!container) return;
 
+            container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading volunteer slots...</div>`;
+
             try {
-                let adminChurchId = currentUserProfile?.church_id;
-                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+                let adminChurchId = currentUserProfile?.church_id || localStorage.getItem('church_id');
+                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adonstance@gmail.com';
 
                 let query = window.sbClient
                     .from('volunteer_roster')
-                    .select('*');
+                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))');
 
                 if (!isSuperAdmin && adminChurchId) {
                     query = query.eq('church_id', adminChurchId);
                 }
 
-                const { data: slots, error } = await query.order('event_date', { ascending: true });
+                let { data: slots, error } = await query.order('event_date', { ascending: true });
+
+                if (error) {
+                    console.warn('Fallback: fetching volunteer_roster without signups relation...');
+                    let fallbackQuery = window.sbClient.from('volunteer_roster').select('*');
+                    if (!isSuperAdmin && adminChurchId) {
+                        fallbackQuery = fallbackQuery.eq('church_id', adminChurchId);
+                    }
+                    const fallback = await fallbackQuery.order('event_date', { ascending: true });
+                    slots = fallback.data;
+                    error = fallback.error;
+                }
 
                 if (error) throw error;
 
@@ -1754,24 +1767,26 @@
         }
 
         document.getElementById('roster-create-form')?.addEventListener('submit', async function(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const titleInput = document.getElementById('roster-title-input');
             const dateInput = document.getElementById('roster-date-input');
             const descInput = document.getElementById('roster-description-input');
             const submitBtn = document.getElementById('roster-create-btn');
 
-            if (!titleInput || !dateInput) return;
-
-            const title = titleInput.value.trim();
-            const eventDate = dateInput.value;
+            const title = titleInput?.value?.trim() || 'New Volunteer Slot';
+            const eventDate = dateInput?.value ? new Date(dateInput.value).toISOString() : new Date().toISOString();
             const description = descInput ? descInput.value.trim() : '';
             const maxCapacity = parseInt(document.getElementById('slot-capacity')?.value) || 5;
-            const churchId = activeDashboardChurchId || (currentUserProfile ? currentUserProfile.church_id : null);
+            const churchId = activeDashboardChurchId || (currentUserProfile ? currentUserProfile.church_id : null) || localStorage.getItem('church_id') || null;
 
-            if (!title || !eventDate) {
-                alert("Please fill in both title and event date.");
-                return;
-            }
+            const payload = {
+                title,
+                event_date: eventDate,
+                description,
+                max_capacity: maxCapacity,
+                is_active: true
+            };
+            if (churchId) payload.church_id = churchId;
 
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -1779,27 +1794,20 @@
             }
 
             try {
-                const { error } = await window.sbClient
+                const { data, error } = await window.sbClient
                     .from('volunteer_roster')
-                    .insert([{ 
-                        title, 
-                        event_date: new Date(eventDate).toISOString(), 
-                        description, 
-                        max_capacity: maxCapacity,
-                        church_id: churchId,
-                        assigned_user_id: null 
-                    }]);
+                    .insert([payload])
+                    .select();
 
-                if (error) throw error;
-
-                if (typeof showNotification === 'function') {
-                    showNotification("Serving slot created successfully!", "success");
-                } else {
-                    alert("Serving slot created successfully!");
+                if (error) {
+                    alert('Failed to create slot: ' + error.message);
+                    console.error('Slot insert error:', error);
+                    return;
                 }
 
-                titleInput.value = '';
-                dateInput.value = '';
+                alert('Volunteer slot created successfully!');
+                if (titleInput) titleInput.value = '';
+                if (dateInput) dateInput.value = '';
                 if (descInput) descInput.value = '';
                 loadAdminRosterSlots();
             } catch (err) {
