@@ -525,6 +525,16 @@
                         <h3 class="text-lg font-bold text-slate-100 mb-4">📋 Published Programmes</h3>
                         <div id="programme-list" class="divide-y divide-slate-800"><p class="text-slate-500">Select a church to load programmes.</p></div>
                     </div>
+                    <!-- Volunteer Slots Card -->
+                    <div class="card bg-dark text-white border-secondary mb-4 shadow-sm">
+                      <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i> Volunteer Slots & Roster</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="openCreateSlotModal()">+ Add Slot</button>
+                      </div>
+                      <div class="card-body" id="volunteer-slots-container">
+                        <div class="text-center p-3 text-muted">Loading volunteers...</div>
+                      </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -812,6 +822,7 @@
                 loadChurchDetails(activeDashboardChurchId);
                 loadChurchMembers(activeDashboardChurchId);
                 loadChurchProgrammes(activeDashboardChurchId);
+                loadChurchVolunteerSlots(activeDashboardChurchId);
             }
         }
 
@@ -849,6 +860,7 @@
                 loadChurchDetails(churchId);
                 loadChurchMembers(churchId);
                 loadChurchProgrammes(churchId);
+                loadChurchVolunteerSlots(churchId);
             }
         }
 
@@ -2158,6 +2170,56 @@
             listEl.innerHTML = `<div class="alert alert-danger">Failed to load volunteers: ${err.message}</div>`;
           }
         };
+
+        async function loadChurchVolunteerSlots(churchId) {
+            const container = document.getElementById('volunteer-slots-container');
+            if (!container) return;
+
+            try {
+                const nowIso = new Date().toISOString();
+                const { data: slots, error } = await window.sbClient
+                    .from('volunteer_roster')
+                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))')
+                    .eq('church_id', churchId)
+                    .gte('event_date', nowIso)
+                    .order('event_date', { ascending: true });
+
+                if (error) throw error;
+
+                if (!slots || slots.length === 0) {
+                    container.innerHTML = `<div class="text-center p-4 text-slate-400 text-sm">No volunteer slots available for this church yet.</div>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="space-y-3">
+                        ${slots.map(slot => {
+                            const dateStr = slot.event_date ? new Date(slot.event_date).toLocaleString() : 'N/A';
+                            const signupsCount = slot.volunteer_signups ? slot.volunteer_signups.length : 0;
+                            return `
+                                <div class="p-3 bg-slate-900/60 border border-slate-700/80 rounded-xl flex items-center justify-between">
+                                    <div>
+                                        <h6 class="font-bold text-white text-sm mb-0">${escapeHTML(slot.title || slot.name)}</h6>
+                                        <p class="text-xs text-slate-400 mb-0">${escapeHTML(slot.description || 'No description')} • <span class="text-blue-400">${escapeHTML(dateStr)}</span></p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">${signupsCount} Volunteers</span>
+                                        <button onclick="window.viewSlotMembers('${slot.id}', '${escapeHTML(slot.title || slot.name)}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs transition font-medium">View Roster</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (err) {
+                console.error("Error loading volunteer slots for dashboard:", err);
+                container.innerHTML = `<div class="text-center p-3 text-red-400 text-sm">Failed to load volunteer slots: ${escapeHTML(err.message)}</div>`;
+            }
+        }
+
+        function openCreateSlotModal() {
+            switchAdminTab('roster');
+        }
 
         initPage();
     </script>
