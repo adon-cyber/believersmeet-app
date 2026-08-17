@@ -549,10 +549,19 @@
             if (error) {
                 alert("Failed to send message: " + error.message);
             } else {
-                // Trigger notification for recipient
-                if (typeof window.sendNotification === 'function') {
-                    const senderName = currentUser.user_metadata?.full_name || currentUser.email || 'Someone';
-                    await window.sendNotification(targetUser.id, 'New Direct Message', `${senderName}: ${content.substring(0, 50)}...`);
+                // Trigger notification for recipient non-blockingly with exact schema
+                if (typeof window.sbClient !== 'undefined') {
+                    try {
+                        await window.sbClient.from('notifications').insert([{
+                            user_id: targetUser.id,
+                            actor_id: currentUser.id,
+                            type: 'message',
+                            message: 'Sent you a message',
+                            is_read: false
+                        }]);
+                    } catch (notifErr) {
+                        console.error('Notification creation failed, but message was sent successfully:', notifErr);
+                    }
                 }
 
                 const container = document.getElementById('messages-container');
@@ -694,6 +703,19 @@
                             }]);
 
                         if (!insertError) {
+                            // Also insert non-blocking notification for finance user
+                            try {
+                                await window.sbClient.from('notifications').insert([{
+                                    user_id: financeUser.id,
+                                    actor_id: currentUser.id,
+                                    type: 'message',
+                                    message: 'Sent you a message',
+                                    is_read: false
+                                }]);
+                            } catch (notifErr) {
+                                console.error('Notification creation failed during auto-send, but message was sent:', notifErr);
+                            }
+
                             // Display immediately in chat UI
                             const container = document.getElementById('messages-container');
                             if (container.querySelector('.text-center')) {
