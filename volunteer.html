@@ -155,10 +155,10 @@
                 const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 const roleName = slot.role || 'Usher';
-                const totalNeeded = slot.total_spots || 1;
+                const totalNeeded = slot.max_capacity || slot.spots || slot.total_spots || 5;
                 const signups = slot.volunteer_signups || [];
                 const filledSpots = signups.length;
-                const isSignedUpByMe = signups.some(s => s.user_id === currentUser.id);
+                const isSignedUpByMe = currentUser && signups.some(s => s.user_id === currentUser.id);
                 const isFull = filledSpots >= totalNeeded;
 
                 let badgeHtml = '';
@@ -172,14 +172,14 @@
                         </button>
                     `;
                 } else if (isFull) {
-                    badgeHtml = `<span class="text-xs font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full"><i class="fas fa-ban mr-1"></i> Full</span>`;
+                    badgeHtml = `<span class="text-xs font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full"><i class="fas fa-ban mr-1"></i> Full (${filledSpots} / ${totalNeeded})</span>`;
                     buttonHtml = `
                         <button disabled class="w-full py-3 px-4 rounded-xl font-semibold text-slate-500 bg-slate-800/50 cursor-not-allowed border border-slate-700/50 flex items-center justify-center space-x-2 text-sm">
                             <span><i class="fas fa-ban mr-1"></i> Slot at Max Capacity</span>
                         </button>
                     `;
                 } else {
-                    badgeHtml = `<span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full"><i class="fas fa-clock mr-1"></i> Open</span>`;
+                    badgeHtml = `<span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full"><i class="fas fa-clock mr-1"></i> ${filledSpots} / ${totalNeeded} spots filled</span>`;
                     buttonHtml = `
                         <button onclick="signUpForSlot('${slot.id}', '${escapeHTML(slot.title).replace(/'/g, "\\'")}', '${escapeHTML(dateStr)}')" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                             <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
