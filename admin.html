@@ -785,6 +785,7 @@
                     loadAllMembers(adminChurchId, isSuperAdmin);
                     loadChurchJoinCode(adminChurchId);
                     if (typeof loadAdminEvents === 'function') loadAdminEvents(adminChurchId, isSuperAdmin);
+                    if (typeof loadChurchVolunteerSlots === 'function') loadChurchVolunteerSlots(adminChurchId);
                 }
 
                 const urlParams = new URLSearchParams(window.location.search);
@@ -2189,60 +2190,65 @@
   const container = document.getElementById('volunteer-slots-container');
   if (!container) return;
 
-  container.innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading volunteer roster...</div>';
+  container.innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading volunteer signups...</div>';
 
   try {
-    // Fetch signups with member profile and slot details
+    // 1. Fetch raw signups first (failsafe against foreign key join errors)
     const { data: signups, error } = await window.sbClient
       .from('volunteer_signups')
-      .select('*, profiles(full_name, email, phone), volunteer_roster(title, name)')
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      // Fallback query if joins fail
-      const { data: rawSignups, error: rawErr } = await window.sbClient
-        .from('volunteer_signups')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (rawErr) throw rawErr;
-      renderVolunteerList(rawSignups || [], container);
+    if (error) throw error;
+
+    console.log('Raw volunteer signups fetched:', signups);
+
+    if (!signups || signups.length === 0) {
+      container.innerHTML = '<div class="text-center text-muted py-3">No members have signed up to volunteer yet.</div>';
       return;
     }
 
-    renderVolunteerList(signups || [], container);
+    // 2. Fetch associated profiles & slot details separately if needed
+    const userIds = signups.map(s => s.user_id).filter(Boolean);
+    let profilesMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await window.sbClient
+        .from('profiles')
+        .select('id, full_name, email, phone')
+        .in('id', userIds);
+      
+      if (profiles) {
+        profiles.forEach(p => { profilesMap[p.id] = p; });
+      }
+    }
+
+    // 3. Render the member roster list
+    let html = '<ul class="list-group list-group-flush bg-transparent">';
+    signups.forEach(item => {
+      const profile = profilesMap[item.user_id] || {};
+      const memberName = profile.full_name || item.full_name || item.name || item.user_email || 'Anonymous Member';
+      const roleName = item.slot_name || item.role || item.title || 'General Volunteer';
+      const contact = profile.phone || profile.email || item.phone || item.email || item.contact_info || 'No contact info';
+      const signupDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+
+      html += `
+        <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2 px-0">
+          <div>
+            <strong class="d-block text-light">${escapeHTML(memberName)}</strong>
+            <small class="text-info">${escapeHTML(roleName)}</small>
+            <small class="d-block text-muted">${escapeHTML(contact)}</small>
+          </div>
+          ${signupDate ? `<span class="badge bg-secondary">${escapeHTML(signupDate)}</span>` : ''}
+        </li>
+      `;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+
   } catch (err) {
-    console.error('Error fetching volunteer roster:', err);
+    console.error('Error loading volunteer signups:', err);
     container.innerHTML = `<div class="text-danger small py-2">Failed to load volunteer roster: ${escapeHTML(err.message)}</div>`;
   }
-}
-
-function renderVolunteerList(list, container) {
-  if (!list || list.length === 0) {
-    container.innerHTML = '<div class="text-center text-muted py-3">No members have signed up to volunteer yet.</div>';
-    return;
-  }
-
-  let html = '<ul class="list-group list-group-flush bg-transparent">';
-  list.forEach(item => {
-    const memberName = item.profiles?.full_name || item.full_name || item.name || 'Anonymous Member';
-    const roleName = item.volunteer_roster?.title || item.volunteer_roster?.name || item.slot_name || item.role || 'General Volunteer';
-    const contact = item.profiles?.phone || item.profiles?.email || item.phone || item.email || 'No contact provided';
-    const signupDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
-
-    html += `
-      <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2 px-0">
-        <div>
-          <strong class="d-block text-light">${escapeHTML(memberName)}</strong>
-          <small class="text-info">${escapeHTML(roleName)}</small>
-          <small class="d-block text-muted">${escapeHTML(contact)}</small>
-        </div>
-        ${signupDate ? `<span class="badge bg-secondary">${escapeHTML(signupDate)}</span>` : ''}
-      </li>
-    `;
-  });
-  html += '</ul>';
-  container.innerHTML = html;
 }
 
         function openCreateSlotModal() {
