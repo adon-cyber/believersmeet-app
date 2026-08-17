@@ -2,6 +2,9 @@
 
 document.getElementById('current-year').textContent = new Date().getFullYear();
 
+// Helper guard function for image URLs
+const isValidImageUrl = (url) => typeof url === 'string' && url.trim().startsWith('http') && !url.includes('@');
+
 // Extract churchId or churchCode from URL parameters, e.g. public-church.html?id=xxx or public-church.html?code=yyy
 const urlParams = new URLSearchParams(window.location.search);
 const churchIdParam = urlParams.get('id');
@@ -96,14 +99,15 @@ function renderChurch(church) {
     document.title = `${churchName} | BelieversMeet`;
     document.getElementById('church-name').textContent = churchName;
     document.getElementById('header-church-name').textContent = churchName;
-    document.getElementById('church-address').innerHTML = `<i class="fas fa-location-dot mr-2 text-blue-400"></i> ${escapeHTML(address)}`;
+    document.getElementById('church-address').innerHTML = `<i class="fas fa-location-dot mr-2 text-blue-200"></i> ${escapeHTML(address)}`;
     
     const logoEl = document.getElementById('church-logo');
-    if (logoEl && church.logo_url) {
-        logoEl.src = church.logo_url;
+    if (logoEl) {
+        const finalLogoUrl = isValidImageUrl(church.logo_url) ? church.logo_url : 'images/BELIEVERS.LOGO.png';
+        logoEl.src = finalLogoUrl;
     }
 
-    // 3. Inject and Conditionally Render Direct Giving Details (Bank & Mobile Money)
+    // Inject and Conditionally Render Direct Giving Details (Bank & Mobile Money)
     const bankNameEl = document.getElementById('bank-name');
     const bankAccountNameEl = document.getElementById('bank-account-name');
     const bankAccountNumberEl = document.getElementById('bank-account-number');
@@ -152,20 +156,17 @@ function renderChurch(church) {
         if (directGivingDivider) directGivingDivider.classList.remove('hidden');
     }
 
-    // 1. Dynamic Plan a Visit Section Updates:
-    // Update physical address text
+    // Dynamic Plan a Visit Section Updates:
     const planVisitAddressEl = document.getElementById('plan-visit-address');
     if (planVisitAddressEl) {
         planVisitAddressEl.textContent = address;
     }
 
-    // Update 'Get Directions' button link dynamically with church address query
     const getDirectionsBtn = document.getElementById('get-directions-btn');
     if (getDirectionsBtn) {
         getDirectionsBtn.href = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
     }
 
-    // Update Map Iframe src
     if (church.physical_address) {
         const baseUrl = "https://maps.google.com/maps?q=";
         const urlParams = "&t=&z=15&ie=UTF8&iwloc=&output=embed";
@@ -183,21 +184,17 @@ function renderChurch(church) {
         }
     }
 
-    // Update Service Schedule list if database schema has a service_times column or JSON array
-    // DATABASE SCHEMA NOTE: Once a dedicated `service_times` column or related table is added,
-    // parse and render the dynamic schedule here. Example:
-    // if (church.service_times && Array.isArray(church.service_times)) { renderServiceTimes(church.service_times); }
     if (church.service_times && Array.isArray(church.service_times)) {
         const scheduleContainer = document.getElementById('service-schedule-container');
         if (scheduleContainer) {
             scheduleContainer.innerHTML = church.service_times.map(service => `
-                <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-start space-x-3">
-                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 mt-0.5 border border-blue-100">
                         <i class="fas fa-calendar-day"></i>
                     </div>
                     <div class="flex-1">
-                        <h4 class="font-bold text-gray-900 text-sm">${escapeHTML(service.title || service.name || 'Worship Service')}</h4>
-                        <p class="text-xs text-gray-600 mt-0.5">${escapeHTML(service.time || service.schedule || '')}</p>
+                        <h4 class="font-bold text-slate-900 text-sm">${escapeHTML(service.title || service.name || 'Worship Service')}</h4>
+                        <p class="text-xs text-slate-600 mt-0.5">${escapeHTML(service.time || service.schedule || '')}</p>
                     </div>
                 </div>
             `).join('');
@@ -208,7 +205,6 @@ function renderChurch(church) {
 async function fetchChurchActivities() {
     const container = document.getElementById('activities-container');
     
-    // We can query events / programs associated with this church
     let activitiesQuery = publicSupabase.from('events').select('*');
     if (currentChurchId) {
         activitiesQuery = activitiesQuery.or(`church_id.eq.${currentChurchId},host_church_id.eq.${currentChurchId}`);
@@ -217,7 +213,6 @@ async function fetchChurchActivities() {
     const { data: events, error } = await activitiesQuery.order('event_date', { ascending: true }).limit(6);
 
     if (error || !events || events.length === 0) {
-        // Fallback: Check if there's a programmes or activities table
         try {
             const { data: progs } = await publicSupabase.from('programmes').select('*').eq('church_id', currentChurchId);
             if (progs && progs.length > 0) {
@@ -229,12 +224,12 @@ async function fetchChurchActivities() {
         }
 
         container.innerHTML = `
-            <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm space-y-3">
-                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+            <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm space-y-3">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl border border-blue-100">
                     <i class="fas fa-calendar-days"></i>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900">No active programs right now</h3>
-                <p class="text-sm text-gray-500 max-w-md mx-auto">Check back soon for upcoming worship services, bible studies, and community gatherings!</p>
+                <h3 class="text-lg font-bold text-slate-900">No active programs right now</h3>
+                <p class="text-sm text-slate-500 max-w-md mx-auto">Check back soon for upcoming worship services, bible studies, and community gatherings!</p>
             </div>
         `;
         return;
@@ -249,10 +244,10 @@ function renderActivities(items) {
         const title = item.title || item.name || 'Church Program';
         const description = item.description || 'Join us for this uplifting church activity.';
         const dateStr = item.event_date ? new Date(item.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : (item.time || 'Weekly Fellowship');
-        const imageUrl = item.image_url || item.photo_url || 'images/meet2.jpg';
+        const imageUrl = isValidImageUrl(item.image_url) ? item.image_url : (isValidImageUrl(item.photo_url) ? item.photo_url : 'assets/images/default-placeholder.png');
 
         return `
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
                 <div class="h-48 overflow-hidden relative">
                     <img src="${imageUrl}" alt="${escapeHTML(title)}" class="w-full h-full object-cover">
                     <div class="absolute top-3 right-3 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
@@ -264,10 +259,10 @@ function renderActivities(items) {
                         <div class="text-xs font-semibold text-blue-600 flex items-center">
                             <i class="fas fa-clock mr-1.5"></i> ${escapeHTML(dateStr)}
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900">${escapeHTML(title)}</h3>
-                        <p class="text-sm text-gray-600 line-clamp-3">${escapeHTML(description)}</p>
+                        <h3 class="text-xl font-bold text-slate-900">${escapeHTML(title)}</h3>
+                        <p class="text-sm text-slate-600 line-clamp-3">${escapeHTML(description)}</p>
                     </div>
-                    <div class="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                         <span><i class="fas fa-users mr-1"></i> Open to All</span>
                         <span class="font-medium text-blue-600">Read-Only</span>
                     </div>
@@ -277,7 +272,6 @@ function renderActivities(items) {
     }).join('');
 }
 
-// 2. Replicate the Bible Fetching Logic
 async function fetchAndRenderWidgetVerse(query) {
     const container = document.getElementById('bible-widget-container');
     if (!container) return;
@@ -287,8 +281,8 @@ async function fetchAndRenderWidgetVerse(query) {
 
     container.innerHTML = `
         <div class="flex items-center justify-center py-4 space-x-2">
-            <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs text-gray-500 font-medium">Looking up "${escapeHTML(query)}" (${version.toUpperCase()})...</span>
+            <div class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs text-slate-500 font-medium">Looking up "${escapeHTML(query)}" (${version.toUpperCase()})...</span>
         </div>
     `;
 
@@ -324,13 +318,12 @@ async function fetchAndRenderWidgetVerse(query) {
             container.innerHTML = `
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <h4 class="text-xs font-bold text-indigo-700">${escapeHTML(officialRef)} <span class="text-[10px] text-gray-500 font-normal">(${escapeHTML(translationName)})</span></h4>
+                        <h4 class="text-xs font-bold text-blue-700">${escapeHTML(officialRef)} <span class="text-[10px] text-slate-500 font-normal">(${escapeHTML(translationName)})</span></h4>
                     </div>
-                    <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(passageText)}"</p>
+                    <p class="text-xs text-slate-800 leading-relaxed italic">"${escapeHTML(passageText)}"</p>
                 </div>
             `;
         } else {
-            // Keyword Search using Bolls Life API POST request
             try {
                 const response = await fetch('https://bolls.life/search/', {
                     method: 'POST',
@@ -365,16 +358,16 @@ async function fetchAndRenderWidgetVerse(query) {
                     container.innerHTML = `
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
-                                <h4 class="text-xs font-bold text-indigo-700">Search result: <span class="text-emerald-700">"${escapeHTML(ref)}"</span> <span class="text-[10px] text-gray-500 font-normal">(${version.toUpperCase()})</span></h4>
+                                <h4 class="text-xs font-bold text-blue-700">Search result: <span class="text-blue-600">"${escapeHTML(ref)}"</span> <span class="text-[10px] text-slate-500 font-normal">(${version.toUpperCase()})</span></h4>
                             </div>
-                            <p class="text-xs text-gray-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
-                            ${results.length > 1 ? `<p class="text-[10px] text-gray-500 italic mt-1">Showing top result out of ${results.length} matches.</p>` : ''}
+                            <p class="text-xs text-slate-800 leading-relaxed italic">"${escapeHTML(text)}"</p>
+                            ${results.length > 1 ? `<p class="text-[10px] text-slate-500 italic mt-1">Showing top result out of ${results.length} matches.</p>` : ''}
                         </div>
                     `;
                 } else {
                     container.innerHTML = `
                         <div class="py-2 text-center">
-                            <p class="text-xs text-gray-600 font-semibold">No scripture results found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference (e.g., 'John 3:16').</p>
+                            <p class="text-xs text-slate-600 font-semibold">No scripture results found for '${escapeHTML(trimmedQuery)}'. Try searching by verse reference (e.g., 'John 3:16').</p>
                         </div>
                     `;
                 }
@@ -475,7 +468,6 @@ if (conversionForm) {
 
             if (error) throw error;
 
-            // Show success message and hide form
             document.getElementById('success-message').classList.remove('hidden');
             conversionForm.reset();
             conversionForm.classList.add('hidden');
@@ -522,7 +514,6 @@ if (prayerForm) {
 
             if (error) throw error;
 
-            // Show success message and hide form
             document.getElementById('prayer-success-message').classList.remove('hidden');
             prayerForm.reset();
             prayerForm.classList.add('hidden');
@@ -546,7 +537,6 @@ function handleOnlineGiving() {
     }
 }
 
-// Attach event listener on DOMContentLoaded or directly
 document.addEventListener('DOMContentLoaded', () => {
     const pesapalBtn = document.getElementById('pesapal-giving-btn');
     if (pesapalBtn) {
@@ -575,8 +565,8 @@ async function fetchFellowshipGallery() {
 
     if (!currentChurchId) {
         gridContainer.innerHTML = `
-            <div class="col-span-full py-12 text-center text-yellow-500/70">
-                <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
+            <div class="col-span-full py-12 text-center text-slate-500">
+                <i class="fas fa-exclamation-circle text-3xl mb-2 text-blue-600"></i>
                 <p class="text-sm">Church identification required to load gallery photos.</p>
             </div>
         `;
@@ -584,7 +574,6 @@ async function fetchFellowshipGallery() {
     }
 
     try {
-        // Query Supabase database for gallery images (checking gallery_images or gallery_media)
         let photos = [];
         
         const { data, error } = await publicSupabase
@@ -596,7 +585,6 @@ async function fetchFellowshipGallery() {
         if (!error && data) {
             photos = data;
         } else {
-            // Fallback table check
             const { data: mediaData, error: mediaErr } = await publicSupabase
                 .from('gallery_media')
                 .select('*')
@@ -609,38 +597,38 @@ async function fetchFellowshipGallery() {
 
         if (!photos || photos.length === 0) {
             gridContainer.innerHTML = `
-                <div class="col-span-full py-16 text-center text-yellow-500/70 space-y-3">
-                    <div class="w-16 h-16 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <div class="col-span-full py-16 text-center text-slate-500 space-y-3">
+                    <div class="w-16 h-16 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
                         <i class="fas fa-images"></i>
                     </div>
-                    <h3 class="text-base font-bold text-white">No Fellowship Photos Yet</h3>
-                    <p class="text-xs text-gray-400 max-w-sm mx-auto">Church admin has not published any moments of fellowship to this gallery yet.</p>
+                    <h3 class="text-base font-bold text-slate-900">No Fellowship Photos Yet</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto">Church admin has not published any moments of fellowship to this gallery yet.</p>
                 </div>
             `;
             return;
         }
 
-        // Loop through fetched database results and dynamically create HTML image elements
         gridContainer.innerHTML = photos.map(photo => {
-            const imageUrl = photo.image_url || photo.url || 'images/meet2.jpg';
+            const rawUrl = photo.image_url || photo.url || '';
+            const imageUrl = isValidImageUrl(rawUrl) ? rawUrl : 'assets/images/default-placeholder.png';
             const caption = photo.caption || photo.title || 'Fellowship Moment';
             const uploader = photo.uploader_name || 'Church Admin';
             const dateStr = photo.created_at ? new Date(photo.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
             return `
-                <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out overflow-hidden rounded-xl shadow-lg bg-gray-900 border border-yellow-900/40 group">
-                    <div class="relative overflow-hidden h-64 bg-gray-950">
-                        <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(caption)}" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                            <span class="text-white text-xs font-medium"><i class="fas fa-heart text-yellow-400 mr-1.5"></i> ${escapeHTML(caption)}</span>
+                <div class="gallery-item-hide group">
+                    <div class="relative overflow-hidden h-64 bg-slate-100 rounded-2xl shadow-sm border border-slate-200 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-blue-100 transition-all duration-300">
+                        <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(caption)}" class="w-full h-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                            <span class="text-white text-xs font-medium"><i class="fas fa-heart text-blue-400 mr-1.5"></i> ${escapeHTML(caption)}</span>
                         </div>
                     </div>
-                    <div class="p-4 flex items-center justify-between bg-gray-900">
+                    <div class="p-4 flex items-center justify-between bg-white mt-2 rounded-2xl border border-slate-100 shadow-sm">
                         <div>
-                            <h4 class="font-bold text-white text-sm truncate max-w-[200px]">${escapeHTML(caption)}</h4>
-                            <p class="text-[11px] text-gray-400">By ${escapeHTML(uploader)} ${dateStr ? '• ' + dateStr : ''}</p>
+                            <h4 class="font-bold text-slate-900 text-sm truncate max-w-[200px]">${escapeHTML(caption)}</h4>
+                            <p class="text-[11px] text-slate-500">By ${escapeHTML(uploader)} ${dateStr ? '• ' + dateStr : ''}</p>
                         </div>
-                        <span class="text-[10px] text-yellow-400 font-semibold bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-1 rounded-full">Official</span>
+                        <span class="text-[10px] text-blue-700 font-semibold bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">Official</span>
                     </div>
                 </div>
             `;
@@ -649,13 +637,12 @@ async function fetchFellowshipGallery() {
     } catch (err) {
         console.error("Error fetching fellowship gallery:", err);
         gridContainer.innerHTML = `
-            <div class="col-span-full py-12 text-center text-red-400">
+            <div class="col-span-full py-12 text-center text-red-500">
                 <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
                 <p class="text-xs">Failed to load gallery photos. Please try again later.</p>
             </div>
         `;
     } finally {
-        // Trigger the Animation
         if (typeof window.initAnimatedGallery === 'function') {
             window.initAnimatedGallery('gallery-section');
         }
@@ -684,7 +671,6 @@ async function renderLeadershipTeam() {
         }
     }
 
-    // Fallback if no leaders found or table doesn't exist
     if (!leaders || leaders.length === 0) {
         leaders = [
             {
@@ -712,21 +698,26 @@ async function renderLeadershipTeam() {
         const name = leader.name || leader.full_name || 'Church Leader';
         const role = leader.role || leader.title || 'Pastor / Minister';
         const bio = leader.bio || leader.description || 'Serving faithfully to build up the body of Christ in grace and truth.';
-        const imageUrl = leader.image_url || leader.photo_url || 'images/meet2.jpg';
+        const rawLeaderUrl = leader.image_url || leader.photo_url || '';
+        const imageUrl = isValidImageUrl(rawLeaderUrl) ? rawLeaderUrl : 'assets/images/default-placeholder.png';
 
         return `
-            <div class="bg-gray-900 border border-yellow-900/50 rounded-xl p-6 text-center hover:scale-105 transition-transform shadow-xl space-y-4 flex flex-col items-center">
-                <div class="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-yellow-500/40 shadow-md">
+            <div class="gallery-item-hide group bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm space-y-4 flex flex-col items-center hover:scale-105 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300">
+                <div class="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-blue-200 shadow-sm group-hover:scale-105 transition-transform duration-500">
                     <img src="${imageUrl}" alt="${escapeHTML(name)}" class="w-full h-full object-cover">
                 </div>
                 <div class="space-y-1">
-                    <h3 class="text-lg font-bold text-white tracking-wide">${escapeHTML(name)}</h3>
-                    <p class="text-xs font-semibold text-yellow-500 uppercase tracking-widest">${escapeHTML(role)}</p>
+                    <h3 class="text-lg font-bold text-slate-900 tracking-wide">${escapeHTML(name)}</h3>
+                    <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest">${escapeHTML(role)}</p>
                 </div>
-                <p class="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">${escapeHTML(bio)}</p>
+                <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">${escapeHTML(bio)}</p>
             </div>
         `;
     }).join('');
+
+    if (typeof window.initAnimatedGallery === 'function') {
+        window.initAnimatedGallery('leadership-section');
+    }
 }
 
 // Initialize Leadership Fade-in Animation on Scroll

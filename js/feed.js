@@ -9,6 +9,9 @@ let activeFilter = 'All';
 let discoveryProfiles = [];
 let currentDiscoveryIndex = 0;
 
+// Helper guard function for image URLs
+const isValidImageUrl = (url) => typeof url === 'string' && url.trim().startsWith('http') && !url.includes('@');
+
 // Utility function to sanitize strings and prevent XSS
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
@@ -105,7 +108,8 @@ async function renderCurrentDiscoveryCard() {
         }
 
         const profile = filtered[currentDiscoveryIndex];
-        const avatarUrl = profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Believer')}&background=2563eb&color=fff`;
+        const rawAvatarUrl = profile.avatar_url || '';
+        const avatarUrl = isValidImageUrl(rawAvatarUrl) ? rawAvatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Believer')}&background=2563eb&color=fff`;
 
         // Check if connection already exists between loggedInUser and profile
         let connectionState = 'none';
@@ -425,22 +429,24 @@ function renderFeedGallerySection(photos) {
     }
 
     container.innerHTML = photos.map(photo => {
-        const isVideo = photo.image_url && (photo.image_url.endsWith('.mp4') || photo.image_url.endsWith('.webm') || photo.image_url.includes('video'));
+        const rawImageUrl = photo.image_url || '';
+        const safeImageUrl = isValidImageUrl(rawImageUrl) ? rawImageUrl : 'assets/images/default-placeholder.png';
+        const isVideo = safeImageUrl && (safeImageUrl.endsWith('.mp4') || safeImageUrl.endsWith('.webm') || safeImageUrl.includes('video'));
         return `
-        <div class="gallery-img-item opacity-0 translate-y-10 transition-all duration-700 ease-out block group relative aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-200">
+        <div class="gallery-item-hide group block relative aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:scale-105 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300">
             ${isVideo ? `
-                <video src="${escapeHTML(photo.image_url)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" preload="metadata"></video>
+                <video src="${escapeHTML(safeImageUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" preload="metadata"></video>
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center text-white shadow-lg">
                         <svg class="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </div>
                 </div>
             ` : `
-                <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(photo.caption || 'Church Memory')}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                <img src="${escapeHTML(safeImageUrl)}" alt="${escapeHTML(photo.caption || 'Church Memory')}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
             `}
             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-end p-2 justify-between">
                 <p class="text-white text-xs opacity-0 group-hover:opacity-100 transition truncate">${escapeHTML(photo.caption || '')}</p>
-                <button onclick="handleSecureDownload('${escapeHTML(photo.image_url)}', 'gallery-memory.jpg', true)" class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 hover:bg-white text-blue-600 rounded-full shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Download Item">
+                <button onclick="handleSecureDownload('${escapeHTML(safeImageUrl)}', 'gallery-memory.jpg', true)" class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 hover:bg-white text-blue-600 rounded-full shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Download Item">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 </button>
             </div>
