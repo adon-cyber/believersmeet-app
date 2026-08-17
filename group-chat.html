@@ -185,17 +185,10 @@
     async function fetchGroupMessages() {
         const container = document.getElementById('messages-container');
         try {
-            // Fetch messages specifically queried by group_id with sender profile join
+            // Fetch group messages using exact requested query
             let { data: messages, error } = await window.sbClient
                 .from('messages')
-                .select(`
-                    id,
-                    content,
-                    created_at,
-                    sender_id,
-                    department,
-                    profiles:sender_id (full_name, avatar_url)
-                `)
+                .select('*, profiles:sender_id(full_name, avatar_url)')
                 .eq('group_id', groupId)
                 .order('created_at', { ascending: true });
 
@@ -351,16 +344,16 @@
 
     function setupGroupRealtimeSubscription() {
         window.sbClient
-            .channel(`group-chat-${groupId}`)
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'messages',
-                filter: `group_id=eq.${groupId}`
-            }, payload => {
-                fetchGroupMessages();
-            })
+            .channel(`group-${groupId}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `group_id=eq.${groupId}` }, payload => { appendMessageToUI(payload.new); })
             .subscribe();
+    }
+
+    async function appendMessageToUI(msg) {
+        // If message belongs to current group, fetch messages or append
+        if (msg.group_id === groupId) {
+            await fetchGroupMessages();
+        }
     }
 
     // Video call trigger for group
