@@ -301,6 +301,51 @@
             </div>
         </div>
 
+        <!-- Manage Leadership Team Section (Admin) -->
+        <div id="manage-leadership-section" class="hidden bg-slate-900 rounded-xl shadow-xl border border-yellow-500/40 p-6 space-y-6 text-white">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">👑 Manage Leadership Team</h3>
+                    <p class="text-xs text-yellow-500 mt-0.5">Upload and manage pastors and ministry leaders for your church public page.</p>
+                </div>
+            </div>
+
+            <!-- Upload Form -->
+            <form id="admin-leadership-upload-form" class="space-y-4 bg-slate-800/80 p-5 rounded-xl border border-slate-700">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Leader Name</label>
+                        <input type="text" id="leader-name-input" placeholder="e.g. Pastor David Anderson" required class="w-full text-sm p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Role / Title</label>
+                        <input type="text" id="leader-role-input" placeholder="e.g. Senior Pastor" required class="w-full text-sm p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Bio (2-3 sentences)</label>
+                    <textarea id="leader-bio-input" rows="2" placeholder="Briefly describe their ministry calling and dedication..." required class="w-full text-sm p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Profile Photo</label>
+                    <input type="file" id="leader-photo-input" accept="image/*" required class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-yellow-500 file:text-slate-900 hover:file:bg-yellow-400 cursor-pointer bg-slate-900 border border-slate-700 rounded-lg">
+                </div>
+                <div class="flex justify-end pt-2">
+                    <button type="submit" id="leader-submit-btn" class="px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i> Add Leader
+                    </button>
+                </div>
+            </form>
+
+            <!-- Current Leadership Grid -->
+            <div class="space-y-3 pt-2">
+                <h4 class="text-sm font-bold text-yellow-400 uppercase tracking-wider">Current Leadership Team</h4>
+                <div id="admin-leadership-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <p class="col-span-full text-center text-slate-400 text-sm py-4 italic">Loading leadership team...</p>
+                </div>
+            </div>
+        </div>
+
         <div id="leadership-inbox-widget-container" class="bg-slate-50 p-5 rounded-xl border border-gray-200 shadow-sm">
             <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
             <form id="leadership-inbox-form">

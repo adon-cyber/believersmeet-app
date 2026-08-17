@@ -256,6 +256,15 @@ async function enforceLoginAndLoad() {
             if (ministrySection) {
                 ministrySection.classList.remove('hidden');
             }
+            const leadershipSection = document.getElementById('manage-leadership-section');
+            if (leadershipSection) {
+                leadershipSection.classList.remove('hidden');
+                const leadershipForm = document.getElementById('admin-leadership-upload-form');
+                if (leadershipForm) {
+                    leadershipForm.addEventListener('submit', handleAdminLeadershipUpload);
+                }
+                fetchAdminLeadership(profile.church_id);
+            }
             fetchMinistryRequests();
         }
         const shareProfileBtn = document.getElementById('share-church-profile-btn');
@@ -1166,6 +1175,178 @@ async function updateMinistryRequestStatus(tableName, recordId, newStatus) {
     } catch (err) {
         console.error("Error updating request status:", err);
         alert('Failed to update status: ' + err.message);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MANAGE LEADERSHIP TEAM (ADMIN CONTROLS)
+// ---------------------------------------------------------------------------
+
+async function handleAdminLeadershipUpload(e) {
+    e.preventDefault();
+    if (!currentUserProfile || !currentUserProfile.church_id) {
+        alert("Admin profile or church ID missing.");
+        return;
+    }
+
+    const nameInput = document.getElementById('leader-name-input');
+    const roleInput = document.getElementById('leader-role-input');
+    const bioInput = document.getElementById('leader-bio-input');
+    const fileInput = document.getElementById('leader-photo-input');
+    const submitBtn = document.getElementById('leader-submit-btn');
+
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("Please select a profile photo.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const name = nameInput ? nameInput.value.trim() : '';
+    const role = roleInput ? roleInput.value.trim() : '';
+    const bio = bioInput ? bioInput.value.trim() : '';
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+    try {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading & Adding Leader...';
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const randStr = Math.random().toString(36).substring(2, 8);
+        const fileName = `${currentUserProfile.church_id}/leader_${Date.now()}_${randStr}.${fileExt}`;
+        const bucketName = 'music-uploads'; // Approved public bucket used across the app
+
+        const { error: uploadError } = await window.sbClient.storage
+            .from(bucketName)
+            .upload(fileName, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = window.sbClient.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+
+        if (!publicUrl) throw new Error("Could not retrieve public URL for uploaded photo.");
+
+        const { error: insertError } = await window.sbClient
+            .from('church_leaders')
+            .insert([{
+                church_id: currentUserProfile.church_id,
+                name: name,
+                role: role,
+                bio: bio,
+                image_url: publicUrl
+            }]);
+
+        if (insertError) throw insertError;
+
+        if (typeof showNotification === 'function') {
+            showNotification('Church leader successfully added!', 'success');
+        } else {
+            alert('Church leader successfully added!');
+        }
+
+        if (nameInput) nameInput.value = '';
+        if (roleInput) roleInput.value = '';
+        if (bioInput) bioInput.value = '';
+        if (fileInput) fileInput.value = '';
+
+        await fetchAdminLeadership(currentUserProfile.church_id);
+
+    } catch (err) {
+        console.error("Leadership upload error:", err);
+        alert("Error adding leader: " + (err.message || err));
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    }
+}
+
+async function fetchAdminLeadership(churchId) {
+    const gridContainer = document.getElementById('admin-leadership-grid');
+    if (!gridContainer) return;
+
+    if (!churchId) {
+        gridContainer.innerHTML = `<p class="col-span-full text-center text-slate-400 text-sm py-4 italic">No church ID specified.</p>`;
+        return;
+    }
+
+    try {
+        const { data, error } = await window.sbClient
+            .from('church_leaders')
+            .select('*')
+            .eq('church_id', churchId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            // If table doesn't exist yet, display helpful notice
+            if (error.code === '42P01' || error.message.includes('does not exist')) {
+                gridContainer.innerHTML = `<p class="col-span-full text-center text-amber-400 text-xs py-4">Notice: 'church_leaders' table needs to be initialized in Supabase.</p>`;
+                return;
+            }
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            gridContainer.innerHTML = `<p class="col-span-full text-center text-slate-400 text-sm py-4 italic">No leaders added yet. Fill out the form above to add your first church leader.</p>`;
+            return;
+        }
+
+        gridContainer.innerHTML = data.map(leader => {
+            const name = leader.name || leader.full_name || 'Church Leader';
+            const role = leader.role || leader.title || 'Pastor / Minister';
+            const bio = leader.bio || leader.description || 'Serving faithfully in Christ.';
+            const imageUrl = leader.image_url || leader.photo_url || 'images/meet2.jpg';
+
+            return `
+                <div class="bg-slate-800 border border-yellow-500/30 rounded-xl p-5 text-center shadow-lg space-y-3 flex flex-col items-center relative group">
+                    <button onclick="removeChurchLeader('${leader.id}')" class="absolute top-3 right-3 w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-xs shadow-md transition" title="Remove Leader">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <div class="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-yellow-500/50 shadow">
+                        <img src="${imageUrl}" alt="${escapeHTML(name)}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="space-y-0.5">
+                        <h4 class="text-base font-bold text-white tracking-wide">${escapeHTML(name)}</h4>
+                        <p class="text-xs font-semibold text-yellow-400 uppercase tracking-widest">${escapeHTML(role)}</p>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed max-w-xs">${escapeHTML(bio)}</p>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error("Error fetching admin leadership:", err);
+        gridContainer.innerHTML = `<p class="col-span-full text-center text-red-400 text-xs py-4">Error loading leaders: ${escapeHTML(err.message)}</p>`;
+    }
+}
+
+async function removeChurchLeader(leaderId) {
+    if (!confirm("Are you sure you want to remove this leader from your church leadership team?")) return;
+
+    try {
+        const { error } = await window.sbClient
+            .from('church_leaders')
+            .delete()
+            .eq('id', leaderId);
+
+        if (error) throw error;
+
+        if (typeof showNotification === 'function') {
+            showNotification('Church leader removed successfully.', 'success');
+        } else {
+            alert('Church leader removed successfully.');
+        }
+
+        if (currentUserProfile && currentUserProfile.church_id) {
+            await fetchAdminLeadership(currentUserProfile.church_id);
+        }
+    } catch (err) {
+        console.error("Error removing leader:", err);
+        alert('Failed to remove leader: ' + err.message);
     }
 }
 
