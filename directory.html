@@ -49,6 +49,16 @@
     </div>
 
     <!-- Search & Filter Bar -->
+    <div class="mt-4">
+      <h4 class="text-primary mb-3">🏢 Approved Church Businesses</h4>
+      <!-- The JS will inject the approved businesses here -->
+      <div id="approved-businesses-container">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading businesses...</span>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 flex flex-col sm:flex-row gap-4">
         <div class="flex-grow relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
@@ -204,6 +214,41 @@
 
         allBusinesses = (data || []).filter(b => b.is_approved === true || b.user_id === currentUser.id);
         renderBusinesses(allBusinesses);
+        renderApprovedBusinessesFeed(allBusinesses);
+    }
+
+    function renderApprovedBusinessesFeed(businesses) {
+        const container = document.getElementById('approved-businesses-container');
+        if (!container) return;
+
+        const approvedList = (businesses || []).filter(b => b.is_approved === true);
+
+        if (approvedList.length === 0) {
+            container.innerHTML = `<div class="p-6 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-gray-100 text-sm">No approved church businesses available at the moment.</div>`;
+            return;
+        }
+
+        container.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">` + approvedList.map(b => {
+            const ownerName = b.profiles?.full_name || b.profiles?.email || 'Church Member';
+            const categoryColor = getCategoryColor(b.category);
+            return `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${categoryColor}">${escapeHtml(b.category)}</span>
+                            <span class="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">Verified & Live</span>
+                        </div>
+                        <h4 class="text-base font-bold text-gray-900 mb-1">${escapeHtml(b.business_name)}</h4>
+                        <p class="text-xs text-gray-600 line-clamp-2 mb-3">${escapeHtml(b.description || 'No description provided.')}</p>
+                    </div>
+                    <div class="space-y-1 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                        <div>Owner: <strong>${escapeHtml(ownerName)}</strong></div>
+                        ${b.phone ? `<div>Phone: <a href="tel:${escapeHtml(b.phone)}" class="text-blue-600 hover:underline">${escapeHtml(b.phone)}</a></div>` : ''}
+                        ${b.website_url ? `<div>Web: <a href="${escapeHtml(b.website_url)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline truncate">${escapeHtml(b.website_url)}</a></div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('') + `</div>`;
     }
 
     function renderBusinesses(businesses) {
@@ -368,10 +413,65 @@
         }, 3500);
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>"']/g, m => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#039;' }[m]));
+    async function loadApprovedBusinessProposals() {
+      const container = document.getElementById('approved-businesses-container');
+      if (!container) return; // Exit if not on the business page
+
+      const db = typeof getDbClient === 'function' ? getDbClient() : window.supabase;
+      if (!db) {
+        container.innerHTML = '<div class="alert alert-danger">Database connection failed.</div>';
+        return;
+      }
+
+      try {
+        const { data, error } = await db
+          .from('business_proposals')
+          .select('*')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="text-center text-muted py-3">No approved business listings yet.</div>';
+          return;
+        }
+
+        let html = '<div class="row g-3">';
+        data.forEach(item => {
+          // Handle fallback column names gracefully
+          const title = item.title || item.business_name || item.name || 'Untitled Business';
+          const desc = item.description || item.details || 'No description provided.';
+          const phone = item.phone || item.contact || item.phone_number || 'No contact provided';
+
+          html += `
+            <div class="col-md-6 col-lg-4">
+              <div class="card bg-dark text-white border-secondary h-100 p-3 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="card-title text-primary mb-0">${title}</h5>
+                  <span class="badge bg-success" style="font-size:0.7rem;">Verified</span>
+                </div>
+                <p class="card-text small text-light mb-3">${desc}</p>
+                <div class="mt-auto pt-2 border-top border-secondary small text-info fw-bold">
+                  📞 ${phone}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+      } catch (err) {
+        console.error('Error fetching approved businesses:', err);
+        container.innerHTML = `<div class="text-danger small">Failed to load businesses: ${err.message}</div>`;
+      }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Add a slight delay to ensure DB client initializes
+      setTimeout(loadApprovedBusinessProposals, 500); 
+    });
 
     initDirectory();
 </script>
