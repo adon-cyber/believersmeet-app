@@ -254,12 +254,14 @@ async function enforceLoginAndLoad() {
             adminNavLink.style.display = 'inline-block';
         }
         const ministryRequestsNavTab = document.getElementById('ministry-requests-nav-tab');
-        if (ministryRequestsNavTab && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {
-            ministryRequestsNavTab.classList.remove('hidden');
-            const ministrySection = document.getElementById('ministry-requests-section');
-            if (ministrySection) {
-                ministrySection.classList.remove('hidden');
-            }
+        if (ministryRequestsNavTab) {
+            ministryRequestsNavTab.remove();
+        }
+        const ministrySection = document.getElementById('ministry-requests-section');
+        if (ministrySection) {
+            ministrySection.remove();
+        }
+        if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin') {
             const leadershipSection = document.getElementById('manage-leadership-section');
             if (leadershipSection) {
                 leadershipSection.classList.remove('hidden');
@@ -269,7 +271,6 @@ async function enforceLoginAndLoad() {
                 }
                 fetchAdminLeadership(profile.church_id);
             }
-            fetchMinistryRequests();
         }
         const shareProfileBtn = document.getElementById('share-church-profile-btn');
         if (shareProfileBtn && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'super-admin')) {

@@ -23,14 +23,13 @@
             <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
             <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
                 <a href="feed.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                <a href="#ministry-requests-section" id="ministry-requests-nav-tab" class="hidden text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">🙏 Ministry Requests</a>
+
                 <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
                 <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
                 <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
                 <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
                 <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
                 <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                <a href="counseling.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Counseling</a>
                 <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
                 <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
                 <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
@@ -236,70 +235,7 @@
             </button>
         </div>
 
-        <!-- Ministry Requests Dashboard (Admin) -->
-        <div id="ministry-requests-section" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-6">
-            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">🙏 Ministry Requests</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Admin panel tool.</p>
-                </div>
-                <button onclick="fetchMinistryRequests()" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex items-center gap-1.5">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-            </div>
 
-            <!-- Table 1: New Believers & Join Requests (Conversion Requests) -->
-            <div class="space-y-3">
-                <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                    <h4 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                        <span>✨</span> New Believers & Join Requests
-                    </h4>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-600 uppercase text-[10px] font-semibold tracking-wider border-b border-gray-200">
-                                <th class="py-2 px-3">Date</th>
-                                <th class="py-2 px-3">Name</th>
-                                <th class="py-2 px-3">Contact</th>
-                                <th class="py-2 px-3 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="conversion-requests-tbody" class="divide-y divide-gray-200 text-xs text-gray-800">
-                            <tr>
-                                <td colspan="4" class="py-4 text-center text-gray-400 italic">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Table 2: Prayer Requests -->
-            <div class="space-y-3 pt-2">
-                <div class="p-3 bg-purple-50 rounded-lg border border-purple-100">
-                    <h4 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                        <span>🙏</span> Prayer Requests
-                    </h4>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-600 uppercase text-[10px] font-semibold tracking-wider border-b border-gray-200">
-                                <th class="py-2 px-3">Date</th>
-                                <th class="py-2 px-3">Name</th>
-                                <th class="py-2 px-3">Message</th>
-                                <th class="py-2 px-3 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="prayer-requests-tbody" class="divide-y divide-gray-200 text-xs text-gray-800">
-                            <tr>
-                                <td colspan="4" class="py-4 text-center text-gray-400 italic">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
 
         <!-- Manage Leadership Team Section (Admin) -->
         <div id="manage-leadership-section" class="hidden bg-slate-900 rounded-xl shadow-xl border border-yellow-500/40 p-6 space-y-6 text-white">
