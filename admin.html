@@ -636,15 +636,39 @@
         let currentUserProfile = null;
         let activeDashboardChurchId = null;
 
+// 1. SAFE CLIENT RESOLVER
+function getDbClient() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    return window.supabaseClient;
+  }
+  if (window.sbClient && typeof window.sbClient.from === 'function') {
+    return window.sbClient;
+  }
+  if (typeof supabase !== 'undefined' && typeof supabase.from === 'function') {
+    return supabase;
+  }
+  if (typeof _supabase !== 'undefined' && typeof _supabase.from === 'function') {
+    return _supabase;
+  }
+  return null;
+}
+
 // ---------------------------------------------
 // LOAD JOIN CHURCH REQUESTS
 // ---------------------------------------------
 async function loadJoinChurchRequests() {
-  const container = document.getElementById('join-requests-container');
+  const container = document.getElementById('join-requests-container') || document.getElementById('public-join-requests');
   if (!container) return;
 
+  const db = getDbClient();
+  if (!db) {
+    container.innerHTML = '<div class="alert alert-warning py-2 small">Supabase client not initialized yet. Retrying...</div>';
+    setTimeout(loadJoinChurchRequests, 1000);
+    return;
+  }
+
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('church_join_requests')
       .select('*')
       .order('created_at', { ascending: false });
@@ -652,15 +676,15 @@ async function loadJoinChurchRequests() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No church join requests yet.</div>';
+      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No church join requests found.</div>';
       return;
     }
 
     let html = '<div class="d-flex flex-column gap-2 my-2">';
     data.forEach(req => {
-      const name = req.full_name || req.name || req.user_email || 'Anonymous';
-      const phone = req.phone || req.contact || 'No phone provided';
-      const email = req.email || req.user_email || '';
+      const name = req.full_name || req.name || 'Anonymous';
+      const phone = req.phone || req.contact || 'No phone';
+      const email = req.email || '';
       const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
@@ -689,17 +713,24 @@ async function loadJoinChurchRequests() {
 // LOAD PUBLIC PRAYER REQUESTS
 // ---------------------------------------------
 async function loadPublicPrayerRequests() {
-  const container = document.getElementById('prayer-requests-container');
+  const container = document.getElementById('prayer-requests-container') || document.getElementById('public-prayer-requests');
   if (!container) return;
 
+  const db = getDbClient();
+  if (!db) {
+    container.innerHTML = '<div class="alert alert-warning py-2 small">Supabase client not initialized yet. Retrying...</div>';
+    setTimeout(loadPublicPrayerRequests, 1000);
+    return;
+  }
+
   try {
-    let { data, error } = await supabase
+    let { data, error } = await db
       .from('prayer_requests')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      const fallback = await supabase.from('ministry_requests').select('*').order('created_at', { ascending: false });
+      const fallback = await db.from('ministry_requests').select('*').order('created_at', { ascending: false });
       data = fallback.data;
       error = fallback.error;
     }
@@ -707,15 +738,15 @@ async function loadPublicPrayerRequests() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No prayer requests yet.</div>';
+      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No prayer requests found.</div>';
       return;
     }
 
     let html = '<div class="d-flex flex-column gap-2 my-2">';
     data.forEach(req => {
-      const name = req.full_name || req.name || req.user_email || 'Anonymous';
-      const phone = req.phone || req.contact || 'No phone provided';
-      const details = req.request || req.message || req.details || 'No details provided.';
+      const name = req.full_name || req.name || 'Anonymous';
+      const phone = req.phone || 'No phone';
+      const details = req.request || req.message || 'No details provided.';
       const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `

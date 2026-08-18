@@ -862,6 +862,8 @@
       console.log('Fetching volunteer roster data...');
       
       try {
+        const { data: { user } } = await window.sbClient.auth.getUser();
+
         // 1. Build query without fragile joins
         let query = window.sbClient
           .from('volunteer_roster')
@@ -876,7 +878,6 @@
         const { data, error } = await query;
 
         if (error) {
-          // Log the actual message, details, and hints instead of printing [object Object]
           console.error('🚨 Supabase 400 Query Error:', {
             message: error.message,
             details: error.details,
@@ -891,13 +892,25 @@
           return;
         }
 
+        // Fetch user's existing signups to determine which slots they are signed up for
+        let userSignups = [];
+        if (user) {
+          const { data: signupsData } = await window.sbClient
+            .from('volunteer_signups')
+            .select('*')
+            .or(`user_id.eq.${user.id},user_email.eq.${user.email}`);
+          if (signupsData) {
+            userSignups = signupsData;
+          }
+        }
+
         console.log('✅ Roster data successfully fetched:', data);
 
         // 3. Trigger rendering of fetched data
         if (typeof renderVolunteerSlots === 'function') {
-          renderVolunteerSlots(data || []);
+          renderVolunteerSlots(data || [], userSignups);
         } else {
-          renderFallbackRoster(data || []);
+          renderFallbackRoster(data || [], userSignups);
         }
 
       } catch (err) {
@@ -909,7 +922,7 @@
         await fetchRosterData();
     }
 
-    function renderFallbackRoster(slots) {
+    function renderFallbackRoster(slots, userSignups = []) {
       const container = document.getElementById('volunteer-roster-container') || document.getElementById('volunteer-slots-list') || document.getElementById('volunteer-container');
       if (!container) return;
 
@@ -932,6 +945,8 @@
         const roleName = slot.title || 'Volunteer Slot';
         const spotsNeeded = slot.max_capacity || 5;
 
+        const isUserSignedUp = userSignups.some(s => s.slot_id === slot.id);
+
         html += `
           <div id="slot-card-${slot.id}" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
             <div class="space-y-3">
@@ -948,9 +963,15 @@
               </div>
             </div>
             <div>
-              <button onclick="signUpForVolunteerSlot('${slot.id}', '${escapeHtml(slot.title || '').replace(/'/g, "\\'")}', '${escapeHtml(dateStr)}', this)" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
-                <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
-              </button>
+              ${isUserSignedUp 
+                ? `<div class="d-flex gap-2 align-items-center flex items-center gap-2">
+                     <span class="badge bg-success py-2 px-3 bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1"><i class="bi bi-check-circle-fill fas fa-check-circle me-1"></i> Signed Up</span>
+                     <button class="btn btn-sm btn-outline-danger px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold transition" onclick="cancelVolunteerSignup('${slot.id}', '${escapeHtml(slot.title || '').replace(/'/g, "\\'")}')">Opt Out</button>
+                   </div>`
+                : `<button onclick="signUpForVolunteerSlot('${slot.id}', '${escapeHtml(slot.title || '').replace(/'/g, "\\'")}', this)" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+                     <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
+                   </button>`
+              }
             </div>
           </div>
         `;
@@ -959,76 +980,95 @@
       container.innerHTML = html;
     }
 
-    async function signUpForVolunteerSlot(slotId, slotTitle, slotDate, btnElement) {
-        if (!loggedInUser) {
-            alert("You must be logged in to sign up.");
+    // 1. OPT OUT / CANCEL SIGNUP
+    async function cancelVolunteerSignup(slotId, slotTitle) {
+      if (!confirm(`Are you sure you want to opt out of "${slotTitle || 'this slot'}"?`)) return;
+
+      try {
+        const { data: { user }, error: authErr } = await supabase.auth.getUser();
+        if (authErr || !user) {
+          alert('Please log in to manage your volunteer slots.');
+          return;
+        }
+
+        const { error } = await supabase
+          .from('volunteer_signups')
+          .delete()
+          .eq('slot_id', slotId)
+          .or(`user_id.eq.${user.id},user_email.eq.${user.email}`);
+
+        if (error) throw error;
+
+        alert(`You have opted out of "${slotTitle || 'the slot'}".`);
+        if (typeof loadVolunteerRoster === 'function') {
+          loadVolunteerRoster();
+        } else {
+          location.reload();
+        }
+      } catch (err) {
+        console.error('Error opting out:', err);
+        alert('Could not opt out: ' + err.message);
+      }
+    }
+
+    // 2. SIGN UP WITH SWITCH SLOT SUPPORT
+    async function signUpForVolunteerSlot(slotId, slotTitle, btnElement) {
+      try {
+        const { data: { user }, error: authErr } = await supabase.auth.getUser();
+        if (authErr || !user) {
+          alert('Please log in to sign up for a volunteer slot.');
+          return;
+        }
+
+        // Check if user is already signed up for any slot
+        const { data: existingSignups } = await supabase
+          .from('volunteer_signups')
+          .select('*')
+          .or(`user_id.eq.${user.id},user_email.eq.${user.email}`);
+
+        if (existingSignups && existingSignups.length > 0) {
+          const alreadyThisSlot = existingSignups.some(s => s.slot_id === slotId);
+          if (alreadyThisSlot) {
+            alert(`You are already signed up for "${slotTitle}".`);
             return;
+          }
+
+          // Switching slots
+          const currentSlotName = existingSignups[0].slot_title || existingSignups[0].slot_name || 'another slot';
+          const switchConfirmed = confirm(`You are currently signed up for "${currentSlotName}". Do you want to switch your signup to "${slotTitle}"?`);
+
+          if (!switchConfirmed) return;
+
+          // Remove previous signups first
+          await supabase
+            .from('volunteer_signups')
+            .delete()
+            .or(`user_id.eq.${user.id},user_email.eq.${user.email}`);
         }
 
-        if (!confirm(`Are you sure you want to sign up to serve as '${slotTitle}' on ${slotDate}?`)) {
-            return;
+        // Insert new signup
+        const payload = {
+          slot_id: slotId,
+          user_id: user.id,
+          slot_title: slotTitle || 'Volunteer Slot',
+          slot_name: slotTitle || 'Volunteer Slot',
+          user_email: user.email || ''
+        };
+
+        const { error } = await supabase.from('volunteer_signups').insert([payload]);
+        if (error) throw error;
+
+        alert(`Successfully signed up for "${slotTitle}"!`);
+        if (typeof loadVolunteerRoster === 'function') {
+          loadVolunteerRoster();
+        } else {
+          location.reload();
         }
 
-        try {
-            const { data: profile } = await window.sbClient
-                .from('profiles')
-                .select('full_name, email, phone')
-                .eq('id', loggedInUser.id)
-                .single();
-
-            const payload = {
-                slot_id: slotId,
-                user_id: loggedInUser.id,
-                slot_title: slotTitle || 'Volunteer Slot',
-                slot_name: slotTitle || 'Volunteer Slot',
-                user_email: profile?.email || loggedInUser.email,
-                full_name: profile?.full_name || loggedInUser.email,
-                email: profile?.email || loggedInUser.email,
-                phone: profile?.phone || null
-            };
-
-            const { error } = await window.sbClient
-                .from('volunteer_signups')
-                .insert([payload]);
-
-            if (error) {
-                if (error.code === '23505' || error.status === 409 || (error.message && error.message.includes('unique'))) {
-                    alert(`You are already signed up for "${slotTitle || 'this slot'}"!`);
-                    
-                    if (btnElement) {
-                        btnElement.className = 'btn btn-sm btn-success disabled';
-                        btnElement.disabled = true;
-                        btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
-                    } else {
-                        loadVolunteerRoster();
-                    }
-                    return;
-                }
-                throw error;
-            }
-
-            if (typeof window.sendNotification === 'function') {
-                await window.sendNotification(
-                    loggedInUser.id,
-                    'Volunteer Signup Confirmed!',
-                    `You have successfully signed up to serve as ${slotTitle} on ${slotDate}. Thank you for your heart for ministry!`
-                );
-            }
-
-            showSuccessToast(`Successfully signed up to serve as ${slotTitle}!`);
-            
-            if (btnElement) {
-                btnElement.className = 'btn btn-sm btn-success disabled';
-                btnElement.disabled = true;
-                btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
-            } else {
-                loadVolunteerRoster();
-            }
-        } catch (err) {
-            console.error("Volunteer sign up error:", err);
-            alert("Failed to sign up for slot: " + (err.message || "It may be fully booked."));
-            loadVolunteerRoster();
-        }
+      } catch (err) {
+        console.error('Error signing up for slot:', err);
+        alert('Failed to complete action: ' + err.message);
+      }
     }
 
     async function cancelVolunteerSlot(slotId, slotTitle) {
