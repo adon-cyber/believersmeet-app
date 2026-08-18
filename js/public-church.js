@@ -474,6 +474,17 @@ if (conversionForm) {
 
             if (error) throw error;
 
+            // Insert public notification for church join request
+            const publicJoinNotificationPayload = {
+                user_id: null,
+                church_id: null,
+                title: 'New Public Church Request',
+                message: `New join request received from ${fullName || 'a guest'}.`,
+                type: 'church_join',
+                is_read: false
+            };
+            await publicSupabase.from('notifications').insert([publicJoinNotificationPayload]);
+
             console.log('Successfully submitted join request to church_join_requests:', payload);
             if (typeof showNotification === 'function') {
                 showNotification('Your join request has been sent successfully!', 'success');
@@ -527,6 +538,17 @@ if (prayerForm) {
             });
 
             if (error) throw error;
+
+            // Insert public notification for prayer request
+            const publicPrayerNotificationPayload = {
+                user_id: null,
+                church_id: null,
+                title: 'New Public Prayer Request',
+                message: `New prayer request received from ${fullName || 'a guest'}.`,
+                type: 'public_request',
+                is_read: false
+            };
+            await publicSupabase.from('notifications').insert([publicPrayerNotificationPayload]);
 
             console.log('Successfully submitted request:', { type: 'prayer_request', church_id: currentChurchId, full_name: fullName });
             if (typeof showNotification === 'function') {
