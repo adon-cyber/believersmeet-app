@@ -374,48 +374,57 @@ async function renderVolunteerSlotsWithState(slots, container) {
 }
 
         async function handleVolunteerSignup(slotId, slotTitle, btnElement) {
-          try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return alert('Please log in to sign up for a volunteer slot.');
+  try {
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      alert('Please log in to sign up for a volunteer slot.');
+      return;
+    }
 
-            // Check if user is already signed up for THIS exact slot
-            const { data: existing } = await supabase
-              .from('volunteer_signups')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('slot_id', slotId)
-              .maybeSingle();
+    const payload = {
+      slot_id: slotId,
+      user_id: user.id,
+      slot_title: slotTitle,
+      slot_name: slotTitle,
+      user_email: user.email
+    };
 
-            if (existing) {
-              alert('You are already signed up for this slot!');
-              return;
-            }
+    const { error } = await supabase.from('volunteer_signups').insert([payload]);
 
-            const payload = {
-              slot_id: slotId,
-              user_id: user.id,
-              slot_title: slotTitle,
-              slot_name: slotTitle,
-              user_email: user.email
-            };
-
-            const { error } = await supabase.from('volunteer_signups').insert([payload]);
-
-            if (error) {
-              if (error.code === '23505') {
-                alert('You are already signed up for this slot.');
-              } else {
-                alert('Could not complete signup: ' + error.message);
-              }
-              return;
-            }
-
-            alert(`Successfully signed up for "${slotTitle}"!`);
-            location.reload();
-          } catch (err) {
-            console.error('Unexpected signup error:', err);
-          }
+    if (error) {
+      // 1. CATCH DUPLICATE SIGNUP CONSTRAINT SAFELY
+      if (error.code === '23505' || error.message.includes('unique_user_slot')) {
+        alert(`You are already signed up for "${slotTitle}"!`);
+        
+        // Lock button UI to "Signed Up" state
+        if (btnElement) {
+          btnElement.className = 'btn btn-sm btn-success disabled';
+          btnElement.disabled = true;
+          btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
         }
+        return;
+      }
+
+      console.error('Signup error:', error);
+      alert('Could not complete signup: ' + error.message);
+      return;
+    }
+
+    // 2. SUCCESSFUL NEW SIGNUP
+    alert(`Successfully signed up for "${slotTitle}"!`);
+    
+    if (btnElement) {
+      btnElement.className = 'btn btn-sm btn-success disabled';
+      btnElement.disabled = true;
+      btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
+    } else {
+      location.reload();
+    }
+
+  } catch (err) {
+    console.error('Unexpected signup error:', err);
+  }
+}
 
         async function handleLeaveSlot(slotId, slotTitle) {
             await cancelOrChangeShift(slotId, slotTitle);
