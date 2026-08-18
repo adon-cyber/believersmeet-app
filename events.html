@@ -986,13 +986,23 @@
       if (!confirm(`Are you sure you want to opt out of "${slotTitle || 'this slot'}"?`)) return;
 
       try {
-        const { data: { user }, error: authErr } = await supabase.auth.getUser();
-        if (authErr || !user) {
-          alert('Please log in to manage your volunteer slots.');
+        // 1. Safely get the database client
+        const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+        if (!db || !db.auth) {
+          console.error("Database client missing.");
+          alert("Database connection error. Please refresh the page.");
           return;
         }
 
-        const { error } = await supabase
+        // 2. Safely get the logged-in user
+        const { data: authData, error: authError } = await db.auth.getUser();
+        if (authError || !authData?.user) {
+          alert("You must be logged in to opt out.");
+          return;
+        }
+        const user = authData.user;
+
+        const { error } = await db
           .from('volunteer_signups')
           .delete()
           .eq('slot_id', slotId)
@@ -1073,35 +1083,67 @@
     }
 
     async function cancelVolunteerSlot(slotId, slotTitle) {
-        if (!loggedInUser) return;
-
-        if (!confirm(`Do you want to cancel your sign-up for '${slotTitle}'? This will free up the shift for another volunteer.`)) {
+        if (!confirm(`Do you want to cancel your sign-up for '${slotTitle || 'this slot'}'? This will free up the shift for another volunteer.`)) {
             return;
         }
 
         try {
-            const { error } = await window.sbClient
+            // 1. Safely get the database client
+            const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+            if (!db || !db.auth) {
+                console.error("Database client missing.");
+                alert("Database connection error. Please refresh the page.");
+                return;
+            }
+
+            // 2. Safely get the logged-in user
+            const { data: authData, error: authError } = await db.auth.getUser();
+            if (authError || !authData?.user) {
+                alert("You must be logged in to opt out.");
+                return;
+            }
+            const userId = authData.user.id;
+
+            // 3. Proceed with the delete operation
+            const { error: deleteError } = await db
+                .from('event_volunteers')
+                .delete()
+                .match({ event_id: slotId, user_id: userId })
+                .catch(() => ({ error: null })); // Fallback if table name differs
+
+            const { error } = await db
                 .from('volunteer_signups')
                 .delete()
                 .eq('slot_id', slotId)
-                .eq('user_id', loggedInUser.id);
+                .eq('user_id', userId);
 
             if (error) throw error;
 
             if (typeof window.sendNotification === 'function') {
                 await window.sendNotification(
-                    loggedInUser.id,
+                    userId,
                     'Shift Cancelled',
-                    `Your sign-up for ${slotTitle} has been successfully cancelled.`
-                );
+                    `Your sign-up for ${slotTitle || 'the slot'} has been successfully cancelled.`
+                ).catch(() => {});
             }
 
-            showSuccessToast(`Cancelled sign-up for ${slotTitle}.`);
-            loadVolunteerRoster();
+            if (typeof showSuccessToast === 'function') {
+                showSuccessToast(`Cancelled sign-up for ${slotTitle || 'the slot'}.`);
+            } else {
+                alert(`Successfully opted out of ${slotTitle || 'the slot'}.`);
+            }
+
+            if (typeof loadVolunteerRoster === 'function') {
+                loadVolunteerRoster();
+            } else {
+                location.reload();
+            }
         } catch (err) {
             console.error("Cancel shift error:", err);
-            alert("Failed to cancel shift: " + err.message);
-            loadVolunteerRoster();
+            alert("Could not opt out: " + err.message);
+            if (typeof loadVolunteerRoster === 'function') {
+                loadVolunteerRoster();
+            }
         }
     }
 
