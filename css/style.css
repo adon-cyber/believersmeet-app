@@ -131,3 +131,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   transition: opacity 0.5s ease-out, transform 0.5s ease-out, scale 0.5s ease-out;
 }
 
+/* Hide Google Translate attribution banner & tooltips */
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+body {
+    top: 0px !important;
+}
+.goog-te-balloon-frame {
+    display: none !important;
+}
+#goog-gt-tt {
+    display: none !important;
+}
+
