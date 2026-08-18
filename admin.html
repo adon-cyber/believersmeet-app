@@ -186,16 +186,16 @@
                 <!-- Join Church Requests Container -->
                 <div id="join-church-section" class="mb-4">
                   <h5 class="text-light border-bottom border-secondary pb-2">⛪ Public Join Church Requests</h5>
-                  <div id="join-church-requests-list" class="mt-3">
-                    <div class="text-muted small">Loading join church requests...</div>
+                  <div id="join-requests-container" class="my-2">
+                    <div class="text-center text-muted py-3 small">Loading church join requests...</div>
                   </div>
                 </div>
 
                 <!-- Prayer Requests Container -->
                 <div id="prayer-requests-section" class="mb-4">
                   <h5 class="text-light border-bottom border-secondary pb-2">🙏 Public Prayer Requests</h5>
-                  <div id="prayer-requests-list" class="mt-3">
-                    <div class="text-muted small">Loading prayer requests...</div>
+                  <div id="prayer-requests-container" class="my-2">
+                    <div class="text-center text-muted py-3 small">Loading prayer requests...</div>
                   </div>
                 </div>
 
@@ -640,53 +640,38 @@
 // LOAD JOIN CHURCH REQUESTS
 // ---------------------------------------------
 async function loadJoinChurchRequests() {
-  const container = document.getElementById('join-church-requests-list');
+  const container = document.getElementById('join-requests-container');
   if (!container) return;
 
   try {
-    let adminChurchId = currentUserProfile?.church_id || localStorage.getItem('church_id');
-    let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
-
-    let q = window.sbClient.from('conversion_requests').select('*');
-    if (!isSuperAdmin && adminChurchId) {
-      q = q.eq('church_id', adminChurchId);
-    }
-    const { data, error } = await q.order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('church_join_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = `
-        <div style="background-color: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; padding: 12px;" class="text-center small">
-          No public church join requests found yet.
-        </div>`;
+      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No church join requests yet.</div>';
       return;
     }
 
-    let html = '<div class="d-flex flex-column gap-3">';
-    data.forEach((item, index) => {
-      const name = item.full_name || item.name || 'Anonymous';
-      const phone = item.phone || item.phone_number || item.contact || 'No phone provided';
-      const email = item.email || item.user_email || 'No email';
-      const address = item.address || item.location || item.prayer_request || 'Location not specified';
-      const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+    let html = '<div class="d-flex flex-column gap-2 my-2">';
+    data.forEach(req => {
+      const name = req.full_name || req.name || req.user_email || 'Anonymous';
+      const phone = req.phone || req.contact || 'No phone provided';
+      const email = req.email || req.user_email || '';
+      const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
-        <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; color: #ffffff;">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="d-flex align-items-center gap-2">
-              <span style="background-color: #059669; color: #fff; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold;">
-                #${index + 1}
-              </span>
-              <span class="fw-bold text-light fs-6">${escapeHTML(name)}</span>
-            </div>
-            ${dateStr ? `<span style="background-color: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;">${dateStr}</span>` : ''}
+        <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #ffffff;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong class="text-primary fs-6">👤 ${name}</strong>
+            ${dateStr ? `<span style="font-size: 0.72rem;" class="badge bg-secondary">${dateStr}</span>` : ''}
           </div>
-          <div class="small text-muted mb-2">📍 ${escapeHTML(address)}</div>
-          <div style="border-top: 1px solid #334155; margin: 8px 0;"></div>
-          <div class="d-flex flex-wrap gap-3 small text-muted">
-            <div>📞 <strong class="text-light">${escapeHTML(phone)}</strong></div>
-            <div>✉️ <strong class="text-light">${escapeHTML(email)}</strong></div>
+          <div class="small text-muted d-flex flex-wrap gap-3 mt-1">
+            <span>📞 ${phone}</span>
+            ${email ? `<span>✉️ ${email}</span>` : ''}
           </div>
         </div>
       `;
@@ -695,55 +680,52 @@ async function loadJoinChurchRequests() {
     container.innerHTML = html;
 
   } catch (err) {
-    console.error('Error loading join church requests:', err);
-    container.innerHTML = `<div class="alert alert-danger py-2 small">Failed to load requests: ${escapeHTML(err.message)}</div>`;
+    console.error('Error loading join requests:', err);
+    container.innerHTML = `<div class="alert alert-danger py-2 small">Could not load join requests: ${err.message}</div>`;
   }
 }
 
 // ---------------------------------------------
 // LOAD PUBLIC PRAYER REQUESTS
 // ---------------------------------------------
-async function loadPrayerRequests() {
-  const container = document.getElementById('prayer-requests-list');
+async function loadPublicPrayerRequests() {
+  const container = document.getElementById('prayer-requests-container');
   if (!container) return;
 
   try {
-    let adminChurchId = currentUserProfile?.church_id || localStorage.getItem('church_id');
-    let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+    let { data, error } = await supabase
+      .from('prayer_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    let q = window.sbClient.from('prayer_requests').select('*');
-    if (!isSuperAdmin && adminChurchId) {
-      q = q.eq('church_id', adminChurchId);
+    if (error) {
+      const fallback = await supabase.from('ministry_requests').select('*').order('created_at', { ascending: false });
+      data = fallback.data;
+      error = fallback.error;
     }
-    const { data, error } = await q.order('created_at', { ascending: false });
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = `
-        <div style="background-color: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; padding: 12px;" class="text-center small">
-          No public prayer requests found yet.
-        </div>`;
+      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No prayer requests yet.</div>';
       return;
     }
 
-    let html = '<div class="d-flex flex-column gap-3">';
-    data.forEach((item, index) => {
-      const name = item.full_name || item.name || 'Anonymous';
-      const phone = item.phone || item.contact || item.email || 'No phone provided';
-      const requestText = item.prayer_request || item.request || item.message || item.details || 'No prayer details provided.';
-      const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+    let html = '<div class="d-flex flex-column gap-2 my-2">';
+    data.forEach(req => {
+      const name = req.full_name || req.name || req.user_email || 'Anonymous';
+      const phone = req.phone || req.contact || 'No phone provided';
+      const details = req.request || req.message || req.details || 'No details provided.';
+      const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
-        <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; color: #ffffff;">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold text-warning">🙏 ${escapeHTML(name)}</span>
-            ${dateStr ? `<span style="background-color: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;">${dateStr}</span>` : ''}
+        <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #ffffff;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong class="text-info fs-6">🙏 ${name}</strong>
+            ${dateStr ? `<span style="font-size: 0.72rem;" class="badge bg-secondary">${dateStr}</span>` : ''}
           </div>
-          <div class="small text-muted mb-2">📞 ${escapeHTML(phone)}</div>
-          <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px; color: #e2e8f0; font-size: 0.85rem;" class="mb-1">
-            "${escapeHTML(requestText)}"
-          </div>
+          <p style="background-color: #0f172a; border: 1px solid #334155; padding: 8px; border-radius: 6px;" class="small text-light mb-1 mt-2">${details}</p>
+          <small class="text-muted">📞 ${phone}</small>
         </div>
       `;
     });
@@ -752,8 +734,18 @@ async function loadPrayerRequests() {
 
   } catch (err) {
     console.error('Error loading prayer requests:', err);
-    container.innerHTML = `<div class="alert alert-danger py-2 small">Failed to load requests: ${escapeHTML(err.message)}</div>`;
+    container.innerHTML = `<div class="alert alert-danger py-2 small">Could not load prayer requests: ${err.message}</div>`;
   }
+}
+
+// Trigger both fetchers on load
+document.addEventListener('DOMContentLoaded', () => {
+  loadJoinChurchRequests();
+  loadPublicPrayerRequests();
+});
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  loadJoinChurchRequests();
+  loadPublicPrayerRequests();
 }
 
         async function updateConversionRequestStatus(id, newStatus) {
