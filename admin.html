@@ -2341,30 +2341,56 @@
           modal.show();
 
           try {
-            const { data: signups, error } = await supabase
-              .from('volunteer_signups')
-              .select('*, profiles(full_name, email, phone)')
-              .eq('slot_id', slotId);
-
-            if (error) throw error;
+            // Safe robust lookup with try/catch and fallback to signup record fields
+            let signups = [];
+            try {
+              const { data, error } = await supabase
+                .from('volunteer_signups')
+                .select('*')
+                .eq('slot_id', slotId);
+              if (!error && data) {
+                signups = data;
+              }
+            } catch (innerErr) {
+              console.warn('Direct signup query failed:', innerErr.message);
+            }
 
             if (!signups || signups.length === 0) {
               listEl.innerHTML = '<div class="text-center text-muted p-4">No members have signed up for this slot yet.</div>';
               return;
             }
 
+            // Fetch profiles separately if user_ids exist
+            const userIds = signups.map(s => s.user_id).filter(Boolean);
+            let profilesMap = {};
+            if (userIds.length > 0) {
+              try {
+                const { data: profs } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .in('id', userIds);
+                if (profs) {
+                  profs.forEach(p => { profilesMap[p.id] = p; });
+                }
+              } catch (profErr) {
+                console.warn('Profile batch lookup skipped:', profErr.message);
+              }
+            }
+
             let html = '<ul class="list-group list-group-flush">';
             signups.forEach(item => {
-              const name = item.profiles?.full_name || item.full_name || item.name || 'Anonymous Member';
-              const email = item.profiles?.email || item.email || item.contact_info || 'No email provided';
-              const phone = item.profiles?.phone || item.phone || '';
+              const profile = profilesMap[item.user_id] || {};
+              const fallbackEmail = item.user_email || item.email;
+              const name = profile.full_name || profile.name || item.full_name || item.name || (fallbackEmail ? fallbackEmail.split('@')[0] : 'Volunteer');
+              const email = profile.email || fallbackEmail || 'No email provided';
+              const phone = profile.phone || profile.phone_number || item.phone || 'No phone';
               const date = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
 
               html += `
                 <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div>
-                    <strong class="d-block">${name}</strong>
-                    <small class="text-muted">${email} ${phone ? '• ' + phone : ''}</small>
+                    <strong class="d-block">${escapeHTML(name)}</strong>
+                    <small class="text-muted">${escapeHTML(email)} ${phone && phone !== 'No phone' ? '• ' + escapeHTML(phone) : ''}</small>
                   </div>
                   ${date ? `<span class="badge bg-light text-dark">${date}</span>` : ''}
                 </li>
@@ -2374,7 +2400,7 @@
             listEl.innerHTML = html;
           } catch (err) {
             console.error('Error loading volunteers:', err);
-            listEl.innerHTML = `<div class="alert alert-danger">Failed to load volunteers: ${err.message}</div>`;
+            listEl.innerHTML = `<div class="alert alert-danger">Failed to load volunteers: ${escapeHTML(err.message)}</div>`;
           }
         };
 
@@ -2400,42 +2426,50 @@
       return;
     }
 
-    // 2. Fetch associated profiles & slot details separately if needed
+    // 2. Fetch associated profiles & slot details separately using select('*') and try/catch resilience
     const userIds = signups.map(s => s.user_id).filter(Boolean);
     const slotIds = signups.map(s => s.slot_id).filter(Boolean);
     let profilesMap = {};
     let slotsMap = {};
 
     if (userIds.length > 0) {
-      const { data: profiles } = await window.sbClient
-        .from('profiles')
-        .select('id, full_name, email, phone')
-        .in('id', userIds);
-      
-      if (profiles) {
-        profiles.forEach(p => { profilesMap[p.id] = p; });
+      try {
+        const { data: profiles } = await window.sbClient
+          .from('profiles')
+          .select('*')
+          .in('id', userIds);
+        
+        if (profiles) {
+          profiles.forEach(p => { profilesMap[p.id] = p; });
+        }
+      } catch (profErr) {
+        console.warn('Profiles batch lookup skipped:', profErr.message);
       }
     }
 
     if (slotIds.length > 0) {
-      const { data: rosterSlots } = await window.sbClient
-        .from('volunteer_roster')
-        .select('id, title, role')
-        .in('id', slotIds);
+      try {
+        const { data: rosterSlots } = await window.sbClient
+          .from('volunteer_roster')
+          .select('*')
+          .in('id', slotIds);
 
-      if (rosterSlots) {
-        rosterSlots.forEach(r => { slotsMap[r.id] = r; });
+        if (rosterSlots) {
+          rosterSlots.forEach(r => { slotsMap[r.id] = r; });
+        }
+      } catch (slotErr) {
+        console.warn('Roster slots batch lookup skipped:', slotErr.message);
       }
     }
 
-    // 3. Render the member roster list
+    // 3. Render the member roster list with robust fallbacks
     const enrichedSignups = signups.map(item => {
       const profile = profilesMap[item.user_id] || {};
       const rosterSlot = slotsMap[item.slot_id] || {};
       return {
         ...item,
         profiles: profile,
-        slot_title: rosterSlot.title || rosterSlot.role || item.slot_title || item.slot_name || item.role || item.title || 'General Volunteer'
+        slot_title: rosterSlot.title || rosterSlot.role || rosterSlot.name || item.slot_title || item.slot_name || item.role || item.title || 'General Volunteer'
       };
     });
 
