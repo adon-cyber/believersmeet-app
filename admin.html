@@ -31,6 +31,18 @@
     </div>
     
     <div class="flex items-center gap-3">
+        <!-- Always Visible Language Switcher -->
+        <div class="d-flex align-items-center ms-auto me-2" style="z-index: 1050;">
+          <select id="appLanguageSelect" 
+                  class="form-select form-select-sm bg-dark text-white border-secondary shadow-sm" 
+                  style="width: auto; max-width: 130px; font-size: 0.8rem;" 
+                  onchange="triggerAppTranslation(this.value)">
+            <option value="en">🇬🇧 EN</option>
+            <option value="sw">🇰🇪 SW</option>
+            <option value="lg">🇺🇬 LG</option>
+            <option value="fr">🇫🇷 FR</option>
+          </select>
+        </div>
         <a href="admin.html" class="px-3.5 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-semibold flex items-center gap-1.5">
             ⚙️ Admin Panel
         </a>
