@@ -2358,35 +2358,28 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             `;
         }
 
-        async function approveBusiness(id) {
-            // First fetch the business record to get owner user_id and church_id
-            const { data: businessData, error: fetchErr } = await window.sbClient
-                .from('business_directory')
-                .select('*')
-                .eq('id', id)
-                .maybeSingle();
+        async function approveBusiness(proposalId) {
+            const db = window.sbClient;
+            if (!db) return alert('Database connection unavailable.');
 
-            if (fetchErr || !businessData) {
-                console.error('Error fetching business details:', fetchErr);
-                showNotification("Failed to fetch business details.", "error");
-                return;
-            }
-
-            const { error } = await window.sbClient
+            // Persist status change to database
+            const { data, error } = await db
                 .from('business_directory')
                 .update({ is_approved: true, status: 'approved' })
-                .eq('id', id);
+                .eq('id', proposalId)
+                .select();
 
             if (error) {
-                console.error('Error approving business:', error);
-                showNotification("Failed to approve business: " + error.message, "error");
+                console.error('Failed to approve proposal:', error);
+                alert('Could not update status in database: ' + error.message);
                 return;
             }
 
-            // Send notification to the business owner if user_id exists
-            if (businessData.user_id) {
+            // Fetch record to notify owner if user_id exists
+            const businessData = data && data[0] ? data[0] : null;
+            if (businessData && businessData.user_id) {
                 try {
-                    await window.sbClient.from('notifications').insert([{
+                    await db.from('notifications').insert([{
                         user_id: businessData.user_id,
                         church_id: businessData.church_id || activeDashboardChurchId || currentUserProfile?.church_id,
                         title: 'Business Approved! 🎉',
@@ -2399,15 +2392,14 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 }
             }
 
-            // Remove item from UI list with success toast
-            const row = document.getElementById(`biz-row-${id}`);
+            alert('Business proposal approved successfully!');
+            // Remove item from UI list
+            const row = document.getElementById(`biz-row-${proposalId}`);
             if (row) {
                 row.style.transition = 'all 0.3s ease';
                 row.style.opacity = '0';
                 setTimeout(() => row.remove(), 300);
             }
-
-            showNotification("Business approved and user notified!", "success");
 
             // Check if list is now empty
             setTimeout(() => {
@@ -2416,6 +2408,10 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                     container.innerHTML = `<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No pending business approvals found. All submissions are approved!</div>`;
                 }
             }, 350);
+
+            if (typeof loadPendingBusinesses === 'function') {
+                loadPendingBusinesses();
+            }
         }
 
         window.viewSlotMembers = async function(slotId, slotName) {
