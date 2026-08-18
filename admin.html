@@ -2313,32 +2313,57 @@
 }
 
 function renderVolunteerList(signups, container) {
+  if (!container) return;
+  
   if (!signups || signups.length === 0) {
-    container.innerHTML = '<div class="text-center text-muted py-3">No members signed up yet.</div>';
+    container.innerHTML = '<div class="text-center text-muted py-4 small">No volunteers registered yet.</div>';
     return;
   }
 
-  let html = '<ul class="list-group list-group-flush bg-transparent">';
-  signups.forEach(item => {
-    const memberName = item.profiles?.full_name || item.full_name || item.name || item.user_email || 'Anonymous Member';
+  let html = '<div class="d-flex flex-column gap-2 mt-3">';
+  signups.forEach((item, index) => {
+    // 1. Extract clean profile name or fall back to email username
+    let memberName = item.profiles?.full_name || item.full_name || item.name;
+    if (!memberName && item.user_email) {
+      memberName = item.user_email.split('@')[0];
+    }
+    if (!memberName) memberName = `Volunteer #${index + 1}`;
+
+    // 2. Extract phone, email, slot title, and date
+    const phone = item.profiles?.phone || item.phone || 'No phone provided';
+    const email = item.user_email || item.email || item.profiles?.email || '';
     const slotTitle = item.slot_title || item.slot_name || item.volunteer_roster?.title || 'General Volunteer';
-    const contact = item.profiles?.phone || item.profiles?.email || item.phone || item.email || item.user_email || 'No contact provided';
-    const signupDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+    const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
 
     html += `
-      <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2 px-0">
-        <div>
-          <strong class="d-block text-light fs-6">${escapeHTML(memberName)}</strong>
-          <span class="badge bg-primary bg-opacity-20 text-info border border-info border-opacity-25 mt-1">
-            <i class="bi bi-tag-fill me-1"></i>${escapeHTML(slotTitle)}
-          </span>
-          <small class="d-block text-muted mt-1">${escapeHTML(contact)}</small>
+      <div class="card bg-dark border-secondary p-3 text-white shadow-sm">
+        <!-- Top Row: Number, Name, Slot Badge, Date -->
+        <div class="d-flex align-items-start justify-content-between gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.85rem;">
+              #${index + 1}
+            </span>
+            <div>
+              <h6 class="mb-0 fw-bold text-light text-capitalize">${escapeHTML(memberName)}</h6>
+              <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-25 mt-1 d-inline-block">
+                🏷️ ${escapeHTML(slotTitle)}
+              </span>
+            </div>
+          </div>
+          ${dateStr ? `<small class="text-muted border border-secondary rounded px-2 py-1 flex-shrink-0" style="font-size: 0.72rem;">${escapeHTML(dateStr)}</small>` : ''}
         </div>
-        ${signupDate ? `<span class="badge bg-secondary">${escapeHTML(signupDate)}</span>` : ''}
-      </li>
+
+        <hr class="border-secondary my-2 opacity-25" />
+
+        <!-- Bottom Row: Contact Details -->
+        <div class="d-flex flex-wrap align-items-center gap-3 small text-muted">
+          <div>📞 <strong class="text-light">${escapeHTML(phone)}</strong></div>
+          ${email ? `<div class="text-truncate" style="max-width: 200px;">✉️ ${escapeHTML(email)}</div>` : ''}
+        </div>
+      </div>
     `;
   });
-  html += '</ul>';
+  html += '</div>';
   container.innerHTML = html;
 }
 
