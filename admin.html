@@ -70,6 +70,9 @@
             <button id="tab-btn-pesapal" onclick="switchAdminTab('pesapal')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
                 💳 Pesapal Settings
             </button>
+            <button id="tab-btn-prayer" onclick="switchAdminTab('prayer')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
+                🙏 Prayer & Ministry Requests
+            </button>
             <button id="tab-btn-businesses" onclick="switchAdminTab('businesses')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
                 🏢 Business Approvals
             </button>
@@ -172,6 +175,24 @@
                             <span><i class="fas fa-save mr-1"></i> Save Settings</span>
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRAYER & MINISTRY REQUESTS CONTENT CONTAINER -->
+        <div id="prayer-content" class="hidden space-y-8">
+            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl space-y-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fas fa-hands-praying text-blue-400"></i> Prayer & Ministry Requests Management
+                    </h3>
+                    <button onclick="loadAdminPrayerRequests()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700">
+                        🔄 Refresh Requests
+                    </button>
+                </div>
+                
+                <div id="prayer-requests-list" class="mt-3">
+                    <div class="text-center text-muted py-3">Loading prayer & ministry requests...</div>
                 </div>
             </div>
         </div>
@@ -610,6 +631,100 @@
         let currentUserProfile = null;
         let activeDashboardChurchId = null;
 
+        async function loadAdminPrayerRequests() {
+            const container = document.getElementById('prayer-requests-list');
+            if (!container) return;
+
+            container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading prayer & ministry requests...</div>`;
+
+            try {
+                let adminChurchId = currentUserProfile?.church_id || localStorage.getItem('church_id');
+                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+
+                let query = window.sbClient
+                    .from('prayer_requests')
+                    .select('*');
+
+                if (!isSuperAdmin && adminChurchId) {
+                    query = query.eq('church_id', adminChurchId);
+                }
+
+                const { data: requests, error } = await query.order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!requests || requests.length === 0) {
+                    container.innerHTML = `<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No prayer or ministry requests found.</div>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700/80 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th class="p-3">Date</th>
+                                    <th class="p-3">Member</th>
+                                    <th class="p-3">Contact</th>
+                                    <th class="p-3">Request Details</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 text-sm">
+                                ${requests.map(req => {
+                                    const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : 'N/A';
+                                    const authorName = escapeHTML(req.full_name || req.name || 'Anonymous Member');
+                                    const contactInfo = escapeHTML(req.email || req.phone || req.contact_info || 'N/A');
+                                    const content = escapeHTML(req.prayer_request || req.content || req.message || 'No content');
+                                    const status = req.status || 'pending';
+                                    const statusBadge = status === 'approved' || status === 'Approved' || status === 'contacted'
+                                        ? `<span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold">Approved</span>`
+                                        : (status === 'rejected' || status === 'Declined'
+                                            ? `<span class="px-2.5 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-semibold">Rejected</span>`
+                                            : `<span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold">Pending</span>`);
+
+                                    return `
+                                        <tr class="hover:bg-slate-800/40 transition">
+                                            <td class="p-3 align-top text-xs text-slate-400 whitespace-nowrap">${dateStr}</td>
+                                            <td class="p-3 align-top font-bold text-slate-100">${authorName}</td>
+                                            <td class="p-3 align-top text-xs text-blue-400">${contactInfo}</td>
+                                            <td class="p-3 align-top text-slate-300 max-w-xs"><p class="truncate" title="${content}">${content}</p></td>
+                                            <td class="p-3 align-top whitespace-nowrap">${statusBadge}</td>
+                                            <td class="p-3 align-top text-right whitespace-nowrap space-x-1">
+                                                <button onclick="updatePrayerRequestStatus('${req.id}', 'approved')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow">Approve</button>
+                                                <button onclick="updatePrayerRequestStatus('${req.id}', 'rejected')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow">Reject</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                console.error("Error loading prayer requests:", err);
+                container.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Failed to load prayer requests: ${escapeHTML(err.message)}</div>`;
+            }
+        }
+
+        async function updatePrayerRequestStatus(id, newStatus) {
+            try {
+                const { error } = await window.sbClient
+                    .from('prayer_requests')
+                    .update({ status: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification(`Prayer request status updated to ${newStatus}.`, "success");
+                loadAdminPrayerRequests();
+            } catch (err) {
+                console.error("Error updating prayer request status:", err);
+                alert("Failed to update status: " + err.message);
+            }
+        }
+
         window.switchAdminTab = function(tab) {
             const globalView = document.getElementById('global-admin-view');
             const dashboardView = document.getElementById('church-dashboard-view');
@@ -617,6 +732,7 @@
             const documentsView = document.getElementById('document-content');
             const rosterView = document.getElementById('roster-content');
             const pesapalView = document.getElementById('pesapal-content');
+            const prayerView = document.getElementById('prayer-content');
             const businessesView = document.getElementById('businesses-content');
             const btnGlobal = document.getElementById('tab-btn-global');
             const btnDashboard = document.getElementById('tab-btn-dashboard');
@@ -624,6 +740,7 @@
             const btnDocuments = document.getElementById('tab-btn-documents');
             const btnRoster = document.getElementById('tab-btn-roster');
             const btnPesapal = document.getElementById('tab-btn-pesapal');
+            const btnPrayer = document.getElementById('tab-btn-prayer');
             const btnBusinesses = document.getElementById('tab-btn-businesses');
 
             // Hide all views by default
@@ -633,6 +750,7 @@
             if (documentsView) { documentsView.classList.remove('block'); documentsView.classList.add('hidden'); }
             if (rosterView) { rosterView.classList.remove('block'); rosterView.classList.add('hidden'); }
             if (pesapalView) { pesapalView.classList.remove('block'); pesapalView.classList.add('hidden'); }
+            if (prayerView) { prayerView.classList.remove('block'); prayerView.classList.add('hidden'); }
             if (businessesView) { businessesView.classList.remove('block'); businessesView.classList.add('hidden'); }
 
             // Reset tab styles
@@ -642,6 +760,7 @@
             if (btnDocuments) btnDocuments.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnRoster) btnRoster.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnPrayer) btnPrayer.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
 
             if (tab === 'global') {
@@ -706,9 +825,24 @@
                 if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
                 if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
                 if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadPesapalSettings === 'function') loadPesapalSettings();
+            } else if (tab === 'prayer') {
+                if (prayerView) {
+                    prayerView.classList.remove('hidden');
+                    prayerView.classList.add('block');
+                }
+                if (dashboardView) { dashboardView.classList.add('hidden'); dashboardView.classList.remove('block'); }
+                if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
+                if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
+                if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
+                if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
+                if (btnPrayer) btnPrayer.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
+                if (typeof loadAdminPrayerRequests === 'function') loadAdminPrayerRequests();
             } else if (tab === 'businesses') {
                 if (businessesView) {
                     businessesView.classList.remove('hidden');
@@ -720,6 +854,7 @@
                 if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
                 if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadPendingBusinesses === 'function') loadPendingBusinesses();
             }
