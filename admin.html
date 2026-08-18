@@ -677,24 +677,19 @@ async function loadJoinChurchRequests() {
   }
 
   try {
-    // 1. Try public_church_requests first
-    let { data, error } = await db.from('public_church_requests').select('*').order('created_at', { ascending: false });
+    // Query church_join_requests
+    let { data, error } = await db
+      .from('church_join_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    // 2. Fallback to church_join_requests if empty/error
-    if (error || !data || data.length === 0) {
-      const fallback = await db.from('church_join_requests').select('*').order('created_at', { ascending: false });
-      if (fallback.data && fallback.data.length > 0) {
-        data = fallback.data;
-      }
+    // Fallback check on public_church_requests if empty
+    if ((!data || data.length === 0) && !error) {
+      const fallback = await db.from('public_church_requests').select('*').order('created_at', { ascending: false });
+      if (fallback.data && fallback.data.length > 0) data = fallback.data;
     }
 
-    // 3. Fallback to church_requests if still empty/error
-    if (!data || data.length === 0) {
-      const fallback = await db.from('church_requests').select('*').order('created_at', { ascending: false });
-      if (fallback.data && fallback.data.length > 0) {
-        data = fallback.data;
-      }
-    }
+    if (error) throw error;
 
     if (!data || data.length === 0) {
       container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No church join requests found.</div>';
@@ -703,7 +698,7 @@ async function loadJoinChurchRequests() {
 
     let html = '<div class="d-flex flex-column gap-2 my-2">';
     data.forEach(req => {
-      const name = req.full_name || req.name || req.author || req.user_email || 'Anonymous';
+      const name = req.full_name || req.name || req.phone || req.phone_number || req.email || req.user_email || 'Anonymous';
       const phone = req.phone || req.phone_number || req.contact || req.mobile || 'No phone provided';
       const email = req.email || req.user_email || '';
       const church = req.church_name || req.church || '';
@@ -732,7 +727,7 @@ async function loadJoinChurchRequests() {
   }
 }
 
-// FETCH PUBLIC PRAYER REQUESTS WITH EXHAUSTIVE COLUMN MAPPINGS
+// FETCH PUBLIC PRAYER REQUESTS WITH EXHAUSTIVE COLUMN MAPPINGS & DETAILS DISPLAY FIX
 async function loadPublicPrayerRequests() {
   const container = document.getElementById('prayer-requests-container') || document.getElementById('public-prayer-requests');
   if (!container) return;
@@ -761,10 +756,10 @@ async function loadPublicPrayerRequests() {
 
     let html = '<div class="d-flex flex-column gap-2 my-2">';
     data.forEach(req => {
-      // Exhaustive column mapping
+      // Exhaustive property mapping supporting prayer_request, request, prayer, message, details, description, content
       const name = req.full_name || req.name || req.author || req.user_email || 'Anonymous';
-      const phone = req.phone || req.phone_number || req.contact || req.mobile || 'No phone provided';
-      const details = req.request || req.prayer || req.message || req.details || req.description || req.content || 'No details provided.';
+      const phone = req.phone || req.phone_number || req.contact || req.mobile || req.contact_info || 'No phone provided';
+      const details = req.request || req.prayer || req.message || req.details || req.description || req.content || req.notes || 'No details provided.';
       const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
