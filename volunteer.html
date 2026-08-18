@@ -245,7 +245,7 @@
                 } else {
                     badgeHtml = `<span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full"><i class="fas fa-clock mr-1"></i> ${filledSpots} / ${totalNeeded} spots filled</span>`;
                     buttonHtml = `
-                        <button onclick="signUpForSlot('${slot.id}', '${escapeHTML(slot.title).replace(/'/g, "\\'")}', '${escapeHTML(dateStr)}')" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+                        <button onclick="handleVolunteerSignup('${slot.id}', '${escapeHTML(slot.title).replace(/'/g, "\\'")}', this)" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                             <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
                         </button>
                     `;
@@ -321,62 +321,70 @@
             }).join('');
         }
 
-        async function signUpForSlot(slotId, slotTitle, slotDate) {
-            if (!currentUser) {
-                alert("You must be logged in to sign up.");
-                return;
-            }
+async function renderVolunteerSlotsWithState(slots, container) {
+  const { data: { user } } = await window.sbClient.auth.getUser();
+  const userSignedUpSlots = new Set();
 
-            if (!confirm(`Are you sure you want to sign up to serve as '${slotTitle}' on ${slotDate}?`)) {
-                return;
-            }
+  if (user) {
+    const { data: signups } = await window.sbClient
+      .from('volunteer_signups')
+      .select('slot_id')
+      .eq('user_id', user.id);
 
-            try {
-                // Fetch profile details for guest/user info mapping
-                const { data: profile } = await window.sbClient
-                    .from('profiles')
-                    .select('full_name, email, phone')
-                    .eq('id', currentUser.id)
-                    .single();
+    if (signups) {
+      signups.forEach(s => userSignedUpSlots.add(s.slot_id));
+    }
+  }
 
-                const { error } = await window.sbClient
-                    .from('volunteer_signups')
-                    .insert([{
-                        slot_id: slotId,
-                        user_id: currentUser.id,
-                        full_name: profile?.full_name || currentUser.email,
-                        email: profile?.email || currentUser.email,
-                        phone: profile?.phone || null
-                    }]);
+  let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 col-span-full">';
+  slots.forEach(slot => {
+    const isSignedUp = userSignedUpSlots.has(slot.id);
+    const safeTitle = (slot.title || 'Volunteer Slot').replace(/'/g, "\\'");
+    const totalNeeded = slot.max_capacity || slot.spots || slot.total_spots || 5;
+    const signups = slot.volunteer_signups || [];
+    const filledSpots = signups.length;
+    const isFull = filledSpots >= totalNeeded && !isSignedUp;
 
-                if (error) throw error;
+    const dateObj = slot.event_date ? new Date(slot.event_date) : new Date();
+    const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                // Trigger automated notification
-                if (typeof window.sendNotification === 'function') {
-                    await window.sendNotification(
-                        currentUser.id,
-                        'Volunteer Sign-Up Confirmed!',
-                        `You have successfully signed up to serve as ${slotTitle} on ${slotDate}. Thank you for your heart for ministry!`
-                    );
-                }
-
-                // Show success modal
-                const msgEl = document.getElementById('success-modal-message');
-                if (msgEl) {
-                    msgEl.innerText = `You have successfully signed up to serve as ${slotTitle} on ${slotDate}. We appreciate your dedication!`;
-                }
-                const modalEl = document.getElementById('success-modal');
-                if (modalEl) {
-                    modalEl.classList.remove('hidden');
-                }
-
-                await loadVolunteerSlots();
-            } catch (err) {
-                console.error("Sign up error:", err);
-                alert("Failed to sign up for slot: " + (err.message || "It may be fully booked."));
-                loadVolunteerSlots();
-            }
-        }
+    html += `
+      <div class="bg-slate-800/70 backdrop-blur-md border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
+        <div class="space-y-3">
+          <div class="flex justify-between items-start gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">${escapeHTML(slot.role || 'Usher')}</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">Capacity: ${totalNeeded}</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-100">${escapeHTML(slot.title || 'Volunteer Slot')}</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">${escapeHTML(slot.description || 'Sign up to serve!')}</p>
+          <div class="text-xs font-medium text-blue-400 flex items-center gap-2 pt-1">
+            <span><i class="far fa-calendar-alt"></i> ${escapeHTML(dateStr)}</span>
+            <span>•</span>
+            <span><i class="far fa-clock"></i> ${escapeHTML(timeStr)}</span>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-slate-700/60">
+          ${isSignedUp ? `
+            <button onclick="cancelOrChangeShift('${slot.id}', '${safeTitle}')" class="w-full py-3 px-4 rounded-xl font-semibold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 transition-all border border-emerald-800/40 flex items-center justify-center space-x-2 text-sm">
+              <i class="fas fa-check-circle mr-1"></i> <span>Signed Up (Cancel / Change)</span>
+            </button>
+          ` : isFull ? `
+            <button disabled class="w-full py-3 px-4 rounded-xl font-semibold text-slate-500 bg-slate-800/50 cursor-not-allowed border border-slate-700/50 flex items-center justify-center space-x-2 text-sm">
+              <i class="fas fa-ban mr-1"></i> <span>Slot at Max Capacity</span>
+            </button>
+          ` : `
+            <button onclick="handleVolunteerSignup('${slot.id}', '${safeTitle}', this)" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+              <i class="fas fa-hand-holding-heart mr-1"></i> <span>Sign Up to Serve</span>
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
 
         async function cancelOrChangeShift(slotId, slotTitle) {
             if (!currentUser) return;
