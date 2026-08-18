@@ -32,25 +32,22 @@
     window.triggerAppTranslation = function(langCode) {
       if (!langCode) return;
 
-      // Save selected language to storage
+      // Save selection
       localStorage.setItem('app_language', langCode);
 
-      // Clear existing googtrans cookies across paths and domains
-      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
-      const hostParts = window.location.hostname.split('.');
-      if (hostParts.length > 1) {
-          const baseDomain = hostParts.slice(-2).join('.');
-          document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=." + baseDomain;
+      // Set the Google Translate cookie required by the google widget
+      const domain = window.location.hostname;
+      document.cookie = `googtrans=/en/${langCode}; path=/;`;
+      document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
+
+      // Attempt to trigger Google Translate's hidden combo box if present
+      const gtCombo = document.querySelector('.goog-te-combo');
+      if (gtCombo) {
+        gtCombo.value = langCode;
+        gtCombo.dispatchEvent(new Event('change'));
       }
 
-      // Set new translation cookie if non-English
-      if (langCode !== 'en') {
-        document.cookie = "googtrans=/en/" + langCode + "; path=/;";
-        document.cookie = "googtrans=/en/" + langCode + "; path=/; domain=" + window.location.hostname;
-      }
-
-      // Force page reload so Google Translate translates the entire DOM
+      // Force page reload to guarantee all dynamic DOM elements pick up the cookie
       window.location.reload();
     };
     window.changeLanguage = window.triggerAppTranslation;
