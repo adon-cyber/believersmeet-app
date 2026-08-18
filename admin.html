@@ -2280,7 +2280,10 @@
 
     // 2. Fetch associated profiles & slot details separately if needed
     const userIds = signups.map(s => s.user_id).filter(Boolean);
+    const slotIds = signups.map(s => s.slot_id).filter(Boolean);
     let profilesMap = {};
+    let slotsMap = {};
+
     if (userIds.length > 0) {
       const { data: profiles } = await window.sbClient
         .from('profiles')
@@ -2292,28 +2295,29 @@
       }
     }
 
-    // 3. Render the member roster list
-    let html = '<ul class="list-group list-group-flush bg-transparent">';
-    signups.forEach(item => {
-      const profile = profilesMap[item.user_id] || {};
-      const memberName = profile.full_name || item.full_name || item.name || item.user_email || 'Anonymous Member';
-      const roleName = item.slot_name || item.role || item.title || 'General Volunteer';
-      const contact = profile.phone || profile.email || item.phone || item.email || item.contact_info || 'No contact info';
-      const signupDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+    if (slotIds.length > 0) {
+      const { data: rosterSlots } = await window.sbClient
+        .from('volunteer_roster')
+        .select('id, title, role')
+        .in('id', slotIds);
 
-      html += `
-        <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2 px-0">
-          <div>
-            <strong class="d-block text-light">${escapeHTML(memberName)}</strong>
-            <small class="text-info">${escapeHTML(roleName)}</small>
-            <small class="d-block text-muted">${escapeHTML(contact)}</small>
-          </div>
-          ${signupDate ? `<span class="badge bg-secondary">${escapeHTML(signupDate)}</span>` : ''}
-        </li>
-      `;
+      if (rosterSlots) {
+        rosterSlots.forEach(r => { slotsMap[r.id] = r; });
+      }
+    }
+
+    // 3. Render the member roster list
+    const enrichedSignups = signups.map(item => {
+      const profile = profilesMap[item.user_id] || {};
+      const rosterSlot = slotsMap[item.slot_id] || {};
+      return {
+        ...item,
+        profiles: profile,
+        slot_title: rosterSlot.title || rosterSlot.role || item.slot_title || item.slot_name || item.role || item.title || 'General Volunteer'
+      };
     });
-    html += '</ul>';
-    container.innerHTML = html;
+
+    renderVolunteerList(enrichedSignups, container);
 
   } catch (err) {
     console.error('Error loading volunteer signups:', err);
@@ -2321,9 +2325,35 @@
   }
 }
 
-        function openCreateSlotModal() {
-            switchAdminTab('roster');
-        }
+function renderVolunteerList(signups, container) {
+  if (!signups || signups.length === 0) {
+    container.innerHTML = '<div class="text-center text-muted py-3">No members signed up yet.</div>';
+    return;
+  }
+
+  let html = '<ul class="list-group list-group-flush bg-transparent">';
+  signups.forEach(item => {
+    const memberName = item.profiles?.full_name || item.full_name || item.name || item.user_email || 'Anonymous Member';
+    const slotTitle = item.slot_title || item.slot_name || item.volunteer_roster?.title || 'General Volunteer';
+    const contact = item.profiles?.phone || item.profiles?.email || item.phone || item.email || item.user_email || 'No contact provided';
+    const signupDate = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+
+    html += `
+      <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2 px-0">
+        <div>
+          <strong class="d-block text-light fs-6">${escapeHTML(memberName)}</strong>
+          <span class="badge bg-primary bg-opacity-20 text-info border border-info border-opacity-25 mt-1">
+            <i class="bi bi-tag-fill me-1"></i>${escapeHTML(slotTitle)}
+          </span>
+          <small class="d-block text-muted mt-1">${escapeHTML(contact)}</small>
+        </div>
+        ${signupDate ? `<span class="badge bg-secondary">${escapeHTML(signupDate)}</span>` : ''}
+      </li>
+    `;
+  });
+  html += '</ul>';
+  container.innerHTML = html;
+}
 
         initPage();
     </script>
