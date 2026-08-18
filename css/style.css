@@ -145,3 +145,21 @@ body {
     display: none !important;
 }
 
+/* Desktop & Large Screen Polish for Language Selection UI */
+@media (min-width: 768px) {
+  .language-modal-dialog,
+  .language-select-container {
+    max-width: 380px !important;
+    margin: 1.75rem auto !important;
+  }
+
+  .language-option-card {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .language-option-card:hover {
+    background-color: #334155 !important;
+    cursor: pointer;
+  }
+}
+
