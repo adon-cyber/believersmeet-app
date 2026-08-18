@@ -28,60 +28,58 @@
         document.head.appendChild(script);
     }
 
-    // 2. Cookie helper functions for Google Translate (`googtrans`)
-    function setTranslateCookie(lang) {
-        // Google Translate reads the cookie named 'googtrans' with value like '/en/sw'
-        const cookieValue = `/en/${lang}`;
-        document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname}`;
-        document.cookie = `googtrans=${cookieValue}; path=/;`;
-    }
+    // 1. Trigger translation via cookie + forced clean reload
+    window.triggerAppTranslation = function(langCode) {
+      if (!langCode) return;
 
+      // Save selected language to storage
+      localStorage.setItem('app_language', langCode);
+
+      // Clear existing googtrans cookies across paths and domains
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+      const hostParts = window.location.hostname.split('.');
+      if (hostParts.length > 1) {
+          const baseDomain = hostParts.slice(-2).join('.');
+          document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=." + baseDomain;
+      }
+
+      // Set new translation cookie if non-English
+      if (langCode !== 'en') {
+        document.cookie = "googtrans=/en/" + langCode + "; path=/;";
+        document.cookie = "googtrans=/en/" + langCode + "; path=/; domain=" + window.location.hostname;
+      }
+
+      // Force page reload so Google Translate translates the entire DOM
+      window.location.reload();
+    };
+    window.changeLanguage = window.triggerAppTranslation;
+
+    // 2. Sync selector state on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('app_language') || 'en';
+      const selectEl = document.getElementById('appLanguageSelect');
+      if (selectEl) {
+        selectEl.value = savedLang;
+      }
+
+      // Also ensure cookie matches saved preference
+      if (savedLang !== 'en') {
+        const domain = window.location.hostname;
+        document.cookie = `googtrans=/en/${savedLang}; path=/; domain=${domain}`;
+        document.cookie = `googtrans=/en/${savedLang}; path=/;`;
+      }
+    });
+
+    // Helper to get current translate cookie
     function getTranslateCookie() {
         const match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
         if (match) {
             const parts = match[2].split('/');
             return parts[parts.length - 1] || 'en';
         }
-        return 'en';
+        return localStorage.getItem('app_language') || 'en';
     }
-
-    // 3. Trigger translation change
-    window.triggerAppTranslation = function(langCode) {
-        if (!langCode) return;
-
-        // Save preference
-        localStorage.setItem('app_language', langCode);
-
-        // Set Google Translate cookie
-        const domain = window.location.hostname;
-        document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
-        document.cookie = `googtrans=/en/${langCode}; path=/;`;
-
-        // Trigger iframe select if google element exists
-        const gtCombo = document.querySelector('.goog-te-combo');
-        if (gtCombo) {
-            gtCombo.value = langCode;
-            gtCombo.dispatchEvent(new Event('change'));
-        } else {
-            // Fallback reload to apply cookie translation across all nodes
-            location.reload();
-        }
-    };
-    window.changeLanguage = window.triggerAppTranslation;
-
-    // Auto-apply saved language choice on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedLang = localStorage.getItem('app_language') || 'en';
-        const selectEl = document.getElementById('appLanguageSelect');
-        if (selectEl) selectEl.value = savedLang;
-
-        // Ensure cookie matches saved preference
-        if (savedLang !== 'en') {
-            const domain = window.location.hostname;
-            document.cookie = `googtrans=/en/${savedLang}; path=/; domain=${domain}`;
-            document.cookie = `googtrans=/en/${savedLang}; path=/;`;
-        }
-    });
 
     // 4. Inject Sleek Custom Language Selector Widget into Navbars
     function injectTranslateSelector() {
@@ -93,7 +91,7 @@
             if (!navContainer) return;
 
             // Check if translate selector already exists in this container
-            if (navContainer.querySelector('#custom-translate-container')) return;
+            if (navContainer.querySelector('#appLanguageSelect')) return;
 
             const currentLang = getTranslateCookie();
 
