@@ -2455,45 +2455,55 @@ function renderVolunteerList(signups, container) {
     return;
   }
 
-  let html = '<div class="d-flex flex-column gap-2 mt-3">';
+  let html = '<div class="d-flex flex-column gap-3 mt-3">';
   signups.forEach((item, index) => {
-    // 1. Extract clean profile name or fall back to email username
-    let memberName = item.profiles?.full_name || item.full_name || item.name;
-    if (!memberName && item.user_email) {
-      memberName = item.user_email.split('@')[0];
+    // 1. Format Name cleanly (If profile name missing, extract username before @)
+    let rawName = item.profiles?.full_name || item.full_name || item.name;
+    let memberName = '';
+    
+    if (rawName) {
+      memberName = rawName;
+    } else if (item.user_email) {
+      // e.g. "adonstance@gmail.com" -> "Adonstance"
+      const username = item.user_email.split('@')[0];
+      memberName = username.charAt(0).toUpperCase() + username.slice(1);
+    } else {
+      memberName = `Volunteer #${index + 1}`;
     }
-    if (!memberName) memberName = `Volunteer #${index + 1}`;
 
-    // 2. Extract phone, email, slot title, and date
+    // 2. Extract details
     const phone = item.profiles?.phone || item.phone || 'No phone provided';
-    const email = item.user_email || item.email || item.profiles?.email || '';
+    const email = item.user_email || item.email || item.profiles?.email || 'No email';
     const slotTitle = item.slot_title || item.slot_name || item.volunteer_roster?.title || 'General Volunteer';
     const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
 
     html += `
-      <div class="card bg-dark border-secondary p-3 text-white shadow-sm">
-        <!-- Top Row: Number, Name, Slot Badge, Date -->
-        <div class="d-flex align-items-start justify-content-between gap-2">
+      <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; color: #ffffff;">
+        <!-- Header: Badge Number, Name, Date -->
+        <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.85rem;">
-              #${index + 1}
+            <span style="background-color: #2563eb; color: #ffffff; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem;">
+              ${index + 1}
             </span>
-            <div>
-              <h6 class="mb-0 fw-bold text-light text-capitalize">${escapeHTML(memberName)}</h6>
-              <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-25 mt-1 d-inline-block">
-                🏷️ ${escapeHTML(slotTitle)}
-              </span>
-            </div>
+            <span class="fw-bold fs-6 text-light">${escapeHTML(memberName)}</span>
           </div>
-          ${dateStr ? `<small class="text-muted border border-secondary rounded px-2 py-1 flex-shrink-0" style="font-size: 0.72rem;">${escapeHTML(dateStr)}</small>` : ''}
+          ${dateStr ? `<span style="background-color: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;">${escapeHTML(dateStr)}</span>` : ''}
         </div>
 
-        <hr class="border-secondary my-2 opacity-25" />
+        <!-- Slot Tag -->
+        <div class="mb-2 ms-4 ps-1">
+          <span style="background-color: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); color: #38bdf8; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; display: inline-block;">
+            🏷️ ${escapeHTML(slotTitle)}
+          </span>
+        </div>
 
-        <!-- Bottom Row: Contact Details -->
-        <div class="d-flex flex-wrap align-items-center gap-3 small text-muted">
-          <div>📞 <strong class="text-light">${escapeHTML(phone)}</strong></div>
-          ${email ? `<div class="text-truncate" style="max-width: 200px;">✉️ ${escapeHTML(email)}</div>` : ''}
+        <!-- Divider -->
+        <div style="border-top: 1px solid #334155; margin: 10px 0;"></div>
+
+        <!-- Contact Info -->
+        <div class="d-flex flex-wrap gap-3" style="font-size: 0.82rem; color: #94a3b8;">
+          <div><i class="bi bi-telephone text-primary me-1"></i> <span class="text-light">${escapeHTML(phone)}</span></div>
+          <div><i class="bi bi-envelope text-primary me-1"></i> <span class="text-light">${escapeHTML(email)}</span></div>
         </div>
       </div>
     `;
