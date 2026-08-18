@@ -502,7 +502,13 @@
                     <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700/60 rounded-2xl p-6 shadow-xl">
                         <h3 class="text-lg font-bold text-slate-100 mb-4">📅 Add New Programme</h3>
                         <div class="space-y-4">
-                            <input type="text" id="p-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <input type="text" id="prog-title" placeholder="Programme Title" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            
+                            <!-- Location -->
+                            <div class="mb-3">
+                              <label class="block text-sm font-medium text-slate-300 mb-1">Location / Venue</label>
+                              <input type="text" id="prog-location" placeholder="e.g. Main Sanctuary / Online" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            </div>
                             
                             <!-- Day / Frequency Selection -->
                             <div class="mb-3">
@@ -960,37 +966,32 @@
                 return;
             }
             const btn = document.getElementById('add-btn');
-            const titleVal = document.getElementById('p-title').value.trim();
-            const dayVal = document.getElementById('prog-day').value;
-            const startTimeVal = document.getElementById('prog-start-time').value;
-            const endTimeVal = document.getElementById('prog-end-time').value;
-            const descVal = document.getElementById('p-desc').value.trim();
-            const locationVal = document.getElementById('lat') && document.getElementById('lng') ? `${document.getElementById('lat').value}, ${document.getElementById('lng').value}` : '';
 
-            if (!titleVal || !dayVal || !startTimeVal || !endTimeVal) {
-                alert("Please fill in Title, Frequency/Day, Start Time, and End Time.");
-                return;
+            const payload = {
+                title: document.getElementById('prog-title')?.value || document.getElementById('p-title')?.value || 'Church Service',
+                description: document.getElementById('p-desc')?.value || '',
+                location: document.getElementById('prog-location')?.value || '',
+                day_of_week: document.getElementById('prog-day')?.value || 'Every Sunday',
+                start_time: document.getElementById('prog-start-time')?.value || '',
+                end_time: document.getElementById('prog-end-time')?.value || '',
+                schedule_text: `${document.getElementById('prog-day')?.value || 'Every Sunday'} • ${document.getElementById('prog-start-time')?.value || ''} - ${document.getElementById('prog-end-time')?.value || ''}`
+            };
+
+            if (activeDashboardChurchId) {
+                payload.church_id = activeDashboardChurchId;
+            } else if (window.adminChurchId) {
+                payload.church_id = window.adminChurchId;
             }
 
-            const formattedStart = format12HourTime(startTimeVal);
-            const formattedEnd = format12HourTime(endTimeVal);
-            const scheduleText = `${dayVal} • ${formattedStart} - ${formattedEnd}`;
-            const timeText = `${formattedStart} - ${formattedEnd}`;
+            if (!payload.title) {
+                alert("Please provide a programme title.");
+                return;
+            }
 
             btn.disabled = true;
             btn.innerText = "Publishing...";
 
-            const { error } = await window.sbClient.from('programmes').insert({
-                title: titleVal,
-                description: descVal,
-                location: locationVal,
-                day_of_week: dayVal,
-                start_time: formattedStart,
-                end_time: formattedEnd,
-                schedule_text: scheduleText,
-                time: timeText,
-                church_id: activeDashboardChurchId
-            });
+            const { error } = await window.sbClient.from('programmes').insert(payload);
 
             btn.disabled = false;
             btn.innerText = "Publish";
@@ -999,9 +1000,11 @@
                 alert("Error publishing programme: " + error.message);
             } else {
                 showNotification("Programme added successfully!", "success");
-                document.getElementById('p-title').value = '';
-                document.getElementById('p-desc').value = '';
-                loadChurchProgrammes(activeDashboardChurchId);
+                if (document.getElementById('prog-title')) document.getElementById('prog-title').value = '';
+                if (document.getElementById('p-title')) document.getElementById('p-title').value = '';
+                if (document.getElementById('prog-location')) document.getElementById('prog-location').value = '';
+                if (document.getElementById('p-desc')) document.getElementById('p-desc').value = '';
+                loadChurchProgrammes(activeDashboardChurchId || window.adminChurchId);
             }
         }
 
