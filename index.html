@@ -58,17 +58,17 @@
                 <span class="text-xl sm:text-2xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent truncate">BelieversMeet</span>
             </a>
             <div class="flex items-center gap-3 sm:space-x-4" id="nav-auth-section">
-                <!-- Always Visible Language Switcher -->
-                <div class="d-flex align-items-center ms-auto me-2" style="z-index: 1050;">
-                  <select id="appLanguageSelect" 
-                          class="form-select form-select-sm bg-dark text-white border-secondary shadow-sm" 
-                          style="width: auto; max-width: 130px; font-size: 0.8rem;" 
-                          onchange="triggerAppTranslation(this.value)">
-                    <option value="en">🇬🇧 EN</option>
-                    <option value="sw">🇰🇪 SW</option>
-                    <option value="lg">🇺🇬 LG</option>
-                    <option value="fr">🇫🇷 FR</option>
-                  </select>
+                <!-- Language Launcher Button in Desktop Header -->
+                <div class="d-flex align-items-center ms-auto me-2">
+                  <button type="button" 
+                          class="btn btn-sm btn-outline-secondary text-white d-flex align-items-center gap-1 py-1 px-2" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#languageSelectModal"
+                          style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2);">
+                    <span id="currentLangFlag">🇬🇧</span>
+                    <span id="currentLangCode" class="fw-bold fs-7">EN</span>
+                    <i class="bi bi-chevron-down ms-1" style="font-size: 0.75rem;"></i>
+                  </button>
                 </div>
                 <!-- Light / Dark Mode Toggle Button -->
                 <button onclick="window.toggleTheme()" 

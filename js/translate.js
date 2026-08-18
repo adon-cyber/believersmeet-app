@@ -1,4 +1,34 @@
 // Google Translate Dynamic Engine & Custom Sleek Navbar Selector
+// Main Translation Trigger (Cookie + Reload)
+window.triggerAppTranslation = function(langCode) {
+  if (!langCode) return;
+
+  // Save selected language
+  localStorage.setItem('app_language', langCode);
+
+  // Set translation cookie for Google Translate
+  const domain = window.location.hostname;
+  document.cookie = `googtrans=/en/${langCode}; path=/;`;
+  document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
+
+  // Trigger Google Translate hidden combo if present
+  const gtCombo = document.querySelector('.goog-te-combo');
+  if (gtCombo) {
+    gtCombo.value = langCode;
+    gtCombo.dispatchEvent(new Event('change'));
+  }
+
+  // Reload page to apply translation across all DOM elements
+  window.location.reload();
+};
+
+// Modal / Radio Button Click Handler
+window.selectLanguageOption = function(langCode) {
+  window.triggerAppTranslation(langCode);
+};
+
+window.changeLanguage = window.triggerAppTranslation;
+
 (function() {
     // 1. Inject Hidden Google Translate Element and Script into DOM if not present
     if (!document.getElementById('google_translate_element')) {
@@ -28,37 +58,17 @@
         document.head.appendChild(script);
     }
 
-    // 1. Trigger translation via cookie + forced clean reload
-    window.triggerAppTranslation = function(langCode) {
-      if (!langCode) return;
-
-      // Save selection
-      localStorage.setItem('app_language', langCode);
-
-      // Set the Google Translate cookie required by the google widget
-      const domain = window.location.hostname;
-      document.cookie = `googtrans=/en/${langCode}; path=/;`;
-      document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
-
-      // Attempt to trigger Google Translate's hidden combo box if present
-      const gtCombo = document.querySelector('.goog-te-combo');
-      if (gtCombo) {
-        gtCombo.value = langCode;
-        gtCombo.dispatchEvent(new Event('change'));
-      }
-
-      // Force page reload to guarantee all dynamic DOM elements pick up the cookie
-      window.location.reload();
-    };
-    window.changeLanguage = window.triggerAppTranslation;
-
-    // 2. Sync selector state on page load
+    // 2. Sync UI states on load
     document.addEventListener('DOMContentLoaded', () => {
       const savedLang = localStorage.getItem('app_language') || 'en';
+      
+      // Update select dropdown if present
       const selectEl = document.getElementById('appLanguageSelect');
-      if (selectEl) {
-        selectEl.value = savedLang;
-      }
+      if (selectEl) selectEl.value = savedLang;
+
+      // Update radio button modal inputs if present
+      const radioEl = document.querySelector(`input[name="languageRadio"][value="${savedLang}"]`);
+      if (radioEl) radioEl.checked = true;
 
       // Also ensure cookie matches saved preference
       if (savedLang !== 'en') {
