@@ -96,31 +96,87 @@
             const container = document.getElementById('volunteer-slots-container');
             if (!container) return;
 
+            container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 text-sm">Attempting to force-load database slots...</div>';
+
             try {
-                // 1. Query volunteer_roster directly without strict date filters
+                console.log('🚨 FORCING RAW FETCH FROM volunteer_roster...');
+                
+                // 2. Fetch ABSOLUTELY EVERYTHING. No church_id filters, no active filters.
                 let { data: slots, error } = await window.sbClient
                     .from('volunteer_roster')
-                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))')
-                    .order('created_at', { ascending: false });
+                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))');
 
                 if (error) {
-                    console.warn('Fallback: checking volunteer_roster without relations...');
-                    const fallback = await window.sbClient.from('volunteer_roster').select('*').order('created_at', { ascending: false });
-                    slots = fallback.data;
-                    error = fallback.error;
+                    console.warn('Relation fetch failed, trying flat fetch:', error);
+                    const flat = await window.sbClient.from('volunteer_roster').select('*');
+                    slots = flat.data;
+                    error = flat.error;
                 }
+
+                console.log('🚨 RAW DATABASE RESPONSE ERROR:', error);
+                console.log('🚨 RAW DATABASE RESPONSE DATA:', slots);
 
                 if (error) throw error;
 
-                console.log('Fetched volunteer slots for members:', slots);
+                if (!slots || slots.length === 0) {
+                    container.innerHTML = '<div class="col-span-full bg-slate-800 border border-red-500/50 p-6 rounded-2xl text-center text-red-300">The database query worked, but exactly 0 slots were returned. The table is empty or data is not saving.</div>';
+                    return;
+                }
 
                 allSlots = slots || [];
                 renderSlots();
+
             } catch (err) {
-                console.error("Error loading volunteer slots:", err);
-                container.innerHTML = `<div class="col-span-full text-center py-12 text-red-400 text-sm">Failed to load volunteer slots: ${escapeHTML(err.message)}</div>`;
+                console.error('🚨 FORCE FETCH CRASHED:', err);
+                container.innerHTML = `<div class="col-span-full bg-slate-800 border border-red-500 p-6 rounded-2xl text-center text-red-300">Fetch crashed entirely: ${escapeHTML(err.message)}</div>`;
             }
         }
+
+        // Attach to window so we can trigger it manually from console if needed
+        window.forceLoadVolunteerSlots = async function() {
+          const container = document.getElementById('volunteer-slots-list') || 
+                            document.getElementById('volunteer-slots-container') ||
+                            document.getElementById('public-volunteer-slots') ||
+                            document.querySelector('.card-body');
+          
+          if (!container) {
+            console.error('🚨 CRITICAL UI ERROR: Could not find HTML container for volunteer slots!');
+            return;
+          }
+
+          container.innerHTML = '<div class="alert alert-warning text-dark">Attempting to force-load database slots...</div>';
+
+          try {
+            console.log('🚨 FORCING RAW FETCH FROM volunteer_roster...');
+            
+            const { data: slots, error } = await window.sbClient.from('volunteer_roster').select('*');
+
+            if (error) throw error;
+
+            if (!slots || slots.length === 0) {
+              container.innerHTML = '<div class="alert alert-danger border border-danger text-dark">Query worked, but 0 slots were returned from the database.</div>';
+              return;
+            }
+
+            let html = '<div class="row g-2">';
+            slots.forEach(slot => {
+              html += `
+                <div class="col-12 p-3 mb-2 bg-dark border border-warning text-white rounded">
+                  <h5 class="text-warning">🛠️ DB ENTRY: ${slot.title || 'Untitled'}</h5>
+                  <p class="small mb-1">ID: ${slot.id}</p>
+                  <p class="small mb-2">Church ID: ${slot.church_id || 'NULL'} | Cap: ${slot.max_capacity}</p>
+                  <button class="btn btn-warning w-100 text-dark fw-bold">Test Button</button>
+                </div>
+              `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+
+          } catch (err) {
+            console.error('🚨 FORCE FETCH CRASHED:', err);
+            container.innerHTML = `<div class="alert alert-danger text-dark">Fetch crashed: ${err.message}</div>`;
+          }
+        };
 
         function filterRole(role) {
             currentRoleFilter = role;
