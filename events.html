@@ -948,7 +948,7 @@
               </div>
             </div>
             <div>
-              <button onclick="signUpForVolunteerSlot('${slot.id}', '${escapeHtml(slot.title || '').replace(/'/g, "\\'")}', '${escapeHtml(dateStr)}')" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+              <button onclick="signUpForVolunteerSlot('${slot.id}', '${escapeHtml(slot.title || '').replace(/'/g, "\\'")}', '${escapeHtml(dateStr)}', this)" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                 <span><i class="fas fa-hand-holding-heart mr-1"></i> Sign Up to Serve</span>
               </button>
             </div>
@@ -959,7 +959,7 @@
       container.innerHTML = html;
     }
 
-    async function signUpForVolunteerSlot(slotId, slotTitle, slotDate) {
+    async function signUpForVolunteerSlot(slotId, slotTitle, slotDate, btnElement) {
         if (!loggedInUser) {
             alert("You must be logged in to sign up.");
             return;
@@ -976,17 +976,36 @@
                 .eq('id', loggedInUser.id)
                 .single();
 
+            const payload = {
+                slot_id: slotId,
+                user_id: loggedInUser.id,
+                slot_title: slotTitle || 'Volunteer Slot',
+                slot_name: slotTitle || 'Volunteer Slot',
+                user_email: profile?.email || loggedInUser.email,
+                full_name: profile?.full_name || loggedInUser.email,
+                email: profile?.email || loggedInUser.email,
+                phone: profile?.phone || null
+            };
+
             const { error } = await window.sbClient
                 .from('volunteer_signups')
-                .insert([{
-                    slot_id: slotId,
-                    user_id: loggedInUser.id,
-                    full_name: profile?.full_name || loggedInUser.email,
-                    email: profile?.email || loggedInUser.email,
-                    phone: profile?.phone || null
-                }]);
+                .insert([payload]);
 
-            if (error) throw error;
+            if (error) {
+                if (error.code === '23505' || error.status === 409 || (error.message && error.message.includes('unique'))) {
+                    alert(`You are already signed up for "${slotTitle || 'this slot'}"!`);
+                    
+                    if (btnElement) {
+                        btnElement.className = 'btn btn-sm btn-success disabled';
+                        btnElement.disabled = true;
+                        btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
+                    } else {
+                        loadVolunteerRoster();
+                    }
+                    return;
+                }
+                throw error;
+            }
 
             if (typeof window.sendNotification === 'function') {
                 await window.sendNotification(
@@ -997,7 +1016,14 @@
             }
 
             showSuccessToast(`Successfully signed up to serve as ${slotTitle}!`);
-            loadVolunteerRoster();
+            
+            if (btnElement) {
+                btnElement.className = 'btn btn-sm btn-success disabled';
+                btnElement.disabled = true;
+                btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
+            } else {
+                loadVolunteerRoster();
+            }
         } catch (err) {
             console.error("Volunteer sign up error:", err);
             alert("Failed to sign up for slot: " + (err.message || "It may be fully booked."));
