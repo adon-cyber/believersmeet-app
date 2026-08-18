@@ -665,27 +665,36 @@ function getDbClient() {
   return null;
 }
 
-// ---------------------------------------------
-// LOAD JOIN CHURCH REQUESTS
-// ---------------------------------------------
+// FETCH PUBLIC JOIN CHURCH REQUESTS WITH MULTI-TABLE FALLBACK
 async function loadJoinChurchRequests() {
   const container = document.getElementById('join-requests-container') || document.getElementById('public-join-requests');
   if (!container) return;
 
   const db = getDbClient();
   if (!db) {
-    container.innerHTML = '<div class="alert alert-warning py-2 small">Supabase client not initialized yet. Retrying...</div>';
     setTimeout(loadJoinChurchRequests, 1000);
     return;
   }
 
   try {
-    const { data, error } = await db
-      .from('church_join_requests')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // 1. Try public_church_requests first
+    let { data, error } = await db.from('public_church_requests').select('*').order('created_at', { ascending: false });
 
-    if (error) throw error;
+    // 2. Fallback to church_join_requests if empty/error
+    if (error || !data || data.length === 0) {
+      const fallback = await db.from('church_join_requests').select('*').order('created_at', { ascending: false });
+      if (fallback.data && fallback.data.length > 0) {
+        data = fallback.data;
+      }
+    }
+
+    // 3. Fallback to church_requests if still empty/error
+    if (!data || data.length === 0) {
+      const fallback = await db.from('church_requests').select('*').order('created_at', { ascending: false });
+      if (fallback.data && fallback.data.length > 0) {
+        data = fallback.data;
+      }
+    }
 
     if (!data || data.length === 0) {
       container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No church join requests found.</div>';
@@ -694,9 +703,10 @@ async function loadJoinChurchRequests() {
 
     let html = '<div class="d-flex flex-column gap-2 my-2">';
     data.forEach(req => {
-      const name = req.full_name || req.name || 'Anonymous';
-      const phone = req.phone || req.contact || 'No phone';
-      const email = req.email || '';
+      const name = req.full_name || req.name || req.author || req.user_email || 'Anonymous';
+      const phone = req.phone || req.phone_number || req.contact || req.mobile || 'No phone provided';
+      const email = req.email || req.user_email || '';
+      const church = req.church_name || req.church || '';
       const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
@@ -705,6 +715,7 @@ async function loadJoinChurchRequests() {
             <strong class="text-primary fs-6">👤 ${name}</strong>
             ${dateStr ? `<span style="font-size: 0.72rem;" class="badge bg-secondary">${dateStr}</span>` : ''}
           </div>
+          ${church ? `<div class="small text-info mb-1">🏛️ ${church}</div>` : ''}
           <div class="small text-muted d-flex flex-wrap gap-3 mt-1">
             <span>📞 ${phone}</span>
             ${email ? `<span>✉️ ${email}</span>` : ''}
@@ -721,25 +732,19 @@ async function loadJoinChurchRequests() {
   }
 }
 
-// ---------------------------------------------
-// LOAD PUBLIC PRAYER REQUESTS
-// ---------------------------------------------
+// FETCH PUBLIC PRAYER REQUESTS WITH EXHAUSTIVE COLUMN MAPPINGS
 async function loadPublicPrayerRequests() {
   const container = document.getElementById('prayer-requests-container') || document.getElementById('public-prayer-requests');
   if (!container) return;
 
   const db = getDbClient();
   if (!db) {
-    container.innerHTML = '<div class="alert alert-warning py-2 small">Supabase client not initialized yet. Retrying...</div>';
     setTimeout(loadPublicPrayerRequests, 1000);
     return;
   }
 
   try {
-    let { data, error } = await db
-      .from('prayer_requests')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let { data, error } = await db.from('prayer_requests').select('*').order('created_at', { ascending: false });
 
     if (error) {
       const fallback = await db.from('ministry_requests').select('*').order('created_at', { ascending: false });
@@ -756,9 +761,10 @@ async function loadPublicPrayerRequests() {
 
     let html = '<div class="d-flex flex-column gap-2 my-2">';
     data.forEach(req => {
-      const name = req.full_name || req.name || 'Anonymous';
-      const phone = req.phone || 'No phone';
-      const details = req.request || req.message || 'No details provided.';
+      // Exhaustive column mapping
+      const name = req.full_name || req.name || req.author || req.user_email || 'Anonymous';
+      const phone = req.phone || req.phone_number || req.contact || req.mobile || 'No phone provided';
+      const details = req.request || req.prayer || req.message || req.details || req.description || req.content || 'No details provided.';
       const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
