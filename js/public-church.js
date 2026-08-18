@@ -445,8 +445,10 @@ if (conversionForm) {
 
         const fullName = document.getElementById('full-name').value.trim();
         const phoneNumber = document.getElementById('phone-number').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const prayerRequest = document.getElementById('prayer-request').value.trim();
+        const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
+        const churchNameEl = document.getElementById('church-name');
+        const churchName = churchNameEl ? churchNameEl.textContent.trim() : '';
+        const prayerRequest = document.getElementById('prayer-request') ? document.getElementById('prayer-request').value.trim() : '';
         const submitBtn = document.getElementById('submit-btn');
 
         if (!fullName || !phoneNumber) {
@@ -458,22 +460,25 @@ if (conversionForm) {
         submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...`;
 
         try {
-            const { error } = await publicSupabase.from('conversion_requests').insert({
+            const payload = {
                 church_id: currentChurchId,
                 full_name: fullName,
-                phone_number: phoneNumber,
+                phone: phoneNumber,
                 email: email || null,
+                church_name: churchName || null,
                 prayer_request: prayerRequest || null,
                 status: 'pending'
-            });
+            };
+
+            const { error } = await publicSupabase.from('church_join_requests').insert([payload]);
 
             if (error) throw error;
 
-            console.log('Successfully submitted request:', { type: 'conversion_request', church_id: currentChurchId, full_name: fullName });
+            console.log('Successfully submitted join request to church_join_requests:', payload);
             if (typeof showNotification === 'function') {
-                showNotification('Join/Conversion request successfully submitted!', 'success');
+                showNotification('Your join request has been sent successfully!', 'success');
             } else {
-                alert('Join/Conversion request successfully submitted!');
+                alert('Your join request has been sent successfully!');
             }
 
             document.getElementById('success-message').classList.remove('hidden');
