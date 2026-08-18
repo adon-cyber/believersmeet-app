@@ -336,48 +336,35 @@ async function renderVolunteerSlotsWithState(slots, container) {
     }
   }
 
-  let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 col-span-full">';
+  let html = '<div class="row g-3">';
   slots.forEach(slot => {
     const isSignedUp = userSignedUpSlots.has(slot.id);
     const safeTitle = (slot.title || 'Volunteer Slot').replace(/'/g, "\\'");
-    const totalNeeded = slot.max_capacity || slot.spots || slot.total_spots || 5;
-    const signups = slot.volunteer_signups || [];
-    const filledSpots = signups.length;
-    const isFull = filledSpots >= totalNeeded && !isSignedUp;
-
-    const dateObj = slot.event_date ? new Date(slot.event_date) : new Date();
-    const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     html += `
-      <div class="bg-slate-800/70 backdrop-blur-md border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
-        <div class="space-y-3">
-          <div class="flex justify-between items-start gap-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">${escapeHTML(slot.role || 'Usher')}</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">Capacity: ${totalNeeded}</span>
+      <div class="col-12 col-md-6">
+        <div class="card bg-dark text-white border-secondary p-3 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="text-primary fw-bold mb-0">${escapeHTML(slot.title || 'Volunteer Slot')}</h5>
+              ${isSignedUp ? '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Your Slot</span>' : ''}
+            </div>
+            <p class="small text-muted mb-2">${escapeHTML(slot.description || 'Sign up to serve!')}</p>
           </div>
-          <h3 class="text-xl font-bold text-slate-100">${escapeHTML(slot.title || 'Volunteer Slot')}</h3>
-          <p class="text-sm text-slate-300 leading-relaxed">${escapeHTML(slot.description || 'Sign up to serve!')}</p>
-          <div class="text-xs font-medium text-blue-400 flex items-center gap-2 pt-1">
-            <span><i class="far fa-calendar-alt"></i> ${escapeHTML(dateStr)}</span>
-            <span>•</span>
-            <span><i class="far fa-clock"></i> ${escapeHTML(timeStr)}</span>
+          
+          <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+            <span class="badge bg-secondary">Capacity: ${slot.max_capacity || 5}</span>
+            
+            ${isSignedUp ? `
+              <button class="btn btn-sm btn-outline-danger" onclick="cancelOrChangeShift('${slot.id}', '${safeTitle}')">
+                <i class="bi bi-x-circle me-1"></i> Leave / Change
+              </button>
+            ` : `
+              <button class="btn btn-sm btn-primary" onclick="handleVolunteerSignup('${slot.id}', '${safeTitle}', this)">
+                Sign Up
+              </button>
+            `}
           </div>
-        </div>
-        <div class="pt-2 border-t border-slate-700/60">
-          ${isSignedUp ? `
-            <button onclick="cancelOrChangeShift('${slot.id}', '${safeTitle}')" class="w-full py-3 px-4 rounded-xl font-semibold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 transition-all border border-emerald-800/40 flex items-center justify-center space-x-2 text-sm">
-              <i class="fas fa-check-circle mr-1"></i> <span>Signed Up (Cancel / Change)</span>
-            </button>
-          ` : isFull ? `
-            <button disabled class="w-full py-3 px-4 rounded-xl font-semibold text-slate-500 bg-slate-800/50 cursor-not-allowed border border-slate-700/50 flex items-center justify-center space-x-2 text-sm">
-              <i class="fas fa-ban mr-1"></i> <span>Slot at Max Capacity</span>
-            </button>
-          ` : `
-            <button onclick="handleVolunteerSignup('${slot.id}', '${safeTitle}', this)" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
-              <i class="fas fa-hand-holding-heart mr-1"></i> <span>Sign Up to Serve</span>
-            </button>
-          `}
         </div>
       </div>
     `;
@@ -386,8 +373,55 @@ async function renderVolunteerSlotsWithState(slots, container) {
   container.innerHTML = html;
 }
 
+        async function handleVolunteerSignup(slotId, slotTitle, btnElement) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return alert('Please log in to sign up for a volunteer slot.');
+
+            // Check if user is already signed up for THIS exact slot
+            const { data: existing } = await supabase
+              .from('volunteer_signups')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('slot_id', slotId)
+              .maybeSingle();
+
+            if (existing) {
+              alert('You are already signed up for this slot!');
+              return;
+            }
+
+            const payload = {
+              slot_id: slotId,
+              user_id: user.id,
+              slot_title: slotTitle,
+              slot_name: slotTitle,
+              user_email: user.email
+            };
+
+            const { error } = await supabase.from('volunteer_signups').insert([payload]);
+
+            if (error) {
+              if (error.code === '23505') {
+                alert('You are already signed up for this slot.');
+              } else {
+                alert('Could not complete signup: ' + error.message);
+              }
+              return;
+            }
+
+            alert(`Successfully signed up for "${slotTitle}"!`);
+            location.reload();
+          } catch (err) {
+            console.error('Unexpected signup error:', err);
+          }
+        }
+
+        async function handleLeaveSlot(slotId, slotTitle) {
+            await cancelOrChangeShift(slotId, slotTitle);
+        }
+
         async function cancelOrChangeShift(slotId, slotTitle) {
-            if (!currentUser) return;
 
             if (!confirm(`Do you want to cancel or change your sign-up for '${slotTitle}'? This will free up the shift for another volunteer.`)) {
                 return;
