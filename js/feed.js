@@ -305,7 +305,7 @@ async function enforceLoginAndLoad() {
         loadDiscoveryProfiles().catch(err => console.error("Fellowship error:", err)),
         loadMusicPlaylist().catch(err => console.error("Music error:", err)),
         fetchAndRenderWidgetVerse('John 3:16').catch(err => console.error("Bible error:", err)),
-        loadChurchProgrammesFeed().catch(err => console.error("Programmes error:", err))
+        loadChurchProgrammes().catch(err => console.error("Programmes error:", err))
     ]);
 
     initTimelineRealtimeSync(); 
