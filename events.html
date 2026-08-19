@@ -1081,8 +1081,14 @@
           user_email: user.email || ''
         };
 
-        const { error } = await db.from('volunteer_signups').insert([payload]);
-        if (error) throw error;
+        const { error: insertError } = await db.from('volunteer_signups').insert([payload]);
+        if (insertError) {
+          if (insertError.code === '23505' || (insertError.message && insertError.message.includes('unique_user_slot'))) {
+            alert('You are already signed up for this volunteer slot!');
+            return;
+          }
+          throw insertError;
+        }
 
         alert(`Successfully signed up for "${slotTitle}"!`);
         if (typeof loadVolunteerRoster === 'function') {
