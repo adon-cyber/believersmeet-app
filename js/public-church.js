@@ -465,7 +465,6 @@ if (conversionForm) {
                 full_name: fullName,
                 phone: phoneNumber,
                 email: email || null,
-                church_name: churchName || null,
                 prayer_request: prayerRequest || null,
                 status: 'pending'
             };
