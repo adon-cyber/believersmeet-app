@@ -406,10 +406,15 @@ async function loadMyBusinesses() {
       return;
     }
 
-    myBusinessesList.innerHTML = data.map(item => {
-      const isApproved = item.status === 'approved' || item.is_approved === true;
-      const badgeText = isApproved ? 'Approved & Live' : 'Pending Review';
-      const badgeClass = isApproved ? 'bg-success text-white' : 'bg-secondary text-light';
+    MyBusinessesList.innerHTML = data.map(item => {
+      const statusVal = item.status ? item.status.toLowerCase() : (item.is_approved ? 'approved' : 'pending');
+      let badgeText = 'Pending Approval';
+      let badgeClass = 'bg-gray-100 text-gray-800 border border-gray-300';
+      
+      if (statusVal === 'approved') {
+        badgeText = 'Approved';
+        badgeClass = 'bg-green-100 text-green-800 border border-green-300';
+      }
 
       return `
         <div class="card mb-2 border-secondary shadow-sm">
@@ -418,7 +423,7 @@ async function loadMyBusinesses() {
               <h6 class="mb-0 text-primary">${escapeHTML(item.name || item.title || item.business_name || 'Untitled')}</h6>
               <small class="text-muted">${escapeHTML(item.category || 'General')}</small>
             </div>
-            <span class="badge rounded-pill ${badgeClass}">${badgeText}</span>
+            <span class="badge rounded-pill px-2.5 py-1 text-xs font-semibold ${badgeClass}">${badgeText}</span>
           </div>
         </div>
       `;
@@ -521,7 +526,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: document.getElementById('feedBizDescription').value.trim(),
                 phone: document.getElementById('feedBizPhone').value.trim(),
                 email: document.getElementById('feedBizEmail').value.trim(),
-                website_url: document.getElementById('feedBizWebsite').value.trim()
+                website_url: document.getElementById('feedBizWebsite').value.trim(),
+                status: 'pending',
+                is_approved: false
             };
 
             const { error } = await window.sbClient

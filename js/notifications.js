@@ -320,7 +320,7 @@
                 : 'bg-blue-50/70 dark:bg-blue-950/40 text-gray-900 dark:text-white font-semibold hover:bg-blue-100/70 dark:hover:bg-blue-900/40 border-l-4 border-blue-600';
 
             return `
-                <a href="${targetLink}" onclick="markAsRead('${n.id}')" class="block p-4 transition-colors text-decoration-none ${readClass}" style="white-space: normal;">
+                <a href="${targetLink}" onclick="handleNotificationClick(event, '${n.id}', '${targetLink}')" class="block p-4 transition-colors text-decoration-none ${readClass}" style="white-space: normal;">
                     <div class="flex justify-between items-start gap-2 mb-1">
                         <h4 class="font-semibold text-sm text-gray-900 dark:text-white">${escapeHtml(n.title)}</h4>
                         <span class="text-[10px] text-gray-400 whitespace-nowrap">${timeAgo}</span>
@@ -331,6 +331,32 @@
             `;
         }).join('');
     }
+
+    window.handleNotificationClick = async function(event, notificationId, targetLink) {
+        await markAsRead(notificationId);
+        if (!targetLink || targetLink === '#') return;
+
+        if (targetLink.includes('#')) {
+            const [pathPart, hashPart] = targetLink.split('#');
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            const targetPage = pathPart ? pathPart.split('/').pop() : currentPath;
+
+            if (!pathPart || targetPage === currentPath) {
+                event.preventDefault();
+                const targetElement = document.getElementById(hashPart);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Add subtle flash highlight effect
+                    targetElement.classList.add('ring-4', 'ring-blue-400', 'transition-all', 'duration-500');
+                    setTimeout(() => {
+                        targetElement.classList.remove('ring-4', 'ring-blue-400');
+                    }, 2000);
+                } else {
+                    console.warn(`Target element with id "${hashPart}" not found on page.`);
+                }
+            }
+        }
+    };
 
     window.markAsRead = async function(notificationId) {
         if (!sbClient) return;

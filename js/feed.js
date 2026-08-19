@@ -1389,7 +1389,8 @@ async function loadChurchProgrammes() {
   try {
     let query = db
       .from('events') 
-      .select('*');
+      .select('*')
+      .eq('category', 'church_programme');
 
     if (typeof currentUserProfile !== 'undefined' && currentUserProfile && currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
       query = query.eq('church_id', currentUserProfile.church_id);
@@ -1403,7 +1404,7 @@ async function loadChurchProgrammes() {
 
     if (!data || data.length === 0) {
       container.innerHTML = `
-        <div class="text-center text-muted p-4 border border-secondary rounded bg-dark">
+        <div class="text-center text-muted p-4 border border-secondary rounded bg-light">
           No upcoming programmes at the moment. Check back soon!
         </div>`;
       return;
@@ -1430,13 +1431,13 @@ async function loadChurchProgrammes() {
       const dateTimeString = dateFormatted ? `🕒 ${dateFormatted} ${time ? 'at ' + time : ''}` : '🕒 Time TBA';
 
       html += `
-        <div class="card bg-dark text-white border-secondary shadow-sm">
-          <div class="card-body p-3">
-            <h6 class="card-title text-primary fw-bold mb-2">${escapeHTML(title)}</h6>
-            ${description ? `<p class="card-text small text-light mb-3">${escapeHTML(description)}</p>` : ''}
-            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-secondary">
-              <span class="small text-info fw-bold">${escapeHTML(dateTimeString)}</span>
-              ${item.location ? `<span class="badge bg-secondary small">📍 ${escapeHTML(item.location)}</span>` : ''}
+        <div class="card shadow-sm mb-3 border-0">
+          <div class="card-body">
+            <h6 class="text-primary fw-bold">${escapeHTML(title)}</h6>
+            ${description ? `<p class="text-muted small mb-2">${escapeHTML(description)}</p>` : ''}
+            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+              <span class="small text-secondary fw-semibold">${escapeHTML(dateTimeString)}</span>
+              ${item.location ? `<span class="badge bg-light text-dark border small">📍 ${escapeHTML(item.location)}</span>` : ''}
             </div>
           </div>
         </div>
