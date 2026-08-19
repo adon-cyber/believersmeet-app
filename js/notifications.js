@@ -335,10 +335,21 @@
     window.markAsRead = async function(notificationId) {
         if (!sbClient) return;
         try {
+            // Extract the raw UUID if a prefix was attached (e.g. 'prayer-1234-...')
+            let cleanId = notificationId;
+            const uuidMatch = notificationId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+            
+            if (uuidMatch) {
+                cleanId = uuidMatch[0];
+            } else {
+                console.warn('Invalid UUID format passed to markAsRead:', notificationId);
+                return;
+            }
+
             const { error } = await sbClient
                 .from('notifications')
                 .update({ is_read: true })
-                .eq('id', notificationId);
+                .eq('id', cleanId);
 
             if (error) {
                 console.error('Error marking notification as read:', error);
