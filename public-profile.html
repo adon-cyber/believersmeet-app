@@ -128,10 +128,19 @@
         if (error) alert("Error: " + error.message);
         else { 
             alert("Message Sent!"); 
-            // Trigger notification
-            if (typeof window.sendNotification === 'function') {
-                const senderName = user.user_metadata?.full_name || user.email || 'Someone';
-                await window.sendNotification(receiverId, 'New Message', 'You received a new message from ' + senderName);
+            // Trigger notification with correct schema and link
+            if (typeof window.sbClient !== 'undefined') {
+                try {
+                    await window.sbClient.from('notifications').insert([{
+                        user_id: receiverId,
+                        title: 'New Message',
+                        message: content.length > 60 ? content.substring(0, 60) + '...' : content,
+                        link: '/dashboard.html#messages-section',
+                        is_read: false
+                    }]);
+                } catch (notifErr) {
+                    console.error('Notification insertion error:', notifErr);
+                }
             }
             document.getElementById('message-content').value = '';
             document.getElementById('message-modal').classList.add('hidden'); 

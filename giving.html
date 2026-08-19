@@ -851,6 +851,19 @@
 
                 if (insertError) {
                     console.warn("Could not auto-create initial message thread:", insertError.message);
+                } else {
+                    // Trigger notification for finance team / admin
+                    try {
+                        await window.sbClient.from('notifications').insert([{
+                            user_id: financeUserId,
+                            title: 'New Finance Inquiry',
+                            message: 'A member sent a giving or finance inquiry message.',
+                            link: '/chat.html?department=finance',
+                            is_read: false
+                        }]);
+                    } catch (notifErr) {
+                        console.error('Failed to insert finance inquiry notification:', notifErr);
+                    }
                 }
             }
 

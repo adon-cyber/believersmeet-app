@@ -25,6 +25,7 @@ function escapeHTML(str) {
 
 document.addEventListener('DOMContentLoaded', () => {
     enforceLoginAndLoad().catch(err => console.error("Initialization error:", err));
+    setTimeout(loadChurchProgrammes, 300); // Slight delay ensures DB client is ready
 });
 
 async function loadDiscoveryProfiles() {
@@ -303,7 +304,8 @@ async function enforceLoginAndLoad() {
         fetchAndRenderWallTimeline().catch(err => console.error("Feed error:", err)),
         loadDiscoveryProfiles().catch(err => console.error("Fellowship error:", err)),
         loadMusicPlaylist().catch(err => console.error("Music error:", err)),
-        fetchAndRenderWidgetVerse('John 3:16').catch(err => console.error("Bible error:", err))
+        fetchAndRenderWidgetVerse('John 3:16').catch(err => console.error("Bible error:", err)),
+        loadChurchProgrammesFeed().catch(err => console.error("Programmes error:", err))
     ]);
 
     initTimelineRealtimeSync(); 
@@ -1376,4 +1378,77 @@ async function removeChurchLeader(leaderId) {
         alert('Failed to remove leader: ' + err.message);
     }
 }
+
+async function loadChurchProgrammes() {
+  const container = document.getElementById('church-programmes-feed');
+  if (!container) return;
+
+  const db = typeof window.sbClient !== 'undefined' ? window.sbClient : (typeof getDbClient === 'function' ? getDbClient() : window.supabase);
+  if (!db) return;
+
+  try {
+    let query = db
+      .from('events') 
+      .select('*');
+
+    if (typeof currentUserProfile !== 'undefined' && currentUserProfile && currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
+      query = query.eq('church_id', currentUserProfile.church_id);
+    }
+
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .limit(10); // Show the latest 10 programmes
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `
+        <div class="text-center text-muted p-4 border border-secondary rounded bg-dark">
+          No upcoming programmes at the moment. Check back soon!
+        </div>`;
+      return;
+    }
+
+    let html = '<div class="d-flex flex-column gap-3">';
+    data.forEach(item => {
+      // Fallback variables to handle different possible column names
+      const title = item.title || item.name || 'Church Event';
+      const description = item.description || item.details || '';
+      const dateVal = item.event_date || item.date || '';
+      
+      let dateFormatted = '';
+      if (dateVal) {
+        try {
+          dateFormatted = new Date(dateVal).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch (e) {
+          dateFormatted = dateVal;
+        }
+      }
+
+      const time = item.time || item.event_time || '';
+      
+      const dateTimeString = dateFormatted ? `🕒 ${dateFormatted} ${time ? 'at ' + time : ''}` : '🕒 Time TBA';
+
+      html += `
+        <div class="card bg-dark text-white border-secondary shadow-sm">
+          <div class="card-body p-3">
+            <h6 class="card-title text-primary fw-bold mb-2">${escapeHTML(title)}</h6>
+            ${description ? `<p class="card-text small text-light mb-3">${escapeHTML(description)}</p>` : ''}
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-secondary">
+              <span class="small text-info fw-bold">${escapeHTML(dateTimeString)}</span>
+              ${item.location ? `<span class="badge bg-secondary small">📍 ${escapeHTML(item.location)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error('Error fetching church programmes:', err);
+    container.innerHTML = `<div class="text-danger small p-2">Failed to load programmes: ${escapeHTML(err.message)}</div>`;
+  }
+}
+
 
