@@ -1023,19 +1023,34 @@
     }
 
     // 2. SIGN UP WITH SWITCH SLOT SUPPORT
-    async function signUpForVolunteerSlot(slotId, slotTitle, btnElement) {
+    window.signUpForVolunteerSlot = async function(slotId, slotTitle, btnElement) {
       try {
-        const { data: { user }, error: authErr } = await supabase.auth.getUser();
-        if (authErr || !user) {
-          alert('Please log in to sign up for a volunteer slot.');
+        // 1. Get the exact global Supabase client
+        const db = (typeof getDbClient === 'function') ? getDbClient() : (window.sbClient || window.supabase);
+        
+        // 2. Strict check: If db or db.auth is missing, stop immediately
+        if (!db || typeof db.auth === 'undefined') {
+          console.error('Supabase client or auth module is missing. Found:', db);
+          alert('Database connection not found. Please refresh the page.');
           return;
         }
 
+        // 3. Safely call getUser()
+        const { data: authData, error: authError } = await db.auth.getUser();
+        
+        if (authError || !authData || !authData.user) {
+          alert('You must be logged in to sign up as a volunteer.');
+          return;
+        }
+        
+        const user = authData.user;
+        const userId = user.id;
+
         // Check if user is already signed up for any slot
-        const { data: existingSignups } = await supabase
+        const { data: existingSignups } = await db
           .from('volunteer_signups')
           .select('*')
-          .or(`user_id.eq.${user.id},user_email.eq.${user.email}`);
+          .or(`user_id.eq.${userId},user_email.eq.${user.email}`);
 
         if (existingSignups && existingSignups.length > 0) {
           const alreadyThisSlot = existingSignups.some(s => s.slot_id === slotId);
@@ -1051,22 +1066,22 @@
           if (!switchConfirmed) return;
 
           // Remove previous signups first
-          await supabase
+          await db
             .from('volunteer_signups')
             .delete()
-            .or(`user_id.eq.${user.id},user_email.eq.${user.email}`);
+            .or(`user_id.eq.${userId},user_email.eq.${user.email}`);
         }
 
         // Insert new signup
         const payload = {
           slot_id: slotId,
-          user_id: user.id,
+          user_id: userId,
           slot_title: slotTitle || 'Volunteer Slot',
           slot_name: slotTitle || 'Volunteer Slot',
           user_email: user.email || ''
         };
 
-        const { error } = await supabase.from('volunteer_signups').insert([payload]);
+        const { error } = await db.from('volunteer_signups').insert([payload]);
         if (error) throw error;
 
         alert(`Successfully signed up for "${slotTitle}"!`);
@@ -1080,7 +1095,7 @@
         console.error('Error signing up for slot:', err);
         alert('Failed to complete action: ' + err.message);
       }
-    }
+    };
 
     async function cancelVolunteerSlot(slotId, slotTitle) {
         if (!confirm(`Do you want to cancel your sign-up for '${slotTitle || 'this slot'}'? This will free up the shift for another volunteer.`)) {
