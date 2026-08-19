@@ -554,9 +554,9 @@
                     try {
                         await window.sbClient.from('notifications').insert([{
                             user_id: targetUser.id,
-                            actor_id: currentUser.id,
-                            type: 'message',
-                            message: 'Sent you a message',
+                            title: 'New Message',
+                            message: content.length > 60 ? content.substring(0, 60) + '...' : content,
+                            link: '/dashboard.html#messages-section',
                             is_read: false
                         }]);
                     } catch (notifErr) {
@@ -707,9 +707,9 @@
                             try {
                                 await window.sbClient.from('notifications').insert([{
                                     user_id: financeUser.id,
-                                    actor_id: currentUser.id,
-                                    type: 'message',
-                                    message: 'Sent you a message',
+                                    title: 'New Finance Inquiry',
+                                    message: decodedContent.length > 60 ? decodedContent.substring(0, 60) + '...' : decodedContent,
+                                    link: '/chat.html?department=finance',
                                     is_read: false
                                 }]);
                             } catch (notifErr) {

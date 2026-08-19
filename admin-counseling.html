@@ -189,10 +189,16 @@
             alert(`Appointment status updated to ${newStatus}.`);
             
             // Trigger in-app notification if sendNotification is available and we have user_id
-            if (appData && appData.user_id && typeof window.sendNotification === 'function') {
+            if (appData && appData.user_id) {
                 const title = `Counseling Request ${newStatus}`;
                 const message = `Your counseling appointment request for ${appData.appointment_date || 'scheduled date'} has been ${newStatus.toLowerCase()}.`;
-                await window.sendNotification(appData.user_id, title, message);
+                await window.sbClient.from('notifications').insert([{
+                    user_id: appData.user_id,
+                    title: title,
+                    message: message,
+                    link: '/counseling.html',
+                    is_read: false
+                }]);
             }
 
             loadAdminAppointments();

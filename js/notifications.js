@@ -20,7 +20,7 @@
                 .from('notifications')
                 .select('*', { count: 'exact', head: true })
                 .eq('is_read', false)
-                .eq('user_id', currentUser.id);
+                .or(`user_id.eq.${currentUser.id},type.eq.broadcast`);
 
             if (error) {
                 console.error('Error getting notification count:', error);
@@ -156,11 +156,11 @@
         let aggregated = [];
 
         try {
-            // 1. Fetch unread system notifications from the notifications table
+            // 1. Fetch user-specific notifications and general church-wide broadcasts
             const { data: sysNotifs, error: sysErr } = await sbClient
                 .from('notifications')
                 .select('*')
-                .eq('user_id', currentUser.id)
+                .or(`user_id.eq.${currentUser.id},type.eq.broadcast`)
                 .order('created_at', { ascending: false });
 
             if (!sysErr && sysNotifs) {
@@ -314,19 +314,20 @@
 
         listContainer.innerHTML = notifications.map(n => {
             const timeAgo = formatTimeAgo(n.created_at);
-            const bgClass = n.is_read 
-                ? 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800' 
-                : 'bg-blue-50/70 dark:bg-blue-950/40 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 border-l-4 border-blue-600';
+            const targetLink = n.link ? n.link : '#';
+            const readClass = n.is_read 
+                ? 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' 
+                : 'bg-blue-50/70 dark:bg-blue-950/40 text-gray-900 dark:text-white font-semibold hover:bg-blue-100/70 dark:hover:bg-blue-900/40 border-l-4 border-blue-600';
 
             return `
-                <div onclick="markAsRead('${n.id}')" class="p-4 cursor-pointer transition-colors ${bgClass}">
-                    <div class="flex justify-between items-start gap-2">
+                <a href="${targetLink}" onclick="markAsRead('${n.id}')" class="block p-4 transition-colors text-decoration-none ${readClass}" style="white-space: normal;">
+                    <div class="flex justify-between items-start gap-2 mb-1">
                         <h4 class="font-semibold text-sm text-gray-900 dark:text-white">${escapeHtml(n.title)}</h4>
                         <span class="text-[10px] text-gray-400 whitespace-nowrap">${timeAgo}</span>
                     </div>
-                    <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">${escapeHtml(n.message)}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">${escapeHtml(n.message)}</p>
                     ${!n.is_read ? '<span class="inline-block mt-2 w-2 h-2 bg-blue-600 rounded-full"></span>' : ''}
-                </div>
+                </a>
             `;
         }).join('');
     }

@@ -325,11 +325,16 @@
                         .select('member_id')
                         .eq('group_id', groupId);
 
-                    if (members && typeof window.sendNotification === 'function') {
-                        const senderName = currentUser.user_metadata?.full_name || currentUser.email || 'Someone';
+                    if (members) {
                         for (const mem of members) {
                             if (mem.member_id !== currentUser.id) {
-                                await window.sendNotification(mem.member_id, 'New Group Message', `${senderName}: ${content.substring(0, 50)}...`);
+                                await window.sbClient.from('notifications').insert([{
+                                    user_id: mem.member_id,
+                                    title: 'New Group Message',
+                                    message: content.length > 60 ? content.substring(0, 60) + '...' : content,
+                                    link: `/group-chat.html?groupId=${groupId}`,
+                                    is_read: false
+                                }]);
                             }
                         }
                     }

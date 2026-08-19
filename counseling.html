@@ -195,9 +195,15 @@
                     adminQuery = adminQuery.eq('church_id', churchId);
                 }
                 const { data: admins } = await adminQuery;
-                if (admins && admins.length > 0 && typeof window.sendNotification === 'function') {
+                if (admins && admins.length > 0) {
                     for (const admin of admins) {
-                        await window.sendNotification(admin.id, 'New Counseling Request', `${memberName || 'A member'} has requested a counseling session for ${appointmentDate}.`);
+                        await window.sbClient.from('notifications').insert([{
+                            user_id: admin.id,
+                            title: 'New Counseling Request',
+                            message: `${memberName || 'A member'} requested a counseling session for ${appointmentDate}.`,
+                            link: '/admin-counseling.html',
+                            is_read: false
+                        }]);
                     }
                 }
             } catch (notifErr) {
