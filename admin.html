@@ -748,7 +748,7 @@ async function loadPublicPrayerRequests() {
       // Exhaustive property mapping supporting prayer_request, request, prayer, message, details, description, content
       const name = req.full_name || req.name || req.author || req.user_email || 'Anonymous';
       const phone = req.phone || req.phone_number || req.contact || req.mobile || req.contact_info || 'No phone provided';
-      const details = req.request || req.prayer || req.message || req.details || req.description || req.content || req.notes || 'No details provided.';
+      const details = req.prayer_request || req.message || req.details || req.description || req.request || req.prayer || req.content || req.notes || 'No details provided.';
       const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
 
       html += `
