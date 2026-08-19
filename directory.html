@@ -360,7 +360,9 @@
             description: document.getElementById('bizDescription').value.trim(),
             phone: document.getElementById('bizPhone').value.trim(),
             email: document.getElementById('bizEmail').value.trim(),
-            website_url: document.getElementById('bizWebsite').value.trim()
+            website_url: document.getElementById('bizWebsite').value.trim(),
+            status: 'pending',
+            is_approved: false
         };
 
         const { error } = await window.sbClient
@@ -425,7 +427,7 @@
 
       try {
         const { data, error } = await db
-          .from('business_proposals')
+          .from('business_directory')
           .select('*')
           .eq('status', 'approved')
           .order('created_at', { ascending: false });
