@@ -16,6 +16,60 @@ window.logoutUser = async function(e) {
     window.location.replace('login.html');
 };
 
+// Robust hash watcher that handles asynchronously rendered elements from Supabase
+function handleUrlHashOnLoad() {
+  if (!window.location.hash) return;
+  
+  const targetHash = window.location.hash; // e.g., "#messages-section"
+  let attempts = 0;
+  const maxAttempts = 25; // Try for up to 5 seconds while Supabase finishes loading
+  
+  const checkAndActivate = setInterval(() => {
+    attempts++;
+    const targetElement = document.querySelector(targetHash);
+    
+    if (targetElement) {
+      clearInterval(checkAndActivate);
+      
+      // 1. Look for a tab trigger pointing to this element or its parent pane
+      let tabTrigger = document.querySelector(`[data-bs-target="${targetHash}"], [href="${targetHash}"]`);
+      
+      if (!tabTrigger) {
+        const parentPane = targetElement.closest('.tab-pane');
+        if (parentPane) {
+          tabTrigger = document.querySelector(`[data-bs-target="#${parentPane.id}"], [href="#${parentPane.id}"]`);
+        }
+      }
+
+      // 2. Activate the Bootstrap tab if found
+      if (tabTrigger) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+          bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
+        } else {
+          tabTrigger.click();
+        }
+      }
+
+      // 3. Scroll to the element and highlight it nicely
+      setTimeout(() => {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetElement.classList.add('border', 'border-primary', 'shadow-lg');
+        setTimeout(() => {
+          targetElement.classList.remove('border', 'border-primary', 'shadow-lg');
+        }, 2000);
+      }, 150);
+      
+    } else if (attempts >= maxAttempts) {
+      clearInterval(checkAndActivate);
+      console.warn(`Hash target element '${targetHash}' did not appear in DOM after multiple attempts.`);
+    }
+  }, 200); // Check every 200ms until the element renders
+}
+
+// Trigger on full page load and when the hash changes dynamically
+window.addEventListener('load', handleUrlHashOnLoad);
+window.addEventListener('hashchange', handleUrlHashOnLoad);
+
 (async () => {
     // 1. Wait for Supabase to initialize
     let retries = 0;
