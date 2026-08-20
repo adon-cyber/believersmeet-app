@@ -383,19 +383,28 @@
 <script src="js/notifications.js"></script>
 <script>
 async function loadMyBusinesses() {
-  const myBusinessesList = document.getElementById('myBusinessesList');
-  if (!myBusinessesList) return;
-
-  const { data: userData } = await window.sbClient.auth.getUser();
-  const user = userData?.user;
-  
-  if (!user) {
-    myBusinessesList.innerHTML = '<p class="text-sm text-slate-500">Please log in to view submissions.</p>';
-    return;
-  }
-
   try {
-    const { data, error } = await window.sbClient
+    // 1. Explicitly define the container
+    const container = document.getElementById('myBusinessesList') || document.getElementById('my-businesses-list');
+    
+    if (!container) {
+      console.warn('My Businesses container not found in the DOM.');
+      return;
+    }
+
+    // 2. Add loading state
+    container.innerHTML = '<p class="text-center text-muted">Loading your submissions...</p>';
+
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) return;
+    
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) {
+      container.innerHTML = '<p class="text-sm text-slate-500">Please log in to view submissions.</p>';
+      return;
+    }
+
+    const { data, error } = await db
       .from('business_directory')
       .select('*')
       .eq('user_id', user.id)
@@ -404,11 +413,13 @@ async function loadMyBusinesses() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      myBusinessesList.innerHTML = '<p class="text-sm text-slate-500 italic">You have not submitted any businesses yet.</p>';
+      container.innerHTML = '<p class="text-center text-muted">You have not submitted any businesses yet.</p>';
       return;
     }
 
-    MyBusinessesList.innerHTML = data.map(item => {
+    // 3. Render the list
+    let html = '';
+    data.forEach(item => {
       const statusVal = item.status ? item.status.toLowerCase() : (item.is_approved ? 'approved' : 'pending');
       let badgeText = 'Pending Approval';
       let badgeClass = 'bg-gray-100 text-gray-800 border border-gray-300';
@@ -418,22 +429,27 @@ async function loadMyBusinesses() {
         badgeClass = 'bg-green-100 text-green-800 border border-green-300';
       }
 
-      return `
-        <div class="card mb-2 border-secondary shadow-sm">
+      html += `
+        <div class="card mb-2 shadow-sm border-0 border-start border-4 ${statusVal === 'approved' ? 'border-success' : 'border-secondary'}">
           <div class="card-body d-flex justify-content-between align-items-center p-3">
             <div>
               <h6 class="mb-0 text-primary">${escapeHTML(item.name || item.title || item.business_name || 'Untitled')}</h6>
               <small class="text-muted">${escapeHTML(item.category || 'General')}</small>
             </div>
-            <span class="badge rounded-pill px-2.5 py-1 text-xs font-semibold ${badgeClass}">${badgeText}</span>
+            <span class="badge ${badgeClass}">${badgeText}</span>
           </div>
         </div>
       `;
-    }).join('');
+    });
 
-  } catch (error) {
-    console.error('Error loading my businesses:', error);
-    myBusinessesList.innerHTML = `<p class="text-xs text-red-600">Error loading submissions: ${escapeHTML(error.message)}</p>`;
+    // 4. Inject into the DOM
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error('Error loading my businesses:', err);
+    // Ensure fallback error UI uses the defined container
+    const fallbackContainer = document.getElementById('myBusinessesList') || document.getElementById('my-businesses-list');
+    if (fallbackContainer) fallbackContainer.innerHTML = '<p class="text-danger small">Failed to load businesses.</p>';
   }
 }
 
