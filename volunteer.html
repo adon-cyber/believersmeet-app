@@ -101,17 +101,27 @@
             try {
                 console.log('🚨 FORCING RAW FETCH FROM volunteer_roster...');
                 
-                // 2. Fetch ABSOLUTELY EVERYTHING. No church_id filters, no active filters.
-                let { data: slots, error } = await window.sbClient
+                // 2. Fetch rosters safely, then signups and stitch them in JS
+                let { data: slots, error: rosterError } = await window.sbClient
                     .from('volunteer_roster')
-                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))');
+                    .select('*');
 
-                if (error) {
-                    console.warn('Relation fetch failed, trying flat fetch:', error);
-                    const flat = await window.sbClient.from('volunteer_roster').select('*');
-                    slots = flat.data;
-                    error = flat.error;
+                if (rosterError) throw rosterError;
+
+                let { data: signups, error: signupsError } = await window.sbClient
+                    .from('volunteer_signups')
+                    .select('*, profiles(full_name, email, phone, avatar_url)');
+
+                if (signupsError) {
+                    console.warn('Could not fetch volunteer signups relation safely:', signupsError);
                 }
+
+                slots = (slots || []).map(slot => {
+                    return {
+                        ...slot,
+                        volunteer_signups: signups ? signups.filter(s => s.roster_id === slot.id || s.event_id === slot.id) : []
+                    };
+                });
 
                 console.log('🚨 RAW DATABASE RESPONSE ERROR:', error);
                 console.log('🚨 RAW DATABASE RESPONSE DATA:', slots);

@@ -1887,26 +1887,29 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
 
                 let query = window.sbClient
                     .from('volunteer_roster')
-                    .select('*, volunteer_signups(*, profiles(full_name, email, phone, avatar_url))');
+                    .select('*');
 
                 if (!isSuperAdmin && adminChurchId) {
                     query = query.eq('church_id', adminChurchId);
                 }
 
-                let { data: slots, error } = await query.order('event_date', { ascending: true });
+                let { data: slots, error: rosterError } = await query.order('event_date', { ascending: true });
+                if (rosterError) throw rosterError;
 
-                if (error) {
-                    console.warn('Fallback: fetching volunteer_roster without signups relation...');
-                    let fallbackQuery = window.sbClient.from('volunteer_roster').select('*');
-                    if (!isSuperAdmin && adminChurchId) {
-                        fallbackQuery = fallbackQuery.eq('church_id', adminChurchId);
-                    }
-                    const fallback = await fallbackQuery.order('event_date', { ascending: true });
-                    slots = fallback.data;
-                    error = fallback.error;
+                let { data: signups, error: signupsError } = await window.sbClient
+                    .from('volunteer_signups')
+                    .select('*, profiles(full_name, email, phone, avatar_url)');
+
+                if (signupsError) {
+                    console.warn('Could not fetch volunteer signups relation safely:', signupsError);
                 }
 
-                if (error) throw error;
+                slots = (slots || []).map(slot => {
+                    return {
+                        ...slot,
+                        volunteer_signups: signups ? signups.filter(s => s.roster_id === slot.id || s.event_id === slot.id) : []
+                    };
+                });
 
                 if (!slots || slots.length === 0) {
                     container.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">No volunteer serving slots created yet.</div>`;
