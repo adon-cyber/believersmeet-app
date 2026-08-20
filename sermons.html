@@ -665,25 +665,25 @@
                 return;
             }
 
-            const mediaData = {
-                church_id: currentUserProfile.church_id,
+            const payload = {
+                church_id: currentUserProfile.church_id || null,
                 title: video.title || 'Untitled',
-                preacher: video.channelTitle || video.preacher || 'YouTube Channel',
-                category: video.category || 'Sermon',
-                media_type: 'youtube',
-                media_url: video.url || video.media_url || `https://www.youtube.com/watch?v=${video.id}`,
+                media_url: video.url || video.media_url || `https://www.youtube.com/watch?v=${video.id}` || '',
+                video_url: video.url || video.video_url || `https://www.youtube.com/watch?v=${video.id}` || '',
+                audio_url: video.audio_url || '',
                 thumbnail_url: video.thumbnail || video.thumbnail_url || '',
+                category: video.category || 'General',
+                media_type: 'video',
+                preacher: video.channelTitle || video.preacher || 'YouTube Channel',
                 description: video.description || '',
                 created_at: new Date().toISOString()
             };
 
-            const { error } = await window.sbClient
-                .from('sermons')
-                .insert([mediaData]);
+            const { data, error } = await window.sbClient.from('sermons').insert([payload]);
 
             if (error) {
+                console.error('Save error details:', error);
                 alert('Failed to save video to church library: ' + error.message);
-                console.error(error);
                 return;
             }
 
@@ -805,19 +805,25 @@
                 const record = {
                     church_id: currentUserProfile.church_id || null,
                     title: title || 'Untitled',
-                    preacher: preacher || 'Unknown',
-                    category: category || 'Sermon',
-                    media_type: mediaType === 'youtube' ? 'youtube' : (mediaType === 'video' ? 'video' : 'audio'),
                     media_url: mediaUrl || '',
+                    video_url: mediaUrl || '',
+                    audio_url: '',
+                    thumbnail_url: '',
+                    category: category || 'General',
+                    media_type: 'video',
+                    preacher: preacher || 'Unknown',
                     description: description || '',
                     created_at: new Date().toISOString()
                 };
 
-                const { error } = await window.sbClient
+                const { data, error } = await window.sbClient
                     .from('sermons')
                     .insert([record]);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Save error details:', error);
+                    throw error;
+                }
 
                 alert('Media successfully uploaded and saved to Supabase!');
                 closeUploadModal();
