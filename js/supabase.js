@@ -1,6 +1,6 @@
 // js/supabase.js
-const SUPABASE_URL = 'https://tgwbhvutozgcmnthxhzo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnd2JodnV0b3pnY21udGh4aHpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NTkwOTQsImV4cCI6MjA5NzQzNTA5NH0.4pDoAZU8nHxGyE8ad3DCfhJEQCPrWA148QERjtE_ooQ';
+// SUPABASE_URL and SUPABASE_ANON_KEY are declared in js/supabase-config.js.
+// Helper methods and wrappers for Supabase client.
 
 // Initialize the Supabase client once and attach globally to both window.supabaseClient and window.sbClient
 if (typeof supabase !== 'undefined' && !window.supabaseClient) {

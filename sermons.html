@@ -222,7 +222,6 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
-    <script src="js/supabase.js"></script>
     <script>
         let currentUserProfile = null;
         let activeScopeTab = 'fellow'; // 'fellow' or 'other'
@@ -790,7 +789,8 @@
 
             const title = document.getElementById('upload-title').value.trim();
             const mediaType = document.getElementById('upload-media-type').value.toLowerCase();
-            const category = document.getElementById('upload-category').value;
+            const categorySelect = document.getElementById('upload-category');
+            const category = categorySelect && categorySelect.value ? categorySelect.value : 'Sermon';
             const preacher = document.getElementById('upload-preacher').value.trim();
             const mediaUrl = document.getElementById('upload-media-url').value.trim();
             const description = document.getElementById('upload-description').value.trim();

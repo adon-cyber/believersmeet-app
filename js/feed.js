@@ -1452,4 +1452,32 @@ async function loadChurchProgrammes() {
   }
 }
 
+window.optOutEvent = async function(eventId) {
+  try {
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) return alert("Database client not found.");
+    
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return alert("Please log in first.");
+
+    if (!confirm("Are you sure you want to opt out of this event?")) return;
+
+    const { error } = await db
+      .from('event_registrations')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('profile_id', user.id);
+
+    if (error) throw error;
+    
+    alert("You have successfully opted out.");
+    
+    if (typeof loadEvents === 'function') loadEvents();
+    if (typeof loadChurchProgrammes === 'function') loadChurchProgrammes();
+  } catch (err) {
+    console.error('Error opting out:', err);
+    alert("Failed to opt out. Please try again.");
+  }
+};
+
 
