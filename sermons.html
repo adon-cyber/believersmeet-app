@@ -667,11 +667,13 @@
 
             const mediaData = {
                 church_id: currentUserProfile.church_id,
-                title: video.title,
-                preacher: video.channelTitle || 'YouTube Channel',
-                category: 'Sermon',
+                title: video.title || 'Untitled',
+                preacher: video.channelTitle || video.preacher || 'YouTube Channel',
+                category: video.category || 'Sermon',
                 media_type: 'youtube',
-                media_url: `https://www.youtube.com/watch?v=${video.id}`,
+                media_url: video.url || video.media_url || `https://www.youtube.com/watch?v=${video.id}`,
+                thumbnail_url: video.thumbnail || video.thumbnail_url || '',
+                description: video.description || '',
                 created_at: new Date().toISOString()
             };
 
@@ -801,13 +803,13 @@
 
             try {
                 const record = {
-                    church_id: currentUserProfile.church_id,
-                    title: title,
-                    preacher: preacher,
-                    category: category,
+                    church_id: currentUserProfile.church_id || null,
+                    title: title || 'Untitled',
+                    preacher: preacher || 'Unknown',
+                    category: category || 'Sermon',
                     media_type: mediaType === 'youtube' ? 'youtube' : (mediaType === 'video' ? 'video' : 'audio'),
-                    media_url: mediaUrl,
-                    description: description,
+                    media_url: mediaUrl || '',
+                    description: description || '',
                     created_at: new Date().toISOString()
                 };
 
