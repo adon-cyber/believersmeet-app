@@ -1390,58 +1390,75 @@ async function loadChurchProgrammes() {
   if (!db) return;
 
   try {
+    const currentChurchId = (typeof currentUserProfile !== 'undefined' && currentUserProfile && currentUserProfile.church_id) ? currentUserProfile.church_id : null;
+
     let query = db
       .from('events') 
       .select('*')
-      .eq('category', 'church_programme');
+      .gte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true })
+      .limit(5);
 
-    if (typeof currentUserProfile !== 'undefined' && currentUserProfile && currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
-      query = query.eq('church_id', currentUserProfile.church_id);
+    if (currentChurchId && currentChurchId !== 'global-fellowship') {
+      query = query.eq('church_id', currentChurchId);
     }
 
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(10); // Show the latest 10 programmes
+    let { data: programmes, error } = await query;
 
-    if (error) throw error;
+    // If no events found with church_id or category, try fallback query without church filter or fetch general events
+    if (error || !programmes || programmes.length === 0) {
+      const fallbackQuery = db
+        .from('events')
+        .select('*')
+        .gte('event_date', new Date().toISOString())
+        .order('event_date', { ascending: true })
+        .limit(5);
+      const fallbackRes = await fallbackQuery;
+      programmes = fallbackRes.data || [];
+    }
 
-    if (!data || data.length === 0) {
+    if (!programmes || programmes.length === 0) {
       container.innerHTML = `
-        <div class="text-center text-muted p-4 border border-secondary rounded bg-light">
-          No upcoming programmes at the moment. Check back soon!
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+          <p class="text-gray-500 text-sm py-2">No upcoming church programmes at the moment. Check back soon!</p>
         </div>`;
       return;
     }
 
-    let html = '<div class="d-flex flex-column gap-3">';
-    data.forEach(item => {
-      // Fallback variables to handle different possible column names
-      const title = item.title || item.name || 'Church Event';
+    let html = '<div class="space-y-4">';
+    programmes.forEach(item => {
+      const title = item.title || item.name || 'Church Programme';
+      const category = item.category || 'Church Event';
       const description = item.description || item.details || '';
       const dateVal = item.event_date || item.date || '';
       
       let dateFormatted = '';
       if (dateVal) {
         try {
-          dateFormatted = new Date(dateVal).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const d = new Date(dateVal);
+          dateFormatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' • ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         } catch (e) {
           dateFormatted = dateVal;
         }
       }
 
-      const time = item.time || item.event_time || '';
-      
-      const dateTimeString = dateFormatted ? `🕒 ${dateFormatted} ${time ? 'at ' + time : ''}` : '🕒 Time TBA';
+      const location = item.location || item.venue || 'Main Sanctuary';
 
       html += `
-        <div class="card shadow-sm mb-3 border-0">
-          <div class="card-body">
-            <h6 class="text-primary fw-bold">${escapeHTML(title)}</h6>
-            ${description ? `<p class="text-muted small mb-2">${escapeHTML(description)}</p>` : ''}
-            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-              <span class="small text-secondary fw-semibold">${escapeHTML(dateTimeString)}</span>
-              ${item.location ? `<span class="badge bg-light text-dark border small">📍 ${escapeHTML(item.location)}</span>` : ''}
+        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">${escapeHTML(category)}</span>
+              <span class="text-xs font-semibold text-gray-500">🕒 ${escapeHTML(dateFormatted || 'Time TBA')}</span>
             </div>
+            <h4 class="text-base font-bold text-gray-900 mb-1">${escapeHTML(title)}</h4>
+            <p class="text-xs text-gray-600 mb-2">📍 <strong>${escapeHTML(location)}</strong></p>
+            ${description ? `<p class="text-xs text-gray-700 leading-relaxed">${escapeHTML(description)}</p>` : ''}
+          </div>
+          <div class="flex justify-end pt-2 border-t border-gray-100">
+            <a href="events.html" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow-sm inline-flex items-center gap-1.5">
+              <span>📅</span> RSVP / Details
+            </a>
           </div>
         </div>
       `;
@@ -1451,7 +1468,7 @@ async function loadChurchProgrammes() {
 
   } catch (err) {
     console.error('Error fetching church programmes:', err);
-    container.innerHTML = `<div class="text-danger small p-2">Failed to load programmes: ${escapeHTML(err.message)}</div>`;
+    container.innerHTML = `<div class="bg-white p-5 rounded-xl border border-red-200 text-center"><p class="text-red-500 text-xs">Failed to load programmes: ${escapeHTML(err.message)}</p></div>`;
   }
 }
 
