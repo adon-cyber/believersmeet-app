@@ -128,12 +128,11 @@
     <!-- Global View Selector Dropdown -->
     <div class="card border-0 shadow-sm mb-4 p-3 bg-white rounded-2xl border border-gray-200">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
-            <span class="fw-bold text-secondary fs-6 text-gray-700 font-bold flex items-center gap-2">🔍 Active View:</span>
-            <select id="events-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" data-target-group="page-sections">
-                <option value="all">Show All Sections</option>
-                <option value="upcoming">Upcoming Programmes</option>
-                <option value="rsd">My RSVPs & Coupons</option>
-                <option value="archive">Event Archive</option>
+            <span class="fw-bold text-secondary fs-6 text-gray-700 font-bold flex items-center gap-2"><span>👁️</span> Filter Event View:</span>
+            <select id="events-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchEventView(this.value)">
+                <option value="all" selected>🌟 Show All Sections</option>
+                <option value="upcoming">📅 Upcoming Programmes</option>
+                <option value="registrations">🎟️ Event Registrations</option>
             </select>
         </div>
     </div>
@@ -210,14 +209,14 @@
     </div>
 
     <!-- Events Grid Section -->
-    <div id="events-section" class="space-y-6">
+    <div id="widget-upcoming" class="space-y-6">
         <div id="events-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading events...</div>
         </div>
     </div>
 
     <!-- Volunteer Roster Section -->
-    <div id="volunteer-roster-section" class="hidden space-y-6">
+    <div id="widget-registrations" class="hidden space-y-6">
         <div class="bg-gradient-to-r from-slate-900 to-blue-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2">
@@ -1478,6 +1477,26 @@
                 alert("You have opted out of this event.");
             }
         }
+    };
+
+    window.switchEventView = function(selected) {
+        const mapping = {
+            upcoming: document.getElementById('widget-upcoming'),
+            registrations: document.getElementById('widget-registrations')
+        };
+
+        Object.keys(mapping).forEach(key => {
+            const el = mapping[key];
+            if (el) {
+                if (selected === 'all' || selected === key) {
+                    el.style.display = 'block';
+                    el.classList.remove('hidden', 'd-none');
+                } else {
+                    el.style.display = 'none';
+                    el.classList.add('hidden', 'd-none');
+                }
+            }
+        });
     };
 
     initApp();

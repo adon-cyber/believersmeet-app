@@ -1936,5 +1936,27 @@ async function markCommunityNeedFulfilled(needId) {
     }
 }
 
+window.switchFeedView = function(selected) {
+  const mapping = {
+    votd: document.getElementById('widget-votd'),
+    needs: document.getElementById('widget-needs') || document.getElementById('community-needs-section'),
+    programmes: document.getElementById('widget-programmes') || document.getElementById('church-programmes-section')
+  };
+
+  Object.keys(mapping).forEach(key => {
+    const el = mapping[key];
+    if (el) {
+      if (selected === 'all' || selected === key) {
+        el.style.display = 'block';
+        el.classList.remove('d-none');
+      } else {
+        el.style.display = 'none';
+        el.classList.add('d-none');
+      }
+    }
+  });
+};
+
+
 
 

@@ -55,13 +55,17 @@
         <!-- Global View Selector Dropdown -->
         <div class="card border-0 shadow-sm mb-4 p-3 bg-slate-900 rounded-2xl border border-slate-800">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
-                <span class="fw-bold text-secondary fs-6 text-slate-300 font-bold flex items-center gap-2">🔍 Active View:</span>
-                <select id="admin-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" data-target-group="page-sections">
-                    <option value="all">Show All Sections</option>
-                    <option value="overview">Overview & Dashboard</option>
-                    <option value="users">User Management</option>
-                    <option value="settings">Church Settings</option>
-                    <option value="moderation">Content Moderation</option>
+                <span class="fw-bold text-secondary fs-6 text-slate-300 font-bold flex items-center gap-2"><span>👁️</span> Filter Admin View:</span>
+                <select id="admin-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchAdminView(this.value)">
+                    <option value="all" selected>🌟 Show All Sections</option>
+                    <option value="global">🌐 Global System Admin</option>
+                    <option value="dashboard">⛪ Church Dashboard</option>
+                    <option value="counseling">💬 Counseling Requests</option>
+                    <option value="documents">📁 Document Manager</option>
+                    <option value="roster">🤝 Volunteer Roster</option>
+                    <option value="pesapal">💳 Pesapal Settings</option>
+                    <option value="prayer">🙏 Prayer & Ministry Requests</option>
+                    <option value="businesses">🏢 Business Approvals</option>
                 </select>
             </div>
         </div>
@@ -829,6 +833,35 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 alert("Failed to update status: " + err.message);
             }
         }
+
+        window.switchAdminView = function(selected) {
+            const mapping = {
+                global: document.getElementById('global-admin-view'),
+                dashboard: document.getElementById('church-dashboard-view'),
+                counseling: document.getElementById('counseling-content'),
+                documents: document.getElementById('document-content'),
+                roster: document.getElementById('roster-content'),
+                pesapal: document.getElementById('pesapal-content'),
+                prayer: document.getElementById('prayer-content'),
+                businesses: document.getElementById('businesses-content')
+            };
+
+            Object.keys(mapping).forEach(key => {
+                const el = mapping[key];
+                if (el) {
+                    if (selected === 'all' || selected === key) {
+                        el.style.display = 'block';
+                        el.classList.remove('hidden', 'd-none');
+                    } else {
+                        el.style.display = 'none';
+                        el.classList.add('hidden', 'd-none');
+                    }
+                }
+            });
+            if (selected === 'dashboard' && typeof initChurchDashboardView === 'function') {
+                initChurchDashboardView();
+            }
+        };
 
         window.switchAdminTab = function(tab) {
             const globalView = document.getElementById('global-admin-view');
