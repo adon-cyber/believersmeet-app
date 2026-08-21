@@ -11,8 +11,12 @@
     <!-- Upgraded to Tailwind v3 to support slate colors, backdrop-blur, and arbitrary variants -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light" style="display: block !important; background-color: #f8f9fa !important;">
+<body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col" style="display: block !important;">
     <nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
     <div class="flex items-center gap-8">
         <span class="text-xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
@@ -50,33 +54,35 @@
 </nav>
 
     <!-- Main Content Area -->
-    <main class="w-full max-w-full px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow overflow-hidden">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
         <!-- Hero Banner -->
-        <div class="bg-primary text-white p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
-            <h2 class="fw-bold mb-2"><i class="bi bi-calendar-event me-2"></i> Admin Console</h2>
-            <p class="mb-0 text-white-50 fs-5">Manage church members, events, content, and system settings.</p>
-        </div>
-        
-        <!-- Global View Selector Dropdown -->
-        <div class="card border-0 shadow-sm mb-4 p-3 bg-slate-900 rounded-2xl border border-slate-800">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
-                <span class="fw-bold text-secondary fs-6 text-slate-300 font-bold flex items-center gap-2"><span>👁️</span> Filter Admin View:</span>
-                <select id="admin-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchAdminView(this.value)">
-                    <option value="all" selected>🌟 Show All Sections</option>
-                    <option value="global">🌐 Global System Admin</option>
-                    <option value="dashboard">⛪ Church Dashboard</option>
-                    <option value="counseling">💬 Counseling Requests</option>
-                    <option value="documents">📁 Document Manager</option>
-                    <option value="roster">🤝 Volunteer Roster</option>
-                    <option value="pesapal">💳 Pesapal Settings</option>
-                    <option value="prayer">🙏 Prayer & Ministry Requests</option>
-                    <option value="businesses">🏢 Business Approvals</option>
-                </select>
+        <div class="bg-gradient-to-r from-blue-950/90 to-slate-900/90 border border-slate-800 p-8 rounded-2xl shadow-xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-white">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-2">
+                    <i class="fas fa-cog text-blue-400"></i> Admin Console
+                </h1>
+                <p class="text-slate-300 text-base">Manage church members, events, content, and system settings.</p>
             </div>
         </div>
         
+        <!-- Global View Selector Dropdown -->
+        <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 p-4 rounded-2xl shadow-xl mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <span class="text-slate-200 font-bold text-sm flex items-center gap-2"><span>👁️</span> Filter Admin View:</span>
+            <select id="admin-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchAdminView(this.value)">
+                <option value="all" selected>🌟 Show All Sections</option>
+                <option value="global">🌐 Global System Admin</option>
+                <option value="dashboard">⛪ Church Dashboard</option>
+                <option value="counseling">💬 Counseling Requests</option>
+                <option value="documents">📁 Document Manager</option>
+                <option value="roster">🤝 Volunteer Roster</option>
+                <option value="pesapal">💳 Pesapal Settings</option>
+                <option value="prayer">🙏 Prayer & Ministry Requests</option>
+                <option value="businesses">🏢 Business Approvals</option>
+            </select>
+        </div>
+        
         <!-- 1. TAB NAVIGATION -->
-        <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden overflow-x-auto whitespace-nowrap pb-2 w-full max-w-full scroll-smooth scrollbar-hide">
+        <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden overflow-x-auto whitespace-nowrap pb-2 w-full max-w-full scroll-smooth no-scrollbar">
             <button id="tab-btn-global" onclick="switchAdminTab('global')" class="py-2.5 px-5 text-sm font-bold border-b-2 focus:outline-none transition border-blue-500 text-blue-400 shrink-0">
                 🌐 Global System Admin
             </button>
@@ -210,17 +216,21 @@
                 
                 <!-- Join Church Requests Container -->
                 <div id="join-church-section" class="mb-4">
-                  <h5 class="text-light border-bottom border-secondary pb-2">⛪ Public Join Church Requests</h5>
+                  <h3 class="text-xl font-bold text-slate-100 border-b border-slate-700 pb-3 mb-4 flex items-center gap-2">
+                      <i class="fas fa-church text-blue-400"></i> Public Join Church Requests
+                  </h3>
                   <div id="join-requests-container" class="my-2">
-                    <div class="text-center text-muted py-3 small">Loading church join requests...</div>
+                    <div class="text-center text-slate-400 py-3 text-sm">Loading church join requests...</div>
                   </div>
                 </div>
 
                 <!-- Prayer Requests Container -->
                 <div id="prayer-requests-section" class="mb-4">
-                  <h5 class="text-light border-bottom border-secondary pb-2">🙏 Public Prayer Requests</h5>
+                  <h3 class="text-xl font-bold text-slate-100 border-b border-slate-700 pb-3 mb-4 flex items-center gap-2">
+                      <i class="fas fa-pray text-blue-400"></i> Public Prayer Requests
+                  </h3>
                   <div id="prayer-requests-container" class="my-2">
-                    <div class="text-center text-muted py-3 small">Loading prayer requests...</div>
+                    <div class="text-center text-slate-400 py-3 text-sm">Loading prayer requests...</div>
                   </div>
                 </div>
 
