@@ -1709,7 +1709,7 @@ async function loadCommunityNeeds(categoryFilter = 'All') {
     try {
         let query = db
             .from('community_needs')
-            .select('*, profiles:user_id(full_name)')
+            .select('*')
             .eq('status', 'open');
 
         if (currentUserProfile && currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
@@ -1726,7 +1726,7 @@ async function loadCommunityNeeds(categoryFilter = 'All') {
         }
 
         if (needs.length === 0) {
-            container.innerHTML = `<p class="col-span-full text-center text-gray-500 text-sm py-8">No open community needs found under "${escapeHTML(categoryFilter)}". Be the first to post a need or offer a ride!</p>`;
+            container.innerHTML = `<p class="text-center text-muted py-4">No open requests right now. Be the first to post!</p>`;
             return;
         }
 
@@ -1841,29 +1841,32 @@ async function submitCommunityNeed(event) {
             return;
         }
 
-        const category = document.getElementById('needCategory').value;
-        const title = document.getElementById('needTitle').value.trim();
-        const description = document.getElementById('needDescription').value.trim();
-        const contactInfo = document.getElementById('needContactInfo').value.trim();
+        const categoryValue = document.getElementById('needCategory').value;
+        const titleValue = document.getElementById('needTitle').value.trim();
+        const descriptionValue = document.getElementById('needDescription').value.trim();
+        const contactValue = document.getElementById('needContactInfo').value.trim();
+        const currentChurchId = currentUserProfile && currentUserProfile.church_id ? currentUserProfile.church_id : null;
 
-        if (!category || !title || !contactInfo) {
+        if (!categoryValue || !titleValue || !contactValue) {
             alert("Please fill out all required fields.");
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Publish Need';
+            }
             return;
         }
 
         const payload = {
-            church_id: currentUserProfile && currentUserProfile.church_id ? currentUserProfile.church_id : null,
             user_id: user.id,
-            category: category,
-            title: title,
-            description: description,
-            contact_info: contactInfo,
+            church_id: currentChurchId, // pass active church id from state/session
+            category: categoryValue,
+            title: titleValue,
+            description: descriptionValue,
+            contact_info: contactValue,
             status: 'open'
         };
 
-        const { error } = await db
-            .from('community_needs')
-            .insert([payload]);
+        const { data, error } = await db.from('community_needs').insert([payload]);
 
         if (error) throw error;
 
