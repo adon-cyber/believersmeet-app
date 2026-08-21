@@ -12,7 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col overflow-x-hidden w-full max-w-[100vw]"></body>
+<body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col overflow-x-hidden w-full max-w-[100vw] text-slate-800 bg-light">
     <nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
     <div class="flex items-center gap-8">
         <span class="text-xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
@@ -51,6 +51,11 @@
 
     <!-- Main Content Area -->
     <main class="w-full max-w-full px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow overflow-hidden">
+        <!-- Hero Banner -->
+        <div class="bg-primary text-white p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+            <h2 class="fw-bold mb-2"><i class="bi bi-calendar-event me-2"></i> Admin Console</h2>
+            <p class="mb-0 text-white-50 fs-5">Manage church members, events, content, and system settings.</p>
+        </div>
         
         <!-- Global View Selector Dropdown -->
         <div class="card border-0 shadow-sm mb-4 p-3 bg-slate-900 rounded-2xl border border-slate-800">

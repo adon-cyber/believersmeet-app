@@ -43,7 +43,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body style="display: none;" class="min-h-screen flex flex-col font-sans text-slate-100 bg-giving-light antialiased selection:bg-blue-500 selection:text-white">
+<body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white">
 
 <!-- Navigation Bar -->
 <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -72,15 +72,17 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
     
     <!-- Page Header with Edit Button Container -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-white mb-2">Tithes & Offerings</h1>
-            <p class="text-blue-100 text-base">Worship through your giving using bank transfer or automated secure checkout.</p>
-        </div>
-        <div id="edit-giving-container" class="hidden">
-            <button onclick="openEditGivingModal()" class="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg shadow transition-all flex items-center gap-2 text-sm">
-                <i class="fas fa-edit"></i> Edit Giving Details
-            </button>
+    <div class="bg-primary text-white p-4 p-md-5 mb-4 shadow-sm max-w-4xl mx-auto my-6" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="fw-bold mb-2"><i class="bi bi-calendar-event me-2"></i> Tithes & Offerings</h2>
+                <p class="mb-0 text-white-50 fs-5">Worship through your giving using bank transfer or automated secure checkout.</p>
+            </div>
+            <div id="edit-giving-container" class="hidden">
+                <button onclick="openEditGivingModal()" class="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg shadow transition-all flex items-center gap-2 text-sm">
+                    <i class="fas fa-edit"></i> Edit Giving Details
+                </button>
+            </div>
         </div>
     </div>
 

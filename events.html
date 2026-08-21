@@ -81,7 +81,7 @@
         }
     </style>
 </head>
-<body style="display: none;" class="min-h-screen flex flex-col font-sans text-slate-100 bg-events-dynamic antialiased selection:bg-blue-500 selection:text-white">
+<body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white">
 
 <!-- Navigation Bar -->
 <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -110,12 +110,10 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full space-y-6">
     
     <!-- Banner & Action Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Believers Community Events</h1>
-            <p class="text-blue-100 mt-1 text-sm sm:text-base">Discover fellowship gatherings, Bible studies, conferences, and manage your entry coupons.</p>
-        </div>
-        <div class="flex flex-wrap gap-3">
+    <div class="bg-primary text-white p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+        <h2 class="fw-bold mb-2"><i class="bi bi-calendar-event me-2"></i> Church Events</h2>
+        <p class="mb-0 text-white-50 fs-5">Discover upcoming church gatherings, conferences, and community fellowship events.</p>
+        <div class="mt-4 flex flex-wrap gap-3">
             <button onclick="openCouponModal()" class="px-5 py-2.5 bg-white bg-opacity-20 backdrop-blur text-white font-bold rounded-xl shadow hover:bg-opacity-30 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2 border border-white border-opacity-30">
                 <span>🎟️</span> Find / Download Coupon
             </button>
