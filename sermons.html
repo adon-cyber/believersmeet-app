@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sermons & Worship Media - BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -408,7 +409,9 @@
           if (!url) return '';
           const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
           const match = url.match(regExp);
-          return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+          return (match && match[2].length === 11) 
+            ? `https://www.youtube-nocookie.com/embed/${match[2]}` 
+            : null;
         }
 
         // Smart Global Media Player Controller
@@ -648,7 +651,7 @@
             }
 
             document.getElementById('modal-video-title').textContent = video.title;
-            document.getElementById('modal-youtube-iframe').src = `https://www.youtube.com/embed/${video.id}?autoplay=1`;
+            document.getElementById('modal-youtube-iframe').src = `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1`;
             modal.classList.remove('hidden');
         }
 
