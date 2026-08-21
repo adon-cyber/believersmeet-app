@@ -76,3 +76,28 @@ window.verifyMemberDownloadAuth = async function() {
     return true;
 };
 window.downloadMediaFile = window.handleSecureDownload;
+
+/**
+ * Universal utility function to setup page switchers/view selectors
+ * @param {string} selectElementId - The ID of the select element
+ * @param {Object} sectionMap - Mapping of option values to section element IDs
+ */
+window.setupPageSwitcher = function(selectElementId, sectionMap) {
+  const select = document.getElementById(selectElementId);
+  if (!select) return;
+  
+  select.addEventListener('change', (e) => {
+    const selected = e.target.value;
+    Object.keys(sectionMap).forEach(key => {
+      const el = document.getElementById(sectionMap[key]);
+      if (el) {
+        if (selected === 'all' || selected === key) {
+          el.classList.remove('d-none');
+        } else {
+          el.classList.add('d-none');
+        }
+      }
+    });
+  });
+};
+
