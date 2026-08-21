@@ -6,6 +6,7 @@
     <title>Admin Dashboard | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/app-utils.js"></script>
     <script src="js/theme.js"></script>
     <!-- Upgraded to Tailwind v3 to support slate colors, backdrop-blur, and arbitrary variants -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -50,6 +51,20 @@
 
     <!-- Main Content Area -->
     <main class="w-full max-w-full px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow overflow-hidden">
+        
+        <!-- Global View Selector Dropdown -->
+        <div class="card border-0 shadow-sm mb-4 p-3 bg-slate-900 rounded-2xl border border-slate-800">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
+                <span class="fw-bold text-secondary fs-6 text-slate-300 font-bold flex items-center gap-2">🔍 Active View:</span>
+                <select id="admin-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" data-target-group="page-sections">
+                    <option value="all">Show All Sections</option>
+                    <option value="overview">Overview & Dashboard</option>
+                    <option value="users">User Management</option>
+                    <option value="settings">Church Settings</option>
+                    <option value="moderation">Content Moderation</option>
+                </select>
+            </div>
+        </div>
         
         <!-- 1. TAB NAVIGATION -->
         <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden overflow-x-auto whitespace-nowrap pb-2 w-full max-w-full scroll-smooth scrollbar-hide">
@@ -2642,6 +2657,14 @@ function renderVolunteerList(signups, container) {
 }
 
         initPage();
+        if (typeof setupPageSwitcher === 'function') {
+            setupPageSwitcher('admin-view-switcher', {
+                'overview': 'global-admin-view',
+                'users': 'user-management-section',
+                'settings': 'church-dashboard-view',
+                'moderation': 'counseling-content'
+            });
+        }
     </script>
     <script src="js/admin-events.js"></script>
     <script src="js/notifications.js"></script>

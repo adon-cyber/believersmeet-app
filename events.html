@@ -6,6 +6,7 @@
     <title>Events & Coupons | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/app-utils.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -121,6 +122,19 @@
             <button onclick="openEventModal()" id="createEventBtn" style="display: none;" class="px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl shadow hover:bg-blue-50 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2">
                 <span>+</span> Host an Event
             </button>
+        </div>
+    </div>
+
+    <!-- Global View Selector Dropdown -->
+    <div class="card border-0 shadow-sm mb-4 p-3 bg-white rounded-2xl border border-gray-200">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
+            <span class="fw-bold text-secondary fs-6 text-gray-700 font-bold flex items-center gap-2">🔍 Active View:</span>
+            <select id="events-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" data-target-group="page-sections">
+                <option value="all">Show All Sections</option>
+                <option value="upcoming">Upcoming Programmes</option>
+                <option value="rsd">My RSVPs & Coupons</option>
+                <option value="archive">Event Archive</option>
+            </select>
         </div>
     </div>
 
@@ -1472,6 +1486,13 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof fetchRosterData === 'function') {
             fetchRosterData();
+        }
+        if (typeof setupPageSwitcher === 'function') {
+            setupPageSwitcher('events-view-switcher', {
+                'upcoming': 'events-section',
+                'rsd': 'admin-coupon-section',
+                'archive': 'volunteer-roster-section'
+            });
         }
     });
 </script>
