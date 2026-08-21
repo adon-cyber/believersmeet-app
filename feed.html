@@ -184,21 +184,30 @@
             </div>
         </div>
 
-<div id="community-needs-section" class="card shadow-sm mb-4">
-  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">🤝 Fellowship Needs Board</h5>
-    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#postNeedModal" onclick="openCommunityNeedModal()">+ Post Request</button>
+<div id="community-needs-section" class="card shadow-sm mb-4 border-0">
+  <!-- Card Header with dark background for clear text contrast -->
+  <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center rounded-top" style="background-color: #212529 !important; color: #ffffff !important;">
+    <h5 class="mb-0 fw-bold d-flex align-items-center gap-2" style="color: #ffffff !important;">
+      <span>🤝</span> Fellowship Needs Board
+    </h5>
+    <button class="btn btn-warning btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#communityNeedModal" onclick="openCommunityNeedModal()">
+      + Post Request
+    </button>
   </div>
-  <div class="card-body">
-    <div class="btn-group mb-3 w-100 flex-wrap" role="group">
-      <button onclick="filterCommunityNeeds('All', this)" class="needs-filter-btn btn btn-outline-secondary active">All</button>
-      <button onclick="filterCommunityNeeds('Ride Share', this)" class="needs-filter-btn btn btn-outline-secondary">🚗 Ride Share</button>
-      <button onclick="filterCommunityNeeds('Meal Train', this)" class="needs-filter-btn btn btn-outline-secondary">🍲 Meal Train</button>
-      <button onclick="filterCommunityNeeds('Volunteer', this)" class="needs-filter-btn btn btn-outline-secondary">🙌 Volunteer</button>
-      <button onclick="filterCommunityNeeds('General Request', this)" class="needs-filter-btn btn btn-outline-secondary">💬 General</button>
+  
+  <!-- Card Body with clean button pill filters -->
+  <div class="card-body bg-white p-3 rounded-bottom" style="background-color: #ffffff !important; color: #212529 !important;">
+    <div class="d-flex flex-wrap gap-2 mb-3" role="group">
+      <button onclick="filterCommunityNeeds('All', this)" class="needs-filter-btn btn btn-sm btn-outline-primary rounded-pill active">All</button>
+      <button onclick="filterCommunityNeeds('Ride Share', this)" class="needs-filter-btn btn btn-sm btn-outline-primary rounded-pill">🚗 Ride Share</button>
+      <button onclick="filterCommunityNeeds('Meal Train', this)" class="needs-filter-btn btn btn-sm btn-outline-primary rounded-pill">🍲 Meal Train</button>
+      <button onclick="filterCommunityNeeds('Volunteer', this)" class="needs-filter-btn btn btn-sm btn-outline-primary rounded-pill">🙌 Volunteer</button>
+      <button onclick="filterCommunityNeeds('General Request', this)" class="needs-filter-btn btn btn-sm btn-outline-primary rounded-pill">💬 General</button>
     </div>
+    
+    <!-- Requests Container -->
     <div id="community-needs-list" class="row g-3">
-      <!-- Cards will load here -->
+      <p class="text-center text-muted py-4 mb-0">No open requests right now. Be the first to post!</p>
     </div>
   </div>
 </div>
