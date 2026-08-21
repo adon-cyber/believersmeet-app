@@ -403,6 +403,14 @@
             `;}).join('');
         }
 
+        // YouTube Embed Helper Function
+        function getYouTubeEmbedUrl(url) {
+          if (!url) return '';
+          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+          const match = url.match(regExp);
+          return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+        }
+
         // Smart Global Media Player Controller
         function playMediaItem(encodedItem) {
             const item = JSON.parse(decodeURIComponent(encodedItem));
@@ -434,6 +442,8 @@
             activeVideo.pause();
             youtubeTarget.innerHTML = '';
 
+            const embedUrl = getYouTubeEmbedUrl(mediaUrl);
+
             if (mediaType === 'audio') {
                 iconBadge.innerHTML = `<i class="fas fa-headphones"></i>`;
                 audioBar.classList.remove('hidden');
@@ -442,25 +452,23 @@
                 globalAudio.play().catch(e => console.error("Audio playback error:", e));
                 document.getElementById('player-play-icon').className = "fas fa-pause";
 
-            } else if (mediaType === 'video') {
+            } else if (embedUrl) {
+                iconBadge.innerHTML = `<fab class="fab fa-youtube"></fab>`;
+                youtubeWrapper.classList.remove('hidden');
+
+                youtubeTarget.innerHTML = `<iframe src="${embedUrl}" class="w-100" style="aspect-ratio: 16/9;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+
+            } else if (mediaUrl) {
                 iconBadge.innerHTML = `<i class="fas fa-video"></i>`;
                 videoWrapper.classList.remove('hidden');
 
                 activeVideo.src = mediaUrl;
                 activeVideo.play().catch(e => console.error("Video playback error:", e));
 
-            } else if (mediaType === 'youtube') {
-                iconBadge.innerHTML = `<fab class="fab fa-youtube"></fab>`;
+            } else {
+                iconBadge.innerHTML = `<i class="fas fa-exclamation-circle"></i>`;
                 youtubeWrapper.classList.remove('hidden');
-
-                let embedUrl = mediaUrl;
-                if (mediaUrl.includes('watch?v=')) {
-                    embedUrl = mediaUrl.replace('watch?v=', 'embed/');
-                } else if (mediaUrl.includes('youtu.be/')) {
-                    embedUrl = mediaUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-                }
-
-                youtubeTarget.innerHTML = `<iframe src="${embedUrl}?autoplay=1" class="w-full h-full rounded-xl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                youtubeTarget.innerHTML = `<p class="text-muted text-center p-3">No playable media source found for this sermon.</p>`;
             }
         }
 
