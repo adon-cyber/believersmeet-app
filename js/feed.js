@@ -1936,26 +1936,35 @@ async function markCommunityNeedFulfilled(needId) {
     }
 }
 
-window.switchFeedView = function(selected) {
-  const mapping = {
-    votd: document.getElementById('widget-votd'),
-    needs: document.getElementById('widget-needs') || document.getElementById('community-needs-section'),
-    programmes: document.getElementById('widget-programmes') || document.getElementById('church-programmes-section')
+window.switchPageView = function(selected) {
+  // Map dropdown values to their HTML container IDs
+  const sectionMapping = {
+    votd: 'section-votd',
+    needs: 'section-needs',
+    programmes: 'section-programmes',
+    directory: 'section-directory',
+    posts: 'section-posts',
+    gallery: 'section-gallery',
+    discovery: 'section-discovery'
   };
 
-  Object.keys(mapping).forEach(key => {
-    const el = mapping[key];
+  Object.keys(sectionMapping).forEach(key => {
+    const el = document.getElementById(sectionMapping[key]);
     if (el) {
       if (selected === 'all' || selected === key) {
+        // Show
         el.style.display = 'block';
-        el.classList.remove('d-none');
+        el.classList.remove('d-none', 'hidden');
       } else {
+        // Hide
         el.style.display = 'none';
-        el.classList.add('d-none');
+        el.classList.add('d-none', 'hidden');
       }
     }
   });
 };
+
+window.switchFeedView = window.switchPageView;
 
 
 
