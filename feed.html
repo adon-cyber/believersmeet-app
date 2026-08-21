@@ -71,17 +71,21 @@
             <span class="fw-bold text-dark fs-6 d-flex align-items-center gap-2 text-indigo-900 font-bold">
               <span>👁️</span> Filter Feed View:
             </span>
-            <select id="feed-view-select" class="form-select form-select-sm w-auto fw-bold border-primary text-primary px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-600 outline-none" onchange="switchFeedView(this.value)">
+            <select id="feed-view-select" class="form-select form-select-sm w-auto fw-bold border-primary text-primary px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-600 outline-none" onchange="switchPageView(this.value)">
               <option value="all" selected>🌟 Show All Sections</option>
               <option value="votd">📖 Verse of the Day</option>
-              <option value="needs">🤝 Fellowship Needs Board</option>
+              <option value="needs">🤝 Fellowship Needs</option>
               <option value="programmes">📅 Church Programmes</option>
+              <option value="directory">🏢 Business Directory</option>
+              <option value="posts">💬 Community Feed</option>
+              <option value="gallery">📸 Gallery Memories</option>
+              <option value="discovery">🤝 Believer Connect</option>
             </select>
           </div>
         </div>
 
         <!-- Daily Scripture & Personal Reflections Card -->
-        <div id="widget-votd" class="bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 rounded-2xl shadow-md border border-indigo-100">
+        <div id="section-votd" class="bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 rounded-2xl shadow-md border border-indigo-100">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">✨</span>
@@ -156,7 +160,7 @@
         </div>
 
         <!-- Gallery Memories Section -->
-        <div id="gallery-section" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div id="section-gallery" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">📸 Gallery Memories</h3>
                 <div class="flex items-center gap-3">
@@ -198,14 +202,14 @@
         </div>
 
         <!-- Public Business Directory Feed Section -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div id="section-directory" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">🏢 Approved Business & Service Directory</h3>
             <div id="public-business-directory">
                 <p class="text-muted text-center py-4">Loading public business directory...</p>
             </div>
         </div>
 
-<div id="community-needs-section" class="card shadow-sm mb-4 border-0 rounded-2xl overflow-hidden border border-indigo-100">
+<div id="section-needs" class="card shadow-sm mb-4 border-0 rounded-2xl overflow-hidden border border-indigo-100">
   <!-- Card Header with primary app brand gradient/color -->
   <div class="card-header bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between items-center" style="background: linear-gradient(to right, #2563eb, #4f46e5) !important; color: #ffffff !important;">
     <h5 class="mb-0 font-bold flex items-center gap-2 text-white text-base">
@@ -233,7 +237,7 @@
   </div>
 </div>
 
-        <div class="mt-4" id="widget-programmes">
+        <div class="mt-4" id="section-programmes">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="text-primary mb-0">📅 Upcoming Church Programmes</h5>
           </div>
@@ -248,7 +252,7 @@
         </div>
 
         <!-- Believer Fellowship Connect & Discovery Matchmaking Widget -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div id="section-discovery" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-gray-100">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">🤝 Believer Fellowship Connect</h3>
@@ -294,7 +298,7 @@
         </button>
 
         <!-- My Directory Submissions Card -->
-        <div class="card border-0 shadow-sm rounded-3 bg-white rounded-xl shadow-sm p-5 border border-slate-200">
+        <div id="section-directory" class="card border-0 shadow-sm rounded-3 bg-white rounded-xl shadow-sm p-5 border border-slate-200">
             <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 My Directory Submissions

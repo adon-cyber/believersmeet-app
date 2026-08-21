@@ -127,16 +127,17 @@
     <div class="card border-0 shadow-sm mb-4 p-3 bg-white rounded-2xl border border-gray-200">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
             <span class="fw-bold text-secondary fs-6 text-gray-700 font-bold flex items-center gap-2"><span>👁️</span> Filter Event View:</span>
-            <select id="events-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchEventView(this.value)">
+            <select id="events-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchPageView(this.value)">
                 <option value="all" selected>🌟 Show All Sections</option>
-                <option value="upcoming">📅 Upcoming Programmes</option>
-                <option value="registrations">🎟️ Event Registrations</option>
+                <option value="upcoming">📅 Upcoming Events</option>
+                <option value="roster">🤝 Volunteer Roster</option>
+                <option value="admin">⚙️ Admin Coupon Section</option>
             </select>
         </div>
     </div>
 
     <!-- Admin Section: Direct Attendee Registration & Coupon Issuance -->
-    <div id="admin-coupon-section" class="hidden bg-white rounded-2xl border border-blue-200 shadow-sm p-6 space-y-4">
+    <div id="section-admin" class="hidden bg-white rounded-2xl border border-blue-200 shadow-sm p-6 space-y-4">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
             <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <span>⚙️</span> Admin: Issue Attendee Registration & Coupon
