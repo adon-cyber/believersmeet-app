@@ -71,19 +71,17 @@
             <span class="fw-bold text-dark fs-6 d-flex align-items-center gap-2 text-indigo-900 font-bold">
               <span>👁️</span> Filter Feed View:
             </span>
-            <select id="feed-view-select" class="form-select form-select-sm w-auto fw-bold border-primary text-primary px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-600 outline-none" onchange="switchPageView(this.value)">
-              <option value="all" selected>🌟 Show All Sections</option>
-              <option value="votd">📖 Verse of the Day</option>
-              <option value="needs">🤝 Fellowship Needs</option>
-              <option value="programmes">📅 Church Programmes</option>
-              <option value="directory">🏢 Business Directory</option>
-              <option value="posts">💬 Community Feed</option>
-              <option value="gallery">📸 Gallery Memories</option>
-              <option value="discovery">🤝 Believer Connect</option>
-            </select>
+            <select class="form-select form-select-sm w-auto fw-bold border-primary text-primary" onchange="switchFeedView(this.value)">
+  <option value="all" selected>🌟 Show All Sections</option>
+  <option value="votd">📖 Verse of the Day</option>
+  <option value="needs">🤝 Fellowship Needs</option>
+  <option value="programmes">📅 Church Programmes</option>
+  <option value="directory">🏢 My Directory Submissions</option>
+</select>
           </div>
         </div>
 
+        <!-- Daily Scripture & Personal Reflections Card -->
         <!-- Daily Scripture & Personal Reflections Card -->
         <div id="section-votd" class="bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 rounded-2xl shadow-md border border-indigo-100">
             <div class="flex items-center justify-between mb-3">
@@ -297,6 +295,7 @@
           Add Your Business to the Directory
         </button>
 
+        <!-- My Directory Submissions Card -->
         <!-- My Directory Submissions Card -->
         <div id="section-directory" class="card border-0 shadow-sm rounded-3 bg-white rounded-xl shadow-sm p-5 border border-slate-200">
             <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -721,6 +720,40 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'Submit Listing';
         }
     }
+</script>
+
+<script>
+  window.switchFeedView = function(selected) {
+    const sections = {
+      'votd': 'section-votd',
+      'needs': 'section-needs',
+      'programmes': 'section-programmes',
+      'directory': 'section-directory'
+    };
+    
+    // Step 1: Hide everything safely
+    Object.values(sections).forEach(id => {
+      const el = document.getElementById(id);
+      if(el) {
+        el.style.setProperty('display', 'none', 'important');
+      }
+    });
+
+    // Step 2: Show what was selected
+    if (selected === 'all') {
+      Object.values(sections).forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+           el.style.setProperty('display', 'block', 'important');
+        }
+      });
+    } else if (sections[selected]) {
+      const el = document.getElementById(sections[selected]);
+      if(el) {
+         el.style.setProperty('display', 'block', 'important');
+      }
+    }
+  };
 </script>
 </body>
 </html>
