@@ -306,8 +306,9 @@ async function enforceLoginAndLoad() {
         loadMusicPlaylist().catch(err => console.error("Music error:", err)),
         fetchAndRenderWidgetVerse('John 3:16').catch(err => console.error("Bible error:", err)),
         // 4. Load Daily Scripture & Personal Reflections (VOTD)
-    loadDailyVerseAndReflections().catch(err => console.error("VOTD error:", err)),
-    loadChurchProgrammes().catch(err => console.error("Programmes error:", err))
+        loadDailyVerseAndReflections().catch(err => console.error("VOTD error:", err)),
+        loadChurchProgrammes().catch(err => console.error("Programmes error:", err)),
+        loadCommunityNeeds('All').catch(err => console.error("Community Needs error:", err))
     ]);
 
     initTimelineRealtimeSync(); 
@@ -1688,6 +1689,230 @@ async function loadPastJournalEntries() {
     } catch (err) {
         console.error("Error loading past journal entries:", err);
         listContainer.innerHTML = '<p class="text-xs text-red-500 italic py-2">Failed to load past journal entries.</p>';
+    }
+}
+
+// --- FELLOWSHIP NEEDS & RIDE-SHARE BOARD LOGIC ---
+
+async function loadCommunityNeeds(categoryFilter = 'All') {
+    const container = document.getElementById('community-needs-list');
+    if (!container) return;
+
+    container.innerHTML = '<p class="col-span-full text-center text-gray-400 text-sm py-8">Loading community needs board...</p>';
+
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) {
+        container.innerHTML = '<p class="col-span-full text-center text-red-500 text-sm py-8">Database client not available.</p>';
+        return;
+    }
+
+    try {
+        let query = db
+            .from('community_needs')
+            .select('*, profiles:user_id(full_name)')
+            .eq('status', 'open');
+
+        if (currentUserProfile && currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
+            query = query.eq('church_id', currentUserProfile.church_id);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        let needs = data || [];
+        if (categoryFilter !== 'All') {
+            needs = needs.filter(n => n.category === categoryFilter);
+        }
+
+        if (needs.length === 0) {
+            container.innerHTML = `<p class="col-span-full text-center text-gray-500 text-sm py-8">No open community needs found under "${escapeHTML(categoryFilter)}". Be the first to post a need or offer a ride!</p>`;
+            return;
+        }
+
+        let html = '';
+        needs.forEach(item => {
+            let dateStr = '';
+            try {
+                dateStr = new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch (e) {
+                dateStr = item.created_at;
+            }
+
+            let badgeBg = 'bg-blue-100 text-blue-800 border-blue-200';
+            if (item.category === 'Ride Share') badgeBg = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+            else if (item.category === 'Meal Train') badgeBg = 'bg-amber-100 text-amber-800 border-amber-200';
+            else if (item.category === 'Volunteer') badgeBg = 'bg-purple-100 text-purple-800 border-purple-200';
+
+            const isOwner = loggedInUser && item.user_id === loggedInUser.id;
+            const contactId = `contact-box-${item.id}`;
+            const authorName = item.profiles?.full_name || 'Church Member';
+
+            html += `
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border ${badgeBg}">${escapeHTML(item.category || 'General')}</span>
+                            <span class="text-[10px] text-gray-400">${escapeHTML(dateStr)}</span>
+                        </div>
+                        <h4 class="text-base font-bold text-gray-900 mb-1">${escapeHTML(item.title)}</h4>
+                        <p class="text-xs text-gray-600 leading-relaxed mb-3">${escapeHTML(item.description || '')}</p>
+                        <p class="text-[11px] text-gray-500 italic">Posted by: <strong>${escapeHTML(authorName)}</strong></p>
+                    </div>
+
+                    <div id="${contactId}" class="hidden p-2.5 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-900 mb-2">
+                        <strong>📞 Contact Info:</strong> ${escapeHTML(item.contact_info)}
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                        <button type="button" onclick="toggleCommunityNeedContact('${contactId}')" class="px-3.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg text-xs transition flex items-center gap-1">
+                            <span>🤝</span> Offer Help / Contact
+                        </button>
+                        ${isOwner ? `
+                            <button type="button" onclick="markCommunityNeedFulfilled('${item.id}')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition shadow-sm">
+                                Mark as Fulfilled
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error("Error loading community needs:", err);
+        container.innerHTML = '<p class="col-span-full text-center text-red-500 text-sm py-8">Failed to load community needs board.</p>';
+    }
+}
+
+function filterCommunityNeeds(category, buttonElement) {
+    document.querySelectorAll('.needs-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+    });
+    if (buttonElement) {
+        buttonElement.classList.remove('bg-gray-100', 'text-gray-700');
+        buttonElement.classList.add('bg-blue-600', 'text-white');
+    }
+    loadCommunityNeeds(category);
+}
+
+function toggleCommunityNeedContact(contactId) {
+    const el = document.getElementById(contactId);
+    if (el) {
+        el.classList.toggle('hidden');
+    }
+}
+
+function openCommunityNeedModal() {
+    const modal = document.getElementById('communityNeedModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeCommunityNeedModal() {
+    const modal = document.getElementById('communityNeedModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function submitCommunityNeed(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('needSubmitBtn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Publishing...';
+    }
+
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) {
+        alert("Database client not available.");
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Publish Need';
+        }
+        return;
+    }
+
+    try {
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) {
+            alert("Please log in to post a need or offer a ride.");
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const category = document.getElementById('needCategory').value;
+        const title = document.getElementById('needTitle').value.trim();
+        const description = document.getElementById('needDescription').value.trim();
+        const contactInfo = document.getElementById('needContactInfo').value.trim();
+
+        if (!category || !title || !contactInfo) {
+            alert("Please fill out all required fields.");
+            return;
+        }
+
+        const payload = {
+            church_id: currentUserProfile && currentUserProfile.church_id ? currentUserProfile.church_id : null,
+            user_id: user.id,
+            category: category,
+            title: title,
+            description: description,
+            contact_info: contactInfo,
+            status: 'open'
+        };
+
+        const { error } = await db
+            .from('community_needs')
+            .insert([payload]);
+
+        if (error) throw error;
+
+        closeCommunityNeedModal();
+        document.getElementById('communityNeedForm').reset();
+
+        if (typeof showNotification === 'function') {
+            showNotification('🤝 Community need successfully published!', 'success');
+        } else {
+            alert('🤝 Community need successfully published!');
+        }
+
+        await loadCommunityNeeds('All');
+
+    } catch (err) {
+        console.error("Error submitting community need:", err);
+        alert('Failed to publish community need: ' + err.message);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Publish Need';
+        }
+    }
+}
+
+async function markCommunityNeedFulfilled(needId) {
+    if (!confirm("Are you sure you want to mark this request as fulfilled?")) return;
+
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) return;
+
+    try {
+        const { error } = await db
+            .from('community_needs')
+            .update({ status: 'fulfilled' })
+            .eq('id', needId);
+
+        if (error) throw error;
+
+        if (typeof showNotification === 'function') {
+            showNotification('Request marked as fulfilled!', 'success');
+        } else {
+            alert('Request marked as fulfilled!');
+        }
+
+        await loadCommunityNeeds('All');
+    } catch (err) {
+        console.error("Error updating need status:", err);
+        alert('Failed to update status: ' + err.message);
     }
 }
 

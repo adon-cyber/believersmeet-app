@@ -184,6 +184,33 @@
             </div>
         </div>
 
+        <!-- Fellowship Needs & Ride-Share Board Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">🤝 Fellowship Needs Board</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Connect with the church family for rides, meals, volunteering, and support.</p>
+                </div>
+                <button type="button" onclick="openCommunityNeedModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Post a Need / Offer Ride
+                </button>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="flex flex-wrap gap-2 pb-4 mb-4 border-b border-gray-100">
+                <button type="button" class="needs-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition" onclick="filterCommunityNeeds('All', this)">[All]</button>
+                <button type="button" class="needs-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterCommunityNeeds('Ride Share', this)">[🚗 Ride Share]</button>
+                <button type="button" class="needs-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterCommunityNeeds('Meal Train', this)">[🍲 Meal Train]</button>
+                <button type="button" class="needs-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterCommunityNeeds('Volunteer', this)">[🙌 Volunteer]</button>
+                <button type="button" class="needs-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterCommunityNeeds('General', this)">[💬 General Request]</button>
+            </div>
+
+            <!-- Needs Grid Container -->
+            <div id="community-needs-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="col-span-full text-center text-gray-400 text-sm py-8">Loading community needs board...</p>
+            </div>
+        </div>
+
         <div class="mt-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="text-primary mb-0">📅 Upcoming Church Programmes</h5>
@@ -427,6 +454,46 @@
             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
                 <button type="button" onclick="closeBusinessModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
                 <button type="submit" id="feedBizSubmitBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow transition">Submit Listing</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Post Community Need / Ride Offer Modal -->
+<div id="communityNeedModal" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden transform transition-all">
+        <div class="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
+            <h3 class="text-lg font-bold">Post a Need or Offer Ride</h3>
+            <button onclick="closeCommunityNeedModal()" class="text-white hover:text-gray-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form id="communityNeedForm" onsubmit="submitCommunityNeed(event)" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select id="needCategory" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                    <option value="">Select category...</option>
+                    <option value="Ride Share">🚗 Ride Share</option>
+                    <option value="Meal Train">🍲 Meal Train</option>
+                    <option value="Volunteer">🙌 Volunteer</option>
+                    <option value="General">💬 General Request</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <input type="text" id="needTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="e.g. Need a ride to Sunday Morning Service from Downtown">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description / Details *</label>
+                <textarea id="needDescription" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Provide any additional details, times, or instructions..."></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Contact Method *</label>
+                <input type="text" id="needContactInfo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="e.g. Phone number, WhatsApp, or Email">
+            </div>
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                <button type="button" onclick="closeCommunityNeedModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" id="needSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow transition">Publish Need</button>
             </div>
         </form>
     </div>
