@@ -331,20 +331,19 @@
         </div>
 
             <!-- User Management Section (Super Admin Only) -->
-            <div id="user-management-section" class="card bg-white border-0 shadow-sm mb-4 hidden" style="border-radius: 0.75rem;">
-                <div class="card-header bg-white border-bottom py-3"><h5 class="mb-0 fw-bold text-dark">👥 Manage Profiles & Members</h5></div>
-                <div class="card-body p-4">
-                    <div id="admin-list" class="divide-y divide-gray-100">
-                        <p class="text-muted py-4">Loading members...</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 p-8 rounded-2xl shadow-xl">
-                <h3 class="text-xl font-bold mb-6 text-slate-100 flex items-center gap-2">
-                    <i class="fas fa-calendar-check text-blue-400"></i> Manage Event Attendees
-                </h3>
-                <div id="admin-events-list" class="space-y-4">
+            <!-- User Management Section (Super Admin Only) -->
+<div id="user-management-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl mb-8 hidden">
+    <div class="border-b border-slate-700/70 pb-4 mb-4">
+        <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <i class="fas fa-users text-purple-400"></i> Manage Profiles & Members
+        </h3>
+    </div>
+    <div class="card-body">
+        <div id="admin-list" class="divide-y divide-slate-700/50">
+            <p class="text-slate-400 py-4 text-sm">Loading members...</p>
+        </div>
+    </div>
+</div>
                     <!-- JS will populate events and attendees here -->
                 </div>
             </div>
