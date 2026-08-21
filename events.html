@@ -107,14 +107,17 @@
 </nav>
 
 <!-- Main Container -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full space-y-6">
+<main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-10 col-xl-9 space-y-6">
     
     <!-- Banner & Action Header -->
     <div class="bg-primary text-white p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
         <h2 class="fw-bold mb-2"><i class="bi bi-calendar-event me-2"></i> Church Events</h2>
         <p class="mb-0 text-white-50 fs-5">Discover upcoming church gatherings, conferences, and community fellowship events.</p>
         <div class="mt-4 flex flex-wrap gap-3">
-            <button onclick="openCouponModal()" class="px-5 py-2.5 bg-white bg-opacity-20 backdrop-blur text-white font-bold rounded-xl shadow hover:bg-opacity-30 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2 border border-white border-opacity-30">
+            <button onclick="openCouponModal()" class="px-5 py-2.5 bg-white bg-opacity-25 backdrop-blur text-white font-bold rounded-xl shadow hover:bg-opacity-35 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2 border border-white border-opacity-30">
                 <span>🎟️</span> Find / Download Coupon
             </button>
             <button onclick="openEventModal()" id="createEventBtn" style="display: none;" class="px-5 py-2.5 bg-white text-blue-700 font-bold rounded-xl shadow hover:bg-blue-50 transition transform hover:-translate-y-0.5 text-sm sm:text-base flex items-center gap-2">
@@ -231,6 +234,9 @@
             <div class="col-span-full bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center text-slate-400 text-sm">Loading open volunteer slots...</div>
         </div>
     </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Create Event Modal -->
