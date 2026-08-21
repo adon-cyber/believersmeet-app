@@ -305,7 +305,9 @@ async function enforceLoginAndLoad() {
         loadDiscoveryProfiles().catch(err => console.error("Fellowship error:", err)),
         loadMusicPlaylist().catch(err => console.error("Music error:", err)),
         fetchAndRenderWidgetVerse('John 3:16').catch(err => console.error("Bible error:", err)),
-        loadChurchProgrammes().catch(err => console.error("Programmes error:", err))
+        // 4. Load Daily Scripture & Personal Reflections (VOTD)
+    loadDailyVerseAndReflections().catch(err => console.error("VOTD error:", err)),
+    loadChurchProgrammes().catch(err => console.error("Programmes error:", err))
     ]);
 
     initTimelineRealtimeSync(); 
@@ -1479,5 +1481,215 @@ window.optOutEvent = async function(eventId) {
     alert("Failed to opt out. Please try again.");
   }
 };
+
+// --- Daily Scripture & Personal Reflections (VOTD & Reflections) ---
+
+let currentVotdData = {
+    reference: 'Philippians 4:6-7',
+    text: 'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.'
+};
+
+async function loadDailyVerseAndReflections() {
+    const cardContentEl = document.getElementById('votd-card-content');
+    if (!cardContentEl) return;
+
+    try {
+        const res = await fetch('https://labs.bible.org/api/?passage=votd&type=json');
+        if (!res.ok) throw new Error('Failed to fetch verse of the day');
+        const data = await res.json();
+
+        if (data && data.length > 0) {
+            const v = data[0];
+            const bookName = v.bookname || v.book || 'John';
+            const chapterNum = v.chapter || '3';
+            const verseNum = v.verse || '16';
+            const textVal = v.text ? v.text.replace(/<[^>]*>/g, '').trim() : '';
+
+            currentVotdData = {
+                reference: `${bookName} ${chapterNum}:${verseNum}`,
+                text: textVal
+            };
+        }
+    } catch (err) {
+        console.warn("Could not fetch labs.bible.org votd, using default verse:", err);
+    }
+
+    renderVotdCard();
+    loadPastJournalEntries();
+}
+
+function renderVotdCard() {
+    const cardContentEl = document.getElementById('votd-card-content');
+    if (!cardContentEl) return;
+
+    cardContentEl.innerHTML = `
+        <div class="space-y-2">
+            <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-indigo-700 uppercase tracking-wide">📖 ${escapeHTML(currentVotdData.reference)}</h4>
+                <span class="text-[10px] text-gray-400">Verse of the Day</span>
+            </div>
+            <p class="text-xs sm:text-sm text-gray-800 leading-relaxed italic">"${escapeHTML(currentVotdData.text)}"</p>
+        </div>
+    `;
+}
+
+function toggleReflectionModal() {
+    const container = document.getElementById('reflection-box-container');
+    if (!container) return;
+    container.classList.toggle('hidden');
+    if (!container.classList.contains('hidden')) {
+        const textarea = document.getElementById('reflection-note-textarea');
+        if (textarea) textarea.focus();
+    }
+}
+
+function togglePastJournalEntries() {
+    const container = document.getElementById('past-journal-container');
+    const chevron = document.getElementById('journal-chevron');
+    if (!container) return;
+
+    container.classList.toggle('hidden');
+    if (chevron) {
+        chevron.classList.toggle('rotate-180');
+    }
+
+    if (!container.classList.contains('hidden')) {
+        loadPastJournalEntries();
+    }
+}
+
+async function saveReflection() {
+    const textarea = document.getElementById('reflection-note-textarea');
+    const saveBtn = document.getElementById('save-reflection-btn');
+    if (!textarea) return;
+
+    const noteText = textarea.value.trim();
+    if (!noteText) {
+        alert("Please write your personal reflection before saving.");
+        return;
+    }
+
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) {
+        alert("Database client not available.");
+        return;
+    }
+
+    try {
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) {
+            alert("Please log in to save journal reflections.");
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const payload = {
+            user_id: user.id,
+            verse_reference: currentVotdData.reference,
+            verse_text: currentVotdData.text,
+            note: noteText
+        };
+
+        const { error } = await db
+            .from('user_reflections')
+            .insert([payload]);
+
+        if (error) throw error;
+
+        // Clear textarea & collapse
+        textarea.value = '';
+        const reflectionBox = document.getElementById('reflection-box-container');
+        if (reflectionBox) reflectionBox.classList.add('hidden');
+
+        // Show quick success toast message
+        if (typeof showNotification === 'function') {
+            showNotification('✍️ Reflection successfully saved to your journal!', 'success');
+        } else {
+            alert('✍️ Reflection successfully saved to your journal!');
+        }
+
+        // Reload past entries
+        await loadPastJournalEntries();
+
+        // Ensure past journal drawer is visible so the user sees their new entry
+        const journalContainer = document.getElementById('past-journal-container');
+        if (journalContainer && journalContainer.classList.contains('hidden')) {
+            togglePastJournalEntries();
+        }
+
+    } catch (err) {
+        console.error("Error saving reflection:", err);
+        alert('Failed to save reflection: ' + err.message);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Reflection';
+        }
+    }
+}
+
+async function loadPastJournalEntries() {
+    const listContainer = document.getElementById('past-journal-list');
+    if (!listContainer) return;
+
+    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    if (!db) return;
+
+    try {
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) {
+            listContainer.innerHTML = '<p class="text-xs text-gray-500 italic py-2">Please log in to view past journal entries.</p>';
+            return;
+        }
+
+        const { data, error } = await db
+            .from('user_reflections')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            listContainer.innerHTML = '<p class="text-xs text-gray-500 italic py-2">No past journal entries yet. Reflect on today\'s verse to start journaling!</p>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(entry => {
+            let dateStr = '';
+            try {
+                dateStr = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                dateStr = entry.created_at;
+            }
+
+            html += `
+                <div class="p-3 bg-white border border-indigo-100 rounded-xl shadow-sm space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-indigo-700">📖 ${escapeHTML(entry.verse_reference)}</span>
+                        <span class="text-[10px] text-gray-400">${escapeHTML(dateStr)}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-600 italic">"${escapeHTML(entry.verse_text)}"</p>
+                    <div class="pt-1.5 border-t border-gray-100 mt-1">
+                        <p class="text-xs text-gray-800 font-medium whitespace-pre-line">💬 ${escapeHTML(entry.note)}</p>
+                    </div>
+                </div>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+
+    } catch (err) {
+        console.error("Error loading past journal entries:", err);
+        listContainer.innerHTML = '<p class="text-xs text-red-500 italic py-2">Failed to load past journal entries.</p>';
+    }
+}
+
 
 
