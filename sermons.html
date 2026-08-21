@@ -71,12 +71,12 @@
         <!-- Global View Selector Dropdown -->
         <div class="card border-0 shadow-sm mb-4 p-3 bg-white rounded-2xl border border-gray-200">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
-                <span class="fw-bold text-secondary fs-6 text-gray-700 font-bold flex items-center gap-2">🔍 Active View:</span>
-                <select id="sermon-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" data-target-group="page-sections">
-                    <option value="all">Show All Sections</option>
-                    <option value="player">Series & Video Player</option>
-                    <option value="notes">My Notes</option>
-                    <option value="audio">Audio Sermons & Media Library</option>
+                <span class="fw-bold text-secondary fs-6 text-gray-700 font-bold flex items-center gap-2"><span>👁️</span> Filter Sermon View:</span>
+                <select id="sermon-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchSermonView(this.value)">
+                    <option value="all" selected>🌟 Show All Sections</option>
+                    <option value="player">📺 Series & Video Player</option>
+                    <option value="notes">📝 My Sermon Notes</option>
+                    <option value="audio">🎵 Audio Sermons & Media Library</option>
                 </select>
             </div>
         </div>
@@ -102,7 +102,7 @@
         </div>
 
         <!-- YouTube Live Search Section -->
-        <div id="youtube-search-section" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+        <div id="widget-player" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
             <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <i class="fab fa-youtube text-red-600"></i> Live YouTube Search & Stream
             </h2>
@@ -125,7 +125,7 @@
         </div>
 
         <!-- Media Cards Grid Container -->
-        <div id="sermons-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="widget-audio" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="col-span-full bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-500">
                 <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-3"></i>
                 <p>Loading media library...</p>
@@ -1009,10 +1009,36 @@
         initApp();
         if (typeof setupPageSwitcher === 'function') {
             setupPageSwitcher('sermon-view-switcher', {
-                'player': 'youtube-search-section',
+                'player': 'widget-player',
                 'notes': 'sermon-notes-panel',
-                'audio': 'sermons-container'
+                'audio': 'widget-audio'
             });
+        }
+        window.switchSermonView = function(selected) {
+            const mapping = {
+                player: document.getElementById('widget-player'),
+                notes: document.getElementById('sermon-notes-panel'),
+                audio: document.getElementById('widget-audio')
+            };
+
+            Object.keys(mapping).forEach(key => {
+                const el = mapping[key];
+                if (el) {
+                    if (selected === 'all' || selected === key) {
+                        el.style.display = 'block';
+                        el.classList.remove('d-none', 'hidden');
+                    } else {
+                        el.style.display = 'none';
+                        el.classList.add('d-none', 'hidden');
+                    }
+                }
+            });
+        };
+        const sermonViewSelect = document.getElementById('sermon-view-switcher');
+        if (sermonViewSelect) {
+            sermonViewSelect.onchange = function() {
+                switchSermonView(this.value);
+            };
         }
     </script>
 </body>

@@ -59,8 +59,23 @@
 <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow">
     <!-- Column 1: Main Feed (spans 8 columns) -->
     <div class="lg:col-span-8 space-y-6">
+        <!-- Visible Filter Bar -->
+        <div class="card border-0 shadow-sm mb-4 p-3 bg-white rounded-3 rounded-2xl border border-indigo-100" id="global-feed-filter">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 flex flex-col sm:flex-row justify-between items-center">
+            <span class="fw-bold text-dark fs-6 d-flex align-items-center gap-2 text-indigo-900 font-bold">
+              <span>👁️</span> Filter Feed View:
+            </span>
+            <select id="feed-view-select" class="form-select form-select-sm w-auto fw-bold border-primary text-primary px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-600 outline-none" onchange="switchFeedView(this.value)">
+              <option value="all" selected>🌟 Show All Sections</option>
+              <option value="votd">📖 Verse of the Day</option>
+              <option value="needs">🤝 Fellowship Needs Board</option>
+              <option value="programmes">📅 Church Programmes</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Daily Scripture & Personal Reflections Card -->
-        <div class="bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 rounded-2xl shadow-md border border-indigo-100">
+        <div id="widget-votd" class="bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 rounded-2xl shadow-md border border-indigo-100">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">✨</span>
@@ -212,7 +227,7 @@
   </div>
 </div>
 
-        <div class="mt-4">
+        <div class="mt-4" id="widget-programmes">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="text-primary mb-0">📅 Upcoming Church Programmes</h5>
           </div>
