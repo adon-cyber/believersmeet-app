@@ -475,4 +475,81 @@
             </div> <!-- End Row -->
         </div> <!-- End Container -->
     </main>
+    <!-- Add this script right before the closing </body> tag -->
+    <script>
+        // Map the dropdown/tab values to the actual HTML IDs of the containers
+        const adminViews = {
+            'global': 'global-admin-view',
+            'dashboard': 'global-admin-view', // Pointing to the same main dashboard
+            'counseling': 'counseling-content',
+            'documents': 'document-content',
+            'roster': 'roster-content',
+            'pesapal': 'pesapal-content',
+            'prayer': 'prayer-content',
+            'businesses': 'businesses-content'
+        };
+
+        // Main function fired by the Select Dropdown
+        function switchAdminView(selectedValue) {
+            // 1. Hide all containers first
+            Object.values(adminViews).forEach(containerId => {
+                const el = document.getElementById(containerId);
+                if (el) {
+                    el.classList.add('hidden');
+                    el.classList.remove('block');
+                }
+            });
+
+            // 2. Show the selected container (or all of them)
+            if (selectedValue === 'all') {
+                Object.values(adminViews).forEach(containerId => {
+                    const el = document.getElementById(containerId);
+                    if (el) {
+                        el.classList.remove('hidden');
+                        el.classList.add('block');
+                    }
+                });
+            } else {
+                const targetContainerId = adminViews[selectedValue];
+                const targetEl = document.getElementById(targetContainerId);
+                if (targetEl) {
+                    targetEl.classList.remove('hidden');
+                    targetEl.classList.add('block');
+                }
+            }
+
+            // 3. Keep the visual tabs in sync with the dropdown
+            updateTabStyles(selectedValue);
+        }
+
+        // Function fired by the Horizontal Tabs
+        function switchAdminTab(tabId) {
+            // Keep the select dropdown in sync with the clicked tab
+            const selectDropdown = document.getElementById('admin-view-switcher');
+            if (selectDropdown) {
+                selectDropdown.value = tabId;
+            }
+            
+            // Run the main view switching logic
+            switchAdminView(tabId);
+        }
+
+        // Helper function to update the blue underline styling on the tabs
+        function updateTabStyles(activeId) {
+            // Get all the tab buttons
+            const tabs = document.querySelectorAll('[id^="tab-btn-"]');
+            
+            tabs.forEach(tab => {
+                // Remove active styling from all tabs
+                tab.classList.remove('border-blue-500', 'text-blue-400', 'border-b-2');
+                tab.classList.add('text-slate-500', 'hover:text-slate-300');
+                
+                // Add active styling back to the clicked tab
+                if (tab.id === 'tab-btn-' + activeId) {
+                    tab.classList.remove('text-slate-500', 'hover:text-slate-300');
+                    tab.classList.add('border-blue-500', 'text-blue-400', 'border-b-2');
+                }
+            });
+        }
+    </script>
 </body>
