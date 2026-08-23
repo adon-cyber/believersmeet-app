@@ -300,7 +300,7 @@ async function enforceLoginAndLoad() {
     // Decouple all widget initializations using Promise.allSettled and independent try...catch blocks
     await Promise.allSettled([
         loadAnnouncements().catch(err => console.error("Bulletins error:", err)),
-        loadFeedGallery().catch(err => console.error("Gallery error:", err)),
+        // loadFeedGallery removed per user pivot to dedicated gallery directory
         fetchAndRenderWallTimeline().catch(err => console.error("Feed error:", err)),
         loadDiscoveryProfiles().catch(err => console.error("Fellowship error:", err)),
         loadMusicPlaylist().catch(err => console.error("Music error:", err)),
@@ -525,9 +525,6 @@ async function handleAdminGalleryUpload(e) {
         alert("Gallery media successfully uploaded and published!");
         if (fileInput) fileInput.value = '';
         if (captionInput) captionInput.value = '';
-
-        // Reload gallery
-        await loadFeedGallery();
 
     } catch (err) {
         console.error("Gallery upload error:", err);
