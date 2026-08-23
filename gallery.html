@@ -203,12 +203,17 @@
         }
 
         async function loadGalleryMemories() {
-            const { data: photos, error } = await window.sbClient
+            const { data, error } = await window.sbClient
                 .from('gallery_images')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            console.log("Supabase fetched gallery photos:", photos, error);
+            console.log('Supabase Data:', data);
+            if (error) {
+                console.log('Supabase Error:', error);
+            }
+
+            console.log("Supabase fetched gallery photos:", data, error);
 
             if (error) {
                 console.error("Error loading gallery:", error);
@@ -218,7 +223,7 @@
                 }
                 return;
             }
-            renderAnimatedGallery(photos);
+            renderAnimatedGallery(data);
         }
 
         function renderAnimatedGallery(photos) {
@@ -236,6 +241,9 @@
                 const formattedDate = photo.created_at ? new Date(photo.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent';
                 const uploader = photo.uploader_name || 'Community Member';
                 const caption = photo.caption || 'Fellowship Moment';
+                const imageUrl = photo.image_url;
+
+                console.log('Generated Image URL:', imageUrl);
 
                 // Escape values for safe embedding in data attributes or click handlers
                 const safeImgUrl = (photo.image_url || '').replace(/'/g, "\\'");
@@ -246,7 +254,7 @@
                 return `
                     <div class="${delayClass} bg-slate-900 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-800 flex flex-col group transform hover:-translate-y-1 cursor-pointer" style="${animationDelay}" onclick="openLightbox('${safeImgUrl}', '${safeCaption}', '${safeUploader}', '${safeDate}')">
                         <div class="relative overflow-hidden aspect-video h-64">
-                            <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(caption)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                            <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(caption)}" onerror="console.error('Image failed to load:', this.src)" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none"></div>
                             
                             <!-- Floating badge -->
