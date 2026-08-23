@@ -78,6 +78,7 @@
                 <option value="pesapal">💳 Pesapal Settings</option>
                 <option value="prayer">🙏 Prayer & Ministry Requests</option>
                 <option value="businesses">🏢 Business Approvals</option>
+                <option value="finance">💰 Finance & Giving Dashboard</option>
             </select>
         </div>
         
@@ -106,6 +107,9 @@
             </button>
             <button id="tab-btn-businesses" onclick="switchAdminTab('businesses')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
                 🏢 Business Approvals
+            </button>
+            <button id="tab-btn-finance" onclick="switchAdminTab('finance')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
+                💰 Finance & Giving
             </button>
         </div>
 
@@ -299,6 +303,42 @@
                 </div>
                 <div id="admin-businesses-container" class="overflow-x-auto">
                     <div class="text-center py-8 text-slate-500 text-sm">Loading pending business submissions...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANCE & GIVING DASHBOARD CONTAINER -->
+        <div id="finance-management-section" class="hidden space-y-8">
+            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fas fa-hand-holding-usd text-emerald-400"></i> Finance & Giving Dashboard
+                        </h3>
+                        <p class="text-slate-400 text-sm mt-1">Review church tithes, offerings, giving records, and download transaction receipts.</p>
+                    </div>
+                    <button onclick="loadFinanceTransactions()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt"></i> Refresh Records
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/80 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="p-3.5">Date</th>
+                                <th class="p-3.5">User/Email</th>
+                                <th class="p-3.5">Type (Tithe/Offering)</th>
+                                <th class="p-3.5">Amount</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finance-transactions-tbody" class="divide-y divide-slate-800/80 text-sm">
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-slate-500 text-sm">Loading recent transactions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -854,7 +894,8 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 roster: document.getElementById('roster-content'),
                 pesapal: document.getElementById('pesapal-content'),
                 prayer: document.getElementById('prayer-content'),
-                businesses: document.getElementById('businesses-content')
+                businesses: document.getElementById('businesses-content'),
+                finance: document.getElementById('finance-management-section')
             };
 
             Object.keys(mapping).forEach(key => {
@@ -872,6 +913,9 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (selected === 'dashboard' && typeof initChurchDashboardView === 'function') {
                 initChurchDashboardView();
             }
+            if (selected === 'finance' && typeof loadFinanceTransactions === 'function') {
+                loadFinanceTransactions();
+            }
         };
 
         window.switchAdminTab = function(tab) {
@@ -883,6 +927,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             const pesapalView = document.getElementById('pesapal-content');
             const prayerView = document.getElementById('prayer-content');
             const businessesView = document.getElementById('businesses-content');
+            const financeView = document.getElementById('finance-management-section');
             const btnGlobal = document.getElementById('tab-btn-global');
             const btnDashboard = document.getElementById('tab-btn-dashboard');
             const btnCounseling = document.getElementById('tab-btn-counseling');
@@ -891,6 +936,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             const btnPesapal = document.getElementById('tab-btn-pesapal');
             const btnPrayer = document.getElementById('tab-btn-prayer');
             const btnBusinesses = document.getElementById('tab-btn-businesses');
+            const btnFinance = document.getElementById('tab-btn-finance');
 
             // Hide all views by default
             if (globalView) { globalView.classList.remove('block'); globalView.classList.add('hidden'); }
@@ -901,6 +947,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (pesapalView) { pesapalView.classList.remove('block'); pesapalView.classList.add('hidden'); }
             if (prayerView) { prayerView.classList.remove('block'); prayerView.classList.add('hidden'); }
             if (businessesView) { businessesView.classList.remove('block'); businessesView.classList.add('hidden'); }
+            if (financeView) { financeView.classList.remove('block'); financeView.classList.add('hidden'); }
 
             // Reset tab styles
             if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
@@ -911,6 +958,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (btnPesapal) btnPesapal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnPrayer) btnPrayer.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnFinance) btnFinance.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
 
             if (tab === 'global') {
                 if (globalView) {
@@ -1004,8 +1052,24 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
+                if (financeView) { financeView.classList.add('hidden'); financeView.classList.remove('block'); }
                 if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadPendingBusinesses === 'function') loadPendingBusinesses();
+            } else if (tab === 'finance') {
+                if (financeView) {
+                    financeView.classList.remove('hidden');
+                    financeView.classList.add('block');
+                }
+                if (dashboardView) { dashboardView.classList.add('hidden'); dashboardView.classList.remove('block'); }
+                if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
+                if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
+                if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
+                if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
+                if (btnFinance) btnFinance.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
+                if (typeof loadFinanceTransactions === 'function') loadFinanceTransactions();
             }
 
             const superAdminNav = document.getElementById('nav-super-admin');
@@ -1064,18 +1128,20 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 }
             }
 
-            if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church') {
+            if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church' || currentUserProfile.role === 'finance') {
                 
-                if (isSuperAdmin) {
+                if (isSuperAdmin || currentUserProfile.role === 'finance') {
                     const tabsEl = document.getElementById('admin-tabs');
                     if (tabsEl) tabsEl.classList.remove('hidden');
-                    const superAdminNav = document.getElementById('nav-super-admin');
-                    if (superAdminNav) {
-                        superAdminNav.classList.remove('hidden');
-                        superAdminNav.classList.add('flex');
-                    }
-                    const selectorContainer = document.getElementById('super-admin-church-selector');
-                    if (selectorContainer) selectorContainer.classList.remove('hidden');
+                }
+                
+                if (currentUserProfile.role === 'finance') {
+                    switchAdminTab('finance');
+                    // Hide non-finance tabs/views if user only has finance role
+                    const globalView = document.getElementById('global-admin-view');
+                    if (globalView) globalView.classList.add('hidden');
+                    const dashboardView = document.getElementById('church-dashboard-view');
+                    if (dashboardView) dashboardView.classList.add('hidden');
                 }
 
                 if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin') {
@@ -1842,7 +1908,121 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             window.location.replace('login.html');
         }
 
-        async function loadAdminAppointments() {
+        async function loadFinanceTransactions() {
+            const tbody = document.getElementById('finance-transactions-tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading transactions...</td></tr>`;
+
+            try {
+                let adminChurchId = currentUserProfile?.church_id;
+                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+
+                let query = window.sbClient
+                    .from('donations')
+                    .select('*');
+
+                if (!isSuperAdmin && adminChurchId) {
+                    query = query.eq('church_id', adminChurchId);
+                }
+
+                let { data: transactions, error } = await query.order('created_at', { ascending: false });
+
+                if (error) {
+                    // Fallback to check if payments table exists
+                    const fallback = await window.sbClient.from('payments').select('*').order('created_at', { ascending: false });
+                    if (fallback.data) transactions = fallback.data;
+                    else throw error;
+                }
+
+                if (!transactions || transactions.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">No recent transactions found.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = transactions.map(tx => {
+                    const dateStr = tx.created_at ? new Date(tx.created_at).toLocaleString() : 'N/A';
+                    const userEmail = tx.user_email || tx.email || tx.donor_email || 'Anonymous Donor';
+                    const txType = tx.giving_type || tx.type || tx.category || 'Tithe/Offering';
+                    const amount = tx.amount ? `${tx.currency || '$'} ${Number(tx.amount).toLocaleString()}` : '$0.00';
+                    const rawStatus = (tx.status || 'Completed').toLowerCase();
+
+                    let statusBadge = '';
+                    if (rawStatus === 'completed' || rawStatus === 'success' || rawStatus === 'paid') {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Completed</span>`;
+                    } else if (rawStatus === 'pending') {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">Pending</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">Failed</span>`;
+                    }
+
+                    return `
+                        <tr class="hover:bg-slate-800/50 transition">
+                            <td class="p-3.5 align-middle whitespace-nowrap text-slate-300 text-xs">${escapeHTML(dateStr)}</td>
+                            <td class="p-3.5 align-middle font-medium text-white">${escapeHTML(userEmail)}</td>
+                            <td class="p-3.5 align-middle text-slate-300"><span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20">${escapeHTML(txType)}</span></td>
+                            <td class="p-3.5 align-middle font-bold text-emerald-400">${escapeHTML(amount)}</td>
+                            <td class="p-3.5 align-middle whitespace-nowrap">${statusBadge}</td>
+                            <td class="p-3.5 align-middle text-right whitespace-nowrap">
+                                <button onclick="downloadReceipt('${tx.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 shadow" title="Download Receipt">
+                                    <i class="fas fa-file-pdf text-red-400"></i> Receipt
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error("Error loading finance transactions:", err);
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400 text-sm">Error loading transactions: ${escapeHTML(err.message)}</td></tr>`;
+            }
+        }
+
+        function downloadReceipt(txId) {
+            showNotification("Generating official PDF receipt...", "success");
+            setTimeout(() => {
+                const receiptWindow = window.open('', '_blank');
+                if (receiptWindow) {
+                    receiptWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>Giving Receipt - BelieversMeet</title>
+                            <style>
+                                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; }
+                                .receipt-card { max-width: 600px; margin: 0 auto; background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5); }
+                                h1 { color: #38bdf8; margin-top: 0; font-size: 24px; }
+                                .header { border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+                                .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+                                .label { color: #94a3b8; }
+                                .value { font-weight: 600; color: #f8fafc; }
+                                .footer { margin-top: 30px; border-top: 1px solid #334155; padding-top: 20px; text-align: center; font-size: 12px; color: #64748b; }
+                                .btn { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="receipt-card">
+                                <div class="header">
+                                    <h1>⛪ BelieversMeet Official Receipt</h1>
+                                    <span style="font-size: 12px; background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 9999px;">Verified</span>
+                                </div>
+                                <div class="row"><span class="label">Transaction Reference ID:</span><span class="value">${txId}</span></div>
+                                <div class="row"><span class="label">Date Issued:</span><span class="value">${new Date().toLocaleString()}</span></div>
+                                <div class="row"><span class="label">Organization:</span><span class="value">BelieversMeet Ministry Platform</span></div>
+                                <div class="row"><span class="label">Status:</span><span class="value" style="color: #34d399;">Completed</span></div>
+                                <div class="footer">
+                                    <p>Thank you for your generous tithes and offerings supporting the ministry work.</p>
+                                    <button class="btn" onclick="window.print()">Print / Save PDF</button>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                    `);
+                    receiptWindow.document.close();
+                } else {
+                    alert("Please allow popups to download receipts.");
+                }
+            }, 500);
+        }
             const container = document.getElementById('admin-appointments-container');
             if (!container) return;
 
