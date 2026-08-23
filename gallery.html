@@ -241,21 +241,20 @@
                 const formattedDate = photo.created_at ? new Date(photo.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent';
                 const uploader = photo.uploader_name || 'Community Member';
                 const caption = photo.caption || 'Fellowship Moment';
-                const imageUrl = photo.image_url;
-
-                console.log('Generated Image URL:', imageUrl);
+                
+                const rawUrl = photo.image_url || photo.url || '';
+                const imageUrl = (typeof rawUrl === 'string' && rawUrl.trim().startsWith('http') && !rawUrl.includes('@')) ? rawUrl : 'assets/images/default-placeholder.png';
 
                 // Escape values for safe embedding in data attributes or click handlers
-                const safeImgUrl = (photo.image_url || '').replace(/'/g, "\\'");
+                const safeImgUrl = imageUrl.replace(/'/g, "\\'");
                 const safeCaption = caption.replace(/'/g, "\\'");
                 const safeUploader = uploader.replace(/'/g, "\\'");
                 const safeDate = formattedDate.replace(/'/g, "\\'");
 
                 return `
                     <div class="${delayClass} bg-slate-900 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-800 flex flex-col group transform hover:-translate-y-1 cursor-pointer" style="${animationDelay}" onclick="openLightbox('${safeImgUrl}', '${safeCaption}', '${safeUploader}', '${safeDate}')">
-                        <div class="relative overflow-hidden aspect-video h-64">
-                            <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(caption)}" onerror="console.error('Image failed to load:', this.src)" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none"></div>
+                        <div class="relative overflow-hidden w-full h-64 bg-slate-100">
+                            <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(caption)}" onerror="console.error('Image failed to load:', this.src)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             
                             <!-- Floating badge -->
                             <div class="absolute top-3 right-3 bg-blue-600/95 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1 z-10">
@@ -264,7 +263,7 @@
                             </div>
 
                             <!-- Caption overlay on hover -->
-                            <div class="absolute inset-x-0 bottom-0 p-5 transform transition-transform duration-300 pointer-events-none z-10">
+                            <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 flex items-end">
                                 <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">${escapeHTML(caption)}</p>
                             </div>
                         </div>
