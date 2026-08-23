@@ -245,18 +245,18 @@
 
                 return `
                     <div class="${delayClass} bg-slate-900 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-800 flex flex-col group transform hover:-translate-y-1 cursor-pointer" style="${animationDelay}" onclick="openLightbox('${safeImgUrl}', '${safeCaption}', '${safeUploader}', '${safeDate}')">
-                        <div class="relative overflow-hidden aspect-video bg-slate-950 h-64">
+                        <div class="relative overflow-hidden aspect-video h-64">
                             <img src="${escapeHTML(photo.image_url)}" alt="${escapeHTML(caption)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none"></div>
                             
                             <!-- Floating badge -->
-                            <div class="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1">
+                            <div class="absolute top-3 right-3 bg-blue-600/95 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1 z-10">
                                 <i class="fas fa-heart text-red-400"></i>
                                 <span>Memory</span>
                             </div>
 
                             <!-- Caption overlay on hover -->
-                            <div class="absolute inset-x-0 bottom-0 p-5 transform transition-transform duration-300 pointer-events-none">
+                            <div class="absolute inset-x-0 bottom-0 p-5 transform transition-transform duration-300 pointer-events-none z-10">
                                 <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">${escapeHTML(caption)}</p>
                             </div>
                         </div>
