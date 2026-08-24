@@ -539,7 +539,7 @@
                 },
                 body: JSON.stringify({
                     amount: finalAmount,
-                    currency: 'KES',
+                    currency: 'UGX',
                     email: loggedInUser.email || 'donor@believersmeet.com',
                     userId: loggedInUser.id,
                     church_id: selectedChurchId,
@@ -555,17 +555,18 @@
 
             const { redirect_url, order_tracking_id, merchant_reference } = data;
 
-            // 3. Insert 'pending' record into Supabase donations table including pesapal_tracking_id
+            // 3. Insert 'pending' record into Supabase transactions table including pesapal_tracking_id
             const { error: insertError } = await window.sbClient
-                .from('donations')
+                .from('transactions')
                 .insert([{
                     user_id: loggedInUser.id,
+                    church_id: selectedChurchId,
                     amount: finalAmount,
-                    transaction_reference: merchant_reference || transactionReference,
+                    merchant_reference: merchant_reference || transactionReference,
                     pesapal_tracking_id: order_tracking_id,
-                    status: 'pending',
-                    payment_gateway: 'pesapal',
-                    currency: 'KES',
+                    status: 'PENDING',
+                    payment_method: 'pesapal',
+                    currency: 'UGX',
                     email: loggedInUser.email || 'donor@believersmeet.com',
                     description: `BelieversMeet Giving - ${category}`
                 }]);
@@ -612,24 +613,24 @@
 
     async function handlePesapalSuccessCallback(transactionReference, orderTrackingId) {
         try {
-            // Update specific record in Supabase donations table from 'pending' to 'successful'
+            // Update specific record in Supabase transactions table from 'PENDING' to 'COMPLETED'
             const { error: updateError } = await window.sbClient
-                .from('donations')
+                .from('transactions')
                 .update({ 
-                    status: 'successful',
+                    status: 'COMPLETED',
                     updated_at: new Date().toISOString()
                 })
-                .eq('transaction_reference', transactionReference);
+                .eq('merchant_reference', transactionReference);
 
             if (updateError) {
-                console.warn("Error updating donation status in DB:", updateError.message);
+                console.warn("Error updating transaction status in DB:", updateError.message);
             }
 
             // Fetch amount for modal display
             const { data: donationRecord } = await window.sbClient
-                .from('donations')
+                .from('transactions')
                 .select('amount')
-                .eq('transaction_reference', transactionReference)
+                .eq('merchant_reference', transactionReference)
                 .maybeSingle();
 
             const displayedAmount = donationRecord ? donationRecord.amount : 0;
