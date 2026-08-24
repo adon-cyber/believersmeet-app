@@ -343,6 +343,47 @@
             </div>
         </div>
 
+        <!-- Receipt Modal Container & Elements -->
+        <div id="receipt-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+                <button onclick="document.getElementById('receipt-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">
+                    &times;
+                </button>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                    <h2 class="text-xl font-bold text-sky-400 flex items-center gap-2">
+                        <span>⛪</span> Official Giving Receipt
+                    </h2>
+                    <span id="receipt-badge" class="px-3 py-1 text-xs font-semibold rounded-full border bg-green-500/10 text-green-400 border-green-500/30">Verified</span>
+                </div>
+                <div class="space-y-4 text-sm">
+                    <div class="flex justify-between py-2 border-b border-slate-800/60">
+                        <span class="text-slate-400">Reference ID:</span>
+                        <span id="receipt-ref-id" class="font-mono text-white font-semibold">N/A</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-slate-800/60">
+                        <span class="text-slate-400">Date Issued:</span>
+                        <span id="receipt-date" class="text-white font-semibold">N/A</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-slate-800/60">
+                        <span class="text-slate-400">Organization:</span>
+                        <span id="receipt-org" class="text-white font-semibold">BelieversMeet Church</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-slate-400">Status:</span>
+                        <span id="receipt-status-text" class="font-bold text-green-500">Completed</span>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs transition">
+                        Print / Save PDF
+                    </button>
+                    <button onclick="document.getElementById('receipt-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- 2. GLOBAL VIEW -->
         <div id="global-admin-view" class="block space-y-8">
             <!-- Page Header Section -->
@@ -1940,7 +1981,10 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                     return;
                 }
 
-                tbody.innerHTML = transactions.map(tx => {
+                // Store transactions list in memory or attach data directly to button click
+                window._recentTransactions = transactions;
+
+                tbody.innerHTML = transactions.map((tx, index) => {
                     const dateStr = tx.created_at ? new Date(tx.created_at).toLocaleString() : 'N/A';
                     const userEmail = tx.user_email || tx.email || tx.donor_email || 'Anonymous Donor';
                     const txType = tx.giving_type || tx.type || tx.category || 'Tithe/Offering';
@@ -1956,16 +2000,19 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                         statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">Failed</span>`;
                     }
 
+                    // Serialize transaction object safely for the inline click event
+                    const txJson = JSON.stringify(tx).replace(/"/g, '&quot;');
+
                     return `
-                        <tr class="hover:bg-slate-800/50 transition">
+                        <tr class="hover:bg-slate-800/50 transition cursor-pointer" onclick="populateAndShowReceipt(${txJson})">
                             <td class="p-3.5 align-middle whitespace-nowrap text-slate-300 text-xs">${escapeHTML(dateStr)}</td>
                             <td class="p-3.5 align-middle font-medium text-white">${escapeHTML(userEmail)}</td>
                             <td class="p-3.5 align-middle text-slate-300"><span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20">${escapeHTML(txType)}</span></td>
                             <td class="p-3.5 align-middle font-bold text-emerald-400">${escapeHTML(amount)}</td>
                             <td class="p-3.5 align-middle whitespace-nowrap">${statusBadge}</td>
-                            <td class="p-3.5 align-middle text-right whitespace-nowrap">
-                                <button onclick="downloadReceipt('${tx.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 shadow" title="Download Receipt">
-                                    <i class="fas fa-file-pdf text-red-400"></i> Receipt
+                            <td class="p-3.5 align-middle text-right whitespace-nowrap" onclick="event.stopPropagation()">
+                                <button onclick="populateAndShowReceipt(${txJson})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 shadow" title="View Receipt">
+                                    <i class="fas fa-receipt text-sky-400"></i> Receipt
                                 </button>
                             </td>
                         </tr>
@@ -1978,50 +2025,72 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             }
         }
 
-        function downloadReceipt(txId) {
-            showNotification("Generating official PDF receipt...", "success");
-            setTimeout(() => {
-                const receiptWindow = window.open('', '_blank');
-                if (receiptWindow) {
-                    receiptWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>Giving Receipt - BelieversMeet</title>
-                            <style>
-                                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; }
-                                .receipt-card { max-width: 600px; margin: 0 auto; background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5); }
-                                h1 { color: #38bdf8; margin-top: 0; font-size: 24px; }
-                                .header { border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-                                .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
-                                .label { color: #94a3b8; }
-                                .value { font-weight: 600; color: #f8fafc; }
-                                .footer { margin-top: 30px; border-top: 1px solid #334155; padding-top: 20px; text-align: center; font-size: 12px; color: #64748b; }
-                                .btn { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 20px; }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="receipt-card">
-                                <div class="header">
-                                    <h1>⛪ BelieversMeet Official Receipt</h1>
-                                    <span style="font-size: 12px; background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 9999px;">Verified</span>
-                                </div>
-                                <div class="row"><span class="label">Transaction Reference ID:</span><span class="value">${txId}</span></div>
-                                <div class="row"><span class="label">Date Issued:</span><span class="value">${new Date().toLocaleString()}</span></div>
-                                <div class="row"><span class="label">Organization:</span><span class="value">BelieversMeet Ministry Platform</span></div>
-                                <div class="row"><span class="label">Status:</span><span class="value" style="color: #34d399;">Completed</span></div>
-                                <div class="footer">
-                                    <p>Thank you for your generous tithes and offerings supporting the ministry work.</p>
-                                    <button class="btn" onclick="window.print()">Print / Save PDF</button>
-                                </div>
-                            </div>
-                        </body>
-                        </html>
-                    `);
-                    receiptWindow.document.close();
-                } else {
-                    alert("Please allow popups to download receipts.");
+        function populateAndShowReceipt(tx) {
+            // 1. Safe normalization for transaction status
+            const rawStatus = (tx.status || 'PENDING').toUpperCase();
+            
+            // 2. Define dynamic status themes & labels
+            const statusStyles = {
+                COMPLETED: {
+                    label: 'Completed',
+                    badgeText: 'Verified',
+                    textColor: 'text-green-500',
+                    badgeClass: 'bg-green-500/10 text-green-400 border-green-500/30'
+                },
+                SUCCESS: {
+                    label: 'Completed',
+                    badgeText: 'Verified',
+                    textColor: 'text-green-500',
+                    badgeClass: 'bg-green-500/10 text-green-400 border-green-500/30'
+                },
+                PAID: {
+                    label: 'Completed',
+                    badgeText: 'Verified',
+                    textColor: 'text-green-500',
+                    badgeClass: 'bg-green-500/10 text-green-400 border-green-500/30'
+                },
+                PENDING: {
+                    label: 'Pending',
+                    badgeText: 'Pending Authorization',
+                    textColor: 'text-yellow-500',
+                    badgeClass: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
+                },
+                FAILED: {
+                    label: 'Failed',
+                    badgeText: 'Unverified',
+                    textColor: 'text-red-500',
+                    badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30'
                 }
-            }, 500);
+            };
+
+            const currentStyle = statusStyles[rawStatus] || statusStyles.PENDING;
+
+            // 3. Populate dynamic text values
+            const refEl = document.getElementById('receipt-ref-id');
+            const dateEl = document.getElementById('receipt-date');
+            const orgEl = document.getElementById('receipt-org');
+            const statusTextEl = document.getElementById('receipt-status-text');
+            const badgeEl = document.getElementById('receipt-badge');
+            
+            if (refEl) refEl.textContent = tx.merchant_reference || tx.pesapal_tracking_id || tx.id;
+            if (dateEl) dateEl.textContent = tx.created_at ? new Date(tx.created_at).toLocaleString() : new Date().toLocaleString();
+            if (orgEl) orgEl.textContent = tx.church_name || tx.organization || 'BelieversMeet Church';
+
+            // 4. Update status text and inline color
+            if (statusTextEl) {
+                statusTextEl.textContent = currentStyle.label;
+                statusTextEl.className = `font-bold ${currentStyle.textColor}`;
+            }
+
+            // 5. Update top-right badge text and background classes
+            if (badgeEl) {
+                badgeEl.textContent = currentStyle.badgeText;
+                badgeEl.className = `px-3 py-1 text-xs font-semibold rounded-full border ${currentStyle.badgeClass}`;
+            }
+
+            // 6. Display the receipt modal container
+            const modalContainer = document.getElementById('receipt-modal');
+            if (modalContainer) modalContainer.classList.remove('hidden');
         }
 
         async function loadAdminAppointments() {
