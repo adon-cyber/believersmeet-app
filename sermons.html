@@ -105,12 +105,50 @@
         </div>
 
         <!-- YouTube Live Broadcast Section -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <i class="fab fa-youtube text-red-600"></i> Live Church Broadcast
-            </h2>
-            <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-inner">
-                <iframe src="https://www.youtube.com/embed/live_stream?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <div id="live-broadcast-section" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fab fa-youtube text-red-600"></i> Live Church Broadcast
+                </h2>
+                <div id="live-status-badge" class="hidden px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold flex items-center gap-1.5 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-red-600"></span> LIVE NOW
+                </div>
+            </div>
+
+            <!-- Admin Live Stream Control Panel (Visible to Church Managers / Admins) -->
+            <div id="admin-live-control-panel" class="hidden bg-slate-900 text-white p-5 rounded-xl space-y-3 shadow-inner border border-slate-800">
+                <h3 class="text-sm font-bold text-amber-300 flex items-center gap-2">
+                    <i class="fas fa-tools"></i> Church Manager Live Stream Control
+                </h3>
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-300">YouTube Live Stream Link / URL</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="admin-stream-url-input" placeholder="Paste YouTube watch, share (youtu.be), or live URL..." class="flex-grow px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="flex items-center gap-2">
+                            <button onclick="handleGoLive()" class="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-1.5 shrink-0">
+                                <i class="fas fa-broadcast-tower"></i> Go Live
+                            </button>
+                            <button onclick="handleEndStream()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl text-xs transition shadow flex items-center gap-1.5 shrink-0">
+                                <i class="fas fa-stop-circle"></i> End Stream
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Enter a YouTube URL to broadcast live to your church members instantly.</p>
+                </div>
+            </div>
+
+            <!-- Live Player Container -->
+            <div id="live-player-wrapper" class="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-inner flex items-center justify-center">
+                <div id="live-player-container" class="w-full h-full">
+                    <iframe src="https://www.youtube.com/embed/live_stream?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                <div id="live-offline-overlay" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-center p-6 space-y-3">
+                    <div class="w-16 h-16 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-2xl shadow-inner border border-slate-700">
+                        <i class="fas fa-video-slash"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Broadcast is Offline</h3>
+                    <p class="text-xs text-slate-400 max-w-sm">The church is not currently streaming live. Check back during scheduled Sunday service times or explore recorded sermons below.</p>
+                </div>
             </div>
             <p class="text-xs text-gray-500 text-center">Tune in above for our live Sunday service and weekly fellowship broadcasts.</p>
         </div>
@@ -322,9 +360,12 @@
                     if (adminLink) adminLink.classList.remove('hidden');
                     const uploadBtn = document.getElementById('open-upload-modal-btn');
                     if (uploadBtn) uploadBtn.classList.remove('hidden');
+                    const adminLivePanel = document.getElementById('admin-live-control-panel');
+                    if (adminLivePanel) adminLivePanel.classList.remove('hidden');
                 }
             }
 
+            loadChurchLiveStatus();
             loadMediaRecords();
             initRealtimeSync();
             setupAudioListeners();
@@ -336,7 +377,128 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'sermons' }, () => {
                     loadMediaRecords();
                 })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'churches' }, (payload) => {
+                    if (currentUserProfile && payload.new && payload.new.id === currentUserProfile.church_id) {
+                        updateLiveStreamUI(payload.new);
+                    }
+                })
                 .subscribe();
+        }
+
+        // 2. JS helper function to extract 11-character YouTube video ID
+        function extractYouTubeVideoId(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        async function loadChurchLiveStatus() {
+            if (!currentUserProfile || !currentUserProfile.church_id) return;
+
+            const { data: church, error } = await window.sbClient
+                .from('churches')
+                .select('id, live_stream_id, is_live, name')
+                .eq('id', currentUserProfile.church_id)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Error loading church live status:', error);
+                return;
+            }
+
+            if (church) {
+                updateLiveStreamUI(church);
+                if (church.live_stream_id) {
+                    const input = document.getElementById('admin-stream-url-input');
+                    if (input && !input.value) {
+                        input.value = `https://www.youtube.com/watch?v=${church.live_stream_id}`;
+                    }
+                }
+            }
+        }
+
+        function updateLiveStreamUI(church) {
+            const container = document.getElementById('live-player-container');
+            const overlay = document.getElementById('live-offline-overlay');
+            const badge = document.getElementById('live-status-badge');
+
+            if (!container || !overlay || !badge) return;
+
+            const isLive = church.is_live === true;
+            const liveStreamId = church.live_stream_id;
+
+            if (isLive && liveStreamId) {
+                badge.classList.remove('hidden');
+                overlay.classList.add('hidden');
+                container.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${liveStreamId}?autoplay=1" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            } else {
+                badge.classList.add('hidden');
+                overlay.classList.remove('hidden');
+                container.innerHTML = `<iframe src="https://www.youtube.com/embed/live_stream?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            }
+        }
+
+        // 3. & 4. Save live_stream_id and is_live status into Supabase on submit
+        async function handleGoLive() {
+            if (!currentUserProfile || !currentUserProfile.church_id) {
+                alert('Church profile not found.');
+                return;
+            }
+
+            const input = document.getElementById('admin-stream-url-input');
+            const rawUrl = input ? input.value.trim() : '';
+
+            if (!rawUrl) {
+                alert('Please enter a YouTube live stream URL or video link.');
+                return;
+            }
+
+            const videoId = extractYouTubeVideoId(rawUrl);
+            if (!videoId || videoId.length !== 11) {
+                alert('Invalid YouTube URL. Please provide a valid watch link, share link (youtu.be), or live stream URL containing an 11-character video ID.');
+                return;
+            }
+
+            const { error } = await window.sbClient
+                .from('churches')
+                .update({
+                    live_stream_id: videoId,
+                    is_live: true
+                })
+                .eq('id', currentUserProfile.church_id);
+
+            if (error) {
+                console.error('Error starting live stream:', error);
+                alert('Failed to go live: ' + error.message);
+                return;
+            }
+
+            alert('🔴 Broadcast is now LIVE!');
+            loadChurchLiveStatus();
+        }
+
+        async function handleEndStream() {
+            if (!currentUserProfile || !currentUserProfile.church_id) {
+                alert('Church profile not found.');
+                return;
+            }
+
+            const { error } = await window.sbClient
+                .from('churches')
+                .update({
+                    is_live: false
+                })
+                .eq('id', currentUserProfile.church_id);
+
+            if (error) {
+                console.error('Error ending live stream:', error);
+                alert('Failed to end stream: ' + error.message);
+                return;
+            }
+
+            alert('⏹️ Live stream has been ended and set to offline.');
+            loadChurchLiveStatus();
         }
 
         function switchScopeTab(tab) {
