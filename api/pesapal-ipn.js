@@ -1,7 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const getPesapalBaseUrl = () => {
-    const env = process.env.PESAPAL_ENV || 'sandbox';
+const getPesapalBaseUrl = (env) => {
     return env === 'live' 
         ? 'https://pay.pesapal.com/v3' 
         : 'https://cybqa.pesapal.com/pesapalv3';
@@ -20,29 +19,26 @@ const getSupabaseAdmin = () => {
     });
 };
 
-async function getPesapalToken() {
-    const consumerKey = process.env.PESAPAL_CONSUMER_KEY;
-    const consumerSecret = process.env.PESAPAL_CONSUMER_SECRET;
-
+async function getPesapalToken(consumerKey, consumerSecret, baseUrl) {
     if (!consumerKey || !consumerSecret) {
-        throw new Error('Missing PESAPAL_CONSUMER_KEY or PESAPAL_CONSUMER_SECRET environment variables');
+        throw new Error('Missing Pesapal Consumer Key or Consumer Secret for this church');
     }
 
-    const response = await fetch(`${getPesapalBaseUrl()}/api/Auth/RequestToken`, {
+    const response = await fetch(`${baseUrl}/api/Auth/RequestToken`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
         body: JSON.stringify({
-            consumer_key: consumerKey,
-            consumer_secret: consumerSecret
+            consumer_key: consumerKey.trim(),
+            consumer_secret: consumerSecret.trim()
         })
     });
 
     const data = await response.json();
-    if (!response.ok || !data.token) {
-        throw new Error(data.message || 'Failed to authenticate with Pesapal');
+    if (!response.ok || data.status !== "200" || !data.token) {
+        throw new Error(data.message || 'Failed to authenticate with Pesapal using church credentials');
     }
 
     return data.token;
@@ -72,11 +68,69 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 1. Authenticate with Pesapal
-        const token = await getPesapalToken();
+        const supabaseAdmin = getSupabaseAdmin();
 
-        // 2. Query transaction status from Pesapal API
-        const statusResponse = await fetch(`${getPesapalBaseUrl()}/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`, {
+        let churchId = null;
+
+        // 1. Query the transactions table using orderMerchantReference to get the transaction's church_id
+        if (orderMerchantReference) {
+            const { data: txData, error: txError } = await supabaseAdmin
+                .from('transactions')
+                .select('church_id')
+                .eq('merchant_reference', orderMerchantReference)
+                .single();
+
+            if (txData && txData.church_id) {
+                churchId = txData.church_id;
+            }
+        }
+
+        // Fallback: If not found by merchant_reference, try querying by pesapal_tracking_id
+        if (!churchId) {
+            const { data: txData, error: txError } = await supabaseAdmin
+                .from('transactions')
+                .select('church_id')
+                .eq('pesapal_tracking_id', orderTrackingId)
+                .single();
+
+            if (txData && txData.church_id) {
+                churchId = txData.church_id;
+            }
+        }
+
+        let pesapal_consumer_key = null;
+        let pesapal_consumer_secret = null;
+        let pesapal_env = 'sandbox';
+
+        if (churchId) {
+            // 2. Query the churches table with that church_id to retrieve pesapal credentials
+            const { data: churchData, error: churchError } = await supabaseAdmin
+                .from('churches')
+                .select('pesapal_consumer_key, pesapal_consumer_secret, pesapal_env')
+                .eq('id', churchId)
+                .single();
+
+            if (churchData) {
+                pesapal_consumer_key = churchData.pesapal_consumer_key;
+                pesapal_consumer_secret = churchData.pesapal_consumer_secret;
+                pesapal_env = churchData.pesapal_env || 'sandbox';
+            }
+        }
+
+        // Fallback to environment variables if church credentials are not found
+        if (!pesapal_consumer_key || !pesapal_consumer_secret) {
+            pesapal_consumer_key = process.env.PESAPAL_CONSUMER_KEY;
+            pesapal_consumer_secret = process.env.PESAPAL_CONSUMER_SECRET;
+            pesapal_env = process.env.PESAPAL_ENV || 'sandbox';
+        }
+
+        const baseUrl = getPesapalBaseUrl(pesapal_env);
+
+        // 3. Use those church credentials dynamically to authenticate with Pesapal
+        const token = await getPesapalToken(pesapal_consumer_key, pesapal_consumer_secret, baseUrl);
+
+        // 4. Query transaction status from Pesapal API
+        const statusResponse = await fetch(`${baseUrl}/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -91,26 +145,23 @@ export default async function handler(req, res) {
         }
 
         const paymentStatus = statusData.payment_status_description || statusData.status; 
-        // Pesapal payment_status_description can be 'Completed', 'Failed', 'Invalid', etc.
         
-        let dbStatus = 'pending';
+        let dbStatus = 'PENDING';
         if (paymentStatus && paymentStatus.toLowerCase() === 'completed') {
-            dbStatus = 'successful';
+            dbStatus = 'COMPLETED';
         } else if (['failed', 'invalid', 'reversed'].includes(paymentStatus?.toLowerCase())) {
-            dbStatus = 'failed';
+            dbStatus = 'FAILED';
         }
 
-        // 3. Update Supabase donations table using Admin client (bypassing RLS)
-        const supabaseAdmin = getSupabaseAdmin();
-
+        // 5. Update Supabase transactions table using Admin client (bypassing RLS)
         const updateQuery = orderMerchantReference 
-            ? supabaseAdmin.from('donations').update({ status: dbStatus, pesapal_tracking_id: orderTrackingId }).eq('transaction_reference', orderMerchantReference)
-            : supabaseAdmin.from('donations').update({ status: dbStatus }).eq('pesapal_tracking_id', orderTrackingId);
+            ? supabaseAdmin.from('transactions').update({ status: dbStatus, pesapal_tracking_id: orderTrackingId }).eq('merchant_reference', orderMerchantReference)
+            : supabaseAdmin.from('transactions').update({ status: dbStatus }).eq('pesapal_tracking_id', orderTrackingId);
 
         const { error: dbError } = await updateQuery;
 
         if (dbError) {
-            console.error('Failed to update donation status in Supabase:', dbError);
+            console.error('Failed to update transaction status in Supabase:', dbError);
             throw new Error('Database update failed');
         }
 

@@ -94,7 +94,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { amount, currency = 'KES', email, userId, church_id, description = 'Church Donation', phone_number } = req.body;
+        const { amount, currency = 'UGX', email, userId, church_id, description = 'Church Donation', phone_number } = req.body;
 
         if (!church_id) {
             return res.status(400).json({ error: "church_id is required" });
@@ -157,7 +157,7 @@ export default async function handler(req, res) {
             billing_address: {
                 email_address: donorEmail,
                 phone_number: phone_number || '0712345678',
-                country_code: 'KE',
+                country_code: 'UG',
                 first_name: 'Church',
                 last_name: 'Donor',
             }
