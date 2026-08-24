@@ -410,7 +410,8 @@
         }
 
         function renderMediaCards() {
-            const container = document.getElementById('sermons-container');
+            const container = document.getElementById('sermons-container') || document.getElementById('widget-audio');
+            if (!container) return;
 
             // Filter by Scope
             let filtered = fetchedMediaRecords.filter(item => {
