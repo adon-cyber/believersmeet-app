@@ -1,0 +1,37 @@
+﻿# Environment files and local secrets
+.env*
+**/.env*
+
+# Git, Vercel metadata and installed dependencies
+.git/
+.vercel/
+node_modules/
+
+# Supabase migrations and Edge Function source
+supabase/
+
+# Local backups and archives
+*.bak
+*.backup
+*-backup
+*.zip
+*.ps1
+*.sql
+deno.lock
+
+# Unused sandbox test endpoint
+api/pesapal-test-auth.js
+
+# Internal project reports and planning documents
+CLEANUP_READINESS_REPORT.md
+MASTER_SYSTEM_ROADMAP.md
+PHASE_4_2_TEST_REPORT.md
+PHASE_4_3_READINESS_REPORT.md
+PHASE_4_FINAL_LAUNCH_CHECKLIST.md
+PROJECT_AUDIT_REPORT.md
+SECURITY.md
+SYSTEM_AUDIT_REPORT.md
+WORKFLOW_AND_CLEANUP_REPORT.md
+
+# Local editor configuration
+.vscode/

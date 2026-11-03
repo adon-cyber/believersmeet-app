@@ -27,20 +27,36 @@
                 return;
             }
 
+            const unreadCount = count || 0;
             const badgeElements = document.querySelectorAll('#notification-badge, .notification-count, #notification-badge-count');
             badgeElements.forEach(el => {
-                if (count > 0) {
-                    el.innerText = count > 99 ? '99+' : count;
+                if (unreadCount > 0) {
+                    const displayVal = unreadCount > 99 ? '99+' : unreadCount;
+                    el.innerText = displayVal;
+                    el.setAttribute('aria-label', `${unreadCount} unread notifications`);
                     el.classList.remove('hidden');
                 } else {
                     el.classList.add('hidden');
                 }
             });
 
+            // Also support the numeric badge specifically if present or main #notification-badge
+            const mainBadge = document.getElementById('notification-badge');
+            if (mainBadge) {
+                if (unreadCount > 0) {
+                    const displayVal = unreadCount > 99 ? '99+' : unreadCount;
+                    mainBadge.innerText = displayVal;
+                    mainBadge.setAttribute('aria-label', `${unreadCount} unread notifications`);
+                    mainBadge.classList.remove('hidden');
+                } else {
+                    mainBadge.classList.add('hidden');
+                }
+            }
+
             // Also support the dot indicator if present
             const badgeDot = document.getElementById('notification-badge-dot');
             if (badgeDot) {
-                if (count > 0) {
+                if (unreadCount > 0) {
                     badgeDot.classList.remove('hidden');
                 } else {
                     badgeDot.classList.add('hidden');
@@ -84,48 +100,81 @@
     }
 
     function injectNotificationBellUI() {
-        // Find all navbar flex containers or right-side buttons
-        // We look for theme toggle buttons or logout links across navs
-        const themeToggles = document.querySelectorAll('button[onclick*="toggleTheme"], button[onclick*="window.toggleTheme"]');
-        
-        themeToggles.forEach(toggleBtn => {
-            const navContainer = toggleBtn.closest('div');
-            if (!navContainer) return;
+        // Prevent duplicate insertion
+        if (document.getElementById('notification-bell-container')) return;
 
-            // Check if notification container already exists here
-            if (navContainer.querySelector('#notification-bell-container')) return;
+        // Try to find the right-side nav container (e.g. where user profile / logout button resides)
+        // Usually headers have a flex container with profile.html link or logout button
+        let targetContainer = null;
 
-            const bellWrapper = document.createElement('div');
-            bellWrapper.id = 'notification-bell-container';
-            bellWrapper.className = 'relative inline-block flex-shrink-0 ml-2 sm:ml-3';
-            bellWrapper.innerHTML = `
-                <button id="notification-bell-btn" onclick="toggleNotificationDropdown(event)" 
-                        class="relative p-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-amber-400 dark:text-blue-300 hover:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 transition-all shadow-sm focus:outline-none flex items-center justify-center"
-                        title="Notifications"
-                        aria-label="Notifications">
-                    <i class="fas fa-bell text-lg"></i>
-                    <span id="notification-badge-dot" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 hidden"></span>
-                </button>
+        // Strategy 1: Look for the right-side icons container (contains profile link or logout button)
+        const logoutBtns = document.querySelectorAll('button[onclick*="logout"], a[href*="profile.html"], button[title*="Logout"]');
+        for (const btn of logoutBtns) {
+            const container = btn.closest('div');
+            if (container && (container.classList.contains('flex') || container.classList.contains('items-center'))) {
+                targetContainer = container;
+                break;
+            }
+        }
 
-                <!-- Dropdown / Slide-out panel -->
-                <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 overflow-hidden transition-all duration-200 text-left">
-                    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                            <i class="fas fa-bell text-blue-600"></i> Notifications
-                        </h3>
-                        <button onclick="markAllAsRead()" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                            Mark all as read
-                        </button>
-                    </div>
-                    <div id="notification-list" class="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
-                        <div class="p-6 text-center text-sm text-gray-500 dark:text-gray-400">Loading notifications...</div>
-                    </div>
+        // Strategy 2: Fallback to theme toggles if any exist
+        if (!targetContainer) {
+            const themeToggles = document.querySelectorAll('button[onclick*="toggleTheme"], button[onclick*="window.toggleTheme"]');
+            for (const toggleBtn of themeToggles) {
+                const container = toggleBtn.closest('div');
+                if (container) {
+                    targetContainer = container;
+                    break;
+                }
+            }
+        }
+
+        // Strategy 3: Fallback to header flex container right-end
+        if (!targetContainer) {
+            const headerFlex = document.querySelector('header .max-w-7xl, header .container, header div');
+            if (headerFlex) {
+                targetContainer = headerFlex.lastElementChild;
+            }
+        }
+
+        if (!targetContainer) return;
+
+        const bellWrapper = document.createElement('div');
+        bellWrapper.id = 'notification-bell-container';
+        bellWrapper.className = 'relative inline-block flex-shrink-0 ml-2 sm:ml-3';
+        bellWrapper.innerHTML = `
+            <button id="notification-bell-btn" onclick="toggleNotificationDropdown(event)"
+                    class="relative p-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-amber-400 dark:text-blue-300 hover:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 transition-all shadow-sm focus:outline-none flex items-center justify-center"
+                    title="Notifications"
+                    aria-label="Notifications">
+                <i class="fas fa-bell text-lg"></i>
+                <span id="notification-badge" class="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full border-2 border-white dark:border-gray-900 hidden shadow-md" aria-label="3 unread notifications"></span>
+                <span id="notification-badge-dot" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 hidden"></span>
+            </button>
+
+            <!-- Dropdown / Slide-out panel -->
+            <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 overflow-hidden transition-all duration-200 text-left">
+                <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                        <i class="fas fa-bell text-blue-600"></i> Notifications
+                    </h3>
+                    <button onclick="markAllAsRead()" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                        Mark all as read
+                    </button>
                 </div>
-            `;
+                <div id="notification-list" class="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                    <div class="p-6 text-center text-sm text-gray-500 dark:text-gray-400">Loading notifications...</div>
+                </div>
+            </div>
+        `;
 
-            // Insert before theme toggle or append
-            navContainer.insertBefore(bellWrapper, toggleBtn);
-        });
+        // Insert before logout button if present and a valid child of targetContainer, otherwise append
+        const logoutBtn = targetContainer.querySelector('button[onclick*="logout"], button[title*="Logout"]');
+        if (logoutBtn && logoutBtn.parentNode === targetContainer) {
+            targetContainer.insertBefore(bellWrapper, logoutBtn);
+        } else {
+            targetContainer.appendChild(bellWrapper);
+        }
 
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
@@ -332,8 +381,16 @@
         }).join('');
     }
 
+    // Keep track of ongoing markAsRead requests to avoid duplicate PATCH requests
+    const activeMarkAsReadRequests = new Set();
+
     window.handleNotificationClick = async function(event, notificationId, targetLink) {
-        await markAsRead(notificationId);
+        try {
+            await markAsRead(notificationId);
+        } catch (err) {
+            console.warn('Non-blocking error handling notification click markAsRead:', err);
+        }
+
         if (!targetLink || targetLink === '#') return;
 
         if (targetLink.includes('#')) {
@@ -360,32 +417,90 @@
 
     window.markAsRead = async function(notificationId) {
         if (!sbClient) return;
+
+        // Extract the raw UUID if a prefix was attached (e.g. 'prayer-1234-...')
+        let cleanId = notificationId;
+        const uuidMatch = notificationId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        
+        if (uuidMatch) {
+            cleanId = uuidMatch[0];
+        } else {
+            console.warn('Invalid UUID format passed to markAsRead:', notificationId);
+            return;
+        }
+
+        // Avoid duplicate PATCH requests if the same notification is clicked multiple times
+        if (activeMarkAsReadRequests.has(cleanId)) {
+            return;
+        }
+        activeMarkAsReadRequests.add(cleanId);
+
         try {
-            // Extract the raw UUID if a prefix was attached (e.g. 'prayer-1234-...')
-            let cleanId = notificationId;
-            const uuidMatch = notificationId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-            
-            if (uuidMatch) {
-                cleanId = uuidMatch[0];
-            } else {
-                console.warn('Invalid UUID format passed to markAsRead:', notificationId);
+            // 1. Retrieve current session
+            let { data: { session }, error: sessionError } = await sbClient.auth.getSession();
+
+            // 2. If no session or session expired / expiring, try refreshing if refresh_token is available
+            if (!session || sessionError) {
+                if (sbClient.auth.refreshSession) {
+                    try {
+                        const { data: refreshData, error: refreshError } = await sbClient.auth.refreshSession();
+                        if (!refreshError && refreshData && refreshData.session) {
+                            session = refreshData.session;
+                        }
+                    } catch (refErr) {
+                        console.warn('Session refresh attempt threw error:', refErr);
+                    }
+                }
+            }
+
+            // 3. Recheck session validity after refresh attempt
+            if (!session) {
+                console.warn('Session is missing or expired. Asking user to sign in again.');
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Your session has expired. Please sign in again.', 'error');
+                } else {
+                    alert('Your session has expired. Please sign in again.');
+                }
                 return;
             }
 
-            const { error } = await sbClient
+            // 4. Perform the update using the authenticated client
+            let { error } = await sbClient
                 .from('notifications')
                 .update({ is_read: true })
                 .eq('id', cleanId);
 
+            // 5. If update returns an authorization error (JWT expired / 401 / PGRST303), try one manual refresh and retry once
+            if (error && (error.code === 'PGRST303' || error.status === 401 || (error.message && error.message.toLowerCase().includes('jwt')))) {
+                console.warn('Encountered authorization error, attempting token refresh and single retry:', error);
+                if (sbClient.auth.refreshSession) {
+                    const { data: retryRefreshData, error: retryRefreshError } = await sbClient.auth.refreshSession();
+                    if (!retryRefreshError && retryRefreshData && retryRefreshData.session) {
+                        const retryRes = await sbClient
+                            .from('notifications')
+                            .update({ is_read: true })
+                            .eq('id', cleanId);
+                        error = retryRes.error;
+                    }
+                }
+            }
+
             if (error) {
-                console.error('Error marking notification as read:', error);
+                console.error('Error marking notification as read after session validation/refresh:', error);
+                if (error.code === 'PGRST303' || error.status === 401) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Authentication failed. Please sign in again.', 'error');
+                    }
+                }
                 return;
             }
 
-            // Refresh list
+            // Refresh list and unread counts
             await loadNotifications();
         } catch (err) {
             console.error('Error in markAsRead:', err);
+        } finally {
+            activeMarkAsReadRequests.delete(cleanId);
         }
     };
 

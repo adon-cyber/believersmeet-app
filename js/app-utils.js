@@ -93,8 +93,10 @@ window.setupPageSwitcher = function(selectElementId, sectionMap) {
       if (el) {
         if (selected === 'all' || selected === key) {
           el.classList.remove('d-none');
+          el.classList.remove('hidden');
         } else {
           el.classList.add('d-none');
+          el.classList.add('hidden');
         }
       }
     });

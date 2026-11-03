@@ -1,39 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profiles & Directory | BelieversMeet</title>
+    <title>Profiles & Directory - BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/app-utils.js"></script>
     <script src="js/auth-guard.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body style="display: none; background-color: #f8f9fa !important;" class="bg-light min-h-screen flex flex-col">
+<body style="display: none;" class="bg-gray-50 min-h-screen flex flex-col">
 
-    <!-- Navigation Bar -->
-    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-                <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                    <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                    <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
-                </div>
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
+                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                </a>
+            </div>
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
+                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
+                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
+                <a href="profile.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap">Profile</a>
+                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
+            </nav>
+            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
+                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
+                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
+                <a href="profile.html" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0">Profile</a>
+                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
+                    <i class="fas fa-user"></i>
+                </a>
+                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Content Area -->
     <main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
@@ -41,10 +64,14 @@
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xl-9 space-y-6">
         
-        <!-- Page Header -->
-        <div class="bg-primary text-white p-4 p-md-5 mb-4 shadow-sm my-6" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
-            <h2 class="fw-bold mb-2"><i class="bi bi-calendar-event me-2"></i> My Profile</h2>
-            <p class="mb-0 text-white-50 fs-5">Manage your account information, church membership, and preferences.</p>
+        <!-- Banner & Upload Button Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+                    <i class="fas fa-user-circle"></i> My Profile
+                </h1>
+                <p class="text-blue-100 mt-1 text-sm sm:text-base">Manage your account information, church membership, and preferences.</p>
+            </div>
         </div>
 
         <!-- Success Notification Toast -->
@@ -195,7 +222,7 @@
             // Fetch logged in user profile
             const { data: profile, error: profError } = await window.sbClient
                 .from('profiles')
-                .select('*, churches(name)')
+                .select('id, full_name, email, role, home_cell, favorite_scripture, bio, church_id, churches:church_id(name)')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -380,15 +407,37 @@
         async function fetchDirectoryRecords() {
             const { data: records, error } = await window.sbClient
                 .from('profiles')
-                .select('id, full_name, role, home_cell, favorite_scripture, bio, church_id, churches(name)')
+                .select('id, full_name, role, home_cell, favorite_scripture, bio, church_id, churches:church_id(name)')
                 .order('full_name', { ascending: true });
 
             if (error) {
-                document.getElementById('directory-container').innerHTML = `<p class="text-center text-red-500 py-4">Failed to fetch data ledger.</p>`;
+                console.warn("Directory query with foreign key failed, retrying without explicit embedding constraint:", error.message);
+                const fallbackRes = await window.sbClient
+                    .from('profiles')
+                    .select('id, full_name, role, home_cell, favorite_scripture, bio, church_id')
+                    .order('full_name', { ascending: true });
+
+                if (fallbackRes.error) {
+                    console.error("Directory fetch error:", fallbackRes.error);
+                    document.getElementById('directory-container').innerHTML = `
+                        <div class="text-center py-8 px-4 bg-red-50/50 rounded-2xl border border-red-100">
+                            <i class="fas fa-exclamation-circle text-red-500 text-2xl mb-2"></i>
+                            <p class="text-sm font-bold text-gray-900">Unable to load fellowship directory</p>
+                            <p class="text-xs text-gray-500 mt-1">${escapeHTML(fallbackRes.error.message || 'Please check your connection and try again.')}</p>
+                            <button onclick="fetchDirectoryRecords()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition">Retry Loading</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                processDirectoryRecords(fallbackRes.data || []);
                 return;
             }
 
-            const allProfiles = records || [];
+            processDirectoryRecords(records || []);
+        }
+
+        function processDirectoryRecords(allProfiles) {
             const myChurchId = loggedInUserProfile.church_id || null;
 
             fellowMembersDataset = [];

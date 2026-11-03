@@ -1,47 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 scroll-smooth">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Gallery | BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        }
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-12px)' },
-                        },
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(24px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -51,144 +21,218 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans text-slate-100 bg-gallery-showcase antialiased selection:bg-blue-500 selection:text-white">
+<body class="bg-gray-50 min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
 
-<!-- Navigation Bar -->
-<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                <a href="gallery.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Gallery</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors flex-shrink-0" style="color: #fecaca !important;">Logout</a>
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
+                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                </a>
+            </div>
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
+                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
+                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
+                <a href="gallery.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap">Gallery</a>
+                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
+            </nav>
+            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
+                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
+                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
+                <a href="gallery.html" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0">Gallery</a>
+                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
+                    <i class="fas fa-user"></i>
+                </a>
+                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
-    </div>
-</nav>
+    </header>
 
-<!-- Main Content Area -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full">
-    
-    <!-- Page Header Section -->
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 mb-10 text-white shadow-md">
-        <div class="max-w-3xl">
-            <span class="bg-blue-500 bg-opacity-40 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Community Moments</span>
-            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">Church Photo Gallery</h1>
-            <p class="text-blue-100 text-base sm:text-lg leading-relaxed">
-                Explore fellowship moments, worship services, and community events captured through our lens.
-            </p>
-        </div>
-    </div>
+    <!-- Main Container -->
+    <main class="py-6 sm:py-8 flex-grow" style="min-height: calc(100vh - 150px);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="space-y-6">
 
-    <!-- Image Gallery Grid (CSS Grid: 3 cols desktop, 2 cols tablet, 1 col mobile) -->
-    <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        <!-- Static Placeholder Item 1 -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
-            <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
-                <img src="images/meet2.jpg" alt="Sunday Worship Service" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500" style="max-width: 100%; object-fit: cover;">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> Sunday Worship Experience</span>
-                </div>
-            </div>
-            <div class="p-4 flex items-center justify-between bg-white">
-                <div>
-                    <h3 class="font-bold text-gray-900 text-sm">Sunday Worship</h3>
-                    <p class="text-xs text-gray-500">Main Sanctuary Celebration</p>
-                </div>
-                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full">Community</span>
-            </div>
-        </div>
-
-        <!-- Static Placeholder Item 2 -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
-            <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
-                <img src="images/BELIEVERS.LOGO.png" alt="Believers Logo & Fellowship" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 bg-blue-50 p-8" style="max-width: 100%; object-fit: cover;">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> BelieversMeet Identity</span>
-                </div>
-            </div>
-            <div class="p-4 flex items-center justify-between bg-white">
-                <div>
-                    <h3 class="font-bold text-gray-900 text-sm">Believers Fellowship</h3>
-                    <p class="text-xs text-gray-500">United in Faith</p>
-                </div>
-                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full">Branding</span>
-            </div>
-        </div>
-
-        <!-- Static Placeholder Item 3 -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col group">
-            <div class="relative overflow-hidden aspect-w-16 aspect-h-12 bg-gray-100 h-64">
-                <img src="images/meet2.jpg" alt="Youth Fellowship Gathering" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 filter brightness-95" style="max-width: 100%; object-fit: cover;">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    <span class="text-white text-sm font-medium"><i class="fas fa-heart text-red-400 mr-1.5"></i> Youth Ministry Outing</span>
-                </div>
-            </div>
-            <div class="p-4 flex items-center justify-between bg-white">
-                <div>
-                    <h3 class="font-bold text-gray-900 text-sm">Youth Fellowship</h3>
-                    <p class="text-xs text-gray-500">Next Generation Leaders</p>
-                </div>
-                <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2.5 py-1 rounded-full">Youth</span>
-            </div>
-        </div>
-
-    </div>
-
-</main>
-
-<!-- Lightbox Modal for Full-Screen Preview -->
-<div id="gallery-lightbox" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
-    <div class="relative max-w-4xl w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col md:flex-row transform scale-95 transition-transform duration-300" id="lightbox-content-box">
-        <button onclick="closeLightbox()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
-            <i class="fas fa-times text-lg"></i>
-        </button>
-        <div class="md:w-3/5 bg-black flex items-center justify-center relative min-h-[300px] md:min-h-[500px]">
-            <img id="lightbox-img" src="" alt="Preview" class="max-h-[80vh] w-auto object-contain">
-        </div>
-        <div class="md:w-2/5 p-6 flex flex-col justify-between bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800">
-            <div>
-                <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-3">
-                    <i class="fas fa-heart text-red-400 mr-1"></i> Community Memory
-                </span>
-                <h3 id="lightbox-caption" class="text-xl font-bold text-white mb-4 leading-snug"></h3>
-                <div class="flex items-center space-x-3 mb-6 pt-4 border-t border-slate-800">
-                    <div id="lightbox-uploader-avatar" class="w-10 h-10 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center font-bold border border-blue-500/30">
-                        U
-                    </div>
+                <!-- Page Header Section -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <p class="text-xs text-slate-400">Uploaded by</p>
-                        <p id="lightbox-uploader" class="text-sm font-medium text-slate-200"></p>
+                        <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">Community Moments</span>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+                            <i class="fas fa-images"></i> Church Photo Gallery
+                        </h1>
+                        <p class="text-blue-100 mt-1 text-sm sm:text-base">
+                            Explore fellowship moments, worship services, and community events captured through our lens.
+                        </p>
                     </div>
                 </div>
+
+                <!-- Image Gallery Grid -->
+                <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <!-- Static Placeholder Item 1 -->
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col group">
+                        <div class="relative overflow-hidden w-full h-64 bg-gray-100">
+                            <img src="images/meet2.jpg" alt="Sunday Worship Service" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+
+                            <!-- Floating badge -->
+                            <div class="absolute top-3 right-3 bg-blue-600/95 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1 z-10">
+                                <i class="fas fa-heart text-red-400"></i>
+                                <span>Memory</span>
+                            </div>
+
+                            <!-- Caption overlay on hover -->
+                            <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 flex items-end">
+                                <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">Sunday Worship Experience</p>
+                            </div>
+                        </div>
+                        <div class="p-5 flex items-center justify-between bg-white border-t border-gray-100">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-200">
+                                    S
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900 text-sm">Sunday Worship</h3>
+                                    <p class="text-xs text-gray-500 flex items-center mt-0.5">
+                                        <i class="far fa-calendar-alt mr-1 text-blue-600"></i> Main Sanctuary Celebration
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer p-2" title="Like / Love">
+                                <i class="fas fa-heart text-lg hover:text-red-500 transition-colors"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Static Placeholder Item 2 -->
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col group">
+                        <div class="relative overflow-hidden w-full h-64 bg-gray-100">
+                            <img src="images/BELIEVERS.LOGO.png" alt="Believers Logo & Fellowship" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-blue-50 p-8">
+
+                            <!-- Floating badge -->
+                            <div class="absolute top-3 right-3 bg-blue-600/95 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1 z-10">
+                                <i class="fas fa-heart text-red-400"></i>
+                                <span>Memory</span>
+                            </div>
+
+                            <!-- Caption overlay on hover -->
+                            <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 flex items-end">
+                                <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">BelieversMeet Identity</p>
+                            </div>
+                        </div>
+                        <div class="p-5 flex items-center justify-between bg-white border-t border-gray-100">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-200">
+                                    B
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900 text-sm">Believers Fellowship</h3>
+                                    <p class="text-xs text-gray-500 flex items-center mt-0.5">
+                                        <i class="far fa-calendar-alt mr-1 text-blue-600"></i> United in Faith
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer p-2" title="Like / Love">
+                                <i class="fas fa-heart text-lg hover:text-red-500 transition-colors"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Static Placeholder Item 3 -->
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col group">
+                        <div class="relative overflow-hidden w-full h-64 bg-gray-100">
+                            <img src="images/meet2.jpg" alt="Youth Fellowship Gathering" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+
+                            <!-- Floating badge -->
+                            <div class="absolute top-3 right-3 bg-blue-600/95 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg flex items-center space-x-1 z-10">
+                                <i class="fas fa-heart text-red-400"></i>
+                                <span>Memory</span>
+                            </div>
+
+                            <!-- Caption overlay on hover -->
+                            <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 flex items-end">
+                                <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">Youth Ministry Outing</p>
+                            </div>
+                        </div>
+                        <div class="p-5 flex items-center justify-between bg-white border-t border-gray-100">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-200">
+                                    Y
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900 text-sm">Youth Fellowship</h3>
+                                    <p class="text-xs text-gray-500 flex items-center mt-0.5">
+                                        <i class="far fa-calendar-alt mr-1 text-blue-600"></i> Next Generation Leaders
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer p-2" title="Like / Love">
+                                <i class="fas fa-heart text-lg hover:text-red-500 transition-colors"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
-            <div class="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                <span id="lightbox-date" class="flex items-center">
-                    <i class="far fa-calendar-alt mr-1.5 text-blue-400"></i> 
-                </span>
-                <span class="text-blue-400 font-medium hover:underline cursor-pointer" onclick="closeLightbox()">Close Viewer</span>
+        </div>
+    </main>
+
+    <!-- Lightbox Modal for Full-Screen Preview -->
+    <div id="gallery-lightbox" class="fixed inset-0 z-50 hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="relative max-w-4xl w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col md:flex-row transform scale-95 transition-transform duration-300" id="lightbox-content-box">
+            <button onclick="closeLightbox()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="md:w-3/5 bg-black flex items-center justify-center relative min-h-[300px] md:min-h-[500px]">
+                <img id="lightbox-img" src="" alt="Preview" class="max-h-[80vh] w-auto object-contain">
+            </div>
+            <div class="md:w-2/5 p-6 flex flex-col justify-between bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800">
+                <div>
+                    <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full uppercase tracking-wider mb-3">
+                        <i class="fas fa-heart text-red-400 mr-1"></i> Community Memory
+                    </span>
+                    <h3 id="lightbox-caption" class="text-xl font-bold text-white mb-4 leading-snug"></h3>
+                    <div class="flex items-center space-x-3 mb-6 pt-4 border-t border-slate-800">
+                        <div id="lightbox-uploader-avatar" class="w-10 h-10 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center font-bold border border-blue-500/30">
+                            U
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Uploaded by</p>
+                            <p id="lightbox-uploader" class="text-sm font-medium text-slate-200"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <span id="lightbox-date" class="flex items-center">
+                        <i class="far fa-calendar-alt mr-1.5 text-blue-400"></i>
+                    </span>
+                    <span class="text-blue-400 font-medium hover:underline cursor-pointer" onclick="closeLightbox()">Close Viewer</span>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Footer -->
-<footer class="bg-white border-t border-gray-200 mt-auto py-6">
-    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
-        &copy; 2026 BelieversMeet. All rights reserved. Building communities in faith and love.
-    </div>
-</footer>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+            &copy; 2026 BelieversMeet. All rights reserved. Building communities in faith and love.
+        </div>
+    </footer>
 
     <script>
         function logoutUser(e) {
@@ -213,8 +257,6 @@
                 console.log('Supabase Error:', error);
             }
 
-            console.log("Supabase fetched gallery photos:", data, error);
-
             if (error) {
                 console.error("Error loading gallery:", error);
                 const grid = document.getElementById('gallery-grid');
@@ -231,13 +273,11 @@
             if (!grid) return;
 
             if (!photos || photos.length === 0) {
-                grid.innerHTML = '<div class="col-span-full py-16 text-center text-gray-400 animate-fade-in-up"><i class="fas fa-images text-5xl mb-3 text-gray-600"></i><p class="text-lg">No gallery memories found yet.</p></div>';
+                grid.innerHTML = '<div class="col-span-full py-16 text-center text-gray-500"><i class="fas fa-images text-5xl mb-3 text-gray-400"></i><p class="text-lg">No gallery memories found yet.</p></div>';
                 return;
             }
 
             grid.innerHTML = photos.map((photo, index) => {
-                const delayClass = `animate-fade-in-up`;
-                const animationDelay = `animation-delay: ${index * 100}ms;`;
                 const formattedDate = photo.created_at ? new Date(photo.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent';
                 const uploader = photo.uploader_name || 'Community Member';
                 const caption = photo.caption || 'Fellowship Moment';
@@ -252,8 +292,8 @@
                 const safeDate = formattedDate.replace(/'/g, "\\'");
 
                 return `
-                    <div class="${delayClass} bg-slate-900 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-800 flex flex-col group transform hover:-translate-y-1 cursor-pointer" style="${animationDelay}" onclick="openLightbox('${safeImgUrl}', '${safeCaption}', '${safeUploader}', '${safeDate}')">
-                        <div class="relative overflow-hidden w-full h-64 bg-slate-100">
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col group cursor-pointer" onclick="openLightbox('${safeImgUrl}', '${safeCaption}', '${safeUploader}', '${safeDate}')">
+                        <div class="relative overflow-hidden w-full h-64 bg-gray-100">
                             <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(caption)}" onerror="console.error('Image failed to load:', this.src)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             
                             <!-- Floating badge -->
@@ -263,23 +303,23 @@
                             </div>
 
                             <!-- Caption overlay on hover -->
-                            <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 flex items-end">
+                            <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 flex items-end">
                                 <p class="text-white text-base font-semibold line-clamp-2 drop-shadow-md mb-1">${escapeHTML(caption)}</p>
                             </div>
                         </div>
-                        <div class="p-5 flex items-center justify-between bg-slate-900/90 backdrop-blur-md border-t border-slate-800/80">
+                        <div class="p-5 flex items-center justify-between bg-white border-t border-gray-100">
                             <div class="flex items-center space-x-3">
-                                <div class="w-9 h-9 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm border border-blue-500/30">
+                                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-200">
                                     ${escapeHTML(uploader.charAt(0).toUpperCase())}
                                 </div>
                                 <div>
-                                    <h3 class="font-medium text-slate-200 text-sm">${escapeHTML(uploader)}</h3>
-                                    <p class="text-xs text-slate-400 flex items-center mt-0.5">
-                                        <i class="far fa-calendar-alt mr-1 text-blue-400"></i> ${escapeHTML(formattedDate)}
+                                    <h3 class="font-medium text-gray-900 text-sm">${escapeHTML(uploader)}</h3>
+                                    <p class="text-xs text-gray-500 flex items-center mt-0.5">
+                                        <i class="far fa-calendar-alt mr-1 text-blue-600"></i> ${escapeHTML(formattedDate)}
                                     </p>
                                 </div>
                             </div>
-                            <div class="text-slate-400 hover:text-blue-400 transition-colors cursor-pointer p-2" title="Like / Love">
+                            <div class="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer p-2" title="Like / Love">
                                 <i class="fas fa-heart text-lg hover:text-red-500 transition-colors"></i>
                             </div>
                         </div>
@@ -312,6 +352,8 @@
                     if (profile && (profile.role === 'admin' || profile.role === 'super_admin')) {
                         const adminNav = document.getElementById('admin-nav-link');
                         if (adminNav) adminNav.classList.remove('hidden');
+                        const adminNavMobile = document.getElementById('admin-nav-link-mobile');
+                        if (adminNavMobile) adminNavMobile.classList.remove('hidden');
                     }
                 }
 
@@ -379,7 +421,6 @@
 
         document.addEventListener('DOMContentLoaded', initGallery);
     </script>
-
-  <script src="js/notifications.js"></script>
+    <script src="js/notifications.js"></script>
 </body>
 </html>

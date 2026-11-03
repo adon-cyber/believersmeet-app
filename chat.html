@@ -1,54 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbox & Chat | BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body style="background-image: linear-gradient(rgba(243, 244, 246, 0.85), rgba(243, 244, 246, 0.85)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed;" class="min-h-screen flex flex-col overflow-x-hidden text-gray-800">
+<body class="bg-gray-50 min-h-screen flex flex-col overflow-x-hidden text-gray-800">
 
-<!-- Global Navigation Bar -->
-<nav class="bg-blue-600 shadow-md flex-shrink-0 w-full" style="background-color: #007bff !important;">
-    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <!-- Logo & Title -->
-            <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 pr-2 sm:pr-4">
+<!-- Navigation Header -->
+<header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3 shrink-0">
+            <a href="feed.html" class="flex items-center space-x-2">
                 <div id="church-logo-container" class="flex items-center space-x-2">
-                    <img id="church-logo-img" src="" alt="Church Logo" class="w-8 h-8 rounded-full object-cover hidden">
-                    <span id="church-logo-placeholder" class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">BM</span>
+                    <img id="church-logo-img" src="" alt="Church Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow hidden">
+                    <span id="church-logo-placeholder" class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold border border-white/20 shadow">BM</span>
                 </div>
-                <a href="feed.html" class="text-lg sm:text-xl font-bold text-white flex-shrink-0">BelieversMeet</a>
-            </div>
-            
-            <!-- Swipable Links -->
-            <div class="flex-1 min-w-0 flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-1 sm:px-2 scroll-smooth [-webkit-overflow-scrolling:touch] no-scrollbar">
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1.5">
-                    Inbox <span id="unread-badge" class="badge bg-danger hidden">0</span>
-                </a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
-            </div>
+                <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+            </a>
+        </div>
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-6">
+            <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
+            <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+            <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
+            <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+            <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
+            <a href="chat.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap flex items-center gap-1.5">
+                Inbox <span id="unread-badge" class="badge bg-red-600 text-white px-1.5 py-0.2 rounded-full text-xs hidden">0</span>
+            </a>
+            <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
+        </nav>
+        <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+        <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+            <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
+            <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+            <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
+            <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+            <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
+            <a href="chat.html" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0 flex items-center gap-1">
+                Inbox <span id="unread-badge-mobile" class="badge bg-red-600 text-white px-1 rounded-full text-[10px] hidden">0</span>
+            </a>
+            <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
+        </div>
+        <div class="flex items-center space-x-3 shrink-0">
+            <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
+                <i class="fas fa-user"></i>
+            </a>
+            <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
     </div>
-</nav>
+</header>
 
 <!-- Main Unified Split-Screen Container -->
 <main class="flex flex-col md:flex-row w-full max-w-6xl mx-auto h-[calc(100vh-4rem)] overflow-hidden my-auto shadow-2xl bg-white rounded-none md:rounded-xl border border-gray-200">
@@ -56,14 +73,14 @@
     <!-- Left Sidebar (The Inbox List) -->
     <div id="left-sidebar" class="w-full md:w-1/3 md:max-w-sm flex flex-col bg-white border-r border-gray-200 h-full flex-shrink-0">
         <!-- Tabs Header -->
-        <div class="flex border-b border-gray-200 bg-gray-50 flex-shrink-0">
-            <button id="tab-fellow-members" onclick="switchTab('fellow')" class="flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors">
+        <div class="flex border-b border-gray-200 bg-white p-3 gap-2 flex-shrink-0">
+            <button id="tab-fellow-members" onclick="switchTab('fellow')" class="whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2">
                 <i class="fas fa-church"></i> Fellow Church
             </button>
-            <button id="tab-other-churches" onclick="switchTab('other')" class="flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors">
+            <button id="tab-other-churches" onclick="switchTab('other')" class="whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition flex items-center justify-center gap-2">
                 <i class="fas fa-globe"></i> Other Churches
             </button>
-            <button id="tab-finance-inquiries" onclick="switchTab('finance')" class="hidden flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors" title="Finance Inquiries">
+            <button id="tab-finance-inquiries" onclick="switchTab('finance')" class="hidden whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition flex items-center justify-center gap-2" title="Finance Inquiries">
                 <i class="fas fa-wallet"></i> Finance
             </button>
         </div>
@@ -193,21 +210,21 @@
         const otherBtn = document.getElementById('tab-other-churches');
         const financeBtn = document.getElementById('tab-finance-inquiries');
 
-        fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
-        otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+        fellowBtn.className = "whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition flex items-center justify-center gap-2";
+        otherBtn.className = "whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition flex items-center justify-center gap-2";
         if (financeBtn) {
-            financeBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition-colors";
+            financeBtn.className = "whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-gray-900 bg-gray-50 transition flex items-center justify-center gap-2";
         }
 
         if (tab === 'fellow') {
-            fellowBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
+            fellowBtn.className = "whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2";
             loadUserDirectory();
         } else if (tab === 'other') {
-            otherBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
+            otherBtn.className = "whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2";
             loadUserDirectory();
         } else if (tab === 'finance') {
             if (financeBtn) {
-                financeBtn.className = "flex-1 py-3 px-2 text-xs sm:text-sm font-bold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition-colors";
+                financeBtn.className = "whitespace-nowrap flex-1 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-2";
             }
             loadFinanceInquiries();
         }
@@ -218,10 +235,10 @@
         const directoryEl = document.getElementById('users-directory');
 
         try {
-            // Fetch messages with department = 'finance'
+            // Fetch messages with department = 'finance' without embedded churches
             const { data: messages, error } = await window.sbClient
                 .from('messages')
-                .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, email, avatar_url, church_id, churches!profiles_church_id_fkey(name))')
+                .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, email, avatar_url, church_id)')
                 .eq('department', 'finance')
                 .order('created_at', { ascending: false });
 
@@ -232,12 +249,30 @@
                 return;
             }
 
+            // Gather all unique church IDs from sender profiles
+            const churchIds = [...new Set(messages.map(m => m.sender?.church_id).filter(Boolean))];
+            const churchMap = {};
+            if (churchIds.length > 0) {
+                const { data: churchesData } = await window.sbClient
+                    .from('church_directory')
+                    .select('id, name')
+                    .in('id', churchIds);
+                if (churchesData) {
+                    churchesData.forEach(c => {
+                        churchMap[c.id] = c.name;
+                    });
+                }
+            }
+
             // Group by unique sender_id or conversation threads
             const threadsMap = new Map();
             messages.forEach(msg => {
                 const sId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
                 // If I am the finance admin viewing inquiries, show senders who are not me
                 const senderProfile = msg.sender_id === currentUser.id ? null : msg.sender;
+                if (senderProfile) {
+                    senderProfile.church_name = senderProfile.church_id ? (churchMap[senderProfile.church_id] || 'Church Member') : 'Church Member';
+                }
                 const contactId = msg.sender_id === currentUser.id ? (msg.receiver_id || msg.recipient_id) : msg.sender_id;
 
                 if (contactId && !threadsMap.has(contactId)) {
@@ -260,7 +295,7 @@
             directoryEl.innerHTML = threads.map(t => {
                 const displayName = escapeHTML(t.profile.full_name || t.profile.email || 'Member');
                 const initial = displayName.charAt(0).toUpperCase();
-                const churchName = t.profile.churches?.name ? t.profile.churches.name : 'Finance Inquiry';
+                const churchName = t.profile.church_name ? t.profile.church_name : 'Finance Inquiry';
                 const isSelected = targetUser && targetUser.id === t.contactId;
 
                 return `
@@ -303,7 +338,7 @@
 
             let query = window.sbClient
                 .from('profiles')
-                .select('*, churches!profiles_church_id_fkey(name, id)')
+                .select('*')
                 .not('id', 'in', `(${excludedIds.join(',')})`);
 
             const userChurchId = currentUser.church_id || localStorage.getItem('church_id');
@@ -329,10 +364,25 @@
                 return;
             }
 
+            // Fetch church names separately from church_directory view
+            const churchIds = [...new Set(profiles.map(p => p.church_id).filter(Boolean))];
+            const churchMap = {};
+            if (churchIds.length > 0) {
+                const { data: churchesData } = await window.sbClient
+                    .from('church_directory')
+                    .select('id, name')
+                    .in('id', churchIds);
+                if (churchesData) {
+                    churchesData.forEach(c => {
+                        churchMap[c.id] = c.name;
+                    });
+                }
+            }
+
             directoryEl.innerHTML = profiles.map(p => {
                 const displayName = escapeHTML(p.full_name || p.email || 'Member');
                 const initial = displayName.charAt(0).toUpperCase();
-                const churchName = p.churches?.name ? p.churches.name : 'Independent';
+                const churchName = p.church_id ? (churchMap[p.church_id] || 'Independent') : 'Independent';
                 const isSelected = targetUser && targetUser.id === p.id;
 
                 return `
@@ -360,8 +410,22 @@
     async function selectUser(userId, departmentOverride = null) {
         if (!userId) return;
         
-        // Fetch profile
-        const { data: profile, error } = await window.sbClient.from('profiles').select('*, churches!profiles_church_id_fkey(name)').eq('id', userId).maybeSingle();
+        // Fetch profile without embedded churches
+        const { data: profile, error } = await window.sbClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+        if (error || !profile) {
+            alert("Could not load user profile.");
+            return;
+        }
+
+        // Fetch church name separately if church_id exists
+        let churchNameVal = '';
+        if (profile.church_id) {
+            const { data: churchData } = await window.sbClient.from('church_directory').select('name').eq('id', profile.church_id).maybeSingle();
+            if (churchData) {
+                churchNameVal = churchData.name;
+            }
+        }
+        profile.church_name = churchNameVal;
         if (error || !profile) {
             alert("Could not load user profile.");
             return;
@@ -555,8 +619,8 @@
                         await window.sbClient.from('notifications').insert([{
                             user_id: targetUser.id,
                             title: 'New Message',
-                            message: content.length > 60 ? content.substring(0, 60) + '...' : content,
-                            link: '/feed.html#messages-section',
+                            message: 'You have a new message.',
+                            link: '/chat.html',
                             is_read: false
                         }]);
                     } catch (notifErr) {
@@ -708,7 +772,7 @@
                                 await window.sbClient.from('notifications').insert([{
                                     user_id: financeUser.id,
                                     title: 'New Finance Inquiry',
-                                    message: decodedContent.length > 60 ? decodedContent.substring(0, 60) + '...' : decodedContent,
+                                    message: 'You have a new message.',
                                     link: '/chat.html?department=finance',
                                     is_read: false
                                 }]);

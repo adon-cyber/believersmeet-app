@@ -1,0 +1,15 @@
+.vercel
+
+# Installed dependencies
+node_modules/
+
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Vercel local configuration
+.vercel/
+
+supabase/.temp/

@@ -1,100 +1,116 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prayer Wall | BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/theme.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="js/bible-service.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        }
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-12px)' },
-                        },
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(24px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="js/app-utils.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body style="display: none;" class="min-h-screen flex flex-col font-sans text-slate-100 bg-prayer-wall antialiased selection:bg-blue-500 selection:text-white">
+<body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col overflow-x-hidden text-gray-800 bg-light">
 
-<!-- Navigation Bar -->
-<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+    <!-- Navigation Header Container -->
+    <div id="navbar"></div>
+    <script src="js/nav.js"></script>
+
+<main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-10 col-xl-9">
+        
+        <!-- Hero Banner -->
+        <div class="bm-card mb-4 text-white shadow-sm" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%); border-radius: 1rem; padding: 1.5rem;">
+          <div>
+            <h2 class="bm-page-heading text-white text-2xl font-extrabold mb-2 flex items-center gap-2">
+              <i class="fas fa-hands-praying"></i> Prayer Wall
+            </h2>
+            <p class="bm-page-subheading text-white-50 text-sm sm:text-base mb-0">Share your prayer requests, lift one another up, and witness God's answers.</p>
+          </div>
+        </div>
+
+        <!-- Submit Card -->
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-200 mb-4">
+            <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-pen-to-square text-blue-600"></i> Submit a Prayer Request
+            </h2>
+            <form id="prayer-form" class="space-y-4">
+                <div>
+                    <textarea id="prayer-content" rows="3" placeholder="What burdens or requests would you like to lay down today?" required class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition"></textarea>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <input type="checkbox" id="isPrivate" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                    <label for="isPrivate" class="text-sm text-gray-700 font-medium cursor-pointer">Make this prayer request private (Only visible to you and Church Admins)</label>
+                </div>
+                <div class="flex justify-end pt-2">
+                    <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm shadow transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane"></i> Post Prayer Request
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Active Prayer Requests Section -->
+        <div class="space-y-4">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-list-check text-blue-600"></i> Active Prayer Requests
+            </h2>
+            <div id="wall-container" class="space-y-4">
+                <div class="bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-500 shadow-sm">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-3"></i>
+                    <p>Loading requests...</p>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
 
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full space-y-6">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Submit a Prayer Request</h2>
-        <form id="prayer-form" class="space-y-4">
-            <textarea id="prayer-content" rows="3" placeholder="What burdens or requests would you like to lay down today?" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"></textarea>
-            <div class="flex items-center gap-2">
-                <input type="checkbox" id="isPrivate" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                <label for="isPrivate" class="text-sm text-gray-700 font-medium">Make this prayer request private (Only visible to you and Church Admins)</label>
-            </div>
-            <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors">Post Prayer Request</button>
-        </form>
+      </div>
     </div>
-
-    <div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Active Prayer Requests</h2>
-        <div id="wall-container" class="space-y-4">
-            <p class="text-gray-500 text-center py-8">Loading requests...</p>
-        </div>
-    </div>
+  </div>
 </main>
 
-<!-- Footer -->
-<footer class="bg-white border-t border-gray-200 mt-auto py-6">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-    &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
-  </div>
-</footer>
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800/80 py-12 text-slate-400 font-sans mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-center md:justify-start space-x-2">
+                        <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border border-white/20 shadow">
+                        <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                    </div>
+                    <p class="text-slate-400 text-xs sm:text-sm">Connecting believers, empowering churches, and strengthening faith communities worldwide.</p>
+                </div>
+                <div class="flex flex-col items-center md:items-end space-y-2 text-sm">
+                    <div class="flex items-center space-x-4">
+                        <a href="about-developer.html" class="text-slate-400 hover:text-blue-400 transition text-xs sm:text-sm underline">About Developer</a>
+                        <a href="mailto:adoniakasango@gmail.com" class="text-slate-400 hover:text-white transition text-xs sm:text-sm">Support</a>
+                    </div>
+                    <div class="flex items-center space-x-3 text-slate-400 pt-1">
+                        <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition" title="WhatsApp">
+                            <i class="fab fa-whatsapp text-lg text-emerald-500"></i>
+                        </a>
+                        <a href="tel:+256751522766" class="hover:text-blue-400 transition" title="Call">
+                            <i class="fas fa-phone-alt text-sm text-blue-400"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-slate-800/80 pt-6 text-center text-xs text-slate-500 space-y-1">
+                <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+                <p>Building and strengthening faith communities together.</p>
+            </div>
+        </div>
+    </footer>
 
 <script>
     let loggedInUser = null;
@@ -127,10 +143,6 @@
 
         if (profile) {
             currentUserProfile = profile;
-            if (profile.role === 'admin' || profile.role === 'super_admin') {
-                const adminLink = document.getElementById('admin-nav-link');
-                if (adminLink) adminLink.classList.remove('hidden');
-            }
         }
 
         loadWallRequests();
@@ -180,7 +192,7 @@
         }
 
         if (!requests || requests.length === 0) {
-            container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">The wall is clean! No unresolved prayer requests found.</p></div>`;
+            container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center shadow-sm"><p class="text-gray-500">The wall is clean! No unresolved prayer requests found.</p></div>`;
             return;
         }
 
@@ -209,7 +221,7 @@
                             ${isPriv ? '<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full"><i class="fas fa-lock text-xs"></i> Private</span>' : ''}
                         </div>
                     </div>
-                    <p class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${linkifyBibleReferences(escapeHTML(p.content || p.request_text || ''))}</p>
+                    <p class="text-gray-800 text-base leading-relaxed whitespace-pre-wrap mb-4">${typeof linkifyBibleReferences === 'function' ? linkifyBibleReferences(escapeHTML(p.content || p.request_text || '')) : escapeHTML(p.content || p.request_text || '')}</p>
                     
                     <!-- Responses List Section -->
                     <div class="space-y-3 mb-4 responses-list" id="responses-list-${p.id}">
@@ -293,6 +305,31 @@
         if (error) {
             alert("Error posting: " + error.message);
         } else {
+            if (typeof window.sendNotification === 'function') {
+                try {
+                    let churchId = currentUserProfile?.church_id;
+                    let adminQuery = window.sbClient.from('profiles').select('id').or('role.eq.admin,role.eq.super_admin,role.eq.super-admin');
+                    if (churchId && churchId !== 'global-fellowship') {
+                        adminQuery = adminQuery.eq('church_id', churchId);
+                    }
+                    const { data: admins } = await adminQuery;
+                    if (admins && admins.length > 0) {
+                        for (const admin of admins) {
+                            if (admin.id !== loggedInUser.id) {
+                                await window.sendNotification(
+                                    admin.id,
+                                    'New Prayer Request',
+                                    `${currentUserProfile?.full_name || 'A believer'} submitted a new prayer request.`,
+                                    '/admin.html'
+                                );
+                            }
+                        }
+                    }
+                } catch (notifErr) {
+                    console.error('Failed to notify admins about prayer request:', notifErr);
+                }
+            }
+
             document.getElementById('prayer-form').reset();
             loadWallRequests();
         }
@@ -336,8 +373,28 @@
                 if (replyForm) replyForm.classList.add('hidden');
             }
 
+            if (typeof window.sendNotification === 'function') {
+                try {
+                    const { data: reqData } = await window.sbClient
+                        .from('prayer_requests')
+                        .select('user_id, is_private')
+                        .eq('id', prayerId)
+                        .maybeSingle();
+
+                    if (reqData && reqData.user_id && reqData.user_id !== loggedInUser.id) {
+                        await window.sendNotification(
+                            reqData.user_id,
+                            'New Prayer Response',
+                            `${currentUserProfile?.full_name || 'A believer'} responded to your prayer request.`,
+                            '/prayer-wall.html'
+                        );
+                    }
+                } catch (notifErr) {
+                    console.error('Failed to notify prayer request owner:', notifErr);
+                }
+            }
+
             loadWallRequests();
-            alert("Encouragement sent successfully!");
         }
     }
 
@@ -350,15 +407,34 @@
         if (error) {
             alert("Update operation failed: " + error.message);
         } else {
+            if (typeof window.sendNotification === 'function') {
+                try {
+                    let churchId = currentUserProfile?.church_id;
+                    let adminQuery = window.sbClient.from('profiles').select('id').or('role.eq.admin,role.eq.super_admin,role.eq.super-admin');
+                    if (churchId && churchId !== 'global-fellowship') {
+                        adminQuery = adminQuery.eq('church_id', churchId);
+                    }
+                    const { data: admins } = await adminQuery;
+                    if (admins && admins.length > 0) {
+                        for (const admin of admins) {
+                            if (admin.id !== loggedInUser.id) {
+                                await window.sendNotification(
+                                    admin.id,
+                                    'Prayer Request Answered',
+                                    `${currentUserProfile?.full_name || 'A believer'} marked a prayer request as answered (testimony).`,
+                                    '/testimonies.html'
+                                );
+                            }
+                        }
+                    }
+                } catch (notifErr) {
+                    console.error('Failed to notify admins about answered prayer:', notifErr);
+                }
+            }
+
             alert("Praise God! This request has been shifted into public testimonies.");
             loadWallRequests();
         }
-    }
-
-    async function logoutUser(e) {
-        e.preventDefault();
-        await window.sbClient.auth.signOut();
-        window.location.replace('login.html');
     }
 
     function escapeHTML(str) {

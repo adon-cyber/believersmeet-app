@@ -103,30 +103,52 @@
                 
                 // 2. Fetch rosters safely, then signups and stitch them in JS
                 let { data: slots, error: rosterError } = await window.sbClient
-                    .from('volunteer_roster')
-                    .select('*');
-
+                .from('church_volunteer_roster')
+                .select('id, title, description, event_date, church_id, max_capacity, is_active');
                 if (rosterError) throw rosterError;
 
                 let { data: signups, error: signupsError } = await window.sbClient
                     .from('volunteer_signups')
-                    .select('*, profiles(full_name, email, phone, avatar_url)');
+                    .select('*');
 
                 if (signupsError) {
-                    console.warn('Could not fetch volunteer signups relation safely:', signupsError);
+                    console.warn('Could not fetch volunteer signups:', signupsError);
+                }
+
+                // Fetch profiles separately if needed to match pattern
+                let profilesMap = {};
+                if (signups && signups.length > 0) {
+                    const userIds = [...new Set(signups.map(s => s.user_id).filter(Boolean))];
+                    if (userIds.length > 0) {
+                        const { data: profiles, error: profError } = await window.sbClient
+                            .from('profiles')
+                            .select('id, full_name, email, phone, avatar_url')
+                            .in('id', userIds);
+                        if (!profError && profiles) {
+                            profiles.forEach(p => {
+                                profilesMap[p.id] = p;
+                            });
+                        }
+                    }
                 }
 
                 slots = (slots || []).map(slot => {
+                    const slotSignups = signups ? signups.filter(s => s.roster_id === slot.id || s.event_id === slot.id || s.slot_id === slot.id) : [];
                     return {
                         ...slot,
-                        volunteer_signups: signups ? signups.filter(s => s.roster_id === slot.id || s.event_id === slot.id) : []
+                        volunteer_signups: slotSignups.map(s => ({
+                            ...s,
+                            profiles: profilesMap[s.user_id] || {
+                                full_name: s.full_name || s.name || 'Anonymous Member',
+                                email: s.email || '',
+                                phone: s.phone || '',
+                                avatar_url: 'images/image-2.png'
+                            }
+                        }))
                     };
                 });
 
-                console.log('🚨 RAW DATABASE RESPONSE ERROR:', error);
                 console.log('🚨 RAW DATABASE RESPONSE DATA:', slots);
-
-                if (error) throw error;
 
                 if (!slots || slots.length === 0) {
                     container.innerHTML = '<div class="col-span-full bg-slate-800 border border-red-500/50 p-6 rounded-2xl text-center text-red-300">The database query worked, but exactly 0 slots were returned. The table is empty or data is not saving.</div>';
@@ -159,8 +181,9 @@
           try {
             console.log('🚨 FORCING RAW FETCH FROM volunteer_roster...');
             
-            const { data: slots, error } = await window.sbClient.from('volunteer_roster').select('*');
-
+            const { data: slots, error } = await window.sbClient
+    .from('church_volunteer_roster')
+    .select('id, title, description, event_date, church_id, max_capacity, is_active');
             if (error) throw error;
 
             if (!slots || slots.length === 0) {
@@ -384,57 +407,127 @@ async function renderVolunteerSlotsWithState(slots, container) {
 }
 
         async function handleVolunteerSignup(slotId, slotTitle, btnElement) {
-  try {
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) {
-      alert('Please log in to sign up for a volunteer slot.');
-      return;
-    }
+            try {
+                const db = window.sbClient || window.supabaseClient || window.supabase;
+                if (!db || !db.auth) {
+                    alert('Database client not initialized. Please refresh the page.');
+                    return;
+                }
+                const { data: { user }, error: authErr } = await db.auth.getUser();
+                if (authErr || !user) {
+                    alert('Please log in to sign up for a volunteer slot.');
+                    return;
+                }
 
-    const payload = {
-      slot_id: slotId,
-      user_id: user.id,
-      slot_title: slotTitle,
-      slot_name: slotTitle,
-      user_email: user.email
-    };
+                // 1. Check capacity & prevent overbooking before inserting
+                const { data: targetSlot, error: slotErr } = await db
+                .from('church_volunteer_roster')
+.select('id, title, max_capacity, is_active')
+.eq('id', slotId)
+.single();
+                if (slotErr || !targetSlot) {
+                    alert('Could not find the selected volunteer slot.');
+                    return;
+                }
 
-    const { error } = await supabase.from('volunteer_signups').insert([payload]);
+                const { data: existingSignups, error: signupsErr } = await db
+                    .from('volunteer_signups')
+                    .select('*')
+                    .eq('slot_id', slotId);
 
-    if (error) {
-      // 1. CATCH DUPLICATE SIGNUP CONSTRAINT SAFELY
-      if (error.code === '23505' || error.message.includes('unique_user_slot')) {
-        alert(`You are already signed up for "${slotTitle}"!`);
-        
-        // Lock button UI to "Signed Up" state
-        if (btnElement) {
-          btnElement.className = 'btn btn-sm btn-success disabled';
-          btnElement.disabled = true;
-          btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
+                if (signupsErr) throw signupsErr;
+
+                const maxCap = targetSlot.max_capacity || targetSlot.spots || targetSlot.total_spots || 5;
+                if (existingSignups && existingSignups.length >= maxCap) {
+                    alert(`Sorry, "${slotTitle}" is already at full capacity (${maxCap}/${maxCap}). Please choose another slot.`);
+                    await loadVolunteerSlots();
+                    return;
+                }
+
+                // 2. Check if user is already signed up for THIS exact slot
+                const alreadyThisSlot = existingSignups.find(s => s.user_id === user.id);
+                if (alreadyThisSlot) {
+                    alert(`You are already signed up for "${slotTitle}"!`);
+                    await loadVolunteerSlots();
+                    return;
+                }
+
+                // 3. ENFORCE ONE ACTIVE SLOT PER USER (Safe Replacement Strategy):
+                // First check if user has ANY other active signup in volunteer_signups
+                const { data: userActiveSignups, error: userActiveErr } = await db
+                    .from('volunteer_signups')
+                    .select('*')
+                    .eq('user_id', user.id);
+
+                if (userActiveErr) throw userActiveErr;
+
+                // Disable button and show loading state to prevent rapid double clicks
+                if (btnElement) {
+                    btnElement.disabled = true;
+                    btnElement.style.opacity = '0.7';
+                    btnElement.innerHTML = '<span><i class="fas fa-spinner fa-spin mr-1"></i> Processing...</span>';
+                }
+
+                // Try inserting the new signup FIRST before deleting the old one, to ensure we don't leave user with nothing if insert fails.
+                const payload = {
+                    slot_id: slotId,
+                    user_id: user.id,
+                    slot_title: slotTitle,
+                    slot_name: slotTitle,
+                    user_email: user.email,
+                    full_name: user.user_metadata?.full_name || user.email
+                };
+
+                const { error: insertErr } = await db.from('volunteer_signups').insert([payload]);
+
+                if (insertErr) {
+                    if (insertErr.code === '23505' || insertErr.message.includes('unique_user_slot')) {
+                        alert(`You are already signed up for this slot.`);
+                    } else {
+                        console.error('Signup error:', insertErr);
+                        alert('Could not complete signup: ' + insertErr.message);
+                    }
+                    await loadVolunteerSlots();
+                    return;
+                }
+
+                // 4. If insert succeeded, safely remove any PREVIOUS/OTHER active signups for this user so they only have ONE active slot
+                if (userActiveSignups && userActiveSignups.length > 0) {
+                    const oldSignupsToRemove = userActiveSignups.filter(s => s.slot_id !== slotId);
+                    if (oldSignupsToRemove.length > 0) {
+                        const oldSlotIds = oldSignupsToRemove.map(s => s.slot_id);
+                        const { error: deleteOldErr } = await db
+                            .from('volunteer_signups')
+                            .delete()
+                            .eq('user_id', user.id)
+                            .in('slot_id', oldSlotIds);
+
+                        if (deleteOldErr) {
+                            console.warn('Warning: Successfully signed up for new slot, but cleaning up previous slot encountered an issue:', deleteOldErr);
+                        }
+                    }
+                }
+
+                // 5. Success feedback & reload counts
+                const modalMessage = document.getElementById('success-modal-message');
+                if (modalMessage) {
+                    modalMessage.textContent = `You have successfully switched/signed up for "${slotTitle}". Only this slot remains active for you!`;
+                }
+                const modalEl = document.getElementById('success-modal');
+                if (modalEl) {
+                    modalEl.classList.remove('hidden');
+                } else {
+                    alert(`Successfully signed up for "${slotTitle}"!`);
+                }
+
+                await loadVolunteerSlots();
+
+            } catch (err) {
+                console.error('Unexpected signup error:', err);
+                alert('An unexpected error occurred during signup: ' + err.message);
+                await loadVolunteerSlots();
+            }
         }
-        return;
-      }
-
-      console.error('Signup error:', error);
-      alert('Could not complete signup: ' + error.message);
-      return;
-    }
-
-    // 2. SUCCESSFUL NEW SIGNUP
-    alert(`Successfully signed up for "${slotTitle}"!`);
-    
-    if (btnElement) {
-      btnElement.className = 'btn btn-sm btn-success disabled';
-      btnElement.disabled = true;
-      btnElement.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Signed Up';
-    } else {
-      location.reload();
-    }
-
-  } catch (err) {
-    console.error('Unexpected signup error:', err);
-  }
-}
 
         async function handleLeaveSlot(slotId, slotTitle) {
             await cancelOrChangeShift(slotId, slotTitle);

@@ -3,397 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up | BelieversMeet</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Get Started | BelieversMeet</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-[url('images/meet2.jpg')] bg-cover bg-center bg-no-repeat bg-fixed flex flex-col min-h-screen text-white relative">
 
-    <!-- Header / Navbar -->
-    <header class="bg-black/30 backdrop-blur-sm border-b border-white/10 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <a href="index.html" class="text-xl font-bold text-white hover:text-gray-200">BelieversMeet</a>
-            <div class="text-sm">
-                <span class="text-gray-300">Already have an account?</span>
-                <a href="login.html" class="ml-1 font-medium text-white underline hover:text-gray-200">Log In</a>
-            </div>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+
+    <header class="border-b border-slate-800 bg-slate-950/90">
+        <div class="max-w-5xl mx-auto px-4 py-5 flex justify-between items-center">
+            <a href="index.html" class="text-xl font-black text-blue-400">
+                BelieversMeet
+            </a>
+            <a href="login.html" class="text-sm text-blue-400 hover:text-blue-300 underline">
+                Log In
+            </a>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-md w-full space-y-8 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 p-8 shadow-2xl rounded-2xl border border-white/20">
-            <div>
-                <h2 class="text-center text-3xl font-extrabold text-gray-900 dark:text-white">Join BelieversMeet</h2>
-                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
-                    Connect with your faith community and grow together.
+    <main class="flex-grow flex items-center justify-center px-4 py-12">
+        <div class="max-w-2xl w-full space-y-8">
+
+            <div class="text-center">
+                <h1 class="text-3xl font-extrabold text-white">
+                    Get Started with BelieversMeet
+                </h1>
+                <p class="mt-3 text-slate-400">
+                    Choose how you would like to connect with BelieversMeet.
                 </p>
             </div>
 
-            <div id="error-message" class="hidden rounded-md bg-red-50 p-4 text-sm text-red-700 border border-red-200"></div>
-            <div id="success-message" class="hidden rounded-md bg-green-50 p-4 text-sm text-green-700 border border-green-200"></div>
+            <div class="grid gap-6 md:grid-cols-2">
 
-            <!-- SECTION A: Initial Signup Form -->
-            <form id="signup-form" class="mt-8 space-y-5">
-                <div>
-                    <label for="full-name" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Full Name</label>
-                    <input type="text" id="full-name" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="John Doe">
-                </div>
-
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email Address</label>
-                    <input type="email" id="email" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="you@example.com">
-                </div>
-
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Password</label>
-                    <div class="relative w-full">
-                        <input type="password" id="password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10 bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="••••••••">
-                        <button type="button" onclick="togglePasswordVisibility('password', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
-                            <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    <!-- Live Visual Password Checklist -->
-                    <div id="password-checklist" class="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-300 bg-white/60 dark:bg-slate-800/80 p-3 rounded-lg border border-gray-200 dark:border-slate-700">
-                        <p class="font-medium text-gray-700 dark:text-gray-200 mb-1">Password requirements:</p>
-                        <div id="req-length" class="flex items-center space-x-2">
-                            <span class="indicator text-gray-400 font-bold">○</span>
-                            <span class="text">At least 8 characters long</span>
-                        </div>
-                        <div id="req-upper" class="flex items-center space-x-2">
-                            <span class="indicator text-gray-400 font-bold">○</span>
-                            <span class="text">At least one uppercase letter (A-Z)</span>
-                        </div>
-                        <div id="req-lower" class="flex items-center space-x-2">
-                            <span class="indicator text-gray-400 font-bold">○</span>
-                            <span class="text">At least one lowercase letter (a-z)</span>
-                        </div>
-                        <div id="req-number" class="flex items-center space-x-2">
-                            <span class="indicator text-gray-400 font-bold">○</span>
-                            <span class="text">At least one number (0-9)</span>
-                        </div>
-                        <div id="req-special" class="flex items-center space-x-2">
-                            <span class="indicator text-gray-400 font-bold">○</span>
-                            <span class="text">At least one special character (@$!%*?&)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="confirm-password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Confirm Password</label>
-                    <div class="relative w-full">
-                        <input type="password" id="confirm-password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10 bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="••••••••">
-                        <button type="button" onclick="togglePasswordVisibility('confirm-password', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
-                            <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="role-select" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Account Type</label>
-                    <select id="role-select" onchange="toggleJoinCodeField(this.value)" required class="block w-full px-3 py-2 border border-gray-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800 dark:text-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="member" selected>Regular Member</option>
-                        <option value="admin">Church Creator / Admin</option>
-                    </select>
-                </div>
-
-                <div id="join-code-container">
-                    <label for="church-join-code" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Church Join Code (Optional)</label>
-                    <input type="text" id="church-join-code" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700 uppercase" placeholder="e.g., JINJA2026">
-                </div>
-
-                <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg">
-                        Sign Up
-                    </button>
-                </div>
-
-                <div class="text-center pt-2">
-                    <p class="text-xs text-gray-600 dark:text-gray-300">
-                        Looking to register an entire church? 
-                        <a href="register-church.html" class="font-medium text-indigo-600 hover:text-indigo-500">Click here</a>
+                <section class="rounded-2xl border border-slate-700 bg-slate-900 p-6 space-y-4">
+                    <h2 class="text-xl font-bold text-white">
+                        Register a Church
+                    </h2>
+                    <p class="text-sm text-slate-400">
+                        Are you a pastor or church representative?
+                        Submit your church application for review.
                     </p>
-                </div>
-            </form>
-
-            <!-- SECTION B: Check Your Email Confirmation State (Verification Link Flow) -->
-            <div id="email-confirmation-state" class="mt-8 space-y-6 hidden text-center">
-                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
-                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Check your email</h3>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                        We have sent a confirmation link to <span id="verification-email-display" class="font-semibold text-indigo-600 dark:text-indigo-400"></span>. Please click the link inside to verify your account.
-                    </p>
-                </div>
-                <div class="pt-2">
-                    <a href="login.html" class="w-full inline-flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg">
-                        Proceed to Login
+                    <ul class="text-sm text-slate-300 space-y-2">
+                        <li>• Register your church details</li>
+                        <li>• Verify your email address</li>
+                        <li>• Wait for Super Admin approval</li>
+                        <li>• Receive a 60-day free trial after approval</li>
+                    </ul>
+                    <a href="register-church.html"
+                       class="block w-full rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-center font-semibold py-3 transition">
+                        Register a Church
                     </a>
-                </div>
+                </section>
+
+                <section class="rounded-2xl border border-slate-700 bg-slate-900 p-6 space-y-4">
+                    <h2 class="text-xl font-bold text-white">
+                        Join Your Church
+                    </h2>
+                    <p class="text-sm text-slate-400">
+                        Already belong to a church registered on BelieversMeet?
+                    </p>
+                    <ul class="text-sm text-slate-300 space-y-2">
+                        <li>• Create your member account</li>
+                        <li>• Enter your church's join code</li>
+                        <li>• No email verification link required</li>
+                        <li>• Access your church community</li>
+                    </ul>
+                    <a href="join-church.html"
+                       class="block w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-center font-semibold py-3 transition">
+                        Join Your Church
+                    </a>
+                </section>
+
             </div>
+
+            <p class="text-center text-xs text-slate-500">
+                Already have a BelieversMeet account?
+                <a href="login.html" class="text-blue-400 underline">Log in here</a>.
+            </p>
+
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-white/10 mt-auto py-6 relative z-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-200 space-y-2">
-        <p>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</p>
-        <p>
-            <a href="#" onclick="openTermsModal(event)" class="text-white hover:text-gray-200 font-medium underline">Terms & Rules</a>
-        </p>
-      </div>
+    <footer class="border-t border-slate-800 py-5 text-center text-xs text-slate-500">
+        © 2026 BelieversMeet. All rights reserved.
     </footer>
 
-    <!-- Script Section -->
-    <script>
-        async function waitForSupabase() {
-            while (!window.sbClient && !window.supabase) await new Promise(r => setTimeout(r, 100));
-            return window.sbClient || window.supabase;
-        }
-
-        function togglePasswordVisibility(inputId, btnElement) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
-
-            const svg = btnElement.querySelector('svg');
-            if (svg) {
-                if (isPassword) {
-                    // Eye slash icon (hide)
-                    svg.innerHTML = `
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    `;
-                } else {
-                    // Open eye icon (show)
-                    svg.innerHTML = `
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    `;
-                }
-            }
-        }
-
-        // Real-time password requirement validator
-        const passwordInput = document.getElementById('password');
-        passwordInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-
-            const rules = {
-                'req-length': val.length >= 8,
-                'req-upper': /[A-Z]/.test(val),
-                'req-lower': /[a-z]/.test(val),
-                'req-number': /\d/.test(val),
-                'req-special': /[@$!%*?&]/.test(val)
-            };
-
-            for (const [id, isValid] of Object.entries(rules)) {
-                const el = document.getElementById(id);
-                const indicator = el.querySelector('.indicator');
-                const text = el.querySelector('.text');
-
-                if (isValid) {
-                    indicator.textContent = '✔';
-                    indicator.className = 'indicator text-green-600 font-bold';
-                    text.className = 'text text-green-700 dark:text-green-400 font-medium';
-                } else {
-                    indicator.textContent = '○';
-                    indicator.className = 'indicator text-gray-400 font-bold';
-                    text.className = 'text text-gray-600 dark:text-gray-300';
-                }
-            }
-        });
-
-        function toggleJoinCodeField(role) {
-            const container = document.getElementById('join-code-container');
-            if (role === 'admin') {
-                container.classList.add('hidden');
-                document.getElementById('church-join-code').value = '';
-            } else {
-                container.classList.remove('hidden');
-            }
-        }
-
-        // Initial Signup Handler with Email Verification Link & Proper Redirect URL
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errBox = document.getElementById('error-message');
-            const successBox = document.getElementById('success-message');
-            errBox.classList.add('hidden');
-            successBox.classList.add('hidden');
-
-            const sb = await waitForSupabase();
-            
-            const btn = document.querySelector('#signup-form button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = "Creating Account...";
-
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const fullName = document.getElementById('full-name').value.trim();
-            const role = document.getElementById('role-select').value;
-            const joinCodeInput = document.getElementById('church-join-code') ? document.getElementById('church-join-code').value.trim() : '';
-
-            if (role === 'member' && joinCodeInput) {
-                localStorage.setItem('pending_church_join_code', joinCodeInput.toUpperCase());
-            } else {
-                localStorage.removeItem('pending_church_join_code');
-            }
-
-            if (!password || password.trim() === "") {
-                errBox.textContent = "Password is required to complete registration.";
-                errBox.classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = "Sign Up";
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                errBox.textContent = "Passwords do not match.";
-                errBox.classList.remove('hidden');
-                btn.disabled = false; 
-                btn.textContent = "Sign Up";
-                return;
-            }
-
-            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            if (!passwordRegex.test(password)) {
-                errBox.textContent = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
-                errBox.classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = "Sign Up";
-                return;
-            }
-
-            try {
-                // Graceful check for existing user / email conflict in profiles or auth
-                const { data: existingProfiles, error: checkError } = await sb
-                    .from('profiles')
-                    .select('id, email')
-                    .eq('email', email)
-                    .maybeSingle();
-                
-                if (existingProfiles) {
-                    errBox.textContent = "This email is already registered.";
-                    errBox.classList.remove('hidden');
-                    btn.disabled = false;
-                    btn.textContent = "Sign Up";
-                    return;
-                }
-
-                // Determine redirect URL based on user type (church founder/admin vs regular member join code)
-                const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                const redirectTo = role === 'admin' 
-                    ? baseUrl + 'register-church.html'
-                    : (joinCodeInput ? baseUrl + 'feed.html' : baseUrl + 'join-church.html');
-
-                const { data: authData, error: authError } = await sb.auth.signUp({
-                    email, 
-                    password,
-                    options: {
-                        emailRedirectTo: redirectTo
-                    }
-                });
-                if (authError) throw authError;
-
-                if (authData && (authData.session || authData.user)) {
-                    const profileData = {
-                        id: authData.user.id,
-                        full_name: fullName,
-                        email: email,
-                        role: role,
-                        is_verified: true
-                    };
-
-                    const { error: profileError } = await sb
-                        .from('profiles')
-                        .upsert(profileData);
-                    
-                    if (profileError) {
-                        console.error("Database error saving new user profile:", profileError);
-                        errBox.textContent = `Database error saving new user: ${profileError.message || JSON.stringify(profileError)}`;
-                        if (profileError.details) {
-                            errBox.textContent += ` (Details: ${profileError.details})`;
-                        }
-                        errBox.classList.remove('hidden');
-                        btn.disabled = false;
-                        btn.textContent = "Sign Up";
-                        return;
-                    }
-
-                    // Automatically redirect based on user role / selection
-                    const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                    if (role === 'super_admin' || email === 'adonstance@gmail.com') {
-                        window.location.replace('super-admin.html');
-                    } else if (role === 'admin') {
-                        window.location.replace('register-church.html');
-                    } else if (joinCodeInput) {
-                        window.location.replace('feed.html');
-                    } else {
-                        window.location.replace('join-church.html');
-                    }
-                    return;
-                }
-
-                // Fallback if session/user check wasn't caught above
-                document.getElementById('signup-form').classList.add('hidden');
-                document.getElementById('email-confirmation-state').classList.remove('hidden');
-                document.getElementById('verification-email-display').textContent = email;
-
-            } catch (err) {
-                errBox.textContent = "Error: " + err.message;
-                errBox.classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = "Sign Up";
-            }
-        });
-
-        function openTermsModal(e) {
-            e.preventDefault();
-            let modal = document.getElementById('terms-modal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'terms-modal';
-                modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4';
-                modal.innerHTML = `
-                    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[80vh]">
-                        <div class="flex justify-between items-center mb-4 border-b pb-3">
-                            <h3 class="text-xl font-bold text-gray-900">Platform Terms & Community Rules</h3>
-                            <button onclick="document.getElementById('terms-modal').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
-                        </div>
-                        <div class="space-y-4 text-sm text-gray-600">
-                            <p>Welcome to BelieversMeet. By registering and participating in our faith community, you agree to abide by the following standards:</p>
-                            <h4 class="font-bold text-gray-900">1. Christian Character & Respect</h4>
-                            <p>All members must treat others with Christ-like love, patience, and respect. Harassment, hate speech, bullying, or abusive behavior will result in immediate account deactivation.</p>
-                            <h4 class="font-bold text-gray-900">2. Authentic Fellowship</h4>
-                            <p>Accounts must represent real individuals or recognized fellowship groups. Impersonation or fraudulent representation is strictly prohibited.</p>
-                            <h4 class="font-bold text-gray-900">3. Content Moderation & Violations</h4>
-                            <p>Admins and users can report any breach of these terms using the "Report Violation" mechanism. Super Administrators hold final authority to review and block offending accounts.</p>
-                        </div>
-                        <div class="mt-6 text-right">
-                            <button onclick="document.getElementById('terms-modal').remove()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-medium">I Understand & Agree</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
-        }
-    </script>
-  <script src="js/notifications.js"></script>
 </body>
 </html>

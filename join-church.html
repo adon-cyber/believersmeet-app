@@ -1,169 +1,649 @@
+
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Setup | BelieversMeet</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Join Your Church | BelieversMeet</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+
     <script>
-        // Inverse Logic: If user ALREADY has a church_id, redirect them away to index.html (or feed.html)
         (async function checkAlreadyJoined() {
-            async function waitForSupabase() {
-                let attempts = 0;
-                while (!window.supabaseClient && !window.supabase && !window.sbClient && attempts < 50) {
-                    await new Promise(r => setTimeout(r, 50));
-                    attempts++;
+            function revealPage() {
+    if (document.body) {
+        document.body.style.display = 'flex';
+        return;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.body) {
+            document.body.style.display = 'flex';
+        }
+    }, { once: true });
+}
+
+    async function waitForSupabase() {
+        let attempts = 0;
+
+        while (
+            !window.supabaseClient &&
+            !window.sbClient &&
+            attempts < 100
+        ) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            attempts++;
+        }
+
+        return window.supabaseClient || window.sbClient;
+    }
+
+    try {
+        const client = await waitForSupabase();
+
+        if (!client) {
+            revealPage();
+            return;
+        }
+                const { data: { session }, error: sessionError } =
+                    await client.auth.getSession();
+
+                if (sessionError) throw sessionError;
+
+                if (session) {
+                    const { data: profile, error: profileError } = await client
+                        .from('profiles')
+                        .select('church_id')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+
+                    if (profileError) throw profileError;
+
+                    let isSuperAdmin = false;
+
+                    try {
+                        const { data: rpcResult, error: rpcError } =
+                            await client.rpc('is_super_admin');
+
+                        if (rpcError) throw rpcError;
+
+                        isSuperAdmin =
+                            rpcResult === true &&
+                            session.user.id ===
+                            '45e7b5df-8f08-4cc7-9356-35e405618329';
+                    } catch (error) {
+                        console.warn('Super Admin verification failed:', error);
+                    }
+
+                    const hasChurch =
+                        profile?.church_id !== null &&
+                        profile?.church_id !== undefined &&
+                        profile?.church_id !== '';
+
+                    if (hasChurch || isSuperAdmin) {
+                        window.location.replace('index.html');
+                        return;
+                    }
                 }
-                return window.supabaseClient || window.supabase || window.sbClient;
-            }
 
-            const client = await waitForSupabase();
-            if (!client) return;
-
-            const { data: { session } } = await client.auth.getSession();
-            if (!session) {
-                window.location.replace('login.html');
-                return;
-            }
-
-            const { data: profile } = await client
-                .from('profiles')
-                .select('church_id, role')
-                .eq('id', session.user.id)
-                .maybeSingle();
-
-            const isSuperAdmin = (profile?.role === 'super_admin') || (session.user.email === 'adonstance@gmail.com');
-            const hasChurch = profile && profile.church_id !== null && profile.church_id !== '';
-
-            if (hasChurch || isSuperAdmin) {
-                window.location.replace('index.html');
-            } else {
-                // Reveal join-church body
-                if (document.body) {
-                    document.body.style.display = 'flex';
-                } else {
-                    window.addEventListener('DOMContentLoaded', () => {
-                        document.body.style.display = 'flex';
-                    });
-                }
+                revealPage();
+            } catch (error) {
+                console.error('Page setup check failed:', error);
+                revealPage();
             }
         })();
     </script>
 </head>
-<body class="bg-[url('images/meet2.jpg')] bg-cover bg-center bg-no-repeat bg-fixed flex flex-col min-h-screen text-white relative" style="display: none;">
 
-    <!-- Header / Navbar -->
+<body
+    class="bg-[url('images/meet2.jpg')] bg-cover bg-center bg-no-repeat bg-fixed flex flex-col min-h-screen text-white relative"
+    style="display: none;"
+>
     <header class="bg-black/30 backdrop-blur-sm border-b border-white/10 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <a href="feed.html" class="text-xl font-bold text-white hover:text-gray-200">BelieversMeet</a>
+            <a href="feed.html" class="text-xl font-bold text-white hover:text-gray-200">
+                BelieversMeet
+            </a>
+            <a href="login.html" class="text-sm text-white hover:text-gray-200">
+                Sign in
+            </a>
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-md w-full space-y-8 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 p-8 shadow-2xl rounded-2xl border border-white/20">
+        <div class="max-w-md w-full space-y-7 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 p-8 shadow-2xl rounded-2xl border border-white/20">
+
             <div>
-                <h2 class="text-center text-3xl font-extrabold text-gray-900 dark:text-white">Welcome! Let's get you set up.</h2>
-                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
-                    Enter the Church Code given to you by your church leadership.
+                <h1 class="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                    Join Your Church
+                </h1>
+
+                <p id="page-description" class="mt-3 text-center text-sm text-gray-600 dark:text-gray-300">
+                    Create your free member account and enter the join code provided by your church leadership.
                 </p>
             </div>
 
-            <div id="error-message" class="hidden rounded-md bg-red-50 p-4 text-sm text-red-700 border border-red-200"></div>
+            <div
+                id="error-message"
+                class="hidden rounded-md bg-red-50 p-4 text-sm text-red-700 border border-red-200"
+                role="alert"
+            ></div>
+
+            <div
+                id="success-message"
+                class="hidden rounded-md bg-green-50 p-4 text-sm text-green-700 border border-green-200"
+                role="status"
+            ></div>
 
             <form id="setup-form" class="mt-8 space-y-5">
-                <div>
-                    <label for="church-id-input" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Church Join Code (e.g., JINJA2026)</label>
-                    <input type="text" id="church-id-input" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/80 dark:bg-slate-800 dark:text-white dark:border-slate-700" placeholder="e.g., JINJA2026">
+
+                <!-- New member account fields -->
+                <div id="account-fields" class="space-y-5">
+
+                    <div>
+                        <label for="full-name" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="full-name"
+                            name="fullName"
+                            autocomplete="name"
+                            minlength="2"
+                            maxlength="100"
+                            required
+                            class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
+                            placeholder="Enter your full name"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            autocomplete="email"
+                            maxlength="254"
+                            required
+                            class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
+                            placeholder="you@example.com"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="new-password"
+                            minlength="10"
+                            maxlength="128"
+                            required
+                            class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
+                            placeholder="At least 10 characters"
+                        >
+
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Use at least 10 characters.
+                        </p>
+                    </div>
+
                 </div>
 
+                <!-- Church join code -->
                 <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg">
-                        Complete Setup
-                    </button>
+                    <label for="church-id-input" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Church Join Code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="church-id-input"
+                        name="joinCode"
+                        minlength="3"
+                        maxlength="64"
+                        autocomplete="off"
+                        required
+                        class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
+                        placeholder="e.g. JINJA2026"
+                    >
+
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Ask your church administrator for this code.
+                    </p>
                 </div>
+
+                <!-- Cloudflare Turnstile -->
+                <div id="turnstile-container" class="flex justify-center">
+                    <div id="turnstile-widget"></div>
+                </div>
+
+                <p id="turnstile-message" class="hidden text-sm text-red-600 text-center">
+                    Please complete the security check.
+                </p>
+
+                <button
+                    id="submit-button"
+                    type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    Create Account & Join Church
+                </button>
+
             </form>
+
+            <p class="text-center text-sm text-gray-600 dark:text-gray-300">
+                Registering a church?
+                <a href="register-church.html" class="font-semibold text-indigo-600 hover:text-indigo-500">
+                    Register as a Church Admin
+                </a>
+            </p>
+
+            <p class="text-center text-xs text-gray-500 dark:text-gray-400">
+                Already have an account? Use the sign-in link above, then return here to join your church.
+            </p>
+
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="border-t border-white/10 mt-auto py-6 relative z-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-200">
-        &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
-      </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-200">
+            &copy; 2026 BelieversMeet. All rights reserved.
+            Building and strengthening faith communities together.
+        </div>
     </footer>
 
     <script>
-        async function waitForSupabase() {
-            let attempts = 0;
-            while (!window.supabaseClient && !window.supabase && !window.sbClient && attempts < 50) {
-                await new Promise(r => setTimeout(r, 50));
-                attempts++;
-            }
-            return window.supabaseClient || window.supabase || window.sbClient;
+        let turnstileWidgetId = null;
+        let turnstileReady = false;
+        let isSubmitting = false;
+        let hasExistingSession = false;
+
+        const TURNSTILE_SITE_KEY = '0x4AAAAAAFtJHsphXNU4LTKs';
+
+        const form = document.getElementById('setup-form');
+        const errorBox = document.getElementById('error-message');
+        const successBox = document.getElementById('success-message');
+        const submitButton = document.getElementById('submit-button');
+        const accountFields = document.getElementById('account-fields');
+        const pageDescription = document.getElementById('page-description');
+        const turnstileMessage = document.getElementById('turnstile-message');
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove('hidden');
+            successBox.classList.add('hidden');
         }
 
-        document.getElementById('setup-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errBox = document.getElementById('error-message');
-            errBox.classList.add('hidden');
+        function showSuccess(message) {
+            successBox.textContent = message;
+            successBox.classList.remove('hidden');
+            errorBox.classList.add('hidden');
+        }
 
-            const churchCode = document.getElementById('church-id-input').value.trim();
-            const btn = document.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = "Saving...";
+        function setSubmitting(value) {
+            isSubmitting = value;
+            submitButton.disabled = value;
+
+            if (value) {
+                submitButton.textContent = 'Please wait...';
+            } else {
+                submitButton.textContent = hasExistingSession
+                    ? 'Join My Church'
+                    : 'Create Account & Join Church';
+            }
+        }
+
+        function updateFormForSession(sessionExists) {
+            hasExistingSession = sessionExists;
+
+            const accountInputs = accountFields.querySelectorAll('input');
+
+            accountFields.classList.toggle('hidden', sessionExists);
+
+            accountInputs.forEach(input => {
+                input.required = !sessionExists;
+                input.disabled = sessionExists;
+            });
+
+            pageDescription.textContent = sessionExists
+                ? 'Your account is signed in. Enter the join code provided by your church leadership.'
+                : 'Create your free member account and enter the join code provided by your church leadership.';
+
+            submitButton.textContent = sessionExists
+                ? 'Join My Church'
+                : 'Create Account & Join Church';
+
+            // Existing signed-in members do not need the signup CAPTCHA.
+            document.getElementById('turnstile-container')
+                .classList.toggle('hidden', sessionExists);
+        }
+
+        window.onTurnstileLoaded = function () {
+            if (!window.turnstile) {
+                console.error('Cloudflare Turnstile did not load.');
+                return;
+            }
 
             try {
-                const client = window.supabaseClient || window.supabase;
+                turnstileWidgetId = window.turnstile.render('#turnstile-widget', {
+                    sitekey: TURNSTILE_SITE_KEY,
+                    action: 'member_signup',
+                    theme: 'auto',
+
+                    callback: function () {
+                        turnstileMessage.classList.add('hidden');
+                    },
+
+                    'expired-callback': function () {
+                        turnstileMessage.textContent =
+                            'Your security check expired. Please complete it again.';
+                        turnstileMessage.classList.remove('hidden');
+                    },
+
+                    'error-callback': function () {
+                        turnstileMessage.textContent =
+                            'The security check could not load. Please refresh the page.';
+                        turnstileMessage.classList.remove('hidden');
+                    }
+                });
+
+                turnstileReady = true;
+
+            } catch (error) {
+                console.error('Turnstile initialization failed:', error);
+            }
+        };
+
+        function resetTurnstile() {
+            if (
+                window.turnstile &&
+                turnstileWidgetId !== null &&
+                !hasExistingSession
+            ) {
+                window.turnstile.reset(turnstileWidgetId);
+            }
+        }
+
+        async function waitForSupabase() {
+    let attempts = 0;
+
+    while (
+        !window.supabaseClient &&
+        !window.sbClient &&
+        attempts < 100
+    ) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        attempts++;
+    }
+
+    return window.supabaseClient || window.sbClient;
+}
+
+        async function joinChurch(client, churchCode) {
+            const { data: joinedChurches, error: joinError } =
+                await client.rpc('join_church_by_code', {
+                    p_join_code: churchCode
+                });
+
+            if (joinError) {
+                throw joinError;
+            }
+
+            const joinedChurch = Array.isArray(joinedChurches)
+                ? joinedChurches[0]
+                : null;
+
+            if (!joinedChurch?.church_id) {
+                throw new Error(
+                    'Church joining could not be completed. Please check your code and try again.'
+                );
+            }
+
+            localStorage.setItem('church_id', joinedChurch.church_id);
+
+            showSuccess(
+                'Your account has been linked to ' +
+                (joinedChurch.church_name || 'your church') +
+                '. Redirecting you now...'
+            );
+
+            window.location.replace('feed.html');
+        }
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            if (isSubmitting) return;
+
+            errorBox.classList.add('hidden');
+            successBox.classList.add('hidden');
+            turnstileMessage.classList.add('hidden');
+
+            const churchCode =
+                document.getElementById('church-id-input').value.trim();
+
+            if (!churchCode) {
+                showError('Please enter your church join code.');
+                return;
+            }
+
+            setSubmitting(true);
+
+            try {
+                const client = await waitForSupabase();
+
                 if (!client || !client.auth) {
-                    console.error("Supabase client or auth is not initialized.");
-                    alert("Connection error. Please refresh the page and try again.");
-                    btn.disabled = false;
-                    btn.textContent = "Complete Setup";
+                    throw new Error(
+                        'Connection error. Please refresh the page and try again.'
+                    );
+                }
+
+                // Check whether this visitor is already signed in.
+                const {
+                    data: { session },
+                    error: sessionError
+                } = await client.auth.getSession();
+
+                if (sessionError) throw sessionError;
+
+                if (session) {
+                    updateFormForSession(true);
+
+                    const {
+                        data: profile,
+                        error: profileError
+                    } = await client
+                        .from('profiles')
+                        .select('church_id, role')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+
+                    if (profileError) {
+                        throw new Error(
+                            'Unable to verify your account. Please try again.'
+                        );
+                    }
+
+                    if (profile?.church_id) {
+                        window.location.replace('index.html');
+                        return;
+                    }
+
+                    if (profile?.role && profile.role !== 'member') {
+                        throw new Error(
+                            'This joining gateway is for ordinary members. Please use the appropriate administrator sign-in.'
+                        );
+                    }
+
+                    await joinChurch(client, churchCode);
                     return;
                 }
 
-                const { data: { user }, error: userError } = await client.auth.getUser();
-                if (userError || !user) {
-                    window.location.replace('login.html');
-                    return;
+                // New members must complete the Turnstile challenge.
+                if (!turnstileReady || !window.turnstile ||
+                    turnstileWidgetId === null) {
+                    throw new Error(
+                        'The security check is still loading. Please wait a moment and try again.'
+                    );
                 }
 
-                // Query church by code
-                const { data: church, error } = await client
-                    .from('churches')
-                    .select('id, name')
-                    .eq('join_code', churchCode.toUpperCase())
-                    .single();
+                const captchaToken =
+                    window.turnstile.getResponse(turnstileWidgetId);
 
-                if (error || !church) {
-                    throw new Error("Invalid Church Code. Please check the code with your church leader and try again.");
+                if (!captchaToken) {
+                    turnstileMessage.textContent =
+                        'Please complete the security check before continuing.';
+                    turnstileMessage.classList.remove('hidden');
+
+                    throw new Error(
+                        'Please complete the security check.'
+                    );
                 }
 
-                const churchUuid = church.id;
+                const fullName =
+                    document.getElementById('full-name').value.trim();
 
-                const { error: updateError } = await client
-                    .from('profiles')
-                    .update({ church_id: churchUuid, role: 'member' })
-                    .eq('id', user.id);
+                const email =
+                    document.getElementById('email').value.trim();
 
-                if (updateError) throw updateError;
+                const password =
+                    document.getElementById('password').value;
 
-                // Securely save to localStorage and update profile before redirecting
-                localStorage.setItem('church_id', churchUuid);
+                if (fullName.length < 2 || fullName.length > 100) {
+                    throw new Error('Please enter your full name.');
+                }
 
-                window.location.replace('index.html');
-            } catch (err) {
-                errBox.textContent = err.message;
-                errBox.classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = "Complete Setup";
+                if (password.length < 10 || password.length > 128) {
+                    throw new Error(
+                        'Your password must be between 10 and 128 characters.'
+                    );
+                }
+
+                // Create the member account through the protected Edge Function.
+                const { data: signupData, error: signupError } =
+                    await client.functions.invoke('member-signup', {
+                        body: {
+                            fullName,
+                            email,
+                            password,
+                            joinCode: churchCode,
+                            captchaToken
+                        }
+                    });
+
+                if (signupError) {
+                    console.error('Member signup function error:', signupError);
+
+                    let message =
+                        'Account registration could not be completed. Please try again.';
+
+                    try {
+                        if (signupError.context &&
+                            typeof signupError.context.json === 'function') {
+                            const responseBody =
+                                await signupError.context.json();
+
+                            if (responseBody?.error) {
+                                message = responseBody.error;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.warn('Could not read signup error response.');
+                    }
+
+                    throw new Error(message);
+                }
+
+                if (!signupData?.success) {
+                    throw new Error(
+                        signupData?.error ||
+                        'Account registration was not successful.'
+                    );
+                }
+
+                // Sign in after server-side account creation.
+                const {
+                    data: signinData,
+                    error: signinError
+                } = await client.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (signinError || !signinData?.user) {
+                    throw new Error(
+                        'Your account was created, but automatic sign-in failed. Please sign in using your email and password, then return here to join your church.'
+                    );
+                }
+
+                updateFormForSession(true);
+
+                // Attach the member to the approved church using the secure RPC.
+                await joinChurch(client, churchCode);
+
+            } catch (error) {
+                console.error('Member joining error:', error);
+
+                showError(
+                    error.message ||
+                    'Something went wrong. Please try again.'
+                );
+
+                resetTurnstile();
+
+            } finally {
+                setSubmitting(false);
             }
         });
+
+        // Initialize the form according to the current login state.
+        (async function initializePage() {
+            try {
+                const client = await waitForSupabase();
+
+                if (!client) {
+                    showError(
+                        'BelieversMeet could not connect. Please refresh the page.'
+                    );
+                    return;
+                }
+
+                const {
+                    data: { session },
+                    error
+                } = await client.auth.getSession();
+
+                if (error) throw error;
+
+                updateFormForSession(!!session);
+
+            } catch (error) {
+                console.error('Page initialization failed:', error);
+                showError(
+                    'Unable to check your account status. Please refresh the page.'
+                );
+            }
+        })();
     </script>
-  <script src="js/notifications.js"></script>
+
+    <script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoaded&render=explicit"
+        async
+        defer
+    ></script>
+
+    <script src="js/notifications.js"></script>
 </body>
 </html>

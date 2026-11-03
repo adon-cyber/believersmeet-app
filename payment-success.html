@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donation Successful | BelieversMeet</title>
+    <title>Verifying Donation | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,14 +18,12 @@
         </div>
         
         <h1 class="text-3xl font-black text-gray-900 mb-2">Thank You!</h1>
-        <p class="text-gray-600 text-sm mb-6 leading-relaxed">
-            Your generous donation and worship through giving has been received successfully. May God bless you abundantly!
-        </p>
+        <p class="text-gray-600 text-sm mb-6 leading-relaxed">We are checking your payment with Pesapal. Your donation will be confirmed here only after verification.</p>
 
         <div id="transaction-details" class="bg-gray-50 rounded-xl p-4 text-left text-xs space-y-2 mb-8 border border-gray-100 hidden">
             <div class="flex justify-between"><span class="text-gray-500">Tracking ID:</span> <span id="display-tracking-id" class="font-mono font-bold text-gray-800"></span></div>
             <div class="flex justify-between"><span class="text-gray-500">Reference:</span> <span id="display-reference" class="font-mono font-bold text-gray-800"></span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="font-bold text-emerald-600 uppercase">Successful</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="font-bold text-amber-600 uppercase">Checking...</span></div>
         </div>
 
         <div class="space-y-3">
@@ -37,24 +35,280 @@
             </a>
         </div>
     </div>
-
     <script>
-        // Parse URL parameters from Pesapal return callback
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderTrackingId = urlParams.get('OrderTrackingId');
-        const orderMerchantReference = urlParams.get('OrderMerchantReference');
-
-        if (orderTrackingId || orderMerchantReference) {
+        (() => {
+            const params = new URLSearchParams(window.location.search);
+        
+            const trackingId = params.get('OrderTrackingId');
+            const merchantReference = params.get('OrderMerchantReference');
+        
+            const heading = document.querySelector('h1');
+            const message = document.querySelector('.text-gray-600');
             const detailsBox = document.getElementById('transaction-details');
-            if (detailsBox) detailsBox.classList.remove('hidden');
-
-            if (orderTrackingId) {
-                document.getElementById('display-tracking-id').innerText = orderTrackingId;
+        
+            const trackingDisplay = document.getElementById('display-tracking-id');
+            const referenceDisplay = document.getElementById('display-reference');
+        
+            const statusDisplay = detailsBox?.querySelector(
+                '.font-bold.uppercase'
+            );
+        
+            const heartIcon = document.querySelector('.fa-heart');
+        
+            const actionArea = document.querySelector('.space-y-3');
+        
+            let amountRow = null;
+            let retryButton = null;
+        
+            function setPage(title, description, status, colorClass) {
+                document.title = title + ' | BelieversMeet';
+        
+                if (heading) heading.textContent = title;
+                if (message) message.textContent = description;
+        
+                if (statusDisplay) {
+                    statusDisplay.textContent = status;
+        
+                    statusDisplay.classList.remove(
+                        'text-emerald-600',
+                        'text-amber-600',
+                        'text-red-600',
+                        'text-gray-600'
+                    );
+        
+                    statusDisplay.classList.add(colorClass);
+                }
+        
+                if (detailsBox) {
+                    detailsBox.classList.remove('hidden');
+                }
             }
-            if (orderMerchantReference) {
-                document.getElementById('display-reference').innerText = orderMerchantReference;
+        
+            function showRetryButton() {
+                if (retryButton || !actionArea) return;
+        
+                retryButton = document.createElement('button');
+                retryButton.type = 'button';
+                retryButton.textContent = 'Check payment again';
+                retryButton.className =
+                    'block w-full bg-amber-500 hover:bg-amber-600 ' +
+                    'text-white font-bold py-3 px-6 rounded-xl';
+        
+                retryButton.addEventListener('click', verifyPayment);
+        
+                actionArea.prepend(retryButton);
             }
-        }
-    </script>
+        
+            function hideRetryButton() {
+                if (retryButton) {
+                    retryButton.remove();
+                    retryButton = null;
+                }
+            }
+        
+            function showAmount(amount, currency) {
+                if (!detailsBox) return;
+        
+                if (!amountRow) {
+                    amountRow = document.createElement('div');
+                    amountRow.className =
+                        'flex justify-between items-center';
+        
+                    amountRow.innerHTML =
+                        '<span class="text-gray-500">Amount:</span>' +
+                        '<span id="display-amount" ' +
+                        'class="font-bold text-gray-800"></span>';
+        
+                    detailsBox.appendChild(amountRow);
+                }
+        
+                const amountDisplay =
+                    document.getElementById('display-amount');
+        
+                if (amountDisplay) {
+                    const number = Number(amount);
+        
+                    amountDisplay.textContent =
+                        `${currency} ${number.toLocaleString(undefined, {
+                            minimumFractionDigits: currency === 'USD' ? 2 : 0,
+                            maximumFractionDigits: currency === 'USD' ? 2 : 0
+                        })}`;
+                }
+            }
+        
+            function displayVerifiedResult(data) {
+                const status = String(data.status || '').toUpperCase();
+        
+                if (trackingDisplay) {
+                    trackingDisplay.textContent = data.order_tracking_id || '';
+                }
+        
+                if (referenceDisplay) {
+                    referenceDisplay.textContent =
+                        data.merchant_reference || '';
+                }
+        
+                showAmount(data.amount, data.currency);
+        
+                if (status === 'COMPLETED') {
+                    setPage(
+                        'Donation Confirmed',
+                        'Pesapal has confirmed your donation. Thank you for supporting your church.',
+                        'COMPLETED',
+                        'text-emerald-600'
+                    );
+        
+                    hideRetryButton();
+        
+                    if (heartIcon) {
+                        heartIcon.className = 'fas fa-check-circle';
+                    }
+        
+                    window.history.replaceState(
+                        {},
+                        document.title,
+                        window.location.pathname
+                    );
+        
+                } else if (status === 'PENDING') {
+                    setPage(
+                        'Payment Processing',
+                        'Your payment is still being processed by Pesapal. Please check again shortly. Do not make another payment while this one is processing.',
+                        'PENDING',
+                        'text-amber-600'
+                    );
+        
+                    showRetryButton();
+        
+                    if (heartIcon) {
+                        heartIcon.className = 'fas fa-clock';
+                    }
+        
+                } else if (status === 'FAILED') {
+                    setPage(
+                        'Payment Not Completed',
+                        'Pesapal reports that this payment was not completed. You can return to the giving page to try again.',
+                        'FAILED',
+                        'text-red-600'
+                    );
+        
+                    hideRetryButton();
+        
+                    if (heartIcon) {
+                        heartIcon.className = 'fas fa-times-circle';
+                    }
+        
+                } else if (status === 'REVERSED') {
+                    setPage(
+                        'Payment Reversed',
+                        'Pesapal reports that this payment was reversed. Please contact your church finance team for assistance.',
+                        'REVERSED',
+                        'text-red-600'
+                    );
+        
+                    hideRetryButton();
+        
+                    if (heartIcon) {
+                        heartIcon.className = 'fas fa-exclamation-circle';
+                    }
+        
+                } else {
+                    throw new Error('The payment status was not recognized.');
+                }
+            }
+        
+            async function verifyPayment() {
+                if (!trackingId || !merchantReference) {
+                    setPage(
+                        'Unable to Verify Payment',
+                        'The payment reference information is missing. Please contact your church finance team before attempting another payment.',
+                        'NOT VERIFIED',
+                        'text-red-600'
+                    );
+        
+                    hideRetryButton();
+                    return;
+                }
+        
+                if (retryButton) {
+                    retryButton.disabled = true;
+                    retryButton.textContent = 'Checking...';
+                }
+        
+                setPage(
+                    'Checking Your Donation',
+                    'We are securely checking your payment with Pesapal. Please do not close this page.',
+                    'VERIFYING',
+                    'text-amber-600'
+                );
+        
+                if (heartIcon) {
+                    heartIcon.className = 'fas fa-spinner fa-spin';
+                }
+        
+                try {
+                    const response = await fetch('/api/pesapal-verify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            merchant_reference: merchantReference,
+                            order_tracking_id: trackingId
+                        })
+                    });
+        
+                    const data = await response.json();
+        
+                    if (!response.ok || !data.success || !data.verified) {
+                        throw new Error(
+                            data.error || 'Payment verification could not be completed.'
+                        );
+                    }
+        
+                    displayVerifiedResult(data);
+        
+                } catch (error) {
+                    console.error('Payment verification error:', error);
+        
+                    setPage(
+                        'Payment Not Yet Verified',
+                        'We could not confirm your payment right now. Please check again shortly. Contact your church if the payment remains unverified.',
+                        'NOT VERIFIED',
+                        'text-red-600'
+                    );
+        
+                    showRetryButton();
+        
+                    if (retryButton) {
+                        retryButton.disabled = false;
+                        retryButton.textContent = 'Check payment again';
+                    }
+        
+                    if (heartIcon) {
+                        heartIcon.className = 'fas fa-exclamation-circle';
+                    }
+                }
+            }
+        
+            // Never display a successful payment before server verification.
+            if (heading) heading.textContent = 'Checking Your Donation';
+        
+            if (message) {
+                message.textContent =
+                    'We are securely verifying your payment with Pesapal.';
+            }
+        
+            if (statusDisplay) {
+                statusDisplay.textContent = 'VERIFYING';
+            }
+        
+            verifyPayment();
+        })();
+        </script>
+   
 </body>
 </html>
+
+

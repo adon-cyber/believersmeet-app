@@ -6,6 +6,7 @@
     <title>Sermons & Worship Media - BelieversMeet</title>
     <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -14,43 +15,9 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
-    <!-- Navigation Header -->
-    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3 shrink-0">
-                <a href="index.html" class="flex items-center space-x-2">
-                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
-                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-                </a>
-            </div>
-            <!-- Desktop Navigation Links -->
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
-                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
-                <a href="sermons.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap">Sermons & Media</a>
-                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
-                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
-                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
-            </nav>
-            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
-            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
-                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
-                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
-                <a href="sermons.html" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0">Sermons & Media</a>
-                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
-                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
-                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
-            </div>
-            <div class="flex items-center space-x-3 shrink-0">
-                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
-                    <i class="fas fa-user"></i>
-                </a>
-                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
-        </div>
-    </header>
+    <!-- Navigation Header Container -->
+    <div id="navbar"></div>
+    <script src="js/nav.js"></script>
 
     <!-- Main Container -->
     <main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
@@ -272,7 +239,7 @@
     <footer class="bg-slate-900 border-t border-slate-800/80 py-12 text-slate-400 font-sans mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <!-- Top Footer Section: Rich Responsive Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
                 <!-- Left: Logo, Tagline, & Mission -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-center md:justify-start space-x-2">
@@ -282,14 +249,7 @@
                     <p class="text-slate-400 text-xs sm:text-sm">Connecting believers, empowering churches, and strengthening faith communities worldwide.</p>
                 </div>
 
-                <!-- Center: Quick Links -->
-                <div class="flex flex-wrap justify-center md:justify-center items-center gap-x-6 gap-y-2 text-sm font-medium">
-                    <a href="feed.html" class="text-slate-300 hover:text-white transition">Feed</a>
-                    <a href="events.html" class="text-slate-300 hover:text-white transition">Events</a>
-                    <a href="sermons.html" class="text-slate-300 hover:text-white transition">Sermons</a>
-                    <a href="giving.html" class="text-slate-300 hover:text-white transition">Giving</a>
-                    <a href="groups.html" class="text-slate-300 hover:text-white transition">Groups</a>
-                </div>
+
 
                 <!-- Right: Support / Terms & Social / Contact Links -->
                 <div class="flex flex-col items-center md:items-end space-y-2 text-sm">
@@ -377,7 +337,7 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'sermons' }, () => {
                     loadMediaRecords();
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'churches' }, (payload) => {
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'church_directory' }, (payload) => {
                     if (currentUserProfile && payload.new && payload.new.id === currentUserProfile.church_id) {
                         updateLiveStreamUI(payload.new);
                     }
@@ -397,7 +357,7 @@
             if (!currentUserProfile || !currentUserProfile.church_id) return;
 
             const { data: church, error } = await window.sbClient
-                .from('churches')
+                .from('church_directory')
                 .select('id, live_stream_id, is_live, name')
                 .eq('id', currentUserProfile.church_id)
                 .maybeSingle();
@@ -461,7 +421,7 @@
             }
 
             const { error } = await window.sbClient
-                .from('churches')
+                .from('church_directory')
                 .update({
                     live_stream_id: videoId,
                     is_live: true
@@ -485,7 +445,7 @@
             }
 
             const { error } = await window.sbClient
-                .from('churches')
+                .from('church_directory')
                 .update({
                     is_live: false
                 })
@@ -539,25 +499,54 @@
         }
 
         async function loadMediaRecords() {
-            const container = document.getElementById('sermons-container');
+            const container = document.getElementById('sermons-container') || document.getElementById('widget-audio');
             
             if (!currentUserProfile || !currentUserProfile.church_id) {
-                container.innerHTML = `<div class="col-span-full bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-500">Your profile is not linked to any church yet.</div>`;
+                if (container) {
+                    container.innerHTML = `<div class="col-span-full bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-500">Your profile is not linked to any church yet.</div>`;
+                } else {
+                    console.warn('[loadMediaRecords] Container element (sermons-container or widget-audio) not found in DOM.');
+                }
                 return;
             }
 
             let query = window.sbClient
                 .from('sermons')
-                .select('*, churches(name)');
+                .select('*');
 
             const { data: records, error } = await query.order('created_at', { ascending: false });
 
             if (error) {
-                container.innerHTML = `<div class="col-span-full bg-white p-12 rounded-2xl border border-gray-200 text-center text-red-500">Error loading media: ${escapeHtml(error.message)}</div>`;
+                if (container) {
+                    container.innerHTML = `<div class="col-span-full bg-white p-12 rounded-2xl border border-gray-200 text-center text-red-500">Error loading media: ${escapeHtml(error.message)}</div>`;
+                } else {
+                    console.error('[loadMediaRecords] Error loading media and container element not found:', error.message);
+                }
                 return;
             }
 
-            fetchedMediaRecords = records || [];
+            const rawRecords = records || [];
+
+            // Fetch approved church names separately from church_directory
+            const churchIds = [...new Set(rawRecords.map(item => item.church_id).filter(Boolean))];
+            let churchMap = {};
+            if (churchIds.length > 0) {
+                const { data: dirs, error: dirError } = await window.sbClient
+                    .from('church_directory')
+                    .select('id, name')
+                    .in('id', churchIds);
+                if (!dirError && dirs) {
+                    dirs.forEach(d => {
+                        churchMap[d.id] = d.name;
+                    });
+                }
+            }
+
+            fetchedMediaRecords = rawRecords.map(item => ({
+                ...item,
+                resolved_church_name: churchMap[item.church_id] || item.church_name || 'Home Church'
+            }));
+
             renderMediaCards();
         }
 
@@ -596,7 +585,7 @@
             }
 
             container.innerHTML = filtered.map(item => {
-                const churchName = item.churches?.name || item.church_name || 'Home Church';
+                const churchName = item.resolved_church_name || item.churches?.name || item.church_name || 'Home Church';
                 const mediaType = (item.media_type || 'audio').toLowerCase();
                 const category = item.category || 'Sermon';
                 
@@ -893,11 +882,12 @@
             `;
 
             try {
-                const response = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
+                const { data, error } = await window.sbClient.functions.invoke('youtube-search', {
+                    body: { q: query }
+                });
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to fetch YouTube search results');
+                if (error) {
+                    throw new Error(error.message || 'Failed to invoke YouTube search function');
                 }
 
                 if (!Array.isArray(data) || data.length === 0) {
@@ -1195,17 +1185,26 @@
             });
         }
         window.switchSermonView = function(selected) {
-            const mapping = {
-                player: document.getElementById('widget-player'),
-                notes: document.getElementById('sermon-notes-panel'),
-                audio: document.getElementById('widget-audio')
+            const groups = {
+                player: ['live-broadcast-section', 'widget-player'],
+                notes: ['sermon-notes-panel'],
+                audio: ['widget-audio', 'sermons-container']
             };
 
-            Object.keys(mapping).forEach(key => {
-                const el = mapping[key];
+            const allIds = new Set(['live-broadcast-section', 'widget-player', 'sermon-notes-panel', 'widget-audio', 'sermons-container']);
+
+            allIds.forEach(id => {
+                const el = document.getElementById(id);
                 if (el) {
-                    if (selected === 'all' || selected === key) {
-                        el.style.display = 'block';
+                    let show = false;
+                    if (selected === 'all') {
+                        show = true;
+                    } else if (groups[selected] && groups[selected].includes(id)) {
+                        show = true;
+                    }
+
+                    if (show) {
+                        el.style.display = '';
                         el.classList.remove('d-none', 'hidden');
                     } else {
                         el.style.display = 'none';

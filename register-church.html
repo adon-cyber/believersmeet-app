@@ -125,29 +125,61 @@
 
                 <!-- SUCCESS SCREEN (Hidden by default) -->
                 <div id="success-screen" class="hidden space-y-6 text-center py-4">
-                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 text-2xl font-bold">
-                        ✓
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 text-amber-600 text-2xl font-bold">
+                        ⏳
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-gray-900">Church Successfully Registered!</h3>
+                        <h3 class="text-2xl font-bold text-gray-900">Church Registration Pending Review</h3>
                         <p class="mt-2 text-sm text-gray-600">
-                            Your church ecosystem is now live. Share this unique <strong class="text-indigo-600">Church Join Code</strong> with your members so they can connect with your congregation.
+                            Your church application has been successfully submitted and is currently <strong class="text-amber-600">Pending Superadmin Review & Approval</strong>. The developer/superadmin will review your credentials shortly.
                         </p>
                     </div>
 
-                    <div class="bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-xl p-5">
-                        <span class="block text-xs uppercase font-bold text-indigo-500 tracking-wider mb-1">Church Join Code</span>
-                        <div id="display-join-code" class="text-3xl font-extrabold text-indigo-900 tracking-widest font-mono">
-                            --
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs uppercase font-bold text-amber-800 tracking-wider">Church Join Code / Ref</span>
+                            <span id="display-join-code" class="text-lg font-extrabold text-amber-900 tracking-wider font-mono bg-white px-3 py-1 rounded border border-amber-300">--</span>
                         </div>
-                        <button type="button" id="copy-code-btn" class="mt-3 inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white px-3 py-1.5 rounded border border-indigo-200 shadow-sm">
-                            Copy Join Code
-                        </button>
+                        <p class="text-xs text-amber-700 italic">
+                            Your join code and full ecosystem features will activate immediately once approved by the superadmin.
+                        </p>
+                        <div class="pt-2 border-t border-amber-200 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-amber-900">Want to track status?</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="copy-code-btn" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                                    <i class="fas fa-copy"></i> Copy Join Code
+                                </button>
+                                <a id="check-status-link" href="church-status.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                                    <i class="fas fa-search"></i> Check Status
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Superadmin Contact Links & 48-Hour Waiting Period / Reminder UI -->
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-left space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900">Need Immediate Assistance?</h4>
+                        <p class="text-xs text-indigo-700">
+                            Contact the official Developer / Superadmin directly using the verified contact details below:
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                            <a href="mailto:adoniakasango@gmail.com?subject=Church%20Approval%20Request&body=Hello%20Superadmin,%20please%20review%20my%20pending%20church%20registration." class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-indigo-300 text-xs font-semibold rounded-lg text-indigo-700 bg-white hover:bg-indigo-50 transition shadow-sm">
+                                <i class="fas fa-envelope mr-1.5 text-indigo-600"></i> Email Superadmin
+                            </a>
+                            <a href="https://wa.me/256777778443?text=Hello%20Superadmin,%20I%20have%20submitted%20my%20church%20registration%20on%20BelieversMeet%20and%20would%20like%20to%20request%20approval." target="_blank" rel="noopener noreferrer" class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-emerald-300 text-xs font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 transition shadow-sm">
+                                <i class="fab fa-whatsapp mr-1.5 text-emerald-600"></i> WhatsApp Superadmin
+                            </a>
+                        </div>
+                        <!-- 48-hour reminder & polite follow-up banner -->
+                        <div id="reminder-banner" class="mt-3 pt-3 border-t border-indigo-200 text-xs text-slate-600 space-y-1">
+                            <p class="font-medium text-slate-700"><i class="fas fa-clock text-amber-500 mr-1"></i> Standard review waiting period: <strong class="text-slate-900">48 Hours</strong></p>
+                            <p id="reminder-followup-text" class="italic text-slate-500">If your application remains pending after 48 hours, please feel free to follow up politely with the superadmin via WhatsApp or email above.</p>
+                        </div>
                     </div>
 
                     <div>
-                        <a href="activate-trial.html" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-md">
-                            Activate Free Trial &rarr;
+                        <a href="login.html" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-md">
+                            Return to Login &rarr;
                         </a>
                     </div>
                 </div>
@@ -244,6 +276,8 @@
             await waitForSupabase();
 
             const btn = document.getElementById('submit-btn');
+            if (btn.dataset.submitting === "true") return;
+            btn.dataset.submitting = "true";
             btn.disabled = true;
             btn.textContent = "Establishing ecosystem...";
 
@@ -257,15 +291,37 @@
             let authDataUser = currentUser;
 
             try {
+                // 1. Check / Recover Session & Refresh if needed
+                let { data: sessionData, error: sessionError } = await window.sbClient.auth.getSession();
+                
+                if (sessionError || !sessionData.session) {
+                    // Attempt token refresh
+                    const { data: refreshData, error: refreshError } = await window.sbClient.auth.refreshSession();
+                    if (refreshError || !refreshData.session) {
+                        if (!authDataUser) {
+                            // User is signing up freshly below, so we can proceed with signUp
+                        } else {
+                            throw new Error("Your session has expired or the refresh token is invalid. Please sign in again to continue.");
+                        }
+                    } else {
+                        sessionData = refreshData;
+                    }
+                }
+
+                if (sessionData && sessionData.session) {
+                    authDataUser = sessionData.session.user;
+                }
+
                 if (!authDataUser) {
                     const pastorName = document.getElementById('pastor-name').value.trim();
                     const pastorEmail = document.getElementById('pastor-email').value.trim();
                     const pastorPassword = document.getElementById('pastor-password').value;
 
                     if (!pastorName || !pastorEmail || !pastorPassword || pastorPassword.trim() === "") {
-                        throw new Error("Password is required to complete registration.");
+                        throw new Error("Full name, email address, and secure password are required to register your admin account.");
                     }
 
+                    // Check if a church application or user already exists / prevent duplicate registration
                     const { data: signUpData, error: authError } = await window.sbClient.auth.signUp({
                         email: pastorEmail,
                         password: pastorPassword,
@@ -274,9 +330,42 @@
                         }
                     });
                     
-                    if (authError) throw authError;
+                    if (authError) {
+                        if (authError.message && authError.message.toLowerCase().includes('rate limit')) {
+                            throw new Error("Too many sign-up attempts. Please wait a few minutes before trying again or log in if you already have an account.");
+                        }
+                        throw authError;
+                    }
+
                     if (!signUpData.user) throw new Error("Authentication initialization failed.");
                     authDataUser = signUpData.user;
+
+                    // Inspect session for email confirmation requirement
+                    if (!signUpData.session) {
+                        // Email confirmation is enabled and session is null
+                        document.getElementById('step-2-container').classList.add('hidden');
+                        document.getElementById('success-screen').classList.remove('hidden');
+                        document.getElementById('page-title').textContent = "Verify Your Email";
+                        document.getElementById('page-subtitle').textContent = "Check your inbox to confirm your account.";
+                        
+                        // Customize success screen view for email confirmation required state
+                        document.querySelector('#success-screen h3').textContent = "Check Your Email to Verify Account";
+                        document.querySelector('#success-screen p').innerHTML = `We have sent a verification link to <strong class="text-indigo-700">${pastorEmail}</strong>. Please check your email inbox and click the verification link, then sign in to automatically resume and complete your church registration safely.`;
+                        document.getElementById('display-join-code').parentElement.parentElement.classList.add('hidden');
+                        document.getElementById('reminder-banner').classList.add('hidden');
+                        
+                        const returnLoginBtn = document.querySelector('#success-screen a[href="login.html"]');
+                        if (returnLoginBtn) {
+                            returnLoginBtn.textContent = "Proceed to Log In &rarr;";
+                        }
+                        return; // Halt execution until email verification & login
+                    }
+                }
+
+                // 2. Validate session before storage upload & RPC
+                const { data: activeSessionCheck } = await window.sbClient.auth.getSession();
+                if (!activeSessionCheck.session) {
+                    throw new Error("Authenticated session is required for church registration and secure storage uploads. Please sign in again.");
                 }
 
                 let logoUrl = logoUrlInput || null;
@@ -295,68 +384,56 @@
                             logoUrl = publicUrlData.publicUrl;
                         } else {
                             console.warn("Image upload failed, falling back to default placeholder:", uploadError);
+                            // Continue without logo as permitted, but inform in console/warn
                         }
                     } catch (uploadCatchErr) {
                         console.warn("Image upload threw an exception, falling back to default placeholder:", uploadCatchErr);
                     }
                 }
 
-                // Helper function to generate unique 6-character alphanumeric join code
-                function generateJoinCode(name) {
-                    const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                    const prefix = cleanName.substring(0, 4) || 'CHUR';
-                    const randomSuffix = Math.floor(100 + Math.random() * 900);
-                    return `${prefix}${randomSuffix}`;
+                const { data: applicationData, error: applicationError } =
+                    await window.sbClient.rpc('submit_church_application', {
+                        p_name: churchName,
+                        p_location: churchLocation || null,
+                        p_address: churchAddress || null,
+                        p_logo_url: logoUrl,
+                        p_admin_position: adminPosition || null
+                    });
+
+                if (applicationError) {
+                    if (applicationError.message && (applicationError.message.includes('unique') || applicationError.message.includes('already exists'))) {
+                        throw new Error("A church application with this name or user has already been submitted. Please check your church registration status.");
+                    }
+                    throw applicationError;
                 }
 
-                const joinCode = generateJoinCode(churchName);
+                if (!applicationData || applicationData.length === 0) {
+                    throw new Error('Church application could not be created. Please verify your details and try again.');
+                }
 
-                const { data: churchData, error: churchError } = await window.sbClient
-                    .from('churches')
-                    .insert([{ 
-                        name: churchName, 
-                        location: churchLocation,
-                        address: churchAddress,
-                        join_code: joinCode,
-                        subscription_status: 'pending_trial',
-                        trial_ends_at: null,
-                        ...(logoUrl ? { logo_url: logoUrl } : {})
-                    }])
-                    .select();
+                const generatedChurchId = applicationData[0].church_id;
+                const joinCode = applicationData[0].join_code;
 
-                if (churchError) throw churchError;
-                if (!churchData || churchData.length === 0) throw new Error("Failed to retrieve generated Church metadata ID.");
-                
-                const generatedChurchId = churchData[0].id;
-
-                const pastorFullName = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]) : document.getElementById('pastor-name').value.trim();
-
-                const { error: profileError } = await window.sbClient
-                    .from('profiles')
-                    .upsert({
-                        id: authDataUser.id,
-                        full_name: pastorFullName,
-                        church_id: generatedChurchId, 
-                        role: 'admin',
-                        position: adminPosition,
-                        ...(logoUrl ? { avatar_url: logoUrl } : {})
-                    });
-                
-                if (profileError) throw profileError;
-
-                // Show success screen with join code
+                // Show success/pending screen with join code
                 document.getElementById('step-2-container').classList.add('hidden');
                 document.getElementById('success-screen').classList.remove('hidden');
-                document.getElementById('page-title').textContent = "Welcome, Leader!";
-                document.getElementById('page-subtitle').textContent = "Your church has been registered successfully.";
+                document.getElementById('page-title').textContent = "Application Pending Review";
+                document.getElementById('page-subtitle').textContent = "Your church registration is submitted. Awaiting superadmin approval.";
                 document.getElementById('display-join-code').textContent = joinCode;
                 document.getElementById('member-signup-prompt').classList.add('hidden');
 
+                const statusLink = document.getElementById('check-status-link');
+
+if (statusLink) {
+    statusLink.href = 'church-status.html';
+}
+
             } catch (err) {
                 console.error("Registration Lifecycle Error Summary:", err);
-                errBox.textContent = "Registration Failed: " + err.message;
+                errBox.textContent = err.message || "An unexpected error occurred during registration. Please check your inputs and try again.";
                 errBox.classList.remove('hidden');
                 btn.disabled = false;
+                btn.dataset.submitting = "false";
                 btn.textContent = "Register & Launch Church";
             }
         });

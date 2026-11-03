@@ -14,73 +14,71 @@
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        select#admin-view-switcher, select#admin-view-switcher option {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+        }
+        select#admin-view-switcher option:checked, select#admin-view-switcher option:hover {
+            background-color: #1e40af !important;
+            color: #ffffff !important;
+        }
     </style>
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col" style="display: block !important;">
-    <nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
-    <div class="flex items-center gap-8">
-        <span class="text-xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-            ⛪ BelieversMeet
-        </span>
-        <div class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-300">
-            <a href="feed.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">My Feed</a>
-            <a href="giving.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Giving</a>
-            <a href="sermons.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Sermons</a>
-            <a href="groups.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Small Groups</a>
-            <a href="prayer.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Prayer Wall</a>
-            <a href="testimonies.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Testimonies</a>
-            <a href="inbox.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Inbox</a>
-            <a href="events.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Events</a>
-            <a href="profile.html" class="px-3 py-1.5 rounded-lg hover:text-slate-100 hover:bg-slate-800 transition">Profile</a>
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
+                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                </a>
+            </div>
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
+                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
+                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
+                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap">Admin Console</a>
+            </nav>
+            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
+                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
+                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
+                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0">Admin Console</a>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
+                <button id="nav-super-admin" onclick="window.location.href='super-admin.html'" class="hidden px-3 py-1.5 rounded-lg bg-purple-600/50 text-white text-xs font-semibold hover:bg-purple-600 transition border border-white/20 shadow">
+                    Super Admin
+                </button>
+                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
+                    <i class="fas fa-user"></i>
+                </a>
+                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
         </div>
-    </div>
-    
-    <div class="flex items-center gap-3">
-
-        <a href="admin.html" class="px-3.5 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-semibold flex items-center gap-1.5">
-            ⚙️ Admin Panel
-        </a>
-        <button id="nav-super-admin" onclick="window.location.href='super-admin.html'" class="hidden px-3.5 py-1.5 rounded-lg bg-purple-600/20 text-purple-300 border border-purple-500/30 text-sm font-semibold hover:bg-purple-600/30 transition">
-            🛡️ Super Admin
-        </button>
-        <!-- Light/Dark Mode Switcher -->
-        <button onclick="window.toggleTheme()" class="p-2 rounded-xl bg-slate-800 text-amber-400 border border-slate-700">
-            ☀️
-        </button>
-        <button onclick="logoutUser(event)" class="text-sm font-medium text-slate-500 hover:text-red-400 transition ml-2">
-            Logout
-        </button>
-    </div>
-</nav>
+    </header>
 
     <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
         <!-- Hero Banner -->
-        <div class="bg-gradient-to-r from-blue-950/90 to-slate-900/90 border border-slate-800 p-8 rounded-2xl shadow-xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-white">
+        <div class="bm-card bg-gradient-to-r from-blue-950/90 to-slate-900/90 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-white">
             <div>
-                <h1 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-2">
+                <h1 class="bm-page-heading mb-2">
                     <i class="fas fa-cog text-blue-400"></i> Admin Console
                 </h1>
-                <p class="text-slate-300 text-base">Manage church members, events, content, and system settings.</p>
+                <p class="bm-page-subheading">Manage church members, events, content, and system settings.</p>
             </div>
         </div>
         
-        <!-- Global View Selector Dropdown -->
-        <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 p-4 rounded-2xl shadow-xl mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <span class="text-slate-200 font-bold text-sm flex items-center gap-2"><span>👁️</span> Filter Admin View:</span>
-            <select id="admin-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchAdminView(this.value)">
-                <option value="all" selected>🌟 Show All Sections</option>
-                <option value="global">🌐 Global System Admin</option>
-                <option value="dashboard">⛪ Church Dashboard</option>
-                <option value="counseling">💬 Counseling Requests</option>
-                <option value="documents">📁 Document Manager</option>
-                <option value="roster">🤝 Volunteer Roster</option>
-                <option value="pesapal">💳 Pesapal Settings</option>
-                <option value="prayer">🙏 Prayer & Ministry Requests</option>
-                <option value="businesses">🏢 Business Approvals</option>
-                <option value="finance">💰 Finance & Giving Dashboard</option>
-            </select>
-        </div>
+
         
         <!-- 1. TAB NAVIGATION -->
         <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden overflow-x-auto whitespace-nowrap pb-2 w-full max-w-full scroll-smooth no-scrollbar">
@@ -110,6 +108,9 @@
             </button>
             <button id="tab-btn-finance" onclick="switchAdminTab('finance')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
                 💰 Finance & Giving
+            </button>
+            <button id="tab-btn-registrations" onclick="switchAdminTab('registrations')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
+                🎟️ Event Registrations
             </button>
         </div>
 
@@ -343,6 +344,73 @@
             </div>
         </div>
 
+        <!-- EVENT REGISTRATIONS SECTION -->
+        <div id="registrations-management-section" class="hidden space-y-8">
+            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fas fa-ticket-alt text-blue-400"></i> Event Registrations Management
+                        </h3>
+                        <p class="text-slate-400 text-sm mt-1">Review upcoming and past church events, select an event to view attendees, search roster, and export CSV.</p>
+                    </div>
+                    <button onclick="loadAdminEventRegistrationsSection()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt"></i> Refresh Events
+                    </button>
+                </div>
+
+                <!-- Events Selector / Cards Grid -->
+                <div id="admin-events-selector-container" class="mb-8">
+                    <div class="text-center py-8 text-slate-500 text-sm">Loading events...</div>
+                </div>
+
+                <!-- Selected Event Roster Container -->
+                <div id="admin-event-roster-container" class="border-t border-slate-700/70 pt-8 hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h4 id="roster-event-title" class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fas fa-users text-blue-400"></i> Attendees Roster
+                            </h4>
+                            <p id="roster-event-meta" class="text-xs text-slate-400 mt-0.5">Date: N/A | Church: N/A | Registrations: 0</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <!-- Search box -->
+                            <div class="relative flex-grow md:flex-grow-0">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fas fa-search text-xs"></i>
+                                </span>
+                                <input type="text" id="roster-search-input" oninput="filterEventRoster()" placeholder="Search by name, email, coupon..." class="w-full md:w-64 bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <!-- Export CSV Button -->
+                            <button onclick="exportRosterCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700/80 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th class="p-3.5">Attendee</th>
+                                    <th class="p-3.5">Email</th>
+                                    <th class="p-3.5">Registration Date</th>
+                                    <th class="p-3.5">Coupon Number</th>
+                                    <th class="p-3.5">Payment / Free Status</th>
+                                    <th class="p-3.5 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-roster-tbody" class="divide-y divide-slate-800/80 text-sm">
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-slate-500 text-sm">Select an event above to view registered attendees.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Receipt Modal Container & Elements -->
         <div id="receipt-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
@@ -387,7 +455,7 @@
         <!-- 2. GLOBAL VIEW -->
         <div id="global-admin-view" class="block space-y-8">
             <!-- Page Header Section -->
-            <div class="bg-gradient-to-r from-blue-900/80 to-slate-900/80 border border-slate-800 p-8 rounded-2xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="bg-gradient-to-r from-blue-900/80 to-slate-900/80 border border-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 class="text-3xl font-bold text-slate-100 mb-2">Church Management Dashboard</h1>
                     <p class="text-slate-300 text-base">Manage announcements, fellowship groups, church events, inquiries, and member roles.</p>
@@ -399,21 +467,58 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-4 p-4 p-md-5 text-white" style="border-radius: 1rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
-            <span class="text-xs font-bold tracking-wider text-white uppercase bg-white/20 border border-white/30 px-3 py-1 rounded-full">Church Workspace Join Code</span>
-            <div class="display-4 fw-bold mb-3 tracking-wider mt-3" id="church-join-code">CHURCH-....</div>
-            <p class="mb-0 text-white-50 fs-5">Share this code with your members so they can connect to your church workspace during registration.</p>
-            <div class="mt-4">
-                <button onclick="copyJoinCode()" id="copy-join-code-btn" class="btn btn-light text-primary fw-bold rounded-pill shadow-sm px-4">
-                    <i class="fas fa-copy"></i>
-                    <span id="copy-btn-text">📋 Copy Join Code</span>
-                </button>
-            </div>
-        </div>
+            <div class="relative overflow-hidden rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 p-6 sm:p-8 shadow-xl">
+
+                <div class="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/5 blur-2xl"></div>
+                <div class="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl"></div>
+            
+                <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            
+                    <div class="min-w-0 flex-1">
+            
+                        <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-indigo-100">
+                            <i class="fas fa-key"></i>
+                            Church Workspace Join Code
+                        </div>
+            
+                        <h2 class="mt-4 text-sm font-medium text-indigo-100">
+                            Your church invitation code
+                        </h2>
+            
+                        <div
+                            id="church-join-code"
+                            class="mt-2 break-all font-mono text-3xl font-extrabold tracking-wider text-white sm:text-4xl"
+                        >
+                            CHURCH-....
+                        </div>
+            
+                        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-indigo-100/90">
+                            Share this code with your members so they can connect to your church workspace during registration.
+                        </p>
+            
+                    </div>
+            
+                    <div class="relative flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+            
+                        <button
+                            onclick="copyJoinCode()"
+                            id="copy-join-code-btn"
+                            type="button"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-indigo-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-700"
+                        >
+                            <i class="fas fa-copy"></i>
+                            <span id="copy-btn-text">Copy Join Code</span>
+                        </button>
+                    </div>
+                </div>
+            
+                    </div>
+            
+        
 
             <!-- User Management Section (Super Admin Only) -->
             <!-- User Management Section (Super Admin Only) -->
-<div id="user-management-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl mb-8 hidden">
+<div id="user-management-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-6 sm:p-8 shadow-xl hidden">
     <div class="border-b border-slate-700/70 pb-4 mb-4">
         <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
             <i class="fas fa-users text-purple-400"></i> Manage Profiles & Members
@@ -425,9 +530,8 @@
         </div>
     </div>
 </div>
-                    <!-- JS will populate events and attendees here -->
-                </div>
-            </div>
+                
+            
 
             <!-- Upload Gallery Memory Section -->
             <div id="gallery-upload-section" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
@@ -608,6 +712,8 @@
                 <div id="announcements-container" class="mt-4 space-y-3"><p class="text-slate-500 italic text-sm">Loading...</p></div>
             </div>
         </div>
+    </div>
+        </div>
 
         <!-- 3. CHURCH DASHBOARD VIEW -->
         <div id="church-dashboard-view" class="hidden space-y-8">
@@ -721,21 +827,6 @@
       </div>
     </footer>
 
-    <!-- Volunteer Members Modal -->
-    <div class="modal fade" id="volunteerMembersModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="volunteerModalTitle">Volunteers</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" id="volunteer-members-list">
-            <div class="text-center p-3">Loading volunteers...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Script Logic -->
     <script>
         function escapeHTML(str) {
@@ -745,8 +836,323 @@
           );
         }
 
+        let currentSelectedEventId = null;
+        let currentEventAttendees = [];
+        let churchesMapCache = {};
         let currentUserProfile = null;
+        let isSuperAdmin = false;
         let activeDashboardChurchId = null;
+
+        async function loadAdminEventRegistrationsSection() {
+            const eventsSelectorContainer = document.getElementById('admin-events-selector-container');
+            const rosterContainer = document.getElementById('admin-event-roster-container');
+            if (!eventsSelectorContainer) return;
+
+            eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading events...</div>`;
+
+            const db = getDbClient();
+            if (!db) {
+                eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Supabase database client not available.</div>`;
+                return;
+            }
+
+            try {
+                // Fetch churches for church name mapping
+                // =====================================================
+// 1. Load church names using the safe public directory
+// =====================================================
+
+const {
+    data: churches,
+    error: churchesError
+} = await db
+    .from('church_directory')
+    .select('id, name');
+
+churchesMapCache = {};
+
+if (churchesError) {
+    console.warn('Church name lookup failed:', churchesError);
+} else {
+    (churches || []).forEach(church => {
+        churchesMapCache[church.id] = church.name;
+    });
+}
+
+// =====================================================
+// 2. Determine scope using verified authorization
+// =====================================================
+
+// Super Admin: global scope unless a church is selected.
+// Other authorized users: their assigned church only.
+const adminChurchId = isSuperAdmin
+    ? (activeDashboardChurchId || null)
+    : (currentUserProfile?.church_id || null);
+
+// Never allow an ordinary administrator to run an
+// unfiltered query because their church context is missing.
+if (!isSuperAdmin && !adminChurchId) {
+    throw new Error(
+        'Your assigned church could not be determined.'
+    );
+}
+
+// =====================================================
+// 3. Load events within the authorized dashboard scope
+// =====================================================
+
+let query = db
+    .from('events')
+    .select('*');
+
+if (adminChurchId) {
+    query = query.or(
+        `church_id.eq.${adminChurchId},` +
+        `host_church_id.eq.${adminChurchId},` +
+        `invited_church_ids.cs.{${adminChurchId}}`
+    );
+}
+
+// A Super Admin with no selected church remains global.
+
+                const { data: events, error } = await query.order('event_date', { ascending: false });
+
+                if (error) throw error;
+
+                if (!events || events.length === 0) {
+                    eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">No events found. Schedule an event to view registrations.</div>`;
+                    if (rosterContainer) rosterContainer.classList.add('hidden');
+                    return;
+                }
+
+                // Fetch registration counts for each event
+                let eventsHtml = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+
+                for (const evt of events) {
+                    // Fetch attendees count & list for each
+                    const attendees = await fetchEventRegistrationsDetailedSafe(evt.id);
+                    const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'TBD';
+                    const churchName = churchesMapCache[evt.church_id || evt.host_church_id] || 'BelieversMeet Church';
+
+                    const isUpcoming = new Date(evt.event_date || Date.now()) >= new Date();
+                    const statusBadge = isUpcoming
+                        ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">Upcoming</span>`
+                        : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600">Past</span>`;
+
+                    eventsHtml += `
+                        <div onclick="selectEventForRoster('${evt.id}', '${escapeHTML(evt.title)}', '${escapeHTML(eventDate)}', '${escapeHTML(churchName)}', ${attendees.length})"
+                             class="bg-slate-900/80 border ${currentSelectedEventId === evt.id ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-blue-500/10' : 'border-slate-700/80 hover:border-slate-600'} rounded-2xl p-5 shadow-lg cursor-pointer transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start gap-2 mb-2">
+                                    <h4 class="font-bold text-slate-100 text-base line-clamp-1">${escapeHTML(evt.title)}</h4>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-xs text-slate-400 mb-1"><i class="fas fa-calendar-alt text-blue-400 mr-1.5"></i> ${escapeHTML(eventDate)}</p>
+                                <p class="text-xs text-slate-400 mb-3"><i class="fas fa-church text-indigo-400 mr-1.5"></i> ${escapeHTML(churchName)}</p>
+                            </div>
+                            <div class="flex items-center justify-between pt-3 border-t border-slate-800 text-xs font-semibold">
+                                <span class="text-slate-300 flex items-center gap-1.5"><i class="fas fa-users text-blue-400"></i> ${attendees.length} Registered</span>
+                                <span class="text-blue-400 hover:text-blue-300">View Roster &rarr;</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                eventsHtml += '</div>';
+                eventsSelectorContainer.innerHTML = eventsHtml;
+
+                // If an event is currently selected, refresh its roster view
+                if (currentSelectedEventId) {
+                    await selectEventForRoster(currentSelectedEventId);
+                }
+
+            } catch (err) {
+                console.error("Error loading events for registrations:", err);
+                eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Failed to load events: ${escapeHTML(err.message)}</div>`;
+            }
+        }
+
+        async function fetchEventRegistrationsDetailedSafe(eventId) {
+            const db = getDbClient();
+            if (!db) return [];
+
+            try {
+                const { data: registrations, error: regError } = await db
+                    .from('event_registrations')
+                    .select('*')
+                    .eq('event_id', eventId);
+
+                if (regError || !registrations) return [];
+
+                const profileIds = registrations.map(r => r.profile_id).filter(Boolean);
+                let profilesMap = {};
+                if (profileIds.length > 0) {
+                    const { data: profiles } = await db
+                        .from('profiles')
+                        .select('id, full_name, email, avatar_url')
+                        .in('id', profileIds);
+                    if (profiles) {
+                        profiles.forEach(p => { profilesMap[p.id] = p; });
+                    }
+                }
+
+                return registrations.map(reg => {
+                    const profile = profilesMap[reg.profile_id] || {};
+                    return {
+                        registration_id: reg.id,
+                        profile_id: reg.profile_id,
+                        full_name: reg.attendee_name || profile.full_name || 'Valued Attendee',
+                        email: reg.attendee_email || profile.email || 'N/A',
+                        avatar_url: reg.photo_url || profile.avatar_url || null,
+                        coupon_number: reg.coupon_number || reg.coupon || 'N/A',
+                        amount_paid: reg.amount_paid !== undefined ? reg.amount_paid : (reg.amount || 0),
+                        is_free: reg.is_free !== undefined ? reg.is_free : true,
+                        created_at: reg.created_at
+                    };
+                });
+            } catch (e) {
+                console.warn("Detailed registration fetch failed:", e);
+                return [];
+            }
+        }
+
+        async function selectEventForRoster(eventId, eventTitle, eventDate, churchName, regCount) {
+            currentSelectedEventId = eventId;
+            const rosterContainer = document.getElementById('admin-event-roster-container');
+            const titleEl = document.getElementById('roster-event-title');
+            const metaEl = document.getElementById('roster-event-meta');
+            const tbody = document.getElementById('admin-roster-tbody');
+
+            if (!rosterContainer || !tbody) return;
+
+            rosterContainer.classList.remove('hidden');
+            if (eventTitle) {
+                if (titleEl) titleEl.innerHTML = `<i class="fas fa-users text-blue-400"></i> Attendees Roster: ${escapeHTML(eventTitle)}`;
+                if (metaEl) metaEl.innerText = `Date: ${eventDate || 'N/A'} | Church: ${churchName || 'N/A'} | Registrations: ${regCount !== undefined ? regCount : '...'}`,
+                window._currentSelectedEventMeta = { title: eventTitle, date: eventDate, church: churchName };
+            }
+
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading attendee roster...</td></tr>`;
+
+            currentEventAttendees = await fetchEventRegistrationsDetailedSafe(eventId);
+            if (metaEl && window._currentSelectedEventMeta) {
+                metaEl.innerText = `Date: ${window._currentSelectedEventMeta.date} | Church: ${window._currentSelectedEventMeta.church} | Registrations: ${currentEventAttendees.length}`;
+            }
+
+            renderEventRosterTable(currentEventAttendees);
+        }
+
+        function renderEventRosterTable(attendees) {
+            const tbody = document.getElementById('admin-roster-tbody');
+            if (!tbody) return;
+
+            if (!attendees || attendees.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">No attendees found matching search criteria.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = attendees.map(att => {
+                const regDate = att.created_at ? new Date(att.created_at).toLocaleString() : 'N/A';
+                const coupon = att.coupon_number && att.coupon_number !== 'N/A' ? att.coupon_number : 'N/A';
+                const paymentInfo = att.amount_paid > 0 ? `$${Number(att.amount_paid).toFixed(2)}` : (att.is_free ? 'Free Registration' : 'Standard');
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3.5 font-medium text-slate-100 flex items-center gap-3">
+                            <img src="${escapeHTML(att.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80')}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-slate-700">
+                            <span>${escapeHTML(att.full_name)}</span>
+                        </td>
+                        <td class="p-3.5 text-slate-300 text-xs">${escapeHTML(att.email)}</td>
+                        <td class="p-3.5 text-slate-300 text-xs">${escapeHTML(regDate)}</td>
+                        <td class="p-3.5 font-mono text-xs text-blue-400 font-bold">${escapeHTML(coupon)}</td>
+                        <td class="p-3.5 text-xs text-slate-300 font-medium">${escapeHTML(paymentInfo)}</td>
+                        <td class="p-3.5 text-right">
+                            <button onclick="removeAdminAttendeeRegistration('${att.registration_id}')" class="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg text-xs font-semibold transition">
+                                <i class="fas fa-trash-alt mr-1"></i> Remove
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterEventRoster() {
+            const query = (document.getElementById('roster-search-input')?.value || '').toLowerCase().trim();
+            if (!query) {
+                renderEventRosterTable(currentEventAttendees);
+                return;
+            }
+
+            const filtered = currentEventAttendees.filter(att => {
+                const name = (att.full_name || '').toLowerCase();
+                const email = (att.email || '').toLowerCase();
+                const coupon = (att.coupon_number || '').toLowerCase();
+                return name.includes(query) || email.includes(query) || coupon.includes(query);
+            });
+
+            renderEventRosterTable(filtered);
+        }
+
+        function exportRosterCSV() {
+            if (!currentEventAttendees || currentEventAttendees.length === 0) {
+                alert("No attendee records available to export.");
+                return;
+            }
+
+            const query = (document.getElementById('roster-search-input')?.value || '').toLowerCase().trim();
+            const dataToExport = query ? currentEventAttendees.filter(att => {
+                const name = (att.full_name || '').toLowerCase();
+                const email = (att.email || '').toLowerCase();
+                const coupon = (att.coupon_number || '').toLowerCase();
+                return name.includes(query) || email.includes(query) || coupon.includes(query);
+            }) : currentEventAttendees;
+
+            if (dataToExport.length === 0) {
+                alert("No records match the current search filter for CSV export.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Attendee Name,Email,Registration Date,Coupon Number,Amount Paid,Free Status\r\n";
+
+            dataToExport.forEach(att => {
+                const name = `"${(att.full_name || '').replace(/"/g, '""')}"`;
+                const email = `"${(att.email || '').replace(/"/g, '""')}"`;
+                const date = `"${att.created_at ? new Date(att.created_at).toISOString() : 'N/A'}"`;
+                const coupon = `"${(att.coupon_number || 'N/A').replace(/"/g, '""')}"`;
+                const amount = att.amount_paid || 0;
+                const freeStatus = att.is_free ? "Free" : "Paid";
+
+                csvContent += `${name},${email},${date},${coupon},${amount},${freeStatus}\r\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `event_registrations_${currentSelectedEventId || 'roster'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showNotification("Event registration CSV exported successfully!", "success");
+        }
+
+        async function removeAdminAttendeeRegistration(registrationId) {
+            if (!confirm("Are you sure you want to remove this registration?")) return;
+            const db = getDbClient();
+            if (!db) return;
+
+            try {
+                const { error } = await db.from('event_registrations').delete().eq('id', registrationId);
+                if (error) throw error;
+                showNotification("Registration removed successfully.", "success");
+                if (currentSelectedEventId) {
+                    await selectEventForRoster(currentSelectedEventId);
+                    await loadAdminEventRegistrationsSection();
+                }
+            } catch (err) {
+                console.error("Error removing registration:", err);
+                alert("Failed to remove registration: " + err.message);
+            }
+        }
 
 // 1. SAFE CLIENT RESOLVER
 function getDbClient() {
@@ -936,7 +1342,8 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 pesapal: document.getElementById('pesapal-content'),
                 prayer: document.getElementById('prayer-content'),
                 businesses: document.getElementById('businesses-content'),
-                finance: document.getElementById('finance-management-section')
+                finance: document.getElementById('finance-management-section'),
+                registrations: document.getElementById('registrations-management-section')
             };
 
             Object.keys(mapping).forEach(key => {
@@ -957,6 +1364,9 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (selected === 'finance' && typeof loadFinanceTransactions === 'function') {
                 loadFinanceTransactions();
             }
+            if (selected === 'registrations' && typeof loadAdminEventRegistrationsSection === 'function') {
+                loadAdminEventRegistrationsSection();
+            }
         };
 
         window.switchAdminTab = function(tab) {
@@ -969,6 +1379,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             const prayerView = document.getElementById('prayer-content');
             const businessesView = document.getElementById('businesses-content');
             const financeView = document.getElementById('finance-management-section');
+            const registrationsView = document.getElementById('registrations-management-section');
             const btnGlobal = document.getElementById('tab-btn-global');
             const btnDashboard = document.getElementById('tab-btn-dashboard');
             const btnCounseling = document.getElementById('tab-btn-counseling');
@@ -978,6 +1389,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             const btnPrayer = document.getElementById('tab-btn-prayer');
             const btnBusinesses = document.getElementById('tab-btn-businesses');
             const btnFinance = document.getElementById('tab-btn-finance');
+            const btnRegistrations = document.getElementById('tab-btn-registrations');
 
             // Hide all views by default
             if (globalView) { globalView.classList.remove('block'); globalView.classList.add('hidden'); }
@@ -989,6 +1401,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (prayerView) { prayerView.classList.remove('block'); prayerView.classList.add('hidden'); }
             if (businessesView) { businessesView.classList.remove('block'); businessesView.classList.add('hidden'); }
             if (financeView) { financeView.classList.remove('block'); financeView.classList.add('hidden'); }
+            if (registrationsView) { registrationsView.classList.remove('block'); registrationsView.classList.add('hidden'); }
 
             // Reset tab styles
             if (btnGlobal) btnGlobal.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
@@ -1000,6 +1413,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (btnPrayer) btnPrayer.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
             if (btnFinance) btnFinance.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
+            if (btnRegistrations) btnRegistrations.className = "py-2.5 px-5 text-sm font-medium text-slate-500 hover:text-slate-300 focus:outline-none transition";
 
             if (tab === 'global') {
                 if (globalView) {
@@ -1094,6 +1508,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
                 if (financeView) { financeView.classList.add('hidden'); financeView.classList.remove('block'); }
+                if (registrationsView) { registrationsView.classList.add('hidden'); registrationsView.classList.remove('block'); }
                 if (btnBusinesses) btnBusinesses.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadPendingBusinesses === 'function') loadPendingBusinesses();
             } else if (tab === 'finance') {
@@ -1109,12 +1524,29 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
                 if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
+                if (registrationsView) { registrationsView.classList.add('hidden'); registrationsView.classList.remove('block'); }
                 if (btnFinance) btnFinance.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadFinanceTransactions === 'function') loadFinanceTransactions();
+            } else if (tab === 'registrations') {
+                if (registrationsView) {
+                    registrationsView.classList.remove('hidden');
+                    registrationsView.classList.add('block');
+                }
+                if (dashboardView) { dashboardView.classList.add('hidden'); dashboardView.classList.remove('block'); }
+                if (globalView) { globalView.classList.add('hidden'); globalView.classList.remove('block'); }
+                if (counselingView) { counselingView.classList.add('hidden'); counselingView.classList.remove('block'); }
+                if (documentsView) { documentsView.classList.add('hidden'); documentsView.classList.remove('block'); }
+                if (rosterView) { rosterView.classList.add('hidden'); rosterView.classList.remove('block'); }
+                if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
+                if (prayerView) { prayerView.classList.add('hidden'); prayerView.classList.remove('block'); }
+                if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
+                if (financeView) { financeView.classList.add('hidden'); financeView.classList.remove('block'); }
+                if (btnRegistrations) btnRegistrations.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
+                if (typeof loadAdminEventRegistrationsSection === 'function') loadAdminEventRegistrationsSection();
             }
 
             const superAdminNav = document.getElementById('nav-super-admin');
-            if (superAdminNav && currentUserProfile && (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com')) {
+            if (superAdminNav && isSuperAdmin)  {
                 superAdminNav.classList.remove('hidden');
                 superAdminNav.classList.add('flex');
             }
@@ -1137,30 +1569,73 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 return; 
             }
 
-            // 1. Fetch logged-in admin's church id and church name from Supabase
-            const { data: profile, error: profileError } = await window.sbClient
-                .from('profiles')
-                .select('*, churches(name)')
-                .eq('id', user.id)
-                .maybeSingle(); 
+            // Super Admin Exception (evaluated before profile query validation)
+        
 
-            if (profileError || !profile) {
-                alert("Authorized administrative profile context missing.");
-                return;
+            // 1. Fetch logged-in admin's church id and church name from Supabase using the real table relationship
+            const { data: profile, error: profileError } = await window.sbClient
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle();
+
+            let backendSuperAdmin = false;
+            try {
+                const { data: rpcRes, error: rpcError } = await window.sbClient.rpc('is_super_admin');
+                if (rpcError) throw rpcError;
+                backendSuperAdmin = !!rpcRes;
+            } catch (e) {
+                console.warn('is_super_admin RPC check failed (failing closed):', e);
+                backendSuperAdmin = false;
             }
+
+            isSuperAdmin = backendSuperAdmin && user.id === '45e7b5df-8f08-4cc7-9356-35e405618329';
+
+            if ((profileError || !profile) && !isSuperAdmin) {
+    const diagnostic = profileError
+        ? `Code: ${profileError.code || 'Not provided'}
+Message: ${profileError.message || 'Not provided'}
+Details: ${profileError.details || 'Not provided'}
+Hint: ${profileError.hint || 'Not provided'}`
+        : `No profile row returned for user ID: ${user.id}`;
+
+    console.error("ADMIN PROFILE LOOKUP DIAGNOSTIC:", diagnostic);
+
+    alert("Admin profile lookup failed:\n\n" + diagnostic);
+
+    window.location.replace('feed.html');
+    return;
+}
             
-            currentUserProfile = profile;
+            if (!profile && isSuperAdmin) {
+                // Distinguish missing profile condition for Super Admin without fabricating data
+                currentUserProfile = { 
+                    id: user.id, 
+                    email: user.email, 
+                    role: 'super_admin',
+                    church_id: null,
+                    missing_profile: true 
+                };
+                console.warn("Super Admin profile row is missing. Allowing globally authorized backend operations only.");
+            } else {
+                currentUserProfile = profile;
+            }
 
             // Store adminChurchId
-            let adminChurchId = profile.church_id;
+            const isValidChurchUuid = value =>
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
 
-            // 4. Super Admin Exception
-            const isSuperAdmin = currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com' || user.email === 'adoniakasango@gmail.com';
+let adminChurchId = isSuperAdmin
+    ? (isValidChurchUuid(activeDashboardChurchId) ? activeDashboardChurchId.trim() : null)
+    : (isValidChurchUuid(currentUserProfile?.church_id)
+        ? currentUserProfile.church_id.trim()
+        : null);
 
             // 3. Update the UI - Display badge with church name
             const churchNameEl = document.getElementById('admin-church-name');
             if (churchNameEl) {
-                if (profile.churches && profile.churches.name) {
+                if (profile && profile.churches && profile.churches.name) {
                     churchNameEl.innerText = profile.churches.name;
                 } else if (isSuperAdmin) {
                     churchNameEl.innerText = 'Global Super Admin (All Churches)';
@@ -1169,23 +1644,58 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 }
             }
 
-            if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.role === 'church' || currentUserProfile.role === 'finance') {
+            if (
+    isSuperAdmin ||
+    currentUserProfile.role === 'church_admin' ||
+    currentUserProfile.role === 'finance'
+)  {
                 
-                if (isSuperAdmin || currentUserProfile.role === 'finance') {
-                    const tabsEl = document.getElementById('admin-tabs');
-                    if (tabsEl) tabsEl.classList.remove('hidden');
-                }
+    if (
+    isSuperAdmin ||
+    currentUserProfile.role === 'church_admin' ||
+    currentUserProfile.role === 'finance'
+) {
+    const tabsEl = document.getElementById('admin-tabs');
+
+    if (tabsEl) {
+        tabsEl.classList.remove('hidden');
+
+        // Church Admins must not see Super Admin or Finance tabs.
+        if (!isSuperAdmin && currentUserProfile.role === 'church_admin') {
+            document.getElementById('tab-btn-global')?.classList.add('hidden');
+            document.getElementById('tab-btn-finance')?.classList.add('hidden');
+
+            // Keep Pesapal settings hidden until its credential access
+            // is secured through a server-side implementation.
+            document.getElementById('tab-btn-pesapal')?.classList.add('hidden');
+        }
+    }
+}
                 
                 if (currentUserProfile.role === 'finance') {
-                    switchAdminTab('finance');
-                    // Hide non-finance tabs/views if user only has finance role
-                    const globalView = document.getElementById('global-admin-view');
-                    if (globalView) globalView.classList.add('hidden');
-                    const dashboardView = document.getElementById('church-dashboard-view');
-                    if (dashboardView) dashboardView.classList.add('hidden');
-                }
+    // Open the finance tab first
+    switchAdminTab('finance');
 
-                if (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin') {
+    // Finance users should only see the Finance & Giving tab
+    const tabsEl = document.getElementById('admin-tabs');
+
+    if (tabsEl) {
+        tabsEl.querySelectorAll('button').forEach(button => {
+            if (button.id === 'tab-btn-finance') {
+                button.classList.remove('hidden');
+            } else {
+                button.classList.add('hidden');
+            }
+        });
+    }
+}
+                if (
+    isSuperAdmin ||
+    currentUserProfile.role === 'church_admin' ||
+    currentUserProfile.role === 'admin' ||
+    currentUserProfile.role === 'super_admin' ||
+    currentUserProfile.role === 'super-admin'
+) {
                     const pubSec = document.getElementById('publish-section');
                     if (pubSec) pubSec.classList.remove('hidden');
                     const usrMgmt = document.getElementById('user-management-section');
@@ -1203,26 +1713,50 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 const overrideChurchId = urlParams.get('church_id');
                 const initialTab = urlParams.get('tab');
 
-                if (overrideChurchId && isSuperAdmin) {
-                    activeDashboardChurchId = overrideChurchId;
-                    switchAdminTab('dashboard');
-                } else if (initialTab === 'dashboard') {
-                    switchAdminTab('dashboard');
-                } else if (adminChurchId) {
-                    activeDashboardChurchId = adminChurchId;
-                    switchAdminTab('dashboard');
-                } else if (isSuperAdmin) {
-                    // Default to first church or let super admin pick
-                    await loadChurchesDropdown();
-                }
+                if (!isSuperAdmin && currentUserProfile?.role === 'finance') {
 
+activeDashboardChurchId = adminChurchId;
+
+switchAdminTab('finance');
+
+const tabsEl = document.getElementById('admin-tabs');
+
+if (tabsEl) {
+    tabsEl.querySelectorAll('button').forEach(button => {
+        button.classList.toggle(
+            'hidden',
+            button.id !== 'tab-btn-finance'
+        );
+    });
+}
+
+} else if (overrideChurchId && isSuperAdmin) {
+
+activeDashboardChurchId = overrideChurchId;
+switchAdminTab('dashboard');
+
+} else if (initialTab === 'dashboard') {
+
+switchAdminTab('dashboard');
+
+} else if (adminChurchId) {
+
+activeDashboardChurchId = adminChurchId;
+switchAdminTab('dashboard');
+
+} else if (isSuperAdmin) {
+
+await loadChurchesDropdown();
+}
             } else {
                 alert("Unauthorized: Admin privileges required.");
                 window.location.replace('feed.html');
                 return;
             }
             
-            loadAnnouncements(adminChurchId, isSuperAdmin);
+            loadAnnouncements(
+    isSuperAdmin ? activeDashboardChurchId : adminChurchId
+);
 
             // Explicitly reveal main container and dismiss loading overlays upon successful initialization
             const mainContainer = document.querySelector('main') || document.getElementById('admin-content');
@@ -1238,7 +1772,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
         }
 
         async function initChurchDashboardView() {
-            if (currentUserProfile.role === 'super_admin' || currentUserProfile.role === 'super-admin' || currentUserProfile.email === 'adoniakasango@gmail.com') {
+            if (isSuperAdmin) {
                 const selectorContainer = document.getElementById('super-admin-church-selector');
                 if (selectorContainer) selectorContainer.classList.remove('hidden');
                 await loadChurchesDropdown();
@@ -1255,34 +1789,58 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
         }
 
         async function loadChurchesDropdown() {
-            const select = document.getElementById('active-church-select');
-            if (!select) return;
+    const select = document.getElementById('active-church-select');
+    if (!select) return;
 
-            const { data: churches, error } = await window.sbClient.from('churches').select('id, name').order('name');
-            if (error) {
-                select.innerHTML = '<option value="">Error loading churches</option>';
-                return;
-            }
+    select.innerHTML = '<option value="">Loading churches...</option>';
 
-            if (!churches || churches.length === 0) {
-                select.innerHTML = '<option value="">No churches found</option>';
-                return;
-            }
+    try {
+        // Use the safe directory view, not the protected churches table.
+        const { data: churches, error } = await window.sbClient
+            .from('church_directory')
+            .select('id, name')
+            .order('name');
 
-            select.innerHTML = '<option value="">-- Choose Church --</option>' + churches.map(c => `
-                <option value="${escapeHTML(c.id)}" ${activeDashboardChurchId === c.id ? 'selected' : ''}>${escapeHTML(c.name)}</option>
-            `).join('');
+        if (error) throw error;
 
-            if (!activeDashboardChurchId && churches.length > 0) {
-                activeDashboardChurchId = churches[0].id;
-                select.value = activeDashboardChurchId;
-                loadChurchDetails(activeDashboardChurchId);
-                loadChurchMembers(activeDashboardChurchId);
-                loadChurchProgrammes(activeDashboardChurchId);
-                loadChurchVolunteerSlots(activeDashboardChurchId);
-            }
+        if (!churches || churches.length === 0) {
+            activeDashboardChurchId = null;
+            select.innerHTML = '<option value="">No approved churches found</option>';
+            return;
         }
 
+        // Preserve the current selection only if it exists in the directory.
+        const selectedExists = churches.some(
+            church => church.id === activeDashboardChurchId
+        );
+
+        if (!selectedExists) {
+            activeDashboardChurchId = null;
+        }
+
+        select.innerHTML =
+            '<option value="">-- Choose Church --</option>' +
+            churches.map(church => `
+                <option value="${escapeHTML(church.id)}">
+                    ${escapeHTML(church.name)}
+                </option>
+            `).join('');
+
+        select.value = activeDashboardChurchId || '';
+
+    } catch (err) {
+        console.error('Failed to load church directory:', err);
+
+        activeDashboardChurchId = null;
+        select.innerHTML =
+            '<option value="">Error loading churches</option>';
+
+        showNotification(
+            'Unable to load the church directory: ' + err.message,
+            'error'
+        );
+    }
+}
         function changeManagedChurch(churchId) {
             activeDashboardChurchId = churchId;
             if (churchId) {
@@ -1290,11 +1848,23 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 loadChurchMembers(churchId);
                 loadChurchProgrammes(churchId);
                 loadChurchVolunteerSlots(churchId);
+                loadChurchJoinCode(churchId);
+                loadAnnouncements(churchId);
             }
         }
 
         async function loadChurchDetails(churchId) {
-            const { data: church } = await window.sbClient.from('churches').select('*').eq('id', churchId).maybeSingle();
+            const { data: churchDetails, error } = await window.sbClient
+    .rpc('get_authorized_church_details', {
+        p_church_id: churchId
+    });
+
+if (error) {
+    console.error('Failed to load authorized church details:', error);
+    return;
+}
+
+const church = churchDetails?.[0] || null;
             if (church) {
                 if (church.latitude) document.getElementById('lat').value = church.latitude;
                 if (church.longitude) document.getElementById('lng').value = church.longitude;
@@ -1311,7 +1881,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                     let bannerClasses = "bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900 border border-blue-500/30 rounded-2xl p-4 text-slate-200 text-sm flex items-center justify-between shadow-lg my-6";
                     let badgeClasses = "px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20";
                     let iconBg = "p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 text-base";
-                    let titleText = "6-Month Free Trial Active";
+                    let titleText = "60-Day Free Trial Active";
 
                     if (diffDays <= 30) {
                         bannerClasses = "bg-gradient-to-r from-yellow-900/40 via-amber-900/30 to-slate-900 border border-yellow-500/30 rounded-2xl p-4 text-slate-200 text-sm flex items-center justify-between shadow-lg my-6";
@@ -1520,11 +2090,37 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 alert("Geolocation error: " + err.message);
             });
         }
+        function getBulletinChurchId() {
+    const rawId = isSuperAdmin
+        ? activeDashboardChurchId
+        : currentUserProfile?.church_id;
+
+    const churchId = typeof rawId === 'string'
+        ? rawId.trim()
+        : '';
+
+    const uuidPattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    return uuidPattern.test(churchId) ? churchId : null;
+}
+
 
         // --- ANNOUNCEMENT HANDLERS ---
         document.getElementById('announcement-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('publish-announcement-btn');
+    e.preventDefault();
+
+    const bulletinChurchId = getBulletinChurchId();
+
+    if (!bulletinChurchId) {
+        showNotification(
+            "Please select a church before publishing a bulletin.",
+            "error"
+        );
+        return;
+    }
+
+    const btn = document.getElementById('publish-announcement-btn');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Publishing...`;
@@ -1534,13 +2130,13 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                     title: document.getElementById('ann-title').value,
                     content: document.getElementById('ann-content').value,
                     pinned: document.getElementById('ann-pinned').checked,
-                    church_id: currentUserProfile.church_id
+                    church_id: bulletinChurchId
                 }]);
                 
                 if (error) throw error;
                 
                 showNotification("Announcement published successfully!", "success");
-                loadAnnouncements(currentUserProfile.church_id);
+                loadAnnouncements(bulletinChurchId);
                 e.target.reset();
             } catch (err) {
                 showNotification("Error: " + err.message, "error");
@@ -1551,10 +2147,26 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
         });
 
         async function loadAnnouncements(churchId) {
-          const container = document.getElementById('announcements-container');
-          if (!container) return;
-          try {
-            const { data: announcements, error } = await window.sbClient.from('announcements').select('*').eq('church_id', churchId).order('created_at', { ascending: false });
+            const container = document.getElementById('announcements-container');
+if (!container) return;
+
+// Only query bulletins when a valid church UUID is available.
+const normalizedChurchId =
+    typeof churchId === 'string' ? churchId.trim() : '';
+
+const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+if (!uuidPattern.test(normalizedChurchId)) {
+    container.innerHTML = `
+        <p class="text-slate-500 italic text-sm p-2">
+            Select a church to view its active bulletins.
+        </p>`;
+    return;
+}
+
+try {
+            const { data: announcements, error } = await window.sbClient.from('announcements').select('*').eq('church_id', normalizedChurchId).order('created_at', { ascending: false });
             if (error) throw error;
             if (!announcements || announcements.length === 0) {
               container.innerHTML = '<p class="text-slate-500 italic text-sm p-2">No active bulletins posted yet.</p>';
@@ -1568,10 +2180,38 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
         }
 
         async function deleteAnnouncement(id) {
-            if (!confirm("Are you sure you want to delete this bulletin?")) return;
-            const { error } = await window.sbClient.from('announcements').delete().eq('id', id);
-            if (!error) loadAnnouncements(currentUserProfile.church_id);
-        }
+    if (!confirm("Are you sure you want to delete this bulletin?")) {
+        return;
+    }
+
+    const bulletinChurchId = getBulletinChurchId();
+
+    if (!bulletinChurchId) {
+        showNotification("Please select a church first.", "error");
+        return;
+    }
+
+    try {
+        const { error } = await window.sbClient
+            .from('announcements')
+            .delete()
+            .eq('id', id)
+            .eq('church_id', bulletinChurchId);
+
+        if (error) throw error;
+
+        showNotification("Bulletin deleted successfully!", "success");
+
+        await loadAnnouncements(bulletinChurchId);
+
+    } catch (err) {
+        console.error("Bulletin deletion failed:", err);
+        showNotification(
+            "Failed to delete bulletin: " + err.message,
+            "error"
+        );
+    }
+}
 
         // --- INBOX HANDLERS ---
         async function loadInboxInquiries(churchId, isSuperAdmin) {
@@ -1643,7 +2283,7 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="d-inline-flex align-items-center gap-2">
-                                            <select id="role-select-${p.id}" class="form-select form-select-sm bg-white border-secondary-subtle">
+                                            <select id="role-select-${p.id}" class="form-select form-select-sm bg-slate-950 text-slate-100 border-slate-700">
                                                 <option value="user" ${p.role === 'user' ? 'selected' : ''}>user</option>
                                                 <option value="finance" ${p.role === 'finance' ? 'selected' : ''}>finance</option>
                                                 <option value="admin" ${p.role === 'admin' ? 'selected' : ''}>admin</option>
@@ -1956,26 +2596,56 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading transactions...</td></tr>`;
 
             try {
-                let adminChurchId = currentUserProfile?.church_id;
-                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+                const adminChurchId = isSuperAdmin
+    ? (activeDashboardChurchId || null)
+    : (currentUserProfile?.church_id || null);
 
-                let query = window.sbClient
-                    .from('donations')
-                    .select('*');
+if (!isSuperAdmin && !adminChurchId) {
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center py-8 text-red-400">
+                Your assigned church could not be determined.
+            </td>
+        </tr>`;
+    return;
+}
 
-                if (!isSuperAdmin && adminChurchId) {
-                    query = query.eq('church_id', adminChurchId);
-                }
+let transactions = [];
 
-                let { data: transactions, error } = await query.order('created_at', { ascending: false });
+if (adminChurchId) {
+    const { data: churchProfiles, error: profilesError } =
+        await window.sbClient
+            .from('profiles')
+            .select('id')
+            .eq('church_id', adminChurchId);
 
-                if (error) {
-                    // Fallback to check if payments table exists
-                    const fallback = await window.sbClient.from('payments').select('*').order('created_at', { ascending: false });
-                    if (fallback.data) transactions = fallback.data;
-                    else throw error;
-                }
+    if (profilesError) throw profilesError;
 
+    const memberIds = (churchProfiles || [])
+        .map(profile => profile.id)
+        .filter(Boolean);
+
+    if (memberIds.length > 0) {
+        const { data, error } = await window.sbClient
+            .from('donations')
+            .select('*')
+            .in('user_id', memberIds)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        transactions = data || [];
+    }
+} else {
+    const { data, error } = await window.sbClient
+        .from('donations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    transactions = data || [];
+}
                 if (!transactions || transactions.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">No recent transactions found.</td></tr>`;
                     return;
@@ -2098,17 +2768,29 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             if (!container) return;
 
             container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">Loading requests...</div>';
+            const adminChurchId = isSuperAdmin
+    ? (activeDashboardChurchId || null)
+    : (currentUserProfile?.church_id || null);
 
-            let adminChurchId = currentUserProfile?.church_id;
-            let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adoniakasango@gmail.com';
+if (!isSuperAdmin && !adminChurchId) {
+    container.innerHTML = `
+        <div class="text-center py-8 text-red-400">
+            Your assigned church could not be determined.
+        </div>`;
+    return;
+}
+let query = window.sbClient
+    .from('donations')
+    .select(`
+        *,
+        profiles!inner (
+            church_id
+        )
+    `);
 
-            let query = window.sbClient
-                .from('counseling_appointments')
-                .select('*');
-
-            if (!isSuperAdmin && adminChurchId) {
-                query = query.eq('church_id', adminChurchId);
-            }
+if (adminChurchId) {
+    query = query.eq('profiles.church_id', adminChurchId);
+} 
 
             const { data, error } = await query.order('appointment_date', { ascending: true });
 
@@ -2204,32 +2886,61 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading volunteer slots...</div>`;
 
             try {
-                let adminChurchId = currentUserProfile?.church_id || localStorage.getItem('church_id');
-                let isSuperAdmin = currentUserProfile?.role === 'super_admin' || currentUserProfile?.role === 'super-admin' || currentUserProfile?.email === 'adonstance@gmail.com';
+                const adminChurchId = isSuperAdmin
+    ? (activeDashboardChurchId || null)
+    : (currentUserProfile?.church_id || null);
 
+if (!isSuperAdmin && !adminChurchId) {
+    container.innerHTML = `
+        <div class="text-center py-8 text-red-400">
+            Your assigned church could not be determined.
+        </div>`;
+    return;
+}
                 let query = window.sbClient
                     .from('volunteer_roster')
                     .select('*');
 
-                if (!isSuperAdmin && adminChurchId) {
-                    query = query.eq('church_id', adminChurchId);
-                }
-
+                    if (adminChurchId) {
+    query = query.eq('church_id', adminChurchId);
+}
                 let { data: slots, error: rosterError } = await query.order('event_date', { ascending: true });
                 if (rosterError) throw rosterError;
 
                 let { data: signups, error: signupsError } = await window.sbClient
                     .from('volunteer_signups')
-                    .select('*, profiles(full_name, email, phone, avatar_url)');
+                    .select('*');
 
                 if (signupsError) {
-                    console.warn('Could not fetch volunteer signups relation safely:', signupsError);
+                    console.warn('Could not fetch volunteer signups safely:', signupsError);
+                } else if (signups && signups.length > 0) {
+                    const userIds = signups.map(s => s.user_id).filter(Boolean);
+                    if (userIds.length > 0) {
+                        try {
+                            const { data: profiles } = await window.sbClient
+                                .from('profiles')
+                                .select('*')
+                                .in('id', userIds);
+                            if (profiles) {
+                                const profileMap = {};
+                                profiles.forEach(p => { profileMap[p.id] = p; });
+                                signups = signups.map(s => ({
+                                    ...s,
+                                    profiles: profileMap[s.user_id] || null
+                                }));
+                            }
+                        } catch (profErr) {
+                            console.warn('Could not fetch profiles for volunteer signups:', profErr);
+                        }
+                    }
                 }
 
                 slots = (slots || []).map(slot => {
                     return {
                         ...slot,
-                        volunteer_signups: signups ? signups.filter(s => s.roster_id === slot.id || s.event_id === slot.id) : []
+                        volunteer_signups: signups
+    ? signups.filter(s => s.slot_id === slot.id)
+    : []
                     };
                 });
 
@@ -2458,24 +3169,60 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             }
         }
 
-        async function loadChurchJoinCode() {
-            const { data: { user } } = await window.sbClient.auth.getUser();
-            if (!user) return;
+        async function loadChurchJoinCode(churchIdOverride) {
+    const codeDisplay = document.getElementById('church-join-code');
+    if (!codeDisplay) return;
 
-            const { data: profile } = await window.sbClient
-                .from('profiles')
-                .select('*, churches(*)')
-                .eq('id', user.id)
-                .single();
+    try {
+        const { data: { user }, error: authError } =
+            await window.sbClient.auth.getUser();
 
-            const church = profile?.churches || profile;
-            const joinCode = church?.join_code || church?.code || church?.church_code || currentUserProfile?.church_code || 'N/A';
-
-            const codeDisplay = document.getElementById('church-join-code');
-            if (codeDisplay) {
-                codeDisplay.innerText = joinCode;
-            }
+        if (authError || !user) {
+            console.error("Expired or missing session:", authError);
+            codeDisplay.innerText = 'Session Expired';
+            return;
         }
+
+        const targetChurchId =
+            churchIdOverride ||
+            activeDashboardChurchId ||
+            currentUserProfile?.church_id ||
+            null;
+
+        if (!targetChurchId) {
+            codeDisplay.innerText = 'CHURCH-....';
+            console.info('Select a church before loading its join code.');
+            return;
+        }
+
+        const { data, error } = await window.sbClient.rpc(
+            'get_authorized_church_join_code',
+            { p_church_id: targetChurchId }
+        );
+
+        if (error) {
+            console.error("Error loading church join code:", error);
+            codeDisplay.innerText = 'Unauthorized';
+            return;
+        }
+
+        // RPC returns a table, so extract its first row.
+        const churchRecord = Array.isArray(data) ? data[0] : data;
+        const joinCode = churchRecord?.join_code;
+
+        if (typeof joinCode !== 'string' || !joinCode.trim()) {
+            codeDisplay.innerText = 'No Join Code Available';
+            return;
+        }
+
+        // Display only the actual join-code string.
+        codeDisplay.innerText = joinCode.trim();
+
+    } catch (err) {
+        console.error("Unexpected error loading church join code:", err);
+        codeDisplay.innerText = 'Network Error';
+    }
+}
 
         function togglePesapalSecretVisibility() {
             const secretInput = document.getElementById('pesapalSecret');
@@ -2490,120 +3237,217 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             }
         }
 
-        async function loadPesapalSettings() {
+       
+async function loadPesapalSettings() {
+    try {
+        let churchId = activeDashboardChurchId || currentUserProfile?.church_id;
+
+        if (!churchId) {
+            const selectEl = document.getElementById('active-church-select');
+            if (selectEl?.value) {
+                churchId = selectEl.value;
+            }
+        }
+
+        if (!churchId) return;
+
+        const {
+            data: { session },
+            error: sessionError
+        } = await window.sbClient.auth.getSession();
+
+        if (sessionError || !session?.access_token) {
+            throw new Error('Your session has expired. Please sign in again.');
+        }
+
+        const response = await fetch(
+            `/api/pesapal-settings?church_id=${encodeURIComponent(churchId)}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Accept': 'application/json'
+                }
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Unable to load Pesapal settings.');
+        }
+
+        const keyInput = document.getElementById('pesapalKey');
+        const secretInput = document.getElementById('pesapalSecret');
+        const envSelect = document.getElementById('pesapalEnv');
+
+        if (keyInput) {
+            keyInput.value = result.pesapal_consumer_key || '';
+        }
+
+        if (secretInput) {
+            // Never load the actual secret into the browser.
+            secretInput.value = '';
+            secretInput.placeholder = result.secret_configured
+                ? 'Leave blank to keep the existing secret'
+                : 'Enter your Pesapal Consumer Secret';
+        }
+
+        if (envSelect) {
+            envSelect.value = result.pesapal_env || 'sandbox';
+        }
+
+    } catch (err) {
+        console.error('Error loading Pesapal settings:', err);
+        showNotification(err.message, 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const pesapalForm = document.getElementById('pesapal-settings-form');
+
+    if (pesapalForm) {
+        pesapalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const saveBtn = document.getElementById('savePesapalBtn');
+            const originalHTML = saveBtn ? saveBtn.innerHTML : '';
+
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML =
+                    '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+            }
+
             try {
                 let churchId = activeDashboardChurchId || currentUserProfile?.church_id;
+
                 if (!churchId) {
-                    // Try to fetch from profiles table or active church select if super admin
                     const selectEl = document.getElementById('active-church-select');
-                    if (selectEl && selectEl.value) {
+                    if (selectEl?.value) {
                         churchId = selectEl.value;
                     }
                 }
 
-                if (!churchId) return;
-
-                const { data: church, error } = await window.sbClient
-                    .from('churches')
-                    .select('pesapal_consumer_key, pesapal_consumer_secret, pesapal_env')
-                    .eq('id', churchId)
-                    .maybeSingle();
-
-                if (error) {
-                    console.error("Error loading Pesapal settings:", error);
-                    return;
+                if (!churchId) {
+                    throw new Error('No active church ID found for this session.');
                 }
 
-                if (church) {
-                    const keyInput = document.getElementById('pesapalKey');
-                    const secretInput = document.getElementById('pesapalSecret');
-                    const envSelect = document.getElementById('pesapalEnv');
+                const {
+                    data: { session },
+                    error: sessionError
+                } = await window.sbClient.auth.getSession();
 
-                    if (keyInput) keyInput.value = church.pesapal_consumer_key || '';
-                    if (secretInput) secretInput.value = church.pesapal_consumer_secret || '';
-                    if (envSelect) envSelect.value = church.pesapal_env || 'sandbox';
+                if (sessionError || !session?.access_token) {
+                    throw new Error('Your session has expired. Please sign in again.');
                 }
-            } catch (err) {
-                console.error("Failed to load Pesapal settings:", err);
-            }
-        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const pesapalForm = document.getElementById('pesapal-settings-form');
-            if (pesapalForm) {
-                pesapalForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const saveBtn = document.getElementById('savePesapalBtn');
-                    const originalHTML = saveBtn ? saveBtn.innerHTML : '';
-                    if (saveBtn) {
-                        saveBtn.disabled = true;
-                        saveBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Saving...`;
-                    }
+                const pesapalKey =
+                    document.getElementById('pesapalKey').value.trim();
 
-                    try {
-                        let churchId = activeDashboardChurchId || currentUserProfile?.church_id;
-                        if (!churchId) {
-                            const selectEl = document.getElementById('active-church-select');
-                            if (selectEl && selectEl.value) {
-                                churchId = selectEl.value;
-                            }
-                        }
+                const pesapalSecret =
+                    document.getElementById('pesapalSecret').value.trim();
 
-                        if (!churchId) {
-                            throw new Error("No active church ID found for this session.");
-                        }
+                const pesapalEnv =
+                    document.getElementById('pesapalEnv').value;
 
-                        const pesapalKey = document.getElementById('pesapalKey').value.trim();
-                        const pesapalSecret = document.getElementById('pesapalSecret').value.trim();
-                        const pesapalEnv = document.getElementById('pesapalEnv').value;
-
-                        const { error } = await window.sbClient
-                            .from('churches')
-                            .update({
-                                pesapal_consumer_key: pesapalKey,
-                                pesapal_consumer_secret: pesapalSecret,
-                                pesapal_env: pesapalEnv
-                            })
-                            .eq('id', churchId);
-
-                        if (error) throw error;
-
-                        showNotification("Pesapal settings saved successfully!", "success");
-                    } catch (err) {
-                        console.error("Error saving Pesapal settings:", err);
-                        showNotification("Failed to save Pesapal settings: " + err.message, "error");
-                    } finally {
-                        if (saveBtn) {
-                            saveBtn.disabled = false;
-                            saveBtn.innerHTML = originalHTML;
-                        }
-                    }
+                const response = await fetch('/api/pesapal-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        church_id: churchId,
+                        pesapal_consumer_key: pesapalKey,
+                        pesapal_consumer_secret: pesapalSecret,
+                        pesapal_env: pesapalEnv
+                    })
                 });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Unable to save Pesapal settings.');
+                }
+
+                // Clear the secret field after saving.
+                document.getElementById('pesapalSecret').value = '';
+
+                showNotification(
+                    'Pesapal settings saved successfully!',
+                    'success'
+                );
+
+            } catch (err) {
+                console.error('Error saving Pesapal settings:', err);
+                showNotification(
+                    'Failed to save Pesapal settings: ' + err.message,
+                    'error'
+                );
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHTML;
+                }
             }
         });
+    }
+});
+
 
         async function copyJoinCode() {
-            const codeDisplay = document.getElementById('church-join-code');
-            const codeText = codeDisplay ? codeDisplay.innerText.trim() : '';
-            if (!codeText || codeText === 'CHURCH-....' || codeText === 'N/A') {
-                showNotification("No join code available to copy.", "error");
-                return;
-            }
+    const codeDisplay = document.getElementById('church-join-code');
+    const btnText = document.getElementById('copy-btn-text');
 
-            try {
-                await navigator.clipboard.writeText(codeText);
-                const btnText = document.getElementById('copy-btn-text');
-                if (btnText) {
-                    btnText.innerText = '✓ Copied!';
-                    setTimeout(() => {
-                        btnText.innerText = '📋 Copy Join Code';
-                    }, 2500);
-                }
-                showNotification("Church join code copied to clipboard!", "success");
-            } catch (err) {
-                showNotification("Failed to copy join code.", "error");
-            }
+    const codeText = codeDisplay
+        ? codeDisplay.innerText.trim()
+        : '';
+
+    const invalidMessages = [
+        '',
+        'CHURCH-....',
+        'N/A',
+        'Unauthorized',
+        'No Join Code Available',
+        'Session Expired',
+        'Network Error'
+    ];
+
+    if (invalidMessages.includes(codeText)) {
+        showNotification(
+            'No valid church join code is available to copy.',
+            'error'
+        );
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(codeText);
+
+        if (btnText) {
+            btnText.innerText = '✓ Copied!';
+
+            setTimeout(() => {
+                btnText.innerText = 'Copy Join Code';
+            }, 2500);
         }
+
+        showNotification(
+            'Church join code copied successfully!',
+            'success'
+        );
+
+    } catch (err) {
+        console.error('Join code copy failed:', err);
+
+        showNotification(
+            'Unable to copy join code. Please copy it manually.',
+            'error'
+        );
+    }
+}
 
         // --- BUSINESS APPROVALS HANDLERS ---
         async function loadPendingBusinesses() {
@@ -2696,17 +3540,17 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             const db = window.sbClient;
             if (!db) return alert('Database connection unavailable.');
 
-            const { data, error } = await db
-                .from('business_directory')
-                .update({ 
-                    status: newStatus,
-                    is_approved: newStatus === 'approved' 
-                })
-                .eq('id', businessId)
-                .select();
+            // Map status and approval fields correctly for RPC
+            const isApproved = newStatus === 'approved';
+
+            const { data, error } = await db.rpc('moderate_business_listing', {
+                p_business_id: businessId,
+                p_status: newStatus,
+                p_is_approved: isApproved
+            });
 
             if (error) {
-                alert('Error updating status: ' + error.message);
+                alert('Error updating status via RPC: ' + error.message);
             } else {
                 alert(`Business ${newStatus === 'approved' ? 'approved' : 'declined'} successfully!`);
                 
@@ -2832,82 +3676,143 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
         };
 
         async function loadChurchVolunteerSlots(churchId) {
-  const container = document.getElementById('volunteer-slots-container');
-  if (!container) return;
+    const container = document.getElementById('volunteer-slots-container');
+    if (!container) return;
 
-  container.innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading volunteer signups...</div>';
-
-  try {
-    // 1. Fetch raw signups first (failsafe against foreign key join errors)
-    const { data: signups, error } = await window.sbClient
-      .from('volunteer_signups')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    console.log('Raw volunteer signups fetched:', signups);
-
-    if (!signups || signups.length === 0) {
-      container.innerHTML = '<div class="text-center text-muted py-3">No members have signed up to volunteer yet.</div>';
-      return;
+    if (!churchId) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-3">
+                Select a church to view its volunteer signups.
+            </div>`;
+        return;
     }
 
-    // 2. Fetch associated profiles & slot details separately using select('*') and try/catch resilience
-    const userIds = signups.map(s => s.user_id).filter(Boolean);
-    const slotIds = signups.map(s => s.slot_id).filter(Boolean);
-    let profilesMap = {};
-    let slotsMap = {};
+    container.innerHTML = `
+        <div class="text-center p-3 text-muted">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Loading volunteer signups...
+        </div>`;
 
-    if (userIds.length > 0) {
-      try {
-        const { data: profiles } = await window.sbClient
-          .from('profiles')
-          .select('*')
-          .in('id', userIds);
-        
-        if (profiles) {
-          profiles.forEach(p => { profilesMap[p.id] = p; });
+    const db = window.sbClient;
+
+    if (!db) {
+        container.innerHTML = `
+            <div class="text-danger small py-2">
+                Supabase database client is unavailable.
+            </div>`;
+        return;
+    }
+
+    try {
+        // 1. Fetch roster slots belonging to the selected church.
+        const {
+            data: rosterSlots,
+            error: rosterError
+        } = await db
+            .from('volunteer_roster')
+            .select('*')
+            .eq('church_id', churchId);
+
+        if (rosterError) throw rosterError;
+
+        const slots = rosterSlots || [];
+        const slotIds = slots.map(slot => slot.id).filter(Boolean);
+
+        if (slotIds.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    No volunteer slots found for this church.
+                </div>`;
+            return;
         }
-      } catch (profErr) {
-        console.warn('Profiles batch lookup skipped:', profErr.message);
-      }
-    }
 
-    if (slotIds.length > 0) {
-      try {
-        const { data: rosterSlots } = await window.sbClient
-          .from('volunteer_roster')
-          .select('*')
-          .in('id', slotIds);
+        // 2. Fetch signups attached only to those roster slots.
+        const {
+            data: signups,
+            error: signupError
+        } = await db
+            .from('volunteer_signups')
+            .select('*')
+            .in('slot_id', slotIds)
+            .order('created_at', { ascending: false });
 
-        if (rosterSlots) {
-          rosterSlots.forEach(r => { slotsMap[r.id] = r; });
+        if (signupError) throw signupError;
+
+        if (!signups || signups.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    No members have signed up to volunteer yet.
+                </div>`;
+            return;
         }
-      } catch (slotErr) {
-        console.warn('Roster slots batch lookup skipped:', slotErr.message);
-      }
+
+        // 3. Fetch only the profile fields needed for display.
+        const userIds = [
+            ...new Set(signups.map(s => s.user_id).filter(Boolean))
+        ];
+
+        const profilesMap = {};
+
+        if (userIds.length > 0) {
+            const {
+                data: profiles,
+                error: profilesError
+            } = await db
+                .from('profiles')
+                .select('id, full_name, phone, email')
+                .in('id', userIds);
+
+            if (profilesError) {
+                console.warn(
+                    'Could not load volunteer profile details:',
+                    profilesError.message
+                );
+            } else {
+                (profiles || []).forEach(profile => {
+                    profilesMap[profile.id] = profile;
+                });
+            }
+        }
+
+        // 4. Map the selected church's roster slots.
+        const slotsMap = {};
+
+        slots.forEach(slot => {
+            slotsMap[slot.id] = slot;
+        });
+
+        // 5. Attach profile and slot information to each signup.
+        const enrichedSignups = signups.map(item => {
+            const profile = profilesMap[item.user_id] || {};
+            const rosterSlot = slotsMap[item.slot_id] || {};
+
+            return {
+                ...item,
+                profiles: profile,
+                slot_title:
+                    rosterSlot.title ||
+                    rosterSlot.role ||
+                    rosterSlot.name ||
+                    item.slot_title ||
+                    item.slot_name ||
+                    item.role ||
+                    item.title ||
+                    'General Volunteer'
+            };
+        });
+
+        renderVolunteerList(enrichedSignups, container);
+
+    } catch (err) {
+        console.error('Error loading volunteer signups:', err);
+
+        container.innerHTML = `
+            <div class="text-danger small py-2">
+                Failed to load volunteer roster:
+                ${escapeHTML(err.message)}
+            </div>`;
     }
-
-    // 3. Render the member roster list with robust fallbacks
-    const enrichedSignups = signups.map(item => {
-      const profile = profilesMap[item.user_id] || {};
-      const rosterSlot = slotsMap[item.slot_id] || {};
-      return {
-        ...item,
-        profiles: profile,
-        slot_title: rosterSlot.title || rosterSlot.role || rosterSlot.name || item.slot_title || item.slot_name || item.role || item.title || 'General Volunteer'
-      };
-    });
-
-    renderVolunteerList(enrichedSignups, container);
-
-  } catch (err) {
-    console.error('Error loading volunteer signups:', err);
-    container.innerHTML = `<div class="text-danger small py-2">Failed to load volunteer roster: ${escapeHTML(err.message)}</div>`;
-  }
 }
-
 function renderVolunteerList(signups, container) {
   if (!container) return;
   
@@ -2974,14 +3879,6 @@ function renderVolunteerList(signups, container) {
 }
 
         initPage();
-        if (typeof setupPageSwitcher === 'function') {
-            setupPageSwitcher('admin-view-switcher', {
-                'overview': 'global-admin-view',
-                'users': 'user-management-section',
-                'settings': 'church-dashboard-view',
-                'moderation': 'counseling-content'
-            });
-        }
     </script>
     <script src="js/admin-events.js"></script>
     <script src="js/notifications.js"></script>

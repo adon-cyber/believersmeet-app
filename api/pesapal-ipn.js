@@ -1,182 +1,336 @@
-const { createClient } = require('@supabase/supabase-js');
+import { getSupabaseAdmin } from '../lib/supabase-admin.js';
 
-const getPesapalBaseUrl = (env) => {
-    return env === 'live' 
-        ? 'https://pay.pesapal.com/v3' 
-        : 'https://cybqa.pesapal.com/pesapalv3';
-};
-
-const getSupabaseAdmin = () => {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Missing Supabase environment variables (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)');
+function getBaseUrl(environment) {
+    if (environment === 'live') {
+        return 'https://pay.pesapal.com/v3';
     }
 
-    return createClient(supabaseUrl, supabaseServiceKey, {
-        auth: { persistSession: false }
-    });
-};
-
-async function getPesapalToken(consumerKey, consumerSecret, baseUrl) {
-    if (!consumerKey || !consumerSecret) {
-        throw new Error('Missing Pesapal Consumer Key or Consumer Secret for this church');
+    if (environment === 'sandbox' || !environment) {
+        return 'https://cybqa.pesapal.com/pesapalv3';
     }
 
-    const response = await fetch(`${baseUrl}/api/Auth/RequestToken`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-            consumer_key: consumerKey.trim(),
-            consumer_secret: consumerSecret.trim()
-        })
-    });
+    throw new Error('Unsupported Pesapal environment.');
+}
 
-    const data = await response.json();
-    if (!response.ok || data.status !== "200" || !data.token) {
-        throw new Error(data.message || 'Failed to authenticate with Pesapal using church credentials');
+async function readJson(response, label) {
+    const text = await response.text();
+
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch {
+        throw new Error(`${label} returned an invalid response.`);
+    }
+
+    if (!response.ok || String(data?.status) !== '200') {
+        throw new Error(
+            data?.message || `${label} request failed.`
+        );
+    }
+
+    return data;
+}
+
+async function getPesapalToken(key, secret, baseUrl) {
+    const response = await fetch(
+        `${baseUrl}/api/Auth/RequestToken`,
+        {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                consumer_key: key,
+                consumer_secret: secret
+            })
+        }
+    );
+
+    const data = await readJson(response, 'Pesapal authentication');
+
+    if (!data.token) {
+        throw new Error('Pesapal did not return an access token.');
     }
 
     return data.token;
 }
 
-export default async function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+function getValue(value) {
+    if (Array.isArray(value)) return value[0];
+    return value;
+}
 
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+function getMinorUnits(value, currency) {
+    const amount = Number(value);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        return null;
     }
 
-    // Pesapal IPN sends GET request containing OrderTrackingId and OrderMerchantReference
-    const orderTrackingId = req.query.OrderTrackingId || req.body?.OrderTrackingId;
-    const orderMerchantReference = req.query.OrderMerchantReference || req.body?.OrderMerchantReference;
-    const notificationType = req.query.OrderNotificationType || req.body?.OrderNotificationType;
+    const decimals = currency === 'UGX' ? 0 : 2;
+    const scaled = amount * (10 ** decimals);
 
-    if (!orderTrackingId) {
-        return res.status(400).json({ status: 400, message: 'OrderTrackingId is required' });
+    if (Math.abs(scaled - Math.round(scaled)) > 0.000001) {
+        return null;
+    }
+
+    return Math.round(scaled);
+}
+
+function mapPaymentStatus(value) {
+    const status = String(value || '').trim().toUpperCase();
+
+    if (status === 'COMPLETED') return 'COMPLETED';
+    if (status === 'FAILED' || status === 'INVALID') return 'FAILED';
+    if (status === 'REVERSED') return 'REVERSED';
+
+    return null;
+}
+
+function acknowledgement(type, trackingId, reference, status) {
+    return {
+        orderNotificationType: type || 'IPNCHANGE',
+        orderTrackingId: trackingId || '',
+        orderMerchantReference: reference || '',
+        status
+    };
+}
+
+export default async function handler(req, res) {
+    if (!['GET', 'POST'].includes(req.method)) {
+        res.setHeader('Allow', 'GET, POST');
+
+        return res.status(405).json({
+            success: false,
+            error: 'Method not allowed.'
+        });
+    }
+
+    const body = req.body && typeof req.body === 'object'
+        ? req.body
+        : {};
+
+    const query = req.query || {};
+
+    const notificationType = String(
+        getValue(query.OrderNotificationType) ||
+        getValue(body.OrderNotificationType) ||
+        ''
+    ).trim();
+
+    const trackingId = String(
+        getValue(query.OrderTrackingId) ||
+        getValue(body.OrderTrackingId) ||
+        ''
+    ).trim();
+
+    const merchantReference = String(
+        getValue(query.OrderMerchantReference) ||
+        getValue(body.OrderMerchantReference) ||
+        ''
+    ).trim();
+
+    if (
+        notificationType !== 'IPNCHANGE' ||
+        !trackingId ||
+        !merchantReference ||
+        trackingId.length > 120 ||
+        merchantReference.length > 120 ||
+        !/^[a-zA-Z0-9-]+$/.test(trackingId) ||
+        !/^[a-zA-Z0-9._-]+$/.test(merchantReference)
+    ) {
+        return res.status(400).json({
+            ...acknowledgement(
+                notificationType,
+                trackingId,
+                merchantReference,
+                400
+            ),
+            message: 'Invalid Pesapal IPN parameters.'
+        });
     }
 
     try {
-        const supabaseAdmin = getSupabaseAdmin();
+        const supabase = getSupabaseAdmin();
 
-        let churchId = null;
-
-        // 1. Query the transactions table using orderMerchantReference to get the transaction's church_id
-        if (orderMerchantReference) {
-            const { data: txData, error: txError } = await supabaseAdmin
+        // Find the exact pending transaction using both identifiers.
+        const { data: transaction, error: lookupError } =
+            await supabase
                 .from('transactions')
-                .select('church_id')
-                .eq('merchant_reference', orderMerchantReference)
-                .single();
+                .select(
+                    'id, church_id, merchant_reference, pesapal_tracking_id, amount, currency, status'
+                )
+                .eq('merchant_reference', merchantReference)
+                .maybeSingle();
 
-            if (txData && txData.church_id) {
-                churchId = txData.church_id;
-            }
+        if (lookupError) {
+            console.error('IPN transaction lookup failed:', lookupError.message);
+            throw new Error('Transaction lookup failed.');
         }
 
-        // Fallback: If not found by merchant_reference, try querying by pesapal_tracking_id
-        if (!churchId) {
-            const { data: txData, error: txError } = await supabaseAdmin
-                .from('transactions')
-                .select('church_id')
-                .eq('pesapal_tracking_id', orderTrackingId)
-                .single();
-
-            if (txData && txData.church_id) {
-                churchId = txData.church_id;
-            }
+        if (!transaction) {
+            throw new Error('Transaction reference was not found.');
         }
 
-        let pesapal_consumer_key = null;
-        let pesapal_consumer_secret = null;
-        let pesapal_env = 'sandbox';
-
-        if (churchId) {
-            // 2. Query the churches table with that church_id to retrieve pesapal credentials
-            const { data: churchData, error: churchError } = await supabaseAdmin
-                .from('churches')
-                .select('pesapal_consumer_key, pesapal_consumer_secret, pesapal_env')
-                .eq('id', churchId)
-                .single();
-
-            if (churchData) {
-                pesapal_consumer_key = churchData.pesapal_consumer_key;
-                pesapal_consumer_secret = churchData.pesapal_consumer_secret;
-                pesapal_env = churchData.pesapal_env || 'sandbox';
-            }
+        // Do not associate a different tracking ID with this transaction.
+        if (
+            transaction.pesapal_tracking_id &&
+            transaction.pesapal_tracking_id !== trackingId
+        ) {
+            throw new Error('Pesapal tracking ID does not match the transaction.');
         }
 
-        // Fallback to environment variables if church credentials are not found
-        if (!pesapal_consumer_key || !pesapal_consumer_secret) {
-            pesapal_consumer_key = process.env.PESAPAL_CONSUMER_KEY;
-            pesapal_consumer_secret = process.env.PESAPAL_CONSUMER_SECRET;
-            pesapal_env = process.env.PESAPAL_ENV || 'sandbox';
+        // Obtain payment credentials only from this transaction's church.
+        const { data: church, error: churchError } = await supabase
+            .from('churches')
+            .select(
+                'id, pesapal_consumer_key, pesapal_consumer_secret, pesapal_env'
+            )
+            .eq('id', transaction.church_id)
+            .maybeSingle();
+
+        if (churchError) {
+            console.error('IPN church lookup failed:', churchError.message);
+            throw new Error('Church lookup failed.');
         }
 
-        const baseUrl = getPesapalBaseUrl(pesapal_env);
+        if (
+            !church?.pesapal_consumer_key ||
+            !church?.pesapal_consumer_secret
+        ) {
+            throw new Error('Church Pesapal credentials are not configured.');
+        }
 
-        // 3. Use those church credentials dynamically to authenticate with Pesapal
-        const token = await getPesapalToken(pesapal_consumer_key, pesapal_consumer_secret, baseUrl);
+        const baseUrl = getBaseUrl(church.pesapal_env || 'sandbox');
 
-        // 4. Query transaction status from Pesapal API
-        const statusResponse = await fetch(`${baseUrl}/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`, {
+        const token = await getPesapalToken(
+            church.pesapal_consumer_key.trim(),
+            church.pesapal_consumer_secret.trim(),
+            baseUrl
+        );
+
+        // Never trust the IPN itself as proof of payment.
+        const statusUrl = new URL(
+            `${baseUrl}/api/Transactions/GetTransactionStatus`
+        );
+        statusUrl.searchParams.set('orderTrackingId', trackingId);
+
+        const statusResponse = await fetch(statusUrl.toString(), {
             method: 'GET',
             headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
             }
         });
 
-        const statusData = await statusResponse.json();
+        const payment = await readJson(
+            statusResponse,
+            'Pesapal transaction verification'
+        );
 
-        if (!statusResponse.ok) {
-            throw new Error(statusData.message || 'Failed to retrieve transaction status from Pesapal');
+        // Verify the reference returned by Pesapal.
+        if (
+            String(payment.merchant_reference || '') !==
+            transaction.merchant_reference
+        ) {
+            throw new Error('Pesapal merchant reference mismatch.');
         }
 
-        const paymentStatus = statusData.payment_status_description || statusData.status; 
-        
-        let dbStatus = 'PENDING';
-        if (paymentStatus && paymentStatus.toLowerCase() === 'completed') {
-            dbStatus = 'COMPLETED';
-        } else if (['failed', 'invalid', 'reversed'].includes(paymentStatus?.toLowerCase())) {
-            dbStatus = 'FAILED';
+        // Verify the original amount and currency.
+        const storedCurrency = String(
+            transaction.currency || 'UGX'
+        ).toUpperCase();
+
+        const returnedCurrency = String(
+            payment.currency || ''
+        ).toUpperCase();
+
+        if (storedCurrency !== returnedCurrency) {
+            throw new Error('Pesapal currency does not match the transaction.');
         }
 
-        // 5. Update Supabase transactions table using Admin client (bypassing RLS)
-        const updateQuery = orderMerchantReference 
-            ? supabaseAdmin.from('transactions').update({ status: dbStatus, pesapal_tracking_id: orderTrackingId }).eq('merchant_reference', orderMerchantReference)
-            : supabaseAdmin.from('transactions').update({ status: dbStatus }).eq('pesapal_tracking_id', orderTrackingId);
-
-        const { error: dbError } = await updateQuery;
-
-        if (dbError) {
-            console.error('Failed to update transaction status in Supabase:', dbError);
-            throw new Error('Database update failed');
+        if (!['UGX', 'USD'].includes(storedCurrency)) {
+            throw new Error('Unsupported transaction currency.');
         }
 
-        // Pesapal IPN expects a specific JSON response format acknowledging receipt
-        return res.status(200).json({
-            order_tracking_id: orderTrackingId,
-            order_merchant_reference: orderMerchantReference,
-            status: dbStatus
-        });
+        const storedAmount = getMinorUnits(
+            transaction.amount,
+            storedCurrency
+        );
+
+        const returnedAmount = getMinorUnits(
+            payment.amount,
+            storedCurrency
+        );
+
+        if (
+            storedAmount === null ||
+            returnedAmount === null ||
+            storedAmount !== returnedAmount
+        ) {
+            throw new Error('Pesapal amount does not match the transaction.');
+        }
+
+        const verifiedStatus = mapPaymentStatus(
+            payment.payment_status_description
+        );
+
+        if (!verifiedStatus) {
+            throw new Error(
+                'Pesapal returned an unrecognized payment status.'
+            );
+        }
+
+        // Preserve a completed payment against stale notifications.
+        let nextStatus = verifiedStatus;
+
+        if (
+            transaction.status === 'COMPLETED' &&
+            verifiedStatus !== 'REVERSED'
+        ) {
+            nextStatus = 'COMPLETED';
+        }
+
+        if (transaction.status === 'REVERSED') {
+            nextStatus = 'REVERSED';
+        }
+
+        const { error: updateError } = await supabase
+            .from('transactions')
+            .update({
+                status: nextStatus,
+                pesapal_tracking_id: trackingId,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', transaction.id);
+
+        if (updateError) {
+            console.error('IPN transaction update failed:', updateError.message);
+            throw new Error('Could not save the verified payment status.');
+        }
+
+        return res.status(200).json(
+            acknowledgement(
+                notificationType,
+                trackingId,
+                merchantReference,
+                200
+            )
+        );
 
     } catch (error) {
-        console.error('Pesapal IPN handler error:', error);
-        return res.status(500).json({
-            status: 500,
-            message: error.message || 'Internal server error processing IPN'
-        });
+        console.error('Pesapal IPN processing error:', error.message);
+
+        // A 500 acknowledgement allows Pesapal to retry the notification.
+        return res.status(500).json(
+            acknowledgement(
+                notificationType,
+                trackingId,
+                merchantReference,
+                500
+            )
+        );
     }
 }

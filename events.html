@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 scroll-smooth">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events & Coupons | BelieversMeet</title>
+    <title>Events - BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/theme.js"></script>
     <script src="js/app-utils.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -41,10 +44,12 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .attendee-photo {
             width: 100px;
             height: 100px;
@@ -81,30 +86,11 @@
         }
     </style>
 </head>
-<body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white">
+<body style="display: none; background-color: #f8f9fa !important;" class="bg-gray-50 min-h-screen flex flex-col">
 
-<!-- Navigation Bar -->
-<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<!-- Navigation Header Container -->
+<div id="navbar"></div>
+<script src="js/nav.js"></script>
 
 <!-- Main Container -->
 <main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
@@ -133,6 +119,7 @@
             <select id="events-view-switcher" class="form-select form-select-sm w-auto fw-semibold border-primary view-switcher px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-600 outline-none" onchange="switchPageView(this.value)">
                 <option value="all" selected>🌟 Show All Sections</option>
                 <option value="upcoming">📅 Upcoming Events</option>
+                <option value="archive">📁 Past Events Archive</option>
                 <option value="roster">🤝 Volunteer Roster</option>
                 <option value="admin">⚙️ Admin Coupon Section</option>
             </select>
@@ -217,6 +204,24 @@
         </div>
     </div>
 
+    <!-- Past Events Archive Section -->
+    <div id="widget-archive" class="hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fas fa-archive text-amber-400"></i> Past Events Archive
+                </h2>
+                <p class="text-slate-300 text-sm mt-1">Browse historical church gatherings, past conferences, and past fellowship events sorted by most recent first.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg font-medium">Sorted: Most Recent First</span>
+            </div>
+        </div>
+        <div id="events-archive-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500">Loading past events archive...</div>
+        </div>
+    </div>
+
     <!-- Volunteer Roster Section -->
     <div id="widget-registrations" class="hidden space-y-6">
         <div class="bg-gradient-to-r from-slate-900 to-blue-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -297,12 +302,14 @@
             <button onclick="closeCouponModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
         </div>
         <div class="space-y-4">
-            <div id="admin-coupon-search-wrapper" class="hidden">
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Admin Search (Email or Unique Coupon Number)</label>
-                <div class="flex gap-2">
-                    <input type="text" id="coupon-search-input" placeholder="e.g. user@example.com or CPN-8924" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <button onclick="searchCoupon()" class="px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm whitespace-nowrap transition shadow">Search</button>
+            <div id="coupon-search-wrapper">
+                <label id="coupon-search-label" for="coupon-search-input" class="block text-xs font-semibold text-gray-600 uppercase mb-1">Search your coupon number</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="search" id="coupon-search-input" onkeydown="if(event.key==='Enter'){event.preventDefault();searchCoupon();}" placeholder="Enter your coupon number, e.g. CPN-8924" class="w-full p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button type="button" onclick="searchCoupon()" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm whitespace-nowrap transition shadow">Search Coupons</button>
+                    <button type="button" onclick="document.getElementById('coupon-search-input').value='';loadUserCoupons();" class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm whitespace-nowrap transition">Show All</button>
                 </div>
+                <p id="coupon-search-help" class="mt-2 text-xs text-gray-500">Search only shows coupons linked to your account.</p>
             </div>
             
             <div id="coupon-result-container" class="mt-4 space-y-6">
@@ -351,19 +358,36 @@
 
         if (profile) {
             const createEventBtn = document.getElementById('createEventBtn');
-            const adminSearchWrapper = document.getElementById('admin-coupon-search-wrapper');
+            const couponSearchLabel = document.getElementById('coupon-search-label');
+            const couponSearchInput = document.getElementById('coupon-search-input');
+            const couponSearchHelp = document.getElementById('coupon-search-help');
             if (profile.role === 'admin' || profile.role === 'super_admin') {
+                if (couponSearchLabel) couponSearchLabel.textContent = 'Admin Search (attendee email or coupon number)';
+                if (couponSearchInput) couponSearchInput.placeholder = 'Search any attendee by email or coupon number';
+                if (couponSearchHelp) couponSearchHelp.textContent = 'Administrators can search all coupon records.';
                 const adminLink = document.getElementById('admin-nav-link');
+                const adminLinkMobile = document.getElementById('admin-nav-link-mobile');
                 if (adminLink) adminLink.classList.remove('hidden');
+                if (adminLinkMobile) adminLinkMobile.classList.remove('hidden');
 
-                const adminSection = document.getElementById('admin-coupon-section');
-                if (adminSection) adminSection.classList.remove('hidden');
+                const adminSection = document.getElementById('section-admin');
+                const adminViewOption = document.querySelector('#events-view-switcher option[value="admin"]');
+                if (adminSection) {
+                    adminSection.classList.remove('hidden');
+                    adminSection.style.display = '';
+                }
+                if (adminViewOption) adminViewOption.hidden = false;
 
                 if (createEventBtn) createEventBtn.style.display = 'flex';
-                if (adminSearchWrapper) adminSearchWrapper.classList.remove('hidden');
             } else {
                 if (createEventBtn) createEventBtn.style.display = 'none';
-                if (adminSearchWrapper) adminSearchWrapper.classList.add('hidden');
+                const adminSection = document.getElementById('section-admin');
+                const adminViewOption = document.querySelector('#events-view-switcher option[value="admin"]');
+                if (adminSection) {
+                    adminSection.classList.add('hidden');
+                    adminSection.style.display = 'none';
+                }
+                if (adminViewOption) adminViewOption.remove();
             }
         }
 
@@ -390,6 +414,7 @@
 
     async function loadEvents() {
         const container = document.getElementById('events-container');
+        const archiveContainer = document.getElementById('events-archive-container');
 
         const { data: events, error } = await window.sbClient
             .from('events')
@@ -397,16 +422,20 @@
             .order('event_date', { ascending: true });
 
         if (error) {
-            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading events: ${escapeHtml(error.message)}</div>`;
+            const errMsg = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading events: ${escapeHtml(error.message)}</div>`;
+            if (container) container.innerHTML = errMsg;
+            if (archiveContainer) archiveContainer.innerHTML = errMsg;
             return;
         }
 
         if (!events || events.length === 0) {
-            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No upcoming community events found.</p></div>`;
+            const emptyMsg = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No community events found.</p></div>`;
+            if (container) container.innerHTML = emptyMsg;
+            if (archiveContainer) archiveContainer.innerHTML = emptyMsg;
             return;
         }
 
-        // Get current logged-in user's ID
+        // Get current logged-in user's ID and registrations
         let userRegisteredEventIds = [];
         try {
             const { data: { user } } = await window.sbClient.auth.getUser();
@@ -424,7 +453,6 @@
         }
 
         // Filter events based on logged-in user's church_id against host_church_id (or church_id) and invited_church_ids array.
-        // Super admins or users without a church can see all events, or filter as appropriate.
         const userChurchId = currentUserProfile?.church_id;
         const isSuperAdmin = currentUserProfile?.role === 'super_admin';
 
@@ -432,21 +460,53 @@
             const hostId = evt.host_church_id || evt.church_id;
             const invitedIds = evt.invited_church_ids || [];
             
-            // If user has a church, they can see events hosted by their church OR events where their church is invited
             if (userChurchId) {
                 return hostId === userChurchId || invitedIds.includes(userChurchId);
             }
-            
-            // If user has no church, show events with no specific church restriction or public events (or none)
             return !hostId || hostId === '';
         });
 
-        // Attach userRegisteredEventIds to events or store globally/locally for rendering
-        allEvents = filteredEvents.map(evt => ({
-            ...evt,
-            is_user_registered: userRegisteredEventIds.includes(evt.id)
-        }));
+        // Determine Upcoming vs Past events based on actual event date and end time (or calendar day if no end time)
+        const now = new Date();
+        const upcomingList = [];
+        const pastList = [];
+
+        filteredEvents.forEach(evt => {
+            const startDate = new Date(evt.event_date);
+            // If end_time or end_date column exists, use it; otherwise if only date, treat as active for that calendar day (until end of that calendar day)
+            let endDate = evt.end_time ? new Date(evt.end_time) : (evt.end_date ? new Date(evt.end_date) : null);
+            if (!endDate) {
+                // Default: end of the event's calendar day (23:59:59)
+                endDate = new Date(startDate);
+                endDate.setHours(23, 59, 59, 999);
+            }
+
+            const isEnded = now > endDate;
+
+            const enhancedEvt = {
+                ...evt,
+                is_user_registered: userRegisteredEventIds.includes(evt.id),
+                is_ended: isEnded
+            };
+
+            if (isEnded) {
+                pastList.push(enhancedEvt);
+            } else {
+                upcomingList.push(enhancedEvt);
+            }
+        });
+
+        // Sort upcoming events by date, nearest first (ascending)
+        upcomingList.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+
+        // Sort past events archive by most recent first (descending)
+        pastList.sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
+
+        allEvents = upcomingList;
+        window.pastEvents = pastList;
+
         renderFilteredEvents();
+        renderArchiveEvents(pastList);
     }
 
     async function loadAdminEventsDropdown() {
@@ -477,6 +537,10 @@
 
     async function handleAdminRegister(e) {
         e.preventDefault();
+        if (!['admin', 'super_admin'].includes(currentUserProfile?.role)) {
+            alert('Only administrators can issue event coupons.');
+            return;
+        }
         const eventId = document.getElementById('admin-event-select').value;
         const attendeeName = document.getElementById('admin-attendee-name').value.trim();
         const attendeeEmail = document.getElementById('admin-attendee-email').value.trim();
@@ -499,9 +563,26 @@
             photoUrl = urlData?.publicUrl || null;
         }
 
+        // Link the issued coupon to the attendee's own account so their RLS-protected
+        // coupon search can find it. Never attach an attendee coupon to the admin account.
+        const { data: attendeeProfile, error: attendeeProfileError } = await window.sbClient
+            .from('profiles')
+            .select('id')
+            .ilike('email', attendeeEmail)
+            .maybeSingle();
+
+        if (attendeeProfileError) {
+            alert('Could not verify the attendee account: ' + attendeeProfileError.message);
+            return;
+        }
+        if (!attendeeProfile?.id) {
+            alert('No BelieversMeet account was found for this email. Ask the attendee to create an account using this email, then issue the coupon again.');
+            return;
+        }
+
         const { error } = await window.sbClient.from('event_registrations').insert([{
             event_id: eventId,
-            profile_id: loggedInUser.id,
+            profile_id: attendeeProfile.id,
             attendee_name: attendeeName,
             attendee_email: attendeeEmail,
             coupon_number: couponNumber,
@@ -522,6 +603,62 @@
         }
     }
 
+    function renderFilteredEvents() {
+        const container = document.getElementById('events-container');
+        if (!container) return;
+
+        const eventsToRender = (Array.isArray(allEvents) ? allEvents : []).filter(evt => {
+            if (currentCategory === 'All') return true;
+            return (evt.category || 'Fellowship') === currentCategory;
+        });
+
+        if (eventsToRender.length === 0) {
+            const message = currentCategory === 'All'
+                ? 'No upcoming events at the moment.'
+                : `No upcoming ${escapeHtml(currentCategory)} events at the moment.`;
+            container.innerHTML = `
+                <div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center">
+                    <p class="text-gray-500">${message}</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = eventsToRender.map(evt => {
+            const imageUrl = evt.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80';
+            const eventDate = evt.event_date ? new Date(evt.event_date) : null;
+            const dateLabel = eventDate && !Number.isNaN(eventDate.getTime())
+                ? eventDate.toLocaleString()
+                : 'Date to be announced';
+            const attendeeCount = Array.isArray(evt.event_registrations)
+                ? evt.event_registrations.length
+                : 0;
+            const registered = Boolean(evt.is_user_registered);
+            const safeId = String(evt.id).replace(/[^a-zA-Z0-9_-]/g, '');
+            const registrationButton = registered
+                ? `<button id="rsvp-btn-${safeId}" onclick="toggleRsvp('${String(evt.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" class="optout-btn px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-red-600 text-white hover:bg-red-700">Opt Out</button>`
+                : `<button id="rsvp-btn-${safeId}" onclick="toggleRsvp('${String(evt.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" class="register-btn px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700">Register</button>`;
+
+            return `
+                <article class="event-card bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col" data-event-id="${escapeHtml(evt.id)}">
+                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(evt.title || 'Church event')}" class="w-full h-48 object-cover" loading="lazy">
+                    <div class="p-5 flex flex-col flex-1 gap-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full">${escapeHtml(evt.category || 'Fellowship')}</span>
+                            ${registered ? '<span class="text-xs font-semibold text-emerald-700">Registered</span>' : ''}
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">${escapeHtml(evt.title || 'Untitled event')}</h3>
+                        <p class="text-sm text-gray-600"><i class="far fa-calendar-alt mr-1"></i> ${escapeHtml(dateLabel)}</p>
+                        ${evt.location ? `<p class="text-sm text-gray-600"><i class="fas fa-map-marker-alt mr-1"></i> ${escapeHtml(evt.location)}</p>` : ''}
+                        ${evt.description ? `<p class="text-sm text-gray-600 whitespace-pre-line">${escapeHtml(evt.description)}</p>` : ''}
+                        <div class="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                            <span id="attendee-count-${safeId}" class="text-xs text-gray-500">👥 ${attendeeCount} ${attendeeCount === 1 ? 'Attendee' : 'Attendees'}</span>
+                            ${registrationButton}
+                        </div>
+                    </div>
+                </article>`;
+        }).join('');
+    }
+
     function filterCategory(category, btn) {
         currentCategory = category;
         document.querySelectorAll('.category-btn').forEach(b => {
@@ -531,38 +668,36 @@
         renderFilteredEvents();
     }
 
-    function renderFilteredEvents() {
-        const container = document.getElementById('events-container');
-        const filtered = currentCategory === 'All' 
-            ? allEvents 
-            : allEvents.filter(e => (e.category || 'Fellowship') === currentCategory);
+    function renderArchiveEvents(pastList) {
+        const container = document.getElementById('events-archive-container');
+        if (!container) return;
 
-        if (filtered.length === 0) {
-            container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No events found in this category.</p></div>`;
+        if (!pastList || pastList.length === 0) {
+            container.innerHTML = `<div class="col-span-full bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center text-slate-400 text-sm">No past events in the archive.</div>`;
             return;
         }
 
-        container.innerHTML = filtered.map(evt => {
-            const isRegistered = evt.is_user_registered;
-            const category = evt.category || 'Fellowship';
+        container.innerHTML = pastList.map(evt => {
             const imageUrl = evt.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80';
             const eventDate = new Date(evt.event_date);
-            const monthStr = eventDate.toLocaleString('default', { month: 'short' }).toUpperCase();
-            const dayStr = eventDate.getDate();
 
             return `
-                <div class="event-card bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col" data-event-id="${evt.id}">
-                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(evt.title)}" class="w-full h-48 object-cover rounded-t-lg">
-                    <div class="p-4 flex flex-col flex-1">
+                <div class="event-card bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col opacity-9rukt" data-event-id="${evt.id}">
+                    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(evt.title)}" class="w-full h-48 object-cover rounded-t-lg grayscale-[30%]">
+                    <div class="p-4 flex flex-col flex-1 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">Archived</span>
+                            <span class="text-xs text-slate-400">${escapeHtml(evt.category || 'Fellowship')}</span>
+                        </div>
                         <h3 class="text-lg font-bold text-white">${escapeHtml(evt.title)}</h3>
-                        <p class="text-slate-400 mb-4 text-sm">Date: ${eventDate.toLocaleString()}</p>
+                        <p class="text-slate-400 text-sm"><i class="far fa-calendar-alt mr-1 text-slate-500"></i> Ended: ${eventDate.toLocaleString()}</p>
+                        ${evt.description ? `<p class="text-slate-300 text-xs line-clamp-2">${escapeHtml(evt.description)}</p>` : ''}
                         
-                        <!-- ATTENDANCE BUTTONS -->
-                        <div class="mt-auto">
-                            ${isRegistered 
-                                ? `<button disabled class="bg-gray-500 cursor-not-allowed text-white px-4 py-2 rounded transition mt-2 w-full">Registered</button>`
-                                : `<button class="register-btn bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition mt-2 w-full" onclick="window.toggleAttendance('${evt.id}', 'registered')">Register</button>`
-                            }
+                        <!-- ARCHIVED REGISTRATION RESTRICTION NOTICE -->
+                        <div class="mt-auto pt-3 border-t border-slate-800">
+                            <div class="w-full bg-red-950/40 border border-red-800/40 text-red-300 text-center py-2 px-3 rounded-lg text-xs font-medium">
+                                🚫 This event has ended. Registration is closed.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -628,16 +763,11 @@
                 btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-gray-400 text-white cursor-not-allowed';
             }
 
-            const randomCoupon = `CPN-${Math.floor(1000 + Math.random() * 9000)}`;
-
             const payload = {
                 event_id: eventId,
                 profile_id: userId,
                 attendee_name: currentUserProfile?.full_name || loggedInUser.email || 'Member',
-                attendee_email: loggedInUser.email,
-                coupon_number: randomCoupon,
-                amount_paid: 0.00,
-                is_free: true
+                attendee_email: loggedInUser.email
             };
 
             const { error: insertError } = await window.sbClient
@@ -667,7 +797,7 @@
                 btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-red-600 text-white hover:bg-red-700';
                 btn.innerText = 'Opt Out';
             }
-            showSuccessToast(`Successfully registered! Coupon: ${randomCoupon}`);
+            showSuccessToast('Successfully registered! An administrator must issue your coupon.');
         }
     }
 
@@ -885,7 +1015,7 @@
 
         // 1. Build query without fragile joins
         let query = window.sbClient
-          .from('volunteer_roster')
+         .from('church_volunteer_roster')
           .select('id, title, description, max_capacity, is_active, event_date, church_id');
 
         // 2. Only apply church_id filter IF it is a valid non-empty string
@@ -1186,83 +1316,68 @@
         }
     }
 
+    function openCouponModal() {
+        const modal = document.getElementById('coupon-modal');
+        if (modal) modal.classList.remove('hidden');
+        const input = document.getElementById('coupon-search-input');
+        if (input) input.value = '';
+        loadUserCoupons();
+    }
+
+    function closeCouponModal() {
+        const modal = document.getElementById('coupon-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
     async function loadUserCoupons() {
         const container = document.getElementById('coupon-result-container');
-        if (!container || !loggedInUser) return;
+        if (!container || !loggedInUser || !window.sbClient) return;
 
-        container.innerHTML = '<div class="text-center py-6 text-gray-500 text-sm">Loading your coupons...</div>';
-
-        const { data: { user } } = await window.sbClient.auth.getUser();
-        if (!user) return;
-
-        let query = window.sbClient
-            .from('event_registrations')
-            .select('*, events(*)');
-
-        const role = currentUserProfile?.role;
-        if (role !== 'admin' && role !== 'super_admin') {
-            // Force standard users to strictly query ONLY their own coupons
-            query = query.eq('profile_id', user.id);
-        }
-
+        container.innerHTML = '<div class="text-center py-6 text-gray-500 text-sm">Loading coupons...</div>';
+        const isAdmin = ['admin', 'super_admin'].includes(currentUserProfile?.role);
+        let query = window.sbClient.from('event_registrations').select('*, events(*)');
+        if (!isAdmin) query = query.eq('profile_id', loggedInUser.id);
         const { data: coupons, error } = await query;
 
         if (error) {
             container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">Error loading coupons: ${escapeHtml(error.message)}</div>`;
             return;
         }
-
         if (!coupons || coupons.length === 0) {
-            container.innerHTML = `<div class="bg-gray-50 text-gray-500 p-8 rounded-2xl text-center text-sm font-medium border border-gray-200">You do not have any admission coupons yet. Register for an event to get your entry pass!</div>`;
+            container.innerHTML = `<div class="bg-gray-50 text-gray-500 p-8 rounded-2xl text-center text-sm font-medium border border-gray-200">${isAdmin ? 'No coupon records found. Use the admin section to issue a coupon.' : 'You do not have any admission coupons yet. Once an administrator issues a coupon linked to your account, it will appear here.'}</div>`;
             return;
         }
-
         renderCouponCards(coupons);
     }
 
     async function searchCoupon() {
         const queryVal = document.getElementById('coupon-search-input')?.value.trim() || '';
         const container = document.getElementById('coupon-result-container');
-        if (!container) return;
-
-        const role = currentUserProfile?.role;
-        if (role !== 'admin' && role !== 'super_admin') {
-            loadUserCoupons();
-            return;
-        }
-
+        if (!container || !window.sbClient) return;
+        const isAdmin = ['admin', 'super_admin'].includes(currentUserProfile?.role);
         if (!queryVal) {
-            loadUserCoupons();
+            await loadUserCoupons();
             return;
         }
 
         container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">Searching coupon records...</div>';
-
-        let { data, error } = await window.sbClient
-            .from('event_registrations')
-            .select('*, events(*)')
-            .or(`attendee_email.eq.${queryVal},coupon_number.eq.${queryVal}`);
-
-        let regList = data;
-        if ((!regList || regList.length === 0) && queryVal.includes('@')) {
-            const { data: dataEmail } = await window.sbClient
-                .from('event_registrations')
-                .select('*, events(*)')
-                .ilike('attendee_email', `%${queryVal}%`);
-            regList = dataEmail;
-        } else if (!regList || regList.length === 0) {
-            const { data: dataCoupon } = await window.sbClient
-                .from('event_registrations')
-                .select('*, events(*)')
-                .ilike('coupon_number', `%${queryVal}%`);
-            regList = dataCoupon;
+        let query = window.sbClient.from('event_registrations').select('*, events(*)');
+        if (isAdmin) {
+            // Admins may search all records by attendee email or coupon code.
+            query = query.or(`attendee_email.ilike.%${queryVal}%,coupon_number.ilike.%${queryVal}%`);
+        } else {
+            // Keep attendee search strictly scoped to the signed-in attendee. RLS is an additional safeguard.
+            query = query.eq('profile_id', loggedInUser.id).ilike('coupon_number', `%${queryVal}%`);
         }
-
-        if (error || !regList || regList.length === 0) {
-            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">No ticket or coupon found matching "${escapeHtml(queryVal)}".</div>`;
+        const { data: regList, error } = await query;
+        if (error) {
+            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">Could not search coupons: ${escapeHtml(error.message)}</div>`;
             return;
         }
-
+        if (!regList || regList.length === 0) {
+            container.innerHTML = `<div class="bg-gray-50 text-gray-600 p-4 rounded-xl text-center text-sm">No coupon found matching "${escapeHtml(queryVal)}"${isAdmin ? '.' : ' in your account.'}</div>`;
+            return;
+        }
         renderCouponCards(regList);
     }
 
@@ -1484,16 +1599,28 @@
         }
     };
 
-    window.switchEventView = function(selected) {
-        const mapping = {
-            upcoming: document.getElementById('widget-upcoming'),
-            registrations: document.getElementById('widget-registrations')
+    window.switchPageView = function(selected) {
+        const isAdmin = ['admin', 'super_admin'].includes(currentUserProfile?.role);
+        if (selected === 'admin' && !isAdmin) {
+            selected = 'upcoming';
+            const selector = document.getElementById('events-view-switcher');
+            if (selector) selector.value = selected;
+        }
+        const sections = {
+            'all': ['widget-upcoming', 'widget-archive', 'widget-registrations', 'section-admin'],
+            'upcoming': ['widget-upcoming'],
+            'archive': ['widget-archive'],
+            'roster': ['widget-registrations'],
+            'admin': ['section-admin']
         };
 
-        Object.keys(mapping).forEach(key => {
-            const el = mapping[key];
+        const allKeys = ['widget-upcoming', 'widget-archive', 'widget-registrations', 'section-admin'];
+        const activeKeys = sections[selected] || allKeys;
+
+        allKeys.forEach(id => {
+            const el = document.getElementById(id);
             if (el) {
-                if (selected === 'all' || selected === key) {
+                if (activeKeys.includes(id)) {
                     el.style.display = 'block';
                     el.classList.remove('hidden', 'd-none');
                 } else {
@@ -1504,19 +1631,15 @@
         });
     };
 
+    // Backward compatibility alias
+    window.switchEventView = window.switchPageView;
+
     initApp();
     
     // Ensure fetchRosterData() is executed inside DOMContentLoaded or inline on page init
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof fetchRosterData === 'function') {
             fetchRosterData();
-        }
-        if (typeof setupPageSwitcher === 'function') {
-            setupPageSwitcher('events-view-switcher', {
-                'upcoming': 'events-section',
-                'rsd': 'admin-coupon-section',
-                'archive': 'volunteer-roster-section'
-            });
         }
     });
 </script>

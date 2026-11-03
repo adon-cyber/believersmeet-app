@@ -1,6 +1,197 @@
-input, textarea, select {
-  color: #111827 !important;
-  background-color: #ffffff !important;
+/* BelieversMeet UI Audit - Phase 1: Shared Design Foundation */
+:root {
+  /* Brand Colors inspired by sermons.html & deep blue theme */
+  --bm-color-primary-deep: #1e3a8a; /* Deep blue 900 */
+  --bm-color-primary-indigo: #312e81; /* Indigo 900 */
+  --bm-color-primary-brand: #2563eb; /* Blue 600 */
+
+  /* Interactive & Hover Colors */
+  --bm-color-interactive-blue: #2563eb;
+  --bm-color-interactive-hover: #1d4ed8; /* Blue 700 */
+  --bm-color-interactive-light-hover: #eff6ff; /* Blue 50 */
+
+  /* Background, Card Surface, and Text Colors */
+  --bm-color-bg-neutral: #f9fafb; /* Gray 50 */
+  --bm-color-surface-card: #ffffff;
+  --bm-color-text-main: #111827; /* Gray 900 */
+  --bm-color-text-muted: #6b7280; /* Gray 500 */
+  --bm-color-text-subtle: #9ca3af; /* Gray 400 */
+
+  /* Borders, Radii, and Shadows */
+  --bm-color-border: #e5e7eb; /* Gray 200 */
+  --bm-color-border-subtle: #f3f4f6; /* Gray 100 */
+  --bm-radius-card: 1rem; /* rounded-2xl */
+  --bm-radius-button: 0.750rem; /* rounded-xl */
+  --bm-radius-badge: 9999px; /* rounded-full */
+  --bm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --bm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* Standard Spacing Variables */
+  --bm-space-xs: 0.25rem;
+  --bm-space-sm: 0.5rem;
+  --bm-space-md: 1rem;
+  --bm-space-lg: 1.5rem;
+  --bm-space-xl: 2rem;
+}
+
+/* Reusable UI Components inspired by sermons.html */
+
+/* Reusable Cards */
+.bm-card {
+  background-color: var(--bm-color-surface-card);
+  border: 1px solid var(--bm-color-border);
+  border-radius: var(--bm-radius-card);
+  box-shadow: var(--bm-shadow-sm);
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.bm-card:hover {
+  box-shadow: var(--bm-shadow-md);
+}
+
+/* Reusable Buttons */
+.bm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background-color: var(--bm-color-primary-brand);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--bm-radius-button);
+  box-shadow: var(--bm-shadow-sm);
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+.bm-btn-primary:hover {
+  background-color: var(--bm-color-interactive-hover);
+  box-shadow: var(--bm-shadow-md);
+}
+.bm-btn-primary:active {
+  transform: translateY(0.5px);
+}
+
+.bm-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background-color: var(--bm-color-bg-neutral);
+  color: var(--bm-color-text-main);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid var(--bm-color-border);
+  border-radius: var(--bm-radius-button);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+}
+.bm-btn-secondary:hover {
+  background-color: var(--bm-color-border);
+  color: var(--bm-color-text-main);
+}
+
+/* Reusable Form Controls */
+.bm-form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bm-color-bg-neutral);
+  border: 1px solid var(--bm-color-border);
+  border-radius: var(--bm-radius-button);
+  font-size: 0.875rem;
+  color: var(--bm-color-text-main) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+.bm-form-control:focus {
+  background-color: var(--bm-color-surface-card) !important;
+  border-color: var(--bm-color-primary-brand);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Reusable Page Headings */
+.bm-page-heading {
+  font-size: 1.875rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--bm-color-text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.bm-page-subheading {
+  font-size: 0.9375rem;
+  color: var(--bm-color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Comprehensive Dark Mode Rules */
+.dark body {
+  background-color: #0b0f19 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .bm-card,
+.dark .card,
+.dark .modal-content {
+  background-color: #111827 !important;
+  border-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .bg-white {
+  background-color: #111827 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .bg-light,
+.dark .bg-gray-50,
+.dark .bg-slate-50 {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .text-gray-900,
+.dark .text-slate-900,
+.dark .text-dark {
+  color: #f9fafb !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-500,
+.dark .text-muted {
+  color: #9ca3af !important;
+}
+
+.dark input, 
+.dark textarea, 
+.dark select {
+  color: #f3f4f6 !important;
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark input::placeholder, 
+.dark textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+.dark .border,
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .border-slate-200 {
+  border-color: #374151 !important;
+}
+
+.dark footer {
+  background-color: #0b0f19 !important;
+  border-color: #1f2937 !important;
+  color: #9ca3af !important;
 }
 
 /* Enhanced Contrast & WCAG AA Compliance Rules */
@@ -162,4 +353,58 @@ body {
     cursor: pointer;
   }
 }
+
+/* Scrollable Row Navigation Fix */
+.nav-scrollable-row {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-scrollable-row::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Global Dark Navy Footer Enforcement (#10182B) */
+footer, .footer {
+  background-color: #10182B !important;
+  color: #CBD5E1 !important;
+  border-top-color: #1E293B !important;
+}
+
+footer h1, footer h2, footer h3, footer h4, footer h5, footer h6,
+.footer h1, .footer h2, .footer h3, .footer h4, .footer h5, .footer h6 {
+  color: #FFFFFF !important;
+}
+
+footer p, footer span, footer div, footer small, footer li,
+.footer p, .footer span, .footer div, .footer small, .footer li {
+  color: #CBD5E1 !important;
+}
+
+footer a, .footer a {
+  color: #60A5FA !important;
+  transition: color 0.2s ease;
+}
+
+footer a:hover, footer a:focus,
+.footer a:hover, .footer a:focus {
+  color: #93C5FD !important;
+  text-decoration: underline !important;
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+}
+
 

@@ -77,7 +77,21 @@ window.addEventListener('hashchange', handleUrlHashOnLoad);
         await new Promise(r => setTimeout(r, 100)); 
         retries++; 
     }
-    if (!window.sbClient) return;
+   if (!window.sbClient) {
+    const currentPath = window.location.pathname.toLowerCase();
+
+    const isGuestAccessiblePage =
+        currentPath.endsWith('giving.html') ||
+        currentPath.endsWith('public-church.html');
+
+    console.warn("Supabase client initialization timed out.");
+
+    if (isGuestAccessiblePage && document.body) {
+        document.body.style.display = '';
+    }
+
+    return;
+}
 
     // 2. Allow Supabase time to parse URL hash tokens from email links
     if (window.location.hash.includes('access_token')) {
@@ -86,9 +100,23 @@ window.addEventListener('hashchange', handleUrlHashOnLoad);
 
     // 3. Identify current page
     const currentPath = window.location.pathname.toLowerCase();
-    const isPublicPage = currentPath.endsWith('index.html') || currentPath.endsWith('login.html') || currentPath.endsWith('signup.html') || currentPath === '/' || currentPath === '';
-    const isTrialPage = currentPath.includes('trial'); 
 
+    const isTrialPage = currentPath.includes('trial'); 
+const isPublicPage =
+    currentPath.endsWith('index.html') ||
+    currentPath.endsWith('login.html') ||
+    currentPath.endsWith('signup.html') ||
+    currentPath.endsWith('giving.html') ||
+    currentPath.endsWith('public-church.html') ||
+    currentPath === '/' ||
+    currentPath === '';
+
+const isAuthEntryPage =
+    currentPath.endsWith('index.html') ||
+    currentPath.endsWith('login.html') ||
+    currentPath.endsWith('signup.html') ||
+    currentPath === '/' ||
+    currentPath === '';
     // 4. Get Session Safely
     const { data: { session } } = await window.sbClient.auth.getSession();
 
@@ -110,10 +138,66 @@ window.addEventListener('hashchange', handleUrlHashOnLoad);
             profile.is_admin === true
         );
 
-        if (isPublicPage) {
+        if (isAuthEntryPage) {
             // Logged in users shouldn't be on index/login.
             if (isAdmin) {
-                window.location.replace('free-trial-expired.html'); // Route admins to trial/dashboard
+                if (!profile.church_id) {
+                    console.error("Admin user is missing church_id.");
+                } else {
+                    try {
+                        const { data: churches, error: churchError } = await window.sbClient
+                            .rpc('get_my_church_subscription');
+
+                        const church = churches && churches.length > 0 ? churches[0] : null;
+
+                        if (churchError) {
+                            console.error("Error fetching church subscription status:", churchError);
+                        } else if (!church) {
+                            console.error("Associated church record not found for church_id:", profile.church_id);
+                        } else {
+                            const status = church.subscription_status;
+                            const trialEndsAt = church.trial_ends_at ? new Date(church.trial_ends_at) : null;
+                            const now = new Date();
+
+                            // Determine if trial is expired
+                            const isTrialExpired = trialEndsAt && trialEndsAt < now;
+
+                            if (status === 'pending_trial') {
+                                if (!currentPath.endsWith('activate-trial.html')) {
+                                    window.location.replace('activate-trial.html');
+                                    return;
+                                }
+                            } else if (status === 'trial') {
+                                if (isTrialExpired) {
+                                    if (!currentPath.endsWith('subscription-expired.html')) {
+                                        window.location.replace('subscription-expired.html');
+                                        return;
+                                    }
+                                } else {
+                                    if (!currentPath.endsWith('admin.html')) {
+                                        window.location.replace('admin.html');
+                                        return;
+                                    }
+                                }
+                            } else if (status === 'active' || status === 'paid') {
+                                if (!currentPath.endsWith('admin.html')) {
+                                    window.location.replace('admin.html');
+                                    return;
+                                }
+                            } else {
+                                // Fallback for unrecognized status or if no specific match
+                                console.warn("Unrecognized church subscription status:", status);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Unexpected error in admin subscription check:", err);
+                    }
+                }
+
+                // Fallback default redirect if subscription check didn't redirect
+                if (!currentPath.endsWith('admin.html') && !currentPath.endsWith('activate-trial.html') && !currentPath.endsWith('subscription-expired.html')) {
+                    window.location.replace('admin.html');
+                }
             } else {
                 window.location.replace('feed.html'); // Route normal members to feed
             }

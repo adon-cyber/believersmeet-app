@@ -4,59 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile | BelieversMeet</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
-    <style>
-        .profile-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto; }
-        .upload-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
-    </style>
+    <script src="js/app-utils.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-50">
-
-<nav class="bg-white shadow-md mb-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="feed.html" class="text-xl font-bold text-blue-600 flex-shrink-0 mr-4">BelieversMeet</a>
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]"></div>
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Events</a>
-                <a href="directory.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Directory</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-gray-600 hover:text-blue-600 px-2 py-1 rounded-md transition-colors">Profile</a>
-                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-md transition-colors">⚙️ Admin Panel</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Logout</a>
+<body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col" style="display: block !important;">
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
+                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                </a>
+            </div>
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
+                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
+                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
+                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
+            </nav>
+            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
+                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
+                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
+                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
+                    <i class="fas fa-user"></i>
+                </a>
+                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
-    </div>
-</nav>
+    </header>
 
-<main style="max-width: 600px; margin: 20px auto; padding: 0 20px;">
-    <div class="card">
-        <h1>Edit Profile</h1>
-        <img id="avatar-preview" src="https://ui-avatars.com/api/?name=User" class="profile-preview" alt="Avatar">
+<main class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
+    <div class="bm-card">
+        <h1 class="bm-page-heading mb-6 text-center justify-center">Edit Profile</h1>
+        <div class="flex flex-col items-center mb-6">
+            <img id="avatar-preview" src="https://ui-avatars.com/api/?name=User" class="w-32 h-32 rounded-full object-cover mb-4 shadow border-2 border-blue-500" alt="Avatar">
+        </div>
         
-        <label>Full Name</label>
-        <input type="text" id="edit-name" style="width: 100%; margin-bottom: 15px;">
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+                <input type="text" id="edit-name" class="bm-form-control">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Church Affiliation</label>
+                <select id="church-select" class="bm-form-control bg-slate-900"></select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Bio</label>
+                <textarea id="edit-bio" class="bm-form-control resize-y" rows="3"></textarea>
+            </div>
+
+            <button onclick="updateProfile()" id="save-btn" class="bm-btn-primary w-full py-3">Save All Changes</button>
+        </div>
         
-        <label>Church Affiliation</label>
-        <select id="church-select" style="width: 100%; margin-bottom: 15px; padding: 10px;"></select>
-        
-        <label>Bio</label>
-        <textarea id="edit-bio" style="width: 100%; margin-bottom: 15px;" rows="3"></textarea>
-        
-        <button onclick="updateProfile()" id="save-btn" style="width: 100%;">Save All Changes</button>
-        
-        <div class="upload-section">
-            <label>Update Picture:</label>
-            <input type="file" id="image-upload" accept="image/*" style="margin: 10px 0;">
-            <button onclick="uploadProfileImage()" id="upload-btn" style="width: 100%; background: #6c757d;">Upload New Photo</button>
+        <div class="mt-8 pt-6 border-t border-slate-700">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Update Picture:</label>
+            <input type="file" id="image-upload" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 file:cursor-pointer transition mb-4">
+            <button onclick="uploadProfileImage()" id="upload-btn" class="bm-btn-secondary w-full py-2.5">Upload New Photo</button>
         </div>
     </div>
 </main>
@@ -73,7 +97,7 @@
             document.getElementById('edit-bio').value = profile.bio || '';
             if (profile.avatar_url) document.getElementById('avatar-preview').src = profile.avatar_url;
             
-            // Load churches and set existing one
+            // Load churches and set existing one / lock if already linked
             loadChurches(profile.church_id);
         }
     }
@@ -81,24 +105,66 @@
     async function loadChurches(selectedId) {
         const { data: churches } = await window.sbClient.from('churches').select('id, name');
         const select = document.getElementById('church-select');
-        select.innerHTML = '<option value="">Select a Church</option>';
-        churches.forEach(church => {
+        
+        if (selectedId) {
+            select.innerHTML = '';
+            const matchedChurch = churches?.find(c => c.id === selectedId);
             const opt = document.createElement('option');
-            opt.value = church.id;
-            opt.textContent = church.name;
-            if (church.id === selectedId) opt.selected = true;
+            opt.value = selectedId;
+            opt.textContent = matchedChurch ? `${matchedChurch.name} (Linked)` : 'Current Linked Church';
+            opt.selected = true;
             select.appendChild(opt);
-        });
+            select.disabled = true;
+            select.classList.add('bg-slate-800', 'cursor-not-allowed', 'text-slate-400');
+            
+            let note = document.getElementById('church-locked-note');
+            if (!note) {
+                note = document.createElement('p');
+                note.id = 'church-locked-note';
+                note.className = 'text-xs text-amber-400 mt-1';
+                note.textContent = 'Church membership is locked. Changing church membership requires an authorized process.';
+                select.parentNode.appendChild(note);
+            }
+        } else {
+            select.innerHTML = '<option value="">Select a Church</option>';
+            if (churches) {
+                churches.forEach(church => {
+                    const opt = document.createElement('option');
+                    opt.value = church.id;
+                    opt.textContent = church.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
     }
 
     async function updateProfile() {
         const { data: { user } } = await window.sbClient.auth.getUser();
-        await window.sbClient.from('profiles').update({
-            full_name: document.getElementById('edit-name').value,
-            church_id: document.getElementById('church-select').value,
-            bio: document.getElementById('edit-bio').value
-        }).eq('id', user.id);
-        alert('Profile updated!');
+        
+        // Fetch current profile to ensure church_id cannot be overwritten or changed arbitrarily
+        const { data: currentProfile } = await window.sbClient.from('profiles').select('church_id').eq('id', user.id).single();
+
+        const updatePayload = {
+            full_name: document.getElementById('edit-name').value.trim(),
+            bio: document.getElementById('edit-bio').value.trim()
+        };
+
+        if (currentProfile && currentProfile.church_id) {
+            updatePayload.church_id = currentProfile.church_id;
+        } else {
+            const churchSelectVal = document.getElementById('church-select').value;
+            if (churchSelectVal) {
+                updatePayload.church_id = churchSelectVal;
+            }
+        }
+
+        const { error } = await window.sbClient.from('profiles').update(updatePayload).eq('id', user.id);
+        if (error) {
+            alert('Error updating profile: ' + error.message);
+        } else {
+            alert('Profile updated!');
+            loadProfile();
+        }
     }
 
     async function uploadProfileImage() {

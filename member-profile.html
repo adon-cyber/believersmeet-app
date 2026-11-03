@@ -1,367 +1,445 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Profile | BelieversMeet</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/auth-guard.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .hidden { display: none !important; }
         .badge { display: inline-block; vertical-align: middle; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth-guard.js"></script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen flex flex-col">
 
-<nav class="bg-blue-600 shadow-md mb-6" style="background-color: #007bff !important;">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <div class="flex items-center space-x-3">
-                <div id="church-logo-container" class="flex items-center space-x-2">
-                    <img id="church-logo-img" src="" alt="Church Logo" class="w-8 h-8 rounded-full object-cover hidden">
-                    <span id="church-logo-placeholder" class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold">BM</span>
-                </div>
-                <a href="feed.html" class="text-xl font-bold text-white flex-shrink-0">BelieversMeet</a>
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="feed.html" class="flex items-center space-x-2">
+                    <div id="church-logo-container" class="flex items-center space-x-2">
+                        <img id="church-logo-img" src="" alt="Church Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow hidden">
+                        <span id="church-logo-placeholder" class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold border-2 border-white/20 shadow">BM</span>
+                    </div>
+                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                </a>
             </div>
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]"></div>
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-blue-100 hover:text-white px-2 py-1 rounded-md transition-colors">Profile</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:bg-blue-700 px-2 py-1 rounded-md transition-colors">Logout</a>
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">My Feed</a>
+                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
+                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons</a>
+                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
+                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Small Groups</a>
+                <a href="prayer-wall.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Prayer Wall</a>
+                <a href="testimonies.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Testimonies</a>
+                <a href="chat.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Inbox</a>
+            </nav>
+            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
+            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
+                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">My Feed</a>
+                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
+                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons</a>
+                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
+                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Small Groups</a>
+                <a href="prayer-wall.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Prayer Wall</a>
+                <a href="testimonies.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Testimonies</a>
+                <a href="chat.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Inbox</a>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
+                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
+                    <i class="fas fa-user"></i>
+                </a>
+                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
-    </div>
-</nav>
+    </header>
 
-<main style="max-width: 600px; margin: 40px auto; padding: 20px;">
-    <div id="profile-container" class="bg-white shadow rounded-lg p-6 text-center">
-        <p class="text-gray-500 py-8">Loading member profile details...</p>
-    </div>
-    
-    <div style="text-align: center; margin-top: 20px;">
-        <button id="block-profile-btn" class="hidden text-sm text-red-600 border border-red-300 px-4 py-2 rounded-md hover:bg-red-50">
-            🚫 Block Member
-        </button>
-    </div>
-</main>
+    <!-- Main Container -->
+    <main class="max-w-2xl mx-auto px-4 py-8 sm:py-12 flex-grow w-full">
+        <div id="profile-container" class="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 sm:p-8 text-center space-y-4">
+            <p class="text-gray-500 py-8">Loading member profile details...</p>
+        </div>
 
-<script>
-    let loggedInUser = null;
-    const targetUserId = new URLSearchParams(window.location.search).get('id');
+        <div class="text-center mt-6">
+            <button id="block-profile-btn" class="hidden text-sm font-semibold text-red-600 border border-red-200 bg-white px-5 py-2.5 rounded-xl hover:bg-red-50 transition shadow-sm">
+                🚫 Block Member
+            </button>
+        </div>
+    </main>
 
-    async function loadChurchLogo() {
-        try {
-            const churchId = localStorage.getItem('church_id');
-            if (!churchId) return;
-            const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
-            if (church && church.logo_url) {
-                const img = document.getElementById('church-logo-img');
-                const placeholder = document.getElementById('church-logo-placeholder');
-                img.src = church.logo_url;
-                img.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-            }
-        } catch (e) {
-            console.error("Error loading church logo:", e);
-        }
-    }
-
-    async function loadMemberProfile() {
-        const container = document.getElementById('profile-container');
-        if (!targetUserId) {
-            container.innerHTML = `<h3 class="text-lg font-bold text-red-600">Profile ID not specified in URL</h3>`;
-            return;
-        }
-
-        const { data, error } = await window.sbClient.from('profiles').select('*, churches!profiles_church_id_fkey(name, id)').eq('id', targetUserId).maybeSingle();
-        if (error || !data) {
-            container.innerHTML = `<p class="text-red-500">Member profile not available or could not be found.</p>`;
-            return;
-        }
-
-        const { data: { user: currentUser } } = await window.sbClient.auth.getUser();
-        const isOwner = currentUser?.id === targetUserId;
-        const avatar = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'User')}`;
-
-        container.innerHTML = `
-            <img src="${avatar}" style="width:120px; height:120px; border-radius:50%; margin: 0 auto 15px auto; object-fit: cover;">
-            <div class="flex items-center justify-center space-x-2 mb-2">
-                <h1 class="text-2xl font-bold text-gray-900">${escapeHTML(data.full_name || 'Anonymous Member')}</h1>
-                <span id="member-presence-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    <span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline
-                </span>
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800/80 py-12 text-slate-400 font-sans mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-center md:justify-start space-x-2">
+                        <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border border-white/20 shadow">
+                        <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
+                    </div>
+                    <p class="text-slate-400 text-xs sm:text-sm">Connecting believers, empowering churches, and strengthening faith communities worldwide.</p>
+                </div>
+                <div class="flex flex-col items-center md:items-end space-y-2 text-sm">
+                    <div class="flex items-center space-x-4">
+                        <a href="about-developer.html" class="text-slate-400 hover:text-blue-400 transition text-xs sm:text-sm underline">About Developer</a>
+                        <a href="mailto:adoniakasango@gmail.com" class="text-slate-400 hover:text-white transition text-xs sm:text-sm">Support</a>
+                    </div>
+                    <div class="flex items-center space-x-3 text-slate-400 pt-1">
+                        <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition" title="WhatsApp">
+                            <i class="fab fa-whatsapp text-lg text-emerald-500"></i>
+                        </a>
+                        <a href="tel:+256751522766" class="hover:text-blue-400 transition" title="Call">
+                            <i class="fas fa-phone-alt text-sm text-blue-400"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-            <p class="member-church text-gray-600 mb-2"><strong>Church:</strong> <span id="memberChurch">${escapeHTML(data.churches?.name || 'Not specified')}</span></p>
-            ${data.home_cell ? `<p class="text-gray-600 mb-2"><strong>Home Cell Group:</strong> ${escapeHTML(data.home_cell)}</p>` : ''}
-            ${data.favorite_scripture ? `<p class="text-gray-600 mb-4 italic">"${escapeHTML(data.favorite_scripture)}"</p>` : ''}
-            <p class="text-gray-700 mb-6 whitespace-pre-wrap">${escapeHTML(data.bio || 'This member hasn\'t written a bio yet.')}</p>
-            
-            <div class="flex flex-wrap justify-center gap-3 mb-4">
-                <button id="connect-btn" onclick="handleConnectClick()" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Connect</button>
-                <button onclick="handleChatClick()" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Chat</button>
+            <div class="border-t border-slate-800/80 pt-6 text-center text-xs text-slate-500 space-y-1">
+                <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+                <p>Building and strengthening faith communities together.</p>
             </div>
+        </div>
+    </footer>
 
-            ${isOwner ? `<div class="mt-4"><a href="profile.html" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700" style="background-color: #007bff;">Edit Profile</a></div>` : ''}
-        `;
+    <script>
+        let loggedInUser = null;
+        const targetUserId = new URLSearchParams(window.location.search).get('id');
 
-        const blockBtn = document.getElementById('block-profile-btn');
-        if (blockBtn && currentUser && !isOwner) {
-            blockBtn.classList.remove('hidden');
-        }
-
-        await checkConnectionStatus(currentUser?.id, targetUserId);
-    }
-
-    let currentConnectionState = 'none'; // 'none', 'pending', 'accepted'
-
-    async function checkConnectionStatus(currentUserId, viewedUserId) {
-        if (!currentUserId || !viewedUserId || currentUserId === viewedUserId) {
-            const btn = document.getElementById('connect-btn');
-            if (btn && currentUserId === viewedUserId) btn.style.display = 'none';
-            return;
-        }
-
-        try {
-            const { data, error } = await window.sbClient
-                .from('connections')
-                .select('*')
-                .or(`and(requester_id.eq.${currentUserId},recipient_id.eq.${viewedUserId}),and(requester_id.eq.${viewedUserId},recipient_id.eq.${currentUserId})`)
-                .maybeSingle();
-
-            const btn = document.getElementById('connect-btn');
-            if (!btn) return;
-
-            if (data) {
-                if (data.status === 'accepted') {
-                    currentConnectionState = 'accepted';
-                    btn.textContent = 'Connected';
-                    btn.disabled = true;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.cursor = 'not-allowed';
-                } else if (data.status === 'pending') {
-                    currentConnectionState = 'pending';
-                    btn.textContent = 'Request Pending';
-                    btn.disabled = true;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.cursor = 'not-allowed';
+        async function loadChurchLogo() {
+            try {
+                const churchId = localStorage.getItem('church_id');
+                if (!churchId) return;
+                const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
+                if (church && church.logo_url) {
+                    const img = document.getElementById('church-logo-img');
+                    const placeholder = document.getElementById('church-logo-placeholder');
+                    img.src = church.logo_url;
+                    img.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
                 }
-            } else {
-                currentConnectionState = 'none';
-                btn.textContent = 'Connect';
-                btn.disabled = false;
-                btn.style.backgroundColor = '#007bff';
-                btn.style.cursor = 'pointer';
+            } catch (e) {
+                console.error("Error loading church logo:", e);
             }
-        } catch (e) {
-            console.error("Error checking connection status:", e);
         }
-    }
 
-    async function handleConnectClick() {
-        if (!loggedInUser) {
-            alert("Please log in to connect with members.");
-            return;
-        }
-        if (!targetUserId || loggedInUser.id === targetUserId) return;
-
-        const btn = document.getElementById('connect-btn');
-        btn.disabled = true;
-        btn.textContent = 'Checking...';
-
-        try {
-            // First check if a connection already exists in either direction
-            const { data: existingConn } = await window.sbClient
-                .from('connections')
-                .select('*')
-                .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},recipient_id.eq.${loggedInUser.id})`)
-                .maybeSingle();
-
-            if (existingConn) {
-                if (existingConn.status === 'accepted') {
-                    currentConnectionState = 'accepted';
-                    btn.textContent = 'Connected';
-                    btn.disabled = true;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.cursor = 'not-allowed';
-                } else {
-                    currentConnectionState = 'pending';
-                    btn.textContent = 'Request Pending';
-                    btn.disabled = true;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.cursor = 'not-allowed';
-                }
-                alert("Connection request already exists");
+        async function loadMemberProfile() {
+            const container = document.getElementById('profile-container');
+            if (!targetUserId) {
+                container.innerHTML = `<h3 class="text-lg font-bold text-red-600">Profile ID not specified in URL</h3>`;
                 return;
             }
 
-            btn.textContent = 'Sending...';
-            const { error } = await window.sbClient
-                .from('connections')
-                .insert([{
-                    requester_id: loggedInUser.id,
-                    recipient_id: targetUserId,
-                    status: 'pending'
-                }]);
+            const { data, error } = await window.sbClient.from('profiles').select('*, churches!profiles_church_id_fkey(name, id)').eq('id', targetUserId).maybeSingle();
+            if (error || !data) {
+                container.innerHTML = `<p class="text-red-500 py-8">Member profile not available or could not be found.</p>`;
+                return;
+            }
 
-            if (error) {
-                if (error.code === '23505' || (error.message && error.message.includes('unique constraint'))) {
-                    alert("Connection request already exists");
-                    currentConnectionState = 'pending';
-                    btn.textContent = 'Request Pending';
-                    btn.disabled = true;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.cursor = 'not-allowed';
+            const { data: { user: currentUser } } = await window.sbClient.auth.getUser();
+            const isOwner = currentUser?.id === targetUserId;
+            const avatar = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'User')}`;
+
+            container.innerHTML = `
+                <div class="flex flex-col items-center space-y-3">
+                    <img src="${avatar}" class="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover shadow-md border-4 border-white">
+                    <div class="flex items-center justify-center space-x-2">
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">${escapeHTML(data.full_name || 'Anonymous Member')}</h1>
+                        <span id="member-presence-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                            <span class="w-2 h-2 mr-1.5 bg-gray-400 rounded-full inline-block"></span> Offline
+                        </span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-sm text-gray-600 pt-2 border-t border-gray-100">
+                    <p class="member-church"><strong>Church:</strong> <span id="memberChurch" class="font-medium text-gray-800">${escapeHTML(data.churches?.name || 'Not specified')}</span></p>
+                    ${data.home_cell ? `<p><strong>Home Cell Group:</strong> <span class="font-medium text-gray-800">${escapeHTML(data.home_cell)}</span></p>` : ''}
+                    ${data.favorite_scripture ? `<p class="italic text-blue-700">"${escapeHTML(data.favorite_scripture)}"</p>` : ''}
+                </div>
+
+                <div class="text-sm text-gray-700 pt-2 pb-2 leading-relaxed whitespace-pre-wrap">${escapeHTML(data.bio || 'This member hasn\'t written a bio yet.')}</div>
+
+                <div class="flex flex-wrap justify-center gap-3 pt-4 border-t border-gray-100">
+                    <button id="connect-btn" onclick="handleConnectClick()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i> Connect
+                    </button>
+                    <button onclick="handleChatClick()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2">
+                        <i class="fas fa-comment-alt"></i> Chat
+                    </button>
+                </div>
+
+                ${isOwner ? `<div class="pt-2"><a href="profile.html" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl text-sm transition">Edit Profile</a></div>` : ''}
+            `;
+
+            const blockBtn = document.getElementById('block-profile-btn');
+            if (blockBtn && currentUser && !isOwner) {
+                blockBtn.classList.remove('hidden');
+            }
+
+            await checkConnectionStatus(currentUser?.id, targetUserId);
+        }
+
+        let currentConnectionState = 'none'; // 'none', 'pending', 'accepted'
+
+        async function checkConnectionStatus(currentUserId, viewedUserId) {
+            if (!currentUserId || !viewedUserId || currentUserId === viewedUserId) {
+                const btn = document.getElementById('connect-btn');
+                if (btn && currentUserId === viewedUserId) btn.style.display = 'none';
+                return;
+            }
+
+            try {
+                const { data, error } = await window.sbClient
+                    .from('connections')
+                    .select('*')
+                    .or(`and(requester_id.eq.${currentUserId},recipient_id.eq.${viewedUserId}),and(requester_id.eq.${viewedUserId},recipient_id.eq.${currentUserId})`)
+                    .maybeSingle();
+
+                const btn = document.getElementById('connect-btn');
+                if (!btn) return;
+
+                if (data) {
+                    if (data.status === 'accepted') {
+                        currentConnectionState = 'accepted';
+                        btn.innerHTML = `<i class="fas fa-check"></i> Connected`;
+                        btn.disabled = true;
+                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                    } else if (data.status === 'pending') {
+                        currentConnectionState = 'pending';
+                        btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
+                        btn.disabled = true;
+                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                    }
                 } else {
-                    alert("Could not send connection request: " + error.message);
+                    currentConnectionState = 'none';
+                    btn.innerHTML = `<i class="fas fa-user-plus"></i> Connect`;
                     btn.disabled = false;
-                    btn.textContent = 'Connect';
-                    btn.style.backgroundColor = '#007bff';
-                    btn.style.cursor = 'pointer';
+                    btn.className = "px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2";
                 }
-            } else {
-                currentConnectionState = 'pending';
-                btn.textContent = 'Request Pending';
-                btn.disabled = true;
-                btn.style.backgroundColor = '#6c757d';
-                btn.style.cursor = 'not-allowed';
-            }
-        } catch (e) {
-            console.error("Error sending connection request:", e);
-            if (e.code === '23505' || (e.message && e.message.includes('unique constraint'))) {
-                alert("Connection request already exists");
-                currentConnectionState = 'pending';
-                btn.textContent = 'Request Pending';
-                btn.disabled = true;
-                btn.style.backgroundColor = '#6c757d';
-                btn.style.cursor = 'not-allowed';
-            } else {
-                alert("Could not send connection request: " + (e.message || e));
-                btn.disabled = false;
-                btn.textContent = 'Connect';
-                btn.style.backgroundColor = '#007bff';
-                btn.style.cursor = 'pointer';
+            } catch (e) {
+                console.error("Error checking connection status:", e);
             }
         }
-    }
 
-    function handleChatClick() {
-        if (!targetUserId) {
-            alert("Target user not specified.");
-            return;
-        }
-        window.location.href = 'chat.html?user=' + targetUserId;
-    }
+        async function handleConnectClick() {
+            if (!loggedInUser) {
+                alert("Please log in to connect with members.");
+                return;
+            }
+            if (!targetUserId || loggedInUser.id === targetUserId) return;
 
-    async function blockUser(idOfTargetToBlock) {
-        const { data: { user } } = await window.sbClient.auth.getUser();
-        if (!user) return alert("Authentication error.");
-        
-        const { error } = await window.sbClient
-            .from('blocks')
-            .insert([{ blocker_id: user.id, blocked_id: idOfTargetToBlock }]);
+            const btn = document.getElementById('connect-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking...`;
 
-        if (error) {
-            alert("Could not block user: " + error.message);
-        } else {
-            alert("User has been blocked successfully.");
-            window.location.replace('feed.html'); 
-        }
-    }
+            try {
+                const { data: existingConn } = await window.sbClient
+                    .from('connections')
+                    .select('*')
+                    .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},recipient_id.eq.${loggedInUser.id})`)
+                    .maybeSingle();
 
-    function escapeHTML(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>"']/g, function(s) {
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            }[s];
-        });
-    }
-
-    async function logoutUser(e) {
-        e.preventDefault();
-        await window.sbClient.auth.signOut();
-        window.location.replace('login.html');
-    }
-
-    document.getElementById('block-profile-btn').addEventListener('click', () => {
-        if (!targetUserId) return;
-        if (confirm("Block this user? Their profile and interactions will be hidden.")) {
-            blockUser(targetUserId);
-        }
-    });
-
-    (async () => {
-        let retries = 0;
-        while (!window.sbClient && retries < 20) { 
-            await new Promise(r => setTimeout(r, 200)); 
-            retries++; 
-        }
-        
-        if (!window.sbClient) {
-            console.error("Supabase client failed to initialize.");
-            return;
-        }
-
-        const { data: { user } } = await window.sbClient.auth.getUser();
-        loggedInUser = user;
-
-        await loadChurchLogo();
-        await loadMemberProfile();
-
-        if (loggedInUser && targetUserId) {
-            const presenceChannel = window.sbClient.channel('online-users', {
-                config: {
-                    presence: { key: loggedInUser.id }
+                if (existingConn) {
+                    if (existingConn.status === 'accepted') {
+                        currentConnectionState = 'accepted';
+                        btn.innerHTML = `<i class="fas fa-check"></i> Connected`;
+                        btn.disabled = true;
+                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                    } else {
+                        currentConnectionState = 'pending';
+                        btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
+                        btn.disabled = true;
+                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                    }
+                    alert("Connection request already exists");
+                    return;
                 }
-            });
 
-            presenceChannel.on('presence', { event: 'sync' }, () => {
-                const state = presenceChannel.presenceState();
-                let isOnline = false;
-                for (const key in state) {
-                    const presences = state[key];
-                    for (const p of presences) {
-                        if (p.user_id === targetUserId) {
-                            isOnline = true;
-                            break;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending...`;
+                const { error } = await window.sbClient
+                    .from('connections')
+                    .insert([{
+                        requester_id: loggedInUser.id,
+                        recipient_id: targetUserId,
+                        status: 'pending'
+                    }]);
+
+                if (error) {
+                    if (error.code === '23505' || (error.message && error.message.includes('unique constraint'))) {
+                        alert("Connection request already exists");
+                        currentConnectionState = 'pending';
+                        btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
+                        btn.disabled = true;
+                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                    } else {
+                        alert("Could not send connection request: " + error.message);
+                        btn.disabled = false;
+                        btn.innerHTML = `<i class="fas fa-user-plus"></i> Connect`;
+                        btn.className = "px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2";
+                    }
+                } else {
+                    currentConnectionState = 'pending';
+                    btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
+                    btn.disabled = true;
+                    btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+
+                    // Trigger notification for connection request recipient using window.sendNotification
+                    if (typeof window.sendNotification === 'function') {
+                        try {
+                            let senderName = 'A believer';
+                            const { data: senderProf } = await window.sbClient
+                                .from('profiles')
+                                .select('full_name')
+                                .eq('id', loggedInUser.id)
+                                .maybeSingle();
+                            if (senderProf && senderProf.full_name) {
+                                senderName = senderProf.full_name;
+                            }
+                            await window.sendNotification(
+                                targetUserId,
+                                'New Connection Request',
+                                `${senderName} sent you a connection request.`,
+                                '/profile.html'
+                            );
+                        } catch (notifErr) {
+                            console.error('Failed to send connection request notification:', notifErr);
                         }
                     }
-                    if (isOnline) break;
                 }
+            } catch (e) {
+                console.error("Error sending connection request:", e);
+                if (e.code === '23505' || (e.message && e.message.includes('unique constraint'))) {
+                    alert("Connection request already exists");
+                    currentConnectionState = 'pending';
+                    btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
+                    btn.disabled = true;
+                    btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                } else {
+                    alert("Could not send connection request: " + (e.message || e));
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-user-plus"></i> Connect`;
+                    btn.className = "px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2";
+                }
+            }
+        }
 
-                const badge = document.getElementById('member-presence-badge');
-                if (badge) {
-                    if (isOnline) {
-                        badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
-                        badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-green-500 rounded-full inline-block animate-pulse"></span> Online`;
-                    } else {
-                        badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800";
-                        badge.innerHTML = `<span class="w-2 h-2 mr-1 bg-gray-400 rounded-full inline-block"></span> Offline`;
-                    }
-                }
-            });
+        function handleChatClick() {
+            if (!targetUserId) {
+                alert("Target user not specified.");
+                return;
+            }
+            window.location.href = 'chat.html?user=' + targetUserId;
+        }
 
-            presenceChannel.subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    await presenceChannel.track({ user_id: loggedInUser.id, online_at: new Date().toISOString() });
-                }
+        async function blockUser(idOfTargetToBlock) {
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (!user) return alert("Authentication error.");
+
+            const { error } = await window.sbClient
+                .from('blocks')
+                .insert([{ blocker_id: user.id, blocked_id: idOfTargetToBlock }]);
+
+            if (error) {
+                alert("Could not block user: " + error.message);
+            } else {
+                alert("User has been blocked successfully.");
+                window.location.replace('feed.html');
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, function(s) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[s];
             });
         }
-    })();
-</script>
-  <script src="js/notifications.js"></script>
+
+        async function logoutUser(e) {
+            e.preventDefault();
+            await window.sbClient.auth.signOut();
+            window.location.replace('login.html');
+        }
+
+        document.getElementById('block-profile-btn').addEventListener('click', () => {
+            if (!targetUserId) return;
+            if (confirm("Block this user? Their profile and interactions will be hidden.")) {
+                blockUser(targetUserId);
+            }
+        });
+
+        (async () => {
+            let retries = 0;
+            while (!window.sbClient && retries < 20) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+
+            if (!window.sbClient) {
+                console.error("Supabase client failed to initialize.");
+                return;
+            }
+
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            loggedInUser = user;
+
+            await loadChurchLogo();
+            await loadMemberProfile();
+
+            if (loggedInUser && targetUserId) {
+                const presenceChannel = window.sbClient.channel('online-users', {
+                    config: {
+                        presence: { key: loggedInUser.id }
+                    }
+                });
+
+                presenceChannel.on('presence', { event: 'sync' }, () => {
+                    const state = presenceChannel.presenceState();
+                    let isOnline = false;
+                    for (const key in state) {
+                        const presences = state[key];
+                        for (const p of presences) {
+                            if (p.user_id === targetUserId) {
+                                isOnline = true;
+                                break;
+                            }
+                        }
+                        if (isOnline) break;
+                    }
+
+                    const badge = document.getElementById('member-presence-badge');
+                    if (badge) {
+                        if (isOnline) {
+                            badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+                            badge.innerHTML = `<span class="w-2 h-2 mr-1.5 bg-green-500 rounded-full inline-block animate-pulse"></span> Online`;
+                        } else {
+                            badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800";
+                            badge.innerHTML = `<span class="w-2 h-2 mr-1.5 bg-gray-400 rounded-full inline-block"></span> Offline`;
+                        }
+                    }
+                });
+
+                presenceChannel.subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await presenceChannel.track({ user_id: loggedInUser.id, online_at: new Date().toISOString() });
+                    }
+                });
+            }
+        })();
+    </script>
+    <script src="js/notifications.js"></script>
 </body>
 </html>

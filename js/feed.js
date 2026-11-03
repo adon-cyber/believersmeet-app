@@ -190,7 +190,7 @@ async function sendFriendRequest(receiverId, buttonElement) {
     buttonElement.className = "px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 transition-all shadow-sm";
 
     // 2. Perform Supabase database insert
-    const client = window.sbClient || window.supabase;
+    const client = window.sbClient || window.supabaseClient;
     const { data: { user } } = await client.auth.getUser();
 
     if (!user) {
@@ -206,6 +206,36 @@ async function sendFriendRequest(receiverId, buttonElement) {
         .insert([
             { requester_id: user.id, recipient_id: receiverId, status: 'pending' }
         ]);
+
+    if (!error) {
+        // Trigger notification for connection request recipient using window.sendNotification
+        if (typeof window.sendNotification === 'function') {
+            try {
+                // Fetch sender's profile name if available
+                let senderName = 'A believer';
+                if (currentUserProfile && currentUserProfile.full_name) {
+                    senderName = currentUserProfile.full_name;
+                } else {
+                    const { data: senderProf } = await client
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', user.id)
+                        .maybeSingle();
+                    if (senderProf && senderProf.full_name) {
+                        senderName = senderProf.full_name;
+                    }
+                }
+                await window.sendNotification(
+                    receiverId,
+                    'New Connection Request',
+                    `${senderName} sent you a connection request.`,
+                    '/profile.html'
+                );
+            } catch (notifErr) {
+                console.error('Failed to send connection request notification:', notifErr);
+            }
+        }
+    }
 
     if (error) {
         console.error('Connection request failed:', error);
@@ -741,37 +771,76 @@ async function loadMusicPlaylist() {
         return;
     }
 
+   
+    const fallbackWorshipTracks = [
+        {
+            id: 'fallback-1',
+            title: 'Amazing Grace (Worship)',
+            artist: 'Believers Ensemble',
+            audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+        },
+        {
+            id: 'fallback-2',
+            title: 'Great Is Thy Faithfulness',
+            artist: 'Grace Sanctuary',
+            audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+        }
+    ];
+
     try {
+        const { data: authData, error: authError } =
+            await window.sbClient.auth.getUser();
+
+        if (authError || !authData || !authData.user) {
+            throw authError || new Error('Unable to verify signed-in user.');
+        }
+
+        const isPlatformSuperAdmin =
+            authData.user.id === '45e7b5df-8f08-4cc7-9356-35e405618329';
+
         let query = window.sbClient
             .from('worship_songs')
             .select('*');
 
-        if (currentUserProfile.church_id !== 'global-fellowship') {
-            query = query.eq('church_id', currentUserProfile.church_id);
+        if (!isPlatformSuperAdmin) {
+            const currentChurchId =
+                (typeof currentUserProfile !== 'undefined' &&
+                 currentUserProfile &&
+                 currentUserProfile.church_id)
+                    ? currentUserProfile.church_id
+                    : null;
+
+            const uuidPattern =
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+            if (!currentChurchId || !uuidPattern.test(currentChurchId)) {
+                throw new Error('Your account is not linked to a valid church.');
+            }
+
+            query = query.eq('church_id', currentChurchId);
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
+        const { data, error } = await query
+            .order('created_at', { ascending: false });
 
         if (error || !data || data.length === 0) {
-            console.warn("Worship songs table empty or unavailable. Using fallback sample tracks.");
-            playlistTracks = [
-                { id: 'fallback-1', title: 'Amazing Grace (Worship)', artist: 'Believers Ensemble', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-                { id: 'fallback-2', title: 'Great Is Thy Faithfulness', artist: 'Grace Sanctuary', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
-            ];
+            console.warn(
+                'No worship songs found or unavailable. Using fallback tracks.',
+                error
+            );
+            playlistTracks = fallbackWorshipTracks;
         } else {
             playlistTracks = data;
         }
 
         renderPlaylistUI();
+
     } catch (err) {
-        console.error("Exception loading worship songs:", err);
-        playlistTracks = [
-            { id: 'fallback-1', title: 'Amazing Grace (Worship)', artist: 'Believers Ensemble', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-            { id: 'fallback-2', title: 'Great Is Thy Faithfulness', artist: 'Grace Sanctuary', audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
-        ];
+        console.error('Exception loading worship songs:', err);
+        playlistTracks = fallbackWorshipTracks;
         renderPlaylistUI();
     }
-}
+} // Closes loadMusicPlaylist()
 
 function renderPlaylistUI() {
     const container = document.getElementById('music-playlist-container');
@@ -1383,35 +1452,68 @@ async function loadChurchProgrammes() {
   const container = document.getElementById('church-programmes-feed');
   if (!container) return;
 
-  const db = typeof window.sbClient !== 'undefined' ? window.sbClient : (typeof getDbClient === 'function' ? getDbClient() : window.supabase);
+  const db = typeof window.sbClient !== 'undefined' ? window.sbClient : (typeof window.supabaseClient !== 'undefined' ? window.supabaseClient : null);
   if (!db) return;
 
   try {
-    const currentChurchId = (typeof currentUserProfile !== 'undefined' && currentUserProfile && currentUserProfile.church_id) ? currentUserProfile.church_id : null;
+    
+    const currentChurchId =
+        (typeof currentUserProfile !== 'undefined' &&
+         currentUserProfile &&
+         currentUserProfile.church_id)
+            ? currentUserProfile.church_id
+            : null;
 
-    let query = db
-      .from('events') 
-      .select('*')
-      .gte('event_date', new Date().toISOString())
-      .order('event_date', { ascending: true })
-      .limit(5);
+    // Require a valid church UUID. Never fall back to an unfiltered query.
+    const uuidPattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    if (currentChurchId && currentChurchId !== 'global-fellowship') {
-      query = query.eq('church_id', currentChurchId);
+    if (!currentChurchId || !uuidPattern.test(currentChurchId)) {
+        console.warn('No valid church ID found. Skipping programme query.');
+
+        container.innerHTML = `
+            <div class="bg-white p-6 rounded-xl border border-gray-200 text-center">
+                <p class="text-gray-500 text-sm py-2">
+                    Your account is not linked to a valid church.
+                </p>
+            </div>`;
+        return;
     }
 
-    let { data: programmes, error } = await query;
-
-    // If no events found with church_id or category, try fallback query without church filter or fetch general events
-    if (error || !programmes || programmes.length === 0) {
-      const fallbackQuery = db
+    // Fetch programmes belonging to this church,
+    // hosted by this church, or shared with this church.
+    const { data: programmes, error } = await db
         .from('events')
         .select('*')
+        .or(
+            `church_id.eq.${currentChurchId},host_church_id.eq.${currentChurchId},invited_church_ids.cs.{${currentChurchId}}`
+        )
         .gte('event_date', new Date().toISOString())
         .order('event_date', { ascending: true })
         .limit(5);
-      const fallbackRes = await fallbackQuery;
-      programmes = fallbackRes.data || [];
+
+
+    // If no events found with church_id or category, try fallback query without church filter or fetch general events
+    if (error) {
+        console.error('Error loading church programmes:', error);
+    
+        container.innerHTML = `
+            <div class="bg-white p-6 rounded-xl border border-red-200 text-center">
+                <p class="text-red-500 text-sm py-2">
+                    Unable to load church programmes. Please try again.
+                </p>
+            </div>`;
+        return;
+    }
+    
+    if (!programmes || programmes.length === 0) {
+        container.innerHTML = `
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                <p class="text-gray-500 text-sm py-2">
+                    No upcoming church programmes at the moment. Check back soon!
+                </p>
+            </div>`;
+        return;
     }
 
     if (!programmes || programmes.length === 0) {
@@ -1471,7 +1573,7 @@ async function loadChurchProgrammes() {
 
 window.optOutEvent = async function(eventId) {
   try {
-    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    const db = window.sbClient || window.supabaseClient;
     if (!db) return alert("Database client not found.");
     
     const { data: { user } } = await db.auth.getUser();
@@ -1584,7 +1686,7 @@ async function saveReflection() {
         return;
     }
 
-    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    const db = window.sbClient || window.supabaseClient;
     if (!db) {
         alert("Database client not available.");
         return;
@@ -1652,7 +1754,7 @@ async function loadPastJournalEntries() {
     const listContainer = document.getElementById('past-journal-list');
     if (!listContainer) return;
 
-    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    const db = window.sbClient || window.supabaseClient;
     if (!db) return;
 
     try {
@@ -1714,7 +1816,7 @@ async function loadCommunityNeeds(categoryFilter = 'All') {
 
     container.innerHTML = '<p class="col-span-full text-center text-gray-400 text-sm py-8">Loading community needs board...</p>';
 
-    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    const db = window.sbClient || window.supabaseClient;
     if (!db) {
         container.innerHTML = '<p class="col-span-full text-center text-red-500 text-sm py-8">Database client not available.</p>';
         return;
@@ -1820,13 +1922,19 @@ function toggleCommunityNeedContact(contactId) {
 }
 
 function openCommunityNeedModal() {
-    const modal = document.getElementById('communityNeedModal');
-    if (modal) modal.classList.remove('hidden');
+    const modalEl = document.getElementById('communityNeedModal');
+    if (modalEl) {
+        modalEl.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function closeCommunityNeedModal() {
-    const modal = document.getElementById('communityNeedModal');
-    if (modal) modal.classList.add('hidden');
+    const modalEl = document.getElementById('communityNeedModal');
+    if (modalEl) {
+        modalEl.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
 }
 
 async function submitCommunityNeed(event) {
@@ -1837,7 +1945,7 @@ async function submitCommunityNeed(event) {
         submitBtn.textContent = 'Publishing...';
     }
 
-    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    const db = window.sbClient || window.supabaseClient;
     if (!db) {
         alert("Database client not available.");
         if (submitBtn) {
@@ -1909,7 +2017,7 @@ async function submitCommunityNeed(event) {
 async function markCommunityNeedFulfilled(needId) {
     if (!confirm("Are you sure you want to mark this request as fulfilled?")) return;
 
-    const db = typeof getDbClient === 'function' ? getDbClient() : (window.sbClient || window.supabase);
+    const db = window.sbClient || window.supabaseClient;
     if (!db) return;
 
     try {

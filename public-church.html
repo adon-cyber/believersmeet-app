@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Church Profile | BelieversMeet</title>
+    <title>Church Directory & Profile | BelieversMeet</title>
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- FontAwesome for Icons -->
@@ -12,6 +12,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/app-utils.js"></script>
+    <style>
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
 
@@ -22,32 +39,84 @@
                 <img id="church-logo" src="images/BELIEVERS.LOGO.png" alt="Church Logo" class="w-10 h-10 rounded-full object-cover border border-blue-400">
                 <span id="header-church-name" class="text-lg font-bold text-white">BelieversMeet Church</span>
             </div>
-            <div>
+            <div class="flex items-center space-x-3">
+                <a href="#showcase-section" class="text-white hover:text-blue-100 text-sm font-semibold hidden sm:inline-block">
+                    <i class="fas fa-church mr-1"></i> Directory
+                </a>
                 <a href="#join-section" class="bg-white hover:bg-slate-100 text-blue-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors shadow-sm">
-                    <i class="fas fa-hands-praying mr-1.5"></i> Join / Get Converted
+                    <i class="fas fa-hands-praying mr-1.5"></i> Get Connected
                 </a>
             </div>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="relative bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white py-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden border-b border-blue-900/30">
-        <div class="absolute inset-0 opacity-20 bg-cover bg-center" style="background-image: url('images/meet2.jpg');"></div>
+    <section class="relative bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white py-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden border-b border-blue-900/35">
+        <div class="absolute inset-0 opacity-20 bg-cover bg-center pointer-events-none" style="background-image: url('images/meet2.jpg');"></div>
         <div class="relative max-w-4xl mx-auto space-y-6">
             <div id="hero-badge" class="inline-block bg-white/10 border border-white/20 text-blue-100 px-4 py-1 rounded-full text-xs font-semibold tracking-wider uppercase backdrop-blur-sm">
-                Welcome to Our Family
+                Welcome to Our Family & Church Discovery
             </div>
-            <h1 id="church-name" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
-                Loading Church...
+            <h1 id="church-name" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                Find a Church Community & Grow in Faith
             </h1>
             <p id="church-address" class="text-lg sm:text-xl text-blue-100/90 max-w-2xl mx-auto flex items-center justify-center">
-                <i class="fas fa-location-dot mr-2 text-white"></i> Loading location...
+                <i class="fas fa-location-dot mr-2 text-white"></i> Explore approved churches, join fellowship, and request spiritual guidance.
             </p>
+            <div class="flex flex-wrap justify-center gap-4 pt-4">
+                <a href="#showcase-section" class="bg-white hover:bg-blue-50 text-blue-700 font-bold px-6 py-3.5 rounded-xl shadow-md transition-all flex items-center space-x-2 text-sm">
+                    <i class="fas fa-search"></i>
+                    <span>Find a Church</span>
+                </a>
+                <a href="#join-section" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3.5 rounded-xl shadow-md transition-all border border-blue-400/40 flex items-center space-x-2 text-sm">
+                    <i class="fas fa-hands-praying"></i>
+                    <span>I Want to Get Connected</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Animated Registered Churches Showcase Section -->
+    <section id="showcase-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="space-y-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+                <div class="space-y-2">
+                    <div class="inline-block bg-blue-50 border border-blue-200 text-blue-700 font-semibold px-3 py-1 rounded-full text-xs tracking-wider uppercase">
+                        Approved Directory
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900">Registered Churches Showcase</h2>
+                    <p class="text-slate-600 text-sm max-w-xl">Browse verified churches on BelieversMeet. Select any church to view its profile, service schedule, or request a personal spiritual connection.</p>
+                </div>
+                
+                <!-- Search & Location Filter -->
+                <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-search"></i></span>
+                        <input type="text" id="church-search-input" placeholder="Search church name..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="relative flex-1 md:w-48">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-location-dot"></i></span>
+                        <input type="text" id="location-search-input" placeholder="Filter location..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <button type="button" onclick="filterChurchesDirectory()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
+                        Filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Churches Carousel / Grid Container -->
+            <div id="churches-showcase-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all">
+                <!-- Loading State -->
+                <div class="col-span-full py-16 text-center text-slate-500 space-y-3">
+                    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p class="text-sm font-medium">Loading approved churches showcase...</p>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Daily Scripture & Bible Reader Widget Section -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-3xl mx-auto">
             <h3 class="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
                 <span class="text-blue-600">📖</span> Daily Scripture & Bible Reader
@@ -215,9 +284,9 @@
         <!-- Call to Action Section: Get Converted / Join Church -->
         <section id="join-section" class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden max-w-3xl mx-auto">
             <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 px-6 py-8 text-white text-center space-y-2 border-b border-blue-500">
-                <h2 class="text-3xl font-extrabold text-white">Give Your Life to Christ / Join Our Church</h2>
+                <h2 class="text-3xl font-extrabold text-white">I Want to Get Connected / Join Church</h2>
                 <p class="text-blue-100 text-sm sm:text-base max-w-xl mx-auto">
-                    We would love to walk with you on your spiritual journey. Fill out the form below, and our pastoral team will reach out to you shortly.
+                    Select your preferred church, choose how you would like to connect (Learn about Christ, Prayer/Guidance, or Church Membership), and our pastoral team will reach out to you shortly.
                 </p>
             </div>
 
@@ -226,11 +295,30 @@
                     <div class="w-12 h-12 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto text-xl border border-blue-200">
                         <i class="fas fa-check"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900">Hallelujah!</h3>
-                    <p class="text-sm text-slate-600">We have received your request and a pastor will contact you shortly.</p>
+                    <h3 class="text-lg font-bold text-slate-900">Connection Request Received!</h3>
+                    <p class="text-sm text-slate-600" id="success-church-confirmation">We have received your request and an authorized church leader will contact you shortly.</p>
                 </div>
 
                 <form id="conversion-form" class="space-y-6">
+                    <!-- Step A: Select Church -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Target Church <span class="text-blue-600">*</span></label>
+                        <select id="connection-church-select" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">-- Select an Approved Church --</option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">Preselected from your active church profile or choose from approved churches above.</p>
+                    </div>
+
+                    <!-- Connection Purpose Category -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Connection Category <span class="text-blue-600">*</span></label>
+                        <select id="connection-category" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="learn_about_christ">Learn about Christianity / Give Life to Christ</option>
+                            <option value="prayer_guidance">Request Prayer & Spiritual Guidance</option>
+                            <option value="church_membership" selected>Seek Church Connection & Membership</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Full Name <span class="text-blue-600">*</span></label>
                         <div class="relative">
@@ -239,29 +327,41 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number <span class="text-blue-600">*</span></label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-phone"></i></span>
-                            <input type="tel" id="phone-number" required placeholder="e.g., +254 700 000000" class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Preferred Contact Method <span class="text-blue-600">*</span></label>
+                            <select id="contact-method" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option value="whatsapp">Phone / WhatsApp</option>
+                                <option value="email">Email</option>
+                                <option value="phone_call">Phone Call</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Contact Detail <span class="text-blue-600">*</span></label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas id-card"></i></span>
+                                <input type="text" id="phone-number" required placeholder="Phone number or email address" class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            </div>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Email <span class="text-slate-400 font-normal">(Optional)</span></label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
-                            <input type="email" id="email" placeholder="you@example.com" class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        </div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Optional Message / Prayer Request <span class="text-slate-400 font-normal">(Optional)</span></label>
+                        <textarea id="prayer-request" rows="3" placeholder="Share any specific prayer points or questions you have..." class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Prayer Request / Message <span class="text-slate-400 font-normal">(Optional)</span></label>
-                        <textarea id="prayer-request" rows="4" placeholder="How can we pray for you or how would you like to join us?" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"></textarea>
+                    <!-- Privacy Notice & Consent Checkbox -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" id="consent-checkbox" required class="mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                            <label for="consent-checkbox" class="text-xs text-slate-600 leading-relaxed">
+                                <span class="font-semibold text-slate-900">Privacy & Informed Consent:</span> I consent for my contact details and message to be securely shared with authorized personnel and leaders of the selected church solely so they can respond to my spiritual connection request.
+                            </label>
+                        </div>
                     </div>
 
                     <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
-                        <span>Submit Request</span>
+                        <span>Submit Spiritual Connection Request</span>
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>

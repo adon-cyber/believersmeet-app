@@ -14,48 +14,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
 <body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col overflow-x-hidden text-gray-800 bg-light">
 
-<!-- Navigation Bar -->
-<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                <button onclick="shareChurchProfile()" id="share-church-profile-btn" class="hidden text-xs sm:text-sm font-bold text-amber-200 hover:text-white px-2.5 py-1 rounded-md transition-colors bg-blue-700/50 border border-blue-400/30">🔗 Share Church Profile</button>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
-            </div>
-            <!-- Light / Dark Mode Toggle Button -->
-            <button onclick="window.toggleTheme()" 
-                    class="flex items-center justify-center p-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-amber-400 dark:text-blue-300 hover:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 transition-all shadow-sm focus:outline-none flex-shrink-0 ml-3"
-                    title="Toggle Light/Dark Theme"
-                    aria-label="Toggle Theme">
-                
-                <!-- Sun Icon (Visible in Dark Mode) -->
-                <svg class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                </svg>
-
-                <!-- Moon Icon (Visible in Light Mode) -->
-                <svg class="w-5 h-5 block dark:hidden text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-</nav>
+    <!-- Navigation Header Container -->
+    <div id="navbar"></div>
+    <script src="js/nav.js"></script>
 
 <main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
   <div class="container">
@@ -64,20 +29,20 @@
         <!-- ALL FEED WIDGETS GO HERE -->
 
         <!-- Hero Banner -->
-        <div class="card border-0 shadow-sm mb-4 text-white" style="border-radius: 0.75rem; overflow: hidden; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
-          <div class="card-body p-4">
-            <h2 class="fw-bold mb-2 fs-4"><i class="fas fa-newspaper me-2"></i> Community Feed</h2>
-            <p class="mb-0 text-white-50 fs-6">Stay connected with church updates, daily verses, and member fellowship.</p>
+        <div class="bm-card mb-4 text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);">
+          <div class="p-2">
+            <h2 class="bm-page-heading text-white"><i class="fas fa-newspaper me-2"></i> Community Feed</h2>
+            <p class="bm-page-subheading text-white-50">Stay connected with church updates, daily verses, and member fellowship.</p>
           </div>
         </div>
 
         <!-- Visible Filter Bar -->
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;" id="global-feed-filter">
-          <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="bm-card mb-4" id="global-feed-filter">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <span class="fw-bold text-dark fs-6 d-flex align-items-center gap-2">
               <span>👁️</span> Filter Feed View:
             </span>
-            <select class="form-select form-select-sm w-auto fw-bold border-primary text-primary" onchange="switchFeedView(this.value)">
+            <select class="bm-form-control w-auto fw-bold border-primary text-primary" onchange="switchFeedView(this.value)">
               <option value="all" selected>🌟 Show All Sections</option>
               <option value="votd">📖 Verse of the Day</option>
               <option value="needs">🤝 Fellowship Needs</option>
@@ -88,8 +53,8 @@
         </div>
 
         <!-- Daily Scripture & Personal Reflections Card -->
-        <div id="section-votd" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div id="section-votd" class="bm-card mb-4">
+            <div class="mb-3">
                 <div class="flex items-center justify-between mb-0">
                     <div class="flex items-center gap-2">
                         <span class="text-2xl">✨</span>
@@ -98,7 +63,7 @@
                     <span id="votd-badge" class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full">Daily Nourishment</span>
                 </div>
             </div>
-            <div class="card-body p-4 d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-3">
                 <!-- Verse Content Display -->
                 <div id="votd-card-content" class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 shadow-sm">
                     <div class="flex items-center justify-center py-6 space-x-2">
@@ -109,7 +74,7 @@
 
                 <!-- Action Buttons: Reflect / Take Notes -->
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <button type="button" onclick="toggleReflectionModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition shadow flex items-center gap-2">
+                    <button type="button" onclick="toggleReflectionModal()" class="bm-btn-primary">
                         <span>✍️</span> Reflect / Take Notes
                     </button>
                     <button type="button" onclick="togglePastJournalEntries()" class="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 py-2 px-3 bg-white border border-indigo-200 rounded-xl shadow-sm transition">
@@ -119,14 +84,24 @@
                 </div>
 
                 <!-- Collapsible Reflection Textarea Section -->
-                <div id="reflection-box-container" class="hidden pt-3 border-t border-indigo-100 space-y-3">
-                    <label class="block text-xs font-bold text-indigo-900 uppercase tracking-wide">Your Personal Reflection & Prayer Notes</label>
-                    <textarea id="reflection-note-textarea" rows="3" placeholder="How does today's verse speak to your heart and walk with God..." class="w-full p-3 bg-white border border-indigo-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"></textarea>
-                    <div class="flex justify-end gap-2">
-                        <button type="button" onclick="toggleReflectionModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
-                        <button type="button" id="save-reflection-btn" onclick="saveReflection()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition shadow flex items-center gap-1.5">
-                            <i class="fas fa-save"></i> Save Reflection
-                        </button>
+                <div id="reflection-box-container" class="hidden pt-4 mt-2 border-t border-indigo-100 space-y-3.5 bg-gradient-to-b from-indigo-50/40 to-white p-4 rounded-2xl shadow-inner transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <label for="reflection-note-textarea" class="block text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="text-indigo-600 text-sm">🕊️</span> Your Personal Reflection & Prayer Notes
+                        </label>
+                        <span class="text-[11px] text-gray-500 font-medium italic">Private & Secure</span>
+                    </div>
+                    <div class="relative">
+                        <textarea id="reflection-note-textarea" rows="5" placeholder="Write your personal reflections, prayers, or thoughts here..." class="w-full p-4 text-sm text-gray-800 bg-white border border-indigo-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 transition resize-y min-h-[130px] leading-relaxed"></textarea>
+                    </div>
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="text-[11px] text-gray-400">Press save to securely store in your private journal.</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="toggleReflectionModal()" class="px-3.5 py-2 text-xs font-semibold text-gray-600 hover:text-gray-800 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition shadow-sm">Cancel</button>
+                            <button type="button" id="save-reflection-btn" onclick="saveReflection()" class="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl shadow-md transition flex items-center gap-1.5">
+                                <i class="fas fa-save"></i> Save Reflection
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -143,34 +118,36 @@
         </div>
 
         <!-- Community Fellowship Header & Create Post Card -->
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div class="bm-card mb-4">
+            <div class="mb-3">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h2 class="text-xl font-bold text-gray-900 mb-0">Community Fellowship Feed</h2>
-                    <a href="counseling.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-xs">
+                    <a href="counseling.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2">
                         <i class="fas fa-comments"></i> Request Counseling
                     </a>
                 </div>
             </div>
-            <div class="card-body p-4 d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-3">
                 <form id="post-composition-form" class="d-flex flex-column gap-3">
-                    <textarea id="post-raw-text" rows="3" placeholder="Share something with the church family..." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"></textarea>
+                    <textarea id="post-raw-text" rows="3" placeholder="Share something with the church family..." required class="bm-form-control"></textarea>
                     
-                    <select id="post-category-input" class="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm">
+                    <select id="post-category-input" class="bm-form-control">
                         <option value="Encouragement">🕊️ Word of Encouragement</option>
                         <option value="Prayer Request">🙏 Prayer Request</option>
                         <option value="Testimony">🙌 Testimony</option>
                     </select>
 
-                    <input type="url" id="bible-link-input" placeholder="Add a Bible link (optional)..." class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm">
-                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow text-sm">Publish Post</button>
+                    <input type="url" id="bible-link-input" placeholder="Add a Bible link (optional)..." class="bm-form-control">
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <i class="fas fa-paper-plane"></i> Publish Post
+                    </button>
                 </form>
             </div>
         </div>
 
         <!-- Gallery Memories Section -->
-        <div id="section-gallery" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div id="section-gallery" class="bm-card mb-4">
+            <div class="mb-3">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-0">📸 Gallery Memories</h3>
                     <div class="flex items-center gap-3">
@@ -181,7 +158,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body p-4 d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-3">
                 <!-- Admin Upload Media Form & Button (Visible to admins/leaders) -->
                 <div id="admin-gallery-upload-wrapper" class="hidden p-4 bg-blue-50/60 rounded-xl border border-blue-100">
                     <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide mb-2 flex items-center gap-1.5">
@@ -196,32 +173,25 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1">Caption / Title</label>
-                                <input type="text" id="gallery-caption-input" placeholder="e.g. Sunday Worship Celebration" required class="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" id="gallery-caption-input" placeholder="e.g. Sunday Worship Celebration" required class="bm-form-control text-xs">
                             </div>
                         </div>
                         <div class="flex justify-end">
-                            <button type="submit" id="gallery-upload-submit-btn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow flex items-center gap-1.5">
+                            <button type="submit" id="gallery-upload-submit-btn" class="bm-btn-primary text-xs">
                                 <i class="fas fa-upload"></i> Upload Media
                             </button>
                         </div>
                     </form>
                 </div>
-
-                <!-- Removed the broken image grid (black boxes) per pivot to Gallery Directory -->
-                <!-- 
-                <div id="feed-gallery-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <p class="col-span-full text-center text-gray-400 text-sm py-4">Loading gallery memories...</p>
-                </div>
-                -->
             </div>
         </div>
 
         <!-- Public Business Directory Feed Section -->
-        <div id="section-directory" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div id="section-directory" class="bm-card mb-4">
+            <div class="mb-3">
                 <h3 class="text-lg font-bold text-gray-900 mb-0 flex items-center gap-2">🏢 Approved Business & Service Directory</h3>
             </div>
-            <div class="card-body p-4">
+            <div>
                 <div id="public-business-directory">
                     <p class="text-muted text-center py-4 text-sm">Loading public business directory...</p>
                 </div>
@@ -229,16 +199,16 @@
         </div>
 
         <!-- Fellowship Needs Board -->
-        <div id="section-needs" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-          <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 flex justify-between items-center">
+        <div id="section-needs" class="bm-card mb-4">
+          <div class="mb-3 flex justify-between items-center">
             <h5 class="mb-0 font-bold flex items-center gap-2 text-gray-900 text-lg">
               <span>🤝</span> Fellowship Needs Board
             </h5>
-            <button class="btn btn-primary btn-sm fw-bold shadow-sm px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-xs transition" data-bs-toggle="modal" data-bs-target="#communityNeedModal" onclick="openCommunityNeedModal()">
-              + Post Request
+            <button class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2" onclick="openCommunityNeedModal()">
+              <i class="fas fa-plus-circle"></i> Post Request
             </button>
           </div>
-          <div class="card-body p-4 d-flex flex-column gap-3">
+          <div class="d-flex flex-column gap-3">
             <div class="flex flex-wrap gap-2" role="group">
               <button onclick="filterCommunityNeeds('All', this)" class="needs-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition shadow-sm active">All</button>
               <button onclick="filterCommunityNeeds('Ride Share', this)" class="needs-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">🚗 Ride Share</button>
@@ -254,11 +224,11 @@
         </div>
 
         <!-- Upcoming Church Programmes -->
-        <div id="section-programmes" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-          <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div id="section-programmes" class="bm-card mb-4">
+          <div class="mb-3">
             <h5 class="text-gray-900 font-bold mb-0 text-lg flex items-center gap-2">📅 Upcoming Church Programmes</h5>
           </div>
-          <div class="card-body p-4">
+          <div>
             <div id="church-programmes-feed" class="d-flex flex-column gap-3">
               <div class="d-flex justify-content-center py-3">
                 <div class="spinner-border text-primary" role="status">
@@ -270,18 +240,18 @@
         </div>
 
         <!-- Believer Fellowship Connect & Discovery Matchmaking Widget -->
-        <div id="section-discovery" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4">
+        <div id="section-discovery" class="bm-card mb-4">
+            <div class="mb-3">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-0">🤝 Believer Fellowship Connect</h3>
                         <p class="text-xs text-gray-500 mt-0.5">Discover and fellowship with members in your congregation.</p>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <select id="discovery-filter-cell" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
+                        <select id="discovery-filter-cell" onchange="applyDiscoveryFilters()" class="bm-form-control text-xs py-1.5 flex-1 sm:flex-initial">
                             <option value="All">🏡 All Home Cells</option>
                         </select>
-                        <select id="discovery-filter-role" onchange="applyDiscoveryFilters()" class="text-xs p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 sm:flex-initial">
+                        <select id="discovery-filter-role" onchange="applyDiscoveryFilters()" class="bm-form-control text-xs py-1.5 flex-1 sm:flex-initial">
                             <option value="All">👤 All Roles</option>
                             <option value="member">Member</option>
                             <option value="admin">Leadership</option>
@@ -289,7 +259,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body p-4">
+            <div>
                 <div id="discovery-card-container" class="relative min-h-[280px] flex items-center justify-center">
                     <p class="text-gray-400 text-sm animate-pulse">Loading fellowship profiles...</p>
                 </div>
@@ -297,8 +267,8 @@
         </div>
 
         <!-- Post Filters -->
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-body p-3">
+        <div class="bm-card mb-4">
+            <div class="p-1">
                 <div class="flex flex-wrap gap-2">
                     <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white transition" onclick="filterTimeline('All', this)">🌍 All Posts</button>
                     <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition" onclick="filterTimeline('Encouragement', this)">🕊️ Encouragements</button>
@@ -315,20 +285,20 @@
 
         <!-- SIDEBAR / SECONDARY WIDGETS MOVED INTO CENTERED COLUMN -->
         <!-- Add Your Business to the Directory Button -->
-        <button id="openBusinessModalBtn" onclick="openBusinessModal()" class="card border-0 shadow-sm mb-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition-colors" style="border-radius: 0.75rem; overflow: hidden;">
+        <button id="openBusinessModalBtn" onclick="openBusinessModal()" class="bm-card mb-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 shadow flex items-center justify-center gap-2 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
           Add Your Business to the Directory
         </button>
 
         <!-- My Directory Submissions Card -->
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div class="bm-card mb-4">
+            <div class="mb-3">
                 <h3 class="text-lg font-bold text-slate-900 mb-0 flex items-center gap-2">
                     <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                     My Directory Submissions
                 </h3>
             </div>
-            <div class="card-body p-4">
+            <div>
                 <div id="myBusinessesList" class="d-flex flex-column gap-3">
                     <p class="text-sm text-slate-500">Loading your submissions...</p>
                 </div>
@@ -336,36 +306,73 @@
         </div>
 
         <!-- Worship Playlist Player -->
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                <h3 class="text-md font-bold text-gray-900 mb-0 flex items-center gap-2">
-                    <i class="fas fa-headphones-alt text-indigo-600"></i> Worship Playlist
-                </h3>
-            </div>
-            <div class="card-body p-4">
-                <div id="music-playlist-container" class="d-flex flex-column gap-3">
-                    <div class="text-sm text-gray-500 italic">Loading tracks...</div>
-                </div>
-                <audio id="global-audio-player" class="hidden"></audio>
-            </div>
+        
+<!-- Worship Playlist Player -->
+<div class="bm-card mb-4">
+
+    <div class="mb-3">
+        <h3 class="text-md font-bold text-gray-900 mb-0 flex items-center gap-2">
+            <i class="fas fa-headphones-alt text-indigo-600"></i>
+            Worship Playlist
+        </h3>
+    </div>
+
+    <!-- Church-specific worship playlist -->
+    <div id="music-playlist-container"
+         class="d-flex flex-column gap-3">
+        <div class="text-sm text-gray-500 italic">
+            Loading tracks...
+        </div>
+    </div>
+
+    <!-- Shared worship library -->
+    <div class="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+        <div class="flex items-center gap-3 mb-2">
+            <i class="fas fa-headphones text-indigo-600 text-xl"></i>
+            <h4 class="font-bold text-indigo-900">
+                BelieversMeet Worship Library
+            </h4>
         </div>
 
+        <p class="text-sm text-gray-600 mb-3">
+            Discover more hymns and instrumental worship music.
+        </p>
+
+        <a
+            href="https://www.publicdomainaudiobibles.com/Hymns.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold"
+        >
+            <i class="fas fa-music"></i>
+            Explore Worship Collection
+            <i class="fas fa-external-link-alt"></i>
+        </a>
+    </div>
+
+    <audio id="global-audio-player" class="hidden"></audio>
+
+</div>
+<!-- End Worship Playlist Player -->
+
         <!-- Bible Search Widget -->
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div class="bm-card mb-4">
+            <div class="mb-3">
                 <h3 class="text-md font-bold text-gray-900 mb-0 flex items-center gap-2">
                     <span>📖</span> Daily Scripture & Bible Reader
                 </h3>
             </div>
-            <div class="card-body p-4 d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-3">
                 <div class="flex gap-2">
-                    <select id="bible-version" onchange="handleBibleVersionChange()" class="px-2.5 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select id="bible-version" onchange="handleBibleVersionChange()" class="bm-form-control text-sm w-auto">
                         <option value="kjv">KJV</option>
                         <option value="web" selected>WEB</option>
                         <option value="bbe">BBE</option>
                     </select>
-                    <input type="text" id="bible-search-input" placeholder="e.g. John 3:16, Psalm 23 or grace" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <button type="button" onclick="lookupWidgetScripture()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Lookup</button>
+                    <input type="text" id="bible-search-input" placeholder="e.g. John 3:16, Psalm 23 or grace" class="bm-form-control flex-1 text-sm">
+                    <button type="button" onclick="lookupWidgetScripture()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-1.5 shrink-0">
+                        <i class="fas fa-search"></i> Lookup
+                    </button>
                 </div>
 
                 <div id="bible-widget-container" class="p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-gray-800">
@@ -376,23 +383,23 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-2">
-                    <button type="button" onclick="navigateWidgetVerse(-1)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition flex items-center justify-center gap-1 shadow-sm">
+                    <button type="button" onclick="navigateWidgetVerse(-1)" class="bm-btn-primary flex-1 text-sm">
                         <i class="fas fa-arrow-left text-xs"></i> Previous
                     </button>
-                    <button type="button" onclick="navigateWidgetVerse(1)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition flex items-center justify-center gap-1 shadow-sm">
+                    <button type="button" onclick="navigateWidgetVerse(1)" class="bm-btn-primary flex-1 text-sm">
                         Next <i class="fas fa-arrow-right text-xs"></i>
                     </button>
                 </div>
 
-                <button type="button" onclick="shareVerseToFeed()" class="w-full py-2 px-4 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2">
+                <button type="button" onclick="shareVerseToFeed()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
                     <i class="fas fa-share-alt"></i> Share to Feed
                 </button>
             </div>
         </div>
 
         <!-- Manage Leadership Team Section (Admin) -->
-        <div id="manage-leadership-section" class="hidden card border-0 shadow-sm mb-4 bg-slate-900 text-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-slate-900 border-bottom-0 pt-4 pb-0 px-4">
+        <div id="manage-leadership-section" class="hidden bm-card mb-4 bg-slate-900 text-white">
+            <div class="mb-3">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-xl font-bold text-white flex items-center gap-2 mb-0">👑 Manage Leadership Team</h3>
@@ -400,21 +407,21 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body p-4 d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-3">
                 <form id="admin-leadership-upload-form" class="space-y-4 bg-slate-800/80 p-5 rounded-xl border border-slate-700">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Leader Name</label>
-                            <input type="text" id="leader-name-input" placeholder="e.g. Pastor David Anderson" required class="w-full text-sm p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 outline-none">
+                            <input type="text" id="leader-name-input" placeholder="e.g. Pastor David Anderson" required class="bm-form-control text-sm bg-slate-900 text-white border-slate-700">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Role / Title</label>
-                            <input type="text" id="leader-role-input" placeholder="e.g. Senior Pastor" required class="w-full text-sm p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 outline-none">
+                            <input type="text" id="leader-role-input" placeholder="e.g. Senior Pastor" required class="bm-form-control text-sm bg-slate-900 text-white border-slate-700">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Bio (2-3 sentences)</label>
-                        <textarea id="leader-bio-input" rows="2" placeholder="Briefly describe their ministry calling and dedication..." required class="w-full text-sm p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 outline-none"></textarea>
+                        <textarea id="leader-bio-input" rows="2" placeholder="Briefly describe their ministry calling and dedication..." required class="bm-form-control text-sm bg-slate-900 text-white border-slate-700"></textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-1">Profile Photo</label>
@@ -436,21 +443,21 @@
             </div>
         </div>
 
-        <div id="leadership-inbox-widget-container" class="card border-0 shadow-sm mb-4 bg-slate-50" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-body p-4">
+        <div id="leadership-inbox-widget-container" class="bm-card mb-4 bg-slate-50">
+            <div>
                 <h4 class="text-lg font-bold text-blue-600 mb-3">✉️ Private Leadership Inbox</h4>
                 <form id="leadership-inbox-form" class="d-flex flex-column gap-3">
-                    <textarea id="inbox-message-text" rows="3" placeholder="Send a private message to the Church Admin panel..." required class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"></textarea>
-                    <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow">Send Secure Inquiry</button>
+                    <textarea id="inbox-message-text" rows="3" placeholder="Send a private message to the Church Admin panel..." required class="bm-form-control text-sm resize-y"></textarea>
+                    <button type="submit" class="bm-btn-primary w-full text-sm">Send Secure Inquiry</button>
                 </form>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 0.75rem; overflow: hidden;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <div class="bm-card mb-4">
+            <div class="mb-3">
                 <h3 class="text-lg font-bold text-gray-900 mb-0">📢 Official Church Bulletins</h3>
             </div>
-            <div class="card-body p-4">
+            <div>
                 <div id="announcements-container" class="d-flex flex-column gap-3 text-sm"></div>
             </div>
         </div>
@@ -674,12 +681,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
     function openBusinessModal() {
-        const modal = document.getElementById('addBusinessModal');
-        if (modal) modal.classList.remove('hidden');
+        const modalEl = document.getElementById('addBusinessModal');
+        if (modalEl) {
+            modalEl.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
     }
     function closeBusinessModal() {
-        const modal = document.getElementById('addBusinessModal');
-        if (modal) modal.classList.add('hidden');
+        const modalEl = document.getElementById('addBusinessModal');
+        if (modalEl) {
+            modalEl.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
     }
     async function submitFeedBusiness(event) {
         event.preventDefault();

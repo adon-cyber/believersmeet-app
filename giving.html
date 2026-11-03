@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/css/intlTelInput.css">
     <title>Tithes & Offerings | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -43,29 +45,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white">
+<body style="background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white"></body>
 
-<!-- Navigation Bar -->
-<nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-            <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                <a href="giving.html" class="text-xs sm:text-sm font-medium text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                <a href="admin.html" id="admin-nav-link" class="hidden text-xs sm:text-sm font-bold text-white hover:bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
-            </div>
-        </div>
-    </div>
-</nav>
+    <!-- Navigation Header Container -->
+    <div id="navbar"></div>
+    <script src="js/nav.js"></script>
 
 
 <!-- Main Content Area -->
@@ -127,6 +111,23 @@
             </div>
 
             <div>
+                
+<div>
+    <label for="giving-currency" class="block text-sm font-bold text-gray-700 mb-2">
+        Donation Currency
+    </label>
+    <select
+        id="giving-currency"
+        onchange="handleGivingCurrencyChange()"
+        class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-medium">
+        <option value="UGX" selected>Ugandan Shilling (UGX)</option>
+        <option value="USD">US Dollar (USD)</option>
+    </select>
+    <p class="text-xs text-gray-500 mt-1">
+        Support your church from Uganda or anywhere around the world.
+    </p>
+</div>
+
                 <label class="block text-sm font-bold text-gray-700 mb-2">Select Giving Category</label>
                 <select id="giving-category" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-medium">
                     <option value="Tithes">Tithes</option>
@@ -137,30 +138,140 @@
                 </select>
             </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Select Preset Amount</label>
-                <div class="grid grid-cols-3 gap-4 mb-4">
-                    <button type="button" onclick="selectPresetAmount(10000, this)" class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
-                        10,000
-                    </button>
-                    <button type="button" onclick="selectPresetAmount(50000, this)" class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
-                        50,000
-                    </button>
-                    <button type="button" onclick="selectPresetAmount(100000, this)" class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
-                        100,000
-                    </button>
-                </div>
-            </div>
+            
+<div>
+    <label class="block text-sm font-bold text-gray-700 mb-2">
+        Select Preset Amount
+    </label>
+
+    <div id="ugx-preset-amounts" class="grid grid-cols-3 gap-4 mb-4">
+        <button type="button"
+            onclick="selectPresetAmount(10000, this)"
+            class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
+            10,000
+        </button>
+
+        <button type="button"
+            onclick="selectPresetAmount(50000, this)"
+            class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
+            50,000
+        </button>
+
+        <button type="button"
+            onclick="selectPresetAmount(100000, this)"
+            class="preset-btn py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-500 font-bold text-gray-800 text-base transition-all shadow-sm">
+            100,000
+        </button>
+    </div>
+</div>
 
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">Or Enter Custom Amount</label>
                 <div class="relative rounded-lg shadow-sm">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-gray-500 font-bold text-sm">UGX / USD</span>
+                        <span id="amount-currency-label" class="text-gray-500 font-bold text-sm">UGX</span>
                     </div>
-                    <input type="number" id="custom-amount" min="1" placeholder="e.g. 25000" oninput="clearPresetSelection()" class="w-full pl-24 pr-4 py-3 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-900">
+                    <input
+                    type="number"
+                    id="custom-amount"
+                    name="amount"
+                    min="1"
+                    step="1"
+                    placeholder="e.g. 25000"
+                    oninput="clearPresetSelection()"
+                    class="w-full pl-24 pr-4 py-3 border border-gray-300 rounded-lg text-base focus:ring-blue-500 focus:border-blue-500 font-bold text-gray-900">
                 </div>
             </div>
+            
+<div class="space-y-4 border-t border-gray-200 pt-5">
+    <div>
+        <h3 class="text-lg font-bold text-gray-900">
+            Donor Information
+        </h3>
+        <p class="text-sm text-gray-500">
+            Enter your contact details for your donation receipt.
+        </p>
+    </div>
+
+    <div>
+        <label for="donor-name" class="block text-sm font-bold text-gray-700 mb-2">
+            Full Name
+        </label>
+        <input
+            type="text"
+            id="donor-name"
+            name="payer_name"
+            autocomplete="name"
+            maxlength="100"
+            required
+            placeholder="Enter your full name"
+            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500">
+    </div>
+
+    <div>
+        <label for="donor-email" class="block text-sm font-bold text-gray-700 mb-2">
+            Email Address
+        </label>
+        <input
+            type="email"
+            id="donor-email"
+            name="payer_email"
+            autocomplete="email"
+            maxlength="254"
+            required
+            placeholder="you@example.com"
+            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500">
+    </div>
+
+    <div>
+        <label for="donor-phone" class="block text-sm font-bold text-gray-700 mb-2">
+            Phone Number
+        </label>
+        <input
+            type="tel"
+            id="donor-phone"
+            name="payer_phone"
+            autocomplete="tel-national"
+            required
+            placeholder="7XX XXX XXX"
+            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500">
+        <p class="text-xs text-gray-500 mt-1">
+            Select your country code and enter your phone number.
+        </p>
+    </div>
+    <div>
+        <label for="donor-country"
+            class="block text-sm font-bold text-gray-700 mb-2">
+            Country
+        </label>
+    
+        <select
+            id="donor-country"
+            name="payer_country"
+            autocomplete="country"
+            required
+            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500">
+    
+            <option value="UG" selected>Uganda</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="AU">Australia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="NL">Netherlands</option>
+            <option value="IE">Ireland</option>
+            <option value="ZA">South Africa</option>
+            <option value="KE">Kenya</option>
+            <option value="TZ">Tanzania</option>
+            <option value="RW">Rwanda</option>
+            <option value="NG">Nigeria</option>
+            <option value="GH">Ghana</option>
+        </select>
+    </div>
+    
+</div>
+
 
             <div class="pt-4">
                 <button type="submit" id="proceed-give-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg">
@@ -386,10 +497,25 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/intlTelInput.min.js"></script>
 <script>
     let loggedInUser = null;
     let currentGivingData = null;
     let selectedAmountValue = 0;
+    // International phone number selector
+    const donorPhoneElement = document.getElementById('donor-phone');
+
+    const phoneIti = window.intlTelInput(donorPhoneElement, {
+        initialCountry: 'ug',
+        separateDialCode: true,
+        nationalMode: true,
+        autoPlaceholder: 'polite',
+        formatAsYouType: true,
+        formatOnDisplay: true,
+        preferredCountries: ['ug', 'ke', 'tz', 'rw', 'us', 'gb'],
+        loadUtils: () =>
+            import('https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/utils.js')
+    });
 
     async function initializeGivingPage() {
         let attempts = 0;
@@ -404,49 +530,89 @@
         }
 
         const { data: { user } } = await window.sbClient.auth.getUser();
-        if (!user) {
-            window.location.replace('login.html');
-            return;
+loggedInUser = user || null;
+
+let profile = null;
+
+if (user) {
+    const { data: userProfile } = await window.sbClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    profile = userProfile;
+    // Prefill donor information for signed-in users.
+const donorNameInput = document.getElementById('donor-name');
+const donorEmailInput = document.getElementById('donor-email');
+const donorPhoneInput = document.getElementById('donor-phone');
+
+if (donorNameInput) {
+    donorNameInput.value =
+        profile?.full_name ||
+        user.user_metadata?.full_name ||
+        '';
+}
+
+if (donorEmailInput) {
+    donorEmailInput.value =
+        profile?.email ||
+        user.email ||
+        '';
+}
+
+if (donorPhoneInput && profile?.phone) {
+    phoneIti.setNumber(profile.phone);
+}
+
+    if (profile) {
+        if (profile.role === 'admin' || profile.role === 'super_admin') {
+            const adminLink = document.getElementById('admin-nav-link');
+            if (adminLink) adminLink.classList.remove('hidden');
         }
-        loggedInUser = user;
 
-        const { data: profile } = await window.sbClient
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        if (profile) {
-            if (profile.role === 'admin' || profile.role === 'super_admin') {
-                const adminLink = document.getElementById('admin-nav-link');
-                if (adminLink) adminLink.classList.remove('hidden');
-            }
-
-            if (['admin', 'super_admin', 'finance'].includes(profile.role)) {
-                const editContainer = document.getElementById('edit-giving-container');
-                if (editContainer) editContainer.classList.remove('hidden');
-            }
-
-            const contactFinanceBtn = document.getElementById('contactFinanceBtn');
-            if (contactFinanceBtn) {
-                const isStaff = ['admin', 'super_admin', 'finance'].includes(profile.role);
-                if (!isStaff) {
-                    contactFinanceBtn.style.display = 'block';
-                } else {
-                    contactFinanceBtn.style.display = 'none';
-                }
-            }
+        if (['admin', 'super_admin', 'finance'].includes(profile.role)) {
+            const editContainer = document.getElementById('edit-giving-container');
+            if (editContainer) editContainer.classList.remove('hidden');
         }
 
-        await fetchGivingSettings();
-        await loadChurchesDropdown(profile?.church_id);
-        await checkPesapalCallback();
+        const contactFinanceBtn = document.getElementById('contactFinanceBtn');
+        if (contactFinanceBtn) {
+            const isStaff = ['admin', 'super_admin', 'finance'].includes(profile.role);
+
+            if (!isStaff) {
+                contactFinanceBtn.style.display = 'block';
+            } else {
+                contactFinanceBtn.style.display = 'none';
+            }
+        }
+    }
+}
+await fetchGivingSettings();
+
+// Identify the member's attached church and any public-page selection.
+const requestedChurchId = new URLSearchParams(window.location.search).get('church_id');
+const memberChurchId = profile?.church_id || null;
+
+// A member's own church always takes priority over the URL.
+const selectedChurchId = memberChurchId || requestedChurchId;
+
+await loadChurchesDropdown(selectedChurchId);
+
+// Members do not need a church-selection dropdown.
+const churchSelector = document.getElementById('giving-church-select')?.parentElement;
+
+if (churchSelector) {
+    churchSelector.classList.toggle('hidden', Boolean(memberChurchId));
+}
+
+await checkPesapalCallback();
     }
 
     async function loadChurchesDropdown(selectedChurchId) {
         try {
             const { data: churches, error } = await window.sbClient
-                .from('churches')
+            .from('church_directory')
                 .select('id, name')
                 .order('name', { ascending: true });
 
@@ -499,96 +665,172 @@
             btn.classList.add('bg-gray-50', 'text-gray-800', 'border-gray-200');
         });
     }
+    function handleGivingCurrencyChange() {
+    const currency = document.getElementById('giving-currency');
+    const currencyLabel = document.getElementById('amount-currency-label');
+    const ugxPresets = document.getElementById('ugx-preset-amounts');
+    const customAmount = document.getElementById('custom-amount');
+
+    if (!currency || !currencyLabel || !customAmount) {
+        console.error("Giving currency elements are missing.");
+        return;
+    }
+
+    currencyLabel.textContent = currency.value;
+
+    if (ugxPresets) {
+        ugxPresets.classList.toggle('hidden', currency.value !== 'UGX');
+    }
+
+    clearPresetSelection();
+    customAmount.value = '';
+}
+
 
     // Task 2 & 3: Database Logic, Unique Transaction Reference Generation & Pesapal v3.0 API Integration
     async function handleProceedToGive(event) {
-        event.preventDefault();
+    event.preventDefault();
 
-        const customInput = document.getElementById('custom-amount').value;
-        const finalAmount = selectedAmountValue > 0 ? selectedAmountValue : parseFloat(customInput);
+    const amountInput = document.getElementById('custom-amount');
+    const currencyInput = document.getElementById('giving-currency');
+    const categoryInput = document.getElementById('giving-category');
 
-        if (!finalAmount || isNaN(finalAmount) || finalAmount <= 0) {
-            alert("Please select a preset amount or enter a valid custom donation amount.");
-            return;
-        }
+    const donorNameInput = document.getElementById('donor-name');
+    const donorEmailInput = document.getElementById('donor-email');
+    const donorPhoneInput = document.getElementById('donor-phone');
+    const donorCountryInput = document.getElementById('donor-country');
 
-        const category = document.getElementById('giving-category').value;
-        const proceedBtn = document.getElementById('proceed-give-btn');
+    const proceedBtn = document.getElementById('proceed-give-btn');
 
-        proceedBtn.disabled = true;
-        proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> <span>Initializing Secure Gateway...</span>';
+    const currency = currencyInput?.value || 'UGX';
+    const customAmount = Number(amountInput?.value);
+    const finalAmount = selectedAmountValue > 0
+        ? selectedAmountValue
+        : customAmount;
 
-        try {
-            // 1. Generate unique transaction reference (UUID or transaction ref)
-            const timestamp = Date.now();
-            const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const transactionReference = `BM-GIVE-${timestamp}-${randomStr}`;
-
-            // Retrieve church_id dynamically from the active church selection on the page
-            const selectedChurchId = document.getElementById('giving-church-select')?.value;
-            if (!selectedChurchId) {
-                throw new Error("Please select a church before proceeding with your donation.");
-            }
-
-            // 2. Make POST request to our new /api/pesapal-checkout route
-            const response = await fetch('/api/pesapal-checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    amount: finalAmount,
-                    currency: 'UGX',
-                    email: loggedInUser.email || 'donor@believersmeet.com',
-                    userId: loggedInUser.id,
-                    church_id: selectedChurchId,
-                    description: `BelieversMeet Giving - ${category}`
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success || !data.redirect_url) {
-                throw new Error(data.error || 'Failed to create Pesapal checkout session');
-            }
-
-            const { redirect_url, order_tracking_id, merchant_reference } = data;
-
-            // 3. Insert 'pending' record into Supabase transactions table including pesapal_tracking_id
-            const { error: insertError } = await window.sbClient
-                .from('transactions')
-                .insert([{
-                    user_id: loggedInUser.id,
-                    church_id: selectedChurchId,
-                    amount: finalAmount,
-                    merchant_reference: merchant_reference || transactionReference,
-                    pesapal_tracking_id: order_tracking_id,
-                    status: 'PENDING',
-                    payment_method: 'pesapal',
-                    currency: 'UGX',
-                    email: loggedInUser.email || 'donor@believersmeet.com',
-                    description: `BelieversMeet Giving - ${category}`
-                }]);
-
-            if (insertError) {
-                console.warn("Database insert warning:", insertError.message);
-            }
-
-            console.log("Redirecting to Pesapal Hosted Checkout:", redirect_url);
-
-            // 4. Finally, redirect user's browser to the redirect_url so they can complete payment securely
-            window.location.href = redirect_url;
-
-        } catch (err) {
-            console.error("Error initiating donation:", err);
-            const errorMessage = err.message || JSON.stringify(err);
-            alert("Failed to initialize donation: " + errorMessage);
-            console.error(err);
-            proceedBtn.disabled = false;
-            proceedBtn.innerHTML = '<i class="fas fa-lock text-sm"></i> <span>Proceed to Give</span>';
-        }
+    if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
+        alert('Please select a preset amount or enter a valid donation amount.');
+        return;
     }
+
+    const category = categoryInput?.value || '';
+    const payerName = donorNameInput?.value.trim() || '';
+    const payerEmail = donorEmailInput?.value.trim() || '';
+    let payerPhone = '';
+    const payerCountry = donorCountryInput?.value || '';
+
+    const selectedChurchId =
+        document.getElementById('giving-church-select')?.value;
+
+    if (!selectedChurchId) {
+        alert('Please select a church before proceeding.');
+        return;
+    }
+
+    if (!payerName || !payerEmail || !payerCountry) {
+        alert('Please complete all donor information fields.');
+        return;
+    }
+
+    if (!proceedBtn) {
+        alert('The payment button could not be found. Please refresh the page.');
+        return;
+    }
+
+    const originalButtonContent = proceedBtn.innerHTML;
+
+    proceedBtn.disabled = true;
+    proceedBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin text-sm"></i> ' +
+        '<span>Initializing Secure Gateway...</span>';
+
+    try {
+        // Wait for phone validation utilities to load.
+        await phoneIti.promise;
+
+        if (!phoneIti.isValidNumber()) {
+            donorPhoneInput?.focus();
+            throw new Error('Please enter a valid phone number for the selected country.');
+        }
+
+        // Send the complete international number, including country code.
+        payerPhone = phoneIti.getNumber();
+
+        if (!window.sbClient){
+            throw new Error('Supabase is not ready. Please refresh the page.');
+        }
+
+        // Retrieve the current session. Guests will have no access token.
+        const {
+            data: sessionData,
+            error: sessionError
+        } = await window.sbClient.auth.getSession();
+
+        if (sessionError) {
+            throw new Error('Could not verify your sign-in session.');
+        }
+
+        const accessToken = sessionData?.session?.access_token || null;
+
+        // An authenticated user must have a valid session token.
+        if (loggedInUser && !accessToken) {
+            throw new Error('Your session has expired. Please sign in again.');
+        }
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
+        }
+
+        // The server creates the pending transaction.
+        // Never insert or mark transactions completed in browser code.
+        const response = await fetch('/api/pesapal-checkout', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                amount: finalAmount,
+                currency,
+                category,
+                payer_name: payerName,
+                payer_email: payerEmail,
+                payer_phone: payerPhone,
+                payer_country: payerCountry,
+                church_id: selectedChurchId
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success || !data.redirect_url) {
+            throw new Error(
+                data.error || 'Unable to initialize the Pesapal payment.'
+            );
+        }
+
+        console.log(
+            'Pesapal checkout initialized:',
+            data.merchant_reference
+        );
+
+        // Redirect to the verified Pesapal-hosted checkout URL.
+        window.location.assign(data.redirect_url);
+
+    } catch (error) {
+        console.error('Donation checkout error:', error);
+
+        alert(
+            'Failed to initialize donation: ' +
+            (error.message || 'Please try again.')
+        );
+
+        proceedBtn.disabled = false;
+        proceedBtn.innerHTML = originalButtonContent;
+    }
+}
 
     async function initiatePesapalCheckout(payload) {
         // Kept for backward compatibility if called elsewhere
@@ -612,38 +854,22 @@
     }
 
     async function handlePesapalSuccessCallback(transactionReference, orderTrackingId) {
-        try {
-            // Update specific record in Supabase transactions table from 'PENDING' to 'COMPLETED'
-            const { error: updateError } = await window.sbClient
-                .from('transactions')
-                .update({ 
-                    status: 'COMPLETED',
-                    updated_at: new Date().toISOString()
-                })
-                .eq('merchant_reference', transactionReference);
+    // Payment completion must only be confirmed by the server
+    // after checking the transaction status directly with Pesapal.
 
-            if (updateError) {
-                console.warn("Error updating transaction status in DB:", updateError.message);
-            }
-
-            // Fetch amount for modal display
-            const { data: donationRecord } = await window.sbClient
-                .from('transactions')
-                .select('amount')
-                .eq('merchant_reference', transactionReference)
-                .maybeSingle();
-
-            const displayedAmount = donationRecord ? donationRecord.amount : 0;
-
-            // Display Tailwind success modal to the user
-            document.getElementById('modal-tx-ref').innerText = transactionReference;
-            document.getElementById('modal-amount').innerText = `UGX ${Number(displayedAmount).toLocaleString()}`;
-            document.getElementById('success-donation-modal').classList.remove('hidden');
-
-        } catch (err) {
-            console.error("Error handling Pesapal success callback:", err);
+    console.log(
+        'Pesapal returned a payment callback.',
+        {
+            merchantReference: transactionReference,
+            trackingId: orderTrackingId
         }
-    }
+    );
+
+    console.warn(
+        'Payment has not yet been verified. ' +
+        'Browser-side transaction updates are disabled.'
+    );
+}
 
     function closeSuccessModal() {
         document.getElementById('success-donation-modal').classList.add('hidden');
@@ -893,3 +1119,4 @@
 </script>
 </body>
 </html>
+

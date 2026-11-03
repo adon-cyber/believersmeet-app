@@ -1,4 +1,4 @@
-// public-church.js - Public Church Profile logic allowing anonymous visitors
+// public-church.js - Public Church Directory, Profile & Spiritual Connection Experience
 
 document.getElementById('current-year').textContent = new Date().getFullYear();
 
@@ -12,6 +12,7 @@ const churchCodeParam = urlParams.get('code');
 
 let currentChurchId = null;
 let currentPesapalPaymentLink = null;
+let approvedChurchesCache = [];
 let currentFetchedVerse = {
     reference: 'John 3:16',
     text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
@@ -35,56 +36,201 @@ async function initPublicChurch() {
             return;
         }
 
-        await fetchChurchDetails();
-        await loadPublicProgrammes(currentChurchId);
-        await fetchChurchActivities();
-        await renderLeadershipTeam();
-        await fetchFellowshipGallery();
+        // 1. Load Approved Churches Showcase & Populate Dropdown
+        await loadApprovedChurchesDirectory();
 
-        // 3. Initialization: trigger default verse when public-church.html first loads
+        // 2. Load specific church details if ID or code is provided in URL
+        if (churchIdParam || churchCodeParam) {
+            await fetchChurchDetails();
+            if (currentChurchId) {
+                await loadPublicProgrammes(currentChurchId);
+                await fetchChurchActivities();
+                await renderLeadershipTeam();
+                await fetchFellowshipGallery();
+            }
+        } else {
+            // Default header state if viewing general directory
+            document.getElementById('church-name').textContent = "Discover Approved Churches";
+            document.getElementById('header-church-name').textContent = "BelieversMeet Directory";
+            const container = document.getElementById('activities-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm space-y-3">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl border border-blue-100">
+                            <i class="fas fa-church"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">Select a church above to view activities</h3>
+                        <p class="text-sm text-slate-500 max-w-md mx-auto">Choose any registered church from the showcase above to view their service times, gallery, and leadership.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 3. Initialization: trigger default verse when page loads
         await fetchAndRenderWidgetVerse('John 3:16');
 
         // Initialize gallery and leadership entrance animations
         if (typeof window.initAnimatedGallery === 'function') {
             window.initAnimatedGallery('gallery-section');
-        } else if (typeof initGalleryAnimation === 'function') {
-            initGalleryAnimation();
         }
         initLeadershipAnimation();
     } catch (err) {
         console.error("Error initializing public church profile:", err);
-        document.getElementById('church-name').textContent = "Church Profile Not Found";
+        document.getElementById('church-name').textContent = "Church Profile Unavailable";
+    }
+}
+
+// Load Approved Churches from public.church_directory view for showcase and dropdown
+async function loadApprovedChurchesDirectory() {
+    const showcaseContainer = document.getElementById('churches-showcase-container');
+    const churchSelect = document.getElementById('connection-church-select');
+    
+    if (!showcaseContainer) return;
+
+    try {
+        const safeColumns = 'id, name, location, address, description, logo_url';
+        const { data: churches, error } = await publicSupabase
+            .from('church_directory')
+            .select(safeColumns)
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        approvedChurchesCache = churches || [];
+
+        if (approvedChurchesCache.length === 0) {
+            showcaseContainer.innerHTML = `
+                <div class="col-span-full py-16 text-center text-slate-500 space-y-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="w-16 h-16 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                        <i class="fas fa-church"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900">No Approved Churches Yet</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto">Check back soon as new churches join the BelieversMeet community directory.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Populate Connection Form Dropdown
+        if (churchSelect) {
+            churchSelect.innerHTML = '<option value="">-- Select an Approved Church --</option>' + 
+                approvedChurchesCache.map(c => `<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.location || 'General')})</option>`).join('');
+            
+            if (currentChurchId) {
+                churchSelect.value = currentChurchId;
+            }
+        }
+
+        renderChurchesShowcase(approvedChurchesCache);
+
+    } catch (err) {
+        console.error("Error loading approved churches directory:", err);
+        showcaseContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-red-500 bg-white rounded-2xl border border-slate-200">
+                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                <p class="text-xs font-semibold">Failed to load church directory showcase. Please try again later.</p>
+            </div>
+        `;
+    }
+}
+
+// Render Churches Showcase Cards with Smooth Entrance
+function renderChurchesShowcase(churches) {
+    const showcaseContainer = document.getElementById('churches-showcase-container');
+    if (!showcaseContainer) return;
+
+    if (churches.length === 0) {
+        showcaseContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
+                <p class="text-sm font-semibold">No churches match your search filter.</p>
+            </div>
+        `;
+        return;
+    }
+
+    showcaseContainer.innerHTML = churches.map(church => {
+        const name = church.name || 'BelieversMeet Church';
+        const location = church.location || church.address || 'Location TBA';
+        const description = church.description || 'Welcome to our vibrant Christian community dedicated to worship, fellowship, and spiritual growth.';
+        const logoUrl = isValidImageUrl(church.logo_url) ? church.logo_url : 'images/BELIEVERS.LOGO.png';
+
+        return `
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-lg hover:border-blue-300 transition-all duration-300 group">
+                <div class="h-48 overflow-hidden relative bg-slate-100">
+                    <img src="${logoUrl}" alt="${escapeHTML(name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-80"></div>
+                    <div class="absolute bottom-3 left-3 right-3 text-white">
+                        <h3 class="text-lg font-bold truncate">${escapeHTML(name)}</h3>
+                        <p class="text-xs text-blue-100 flex items-center"><i class="fas fa-location-dot mr-1"></i> ${escapeHTML(location)}</p>
+                    </div>
+                </div>
+                <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <p class="text-xs text-slate-600 line-clamp-3 leading-relaxed">${escapeHTML(description)}</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                        <a href="public-church.html?id=${church.id}" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs text-center transition flex items-center justify-center space-x-1">
+                            <i class="fas fa-eye text-blue-600"></i>
+                            <span>View Church</span>
+                        </a>
+                        <button type="button" onclick="preselectChurchForConnection('${church.id}', '${escapeHTML(name).replace(/'/g, "\\'")}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs text-center transition flex items-center justify-center space-x-1 shadow-sm">
+                            <i class="fas fa-hands-praying"></i>
+                            <span>Connect</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Search / Filter capability by church name and location
+function filterChurchesDirectory() {
+    const nameQuery = document.getElementById('church-search-input').value.toLowerCase().trim();
+    const locationQuery = document.getElementById('location-search-input').value.toLowerCase().trim();
+
+    const filtered = approvedChurchesCache.filter(c => {
+        const matchName = !nameQuery || (c.name && c.name.toLowerCase().includes(nameQuery));
+        const matchLocation = !locationQuery || 
+            (c.location && c.location.toLowerCase().includes(locationQuery)) || 
+            (c.address && c.address.toLowerCase().includes(locationQuery));
+        return matchName && matchLocation;
+    });
+
+    renderChurchesShowcase(filtered);
+}
+
+// Preselect church in connection form and smoothly scroll to it
+function preselectChurchForConnection(churchId, churchName) {
+    const churchSelect = document.getElementById('connection-church-select');
+    if (churchSelect) {
+        churchSelect.value = churchId;
+    }
+    const joinSection = document.getElementById('join-section');
+    if (joinSection) {
+        joinSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    if (typeof showNotification === 'function') {
+        showNotification(`Selected ${churchName} for your connection request.`, 'info');
     }
 }
 
 async function fetchChurchDetails() {
-    let query = publicSupabase.from('churches').select('*');
+    const safeColumns = 'id, name, location, description, address, logo_url, created_at';
+    let query = publicSupabase.from('church_directory').select(safeColumns);
 
     if (churchIdParam) {
         query = query.eq('id', churchIdParam);
-    } else if (churchCodeParam) {
-        query = query.eq('code', churchCodeParam);
     } else {
-        // Default to the first church if no query param is provided
-        const { data: defaultChurches, error: defErr } = await query.limit(1);
-        if (defErr || !defaultChurches || defaultChurches.length === 0) {
-            throw new Error("No church found.");
-        }
-        renderChurch(defaultChurches[0]);
         return;
     }
 
     const { data, error } = await query.maybeSingle();
-    if (error || !data) {
-        // Try fallback to search by join_code if code failed
-        if (churchCodeParam) {
-            const { data: altData } = await publicSupabase.from('churches').select('*').eq('join_code', churchCodeParam).maybeSingle();
-            if (altData) {
-                renderChurch(altData);
-                return;
-            }
-        }
-        throw new Error("Church profile not found.");
+    if (error) {
+        console.error("Supabase query error in fetchChurchDetails:", error.message);
+        throw new Error("Failed to load church profile.");
+    }
+
+    if (!data) {
+        throw new Error("No matching approved church found.");
     }
 
     renderChurch(data);
@@ -106,6 +252,11 @@ function renderChurch(church) {
     if (logoEl) {
         const finalLogoUrl = isValidImageUrl(church.logo_url) ? church.logo_url : 'images/BELIEVERS.LOGO.png';
         logoEl.src = finalLogoUrl;
+    }
+
+    const churchSelect = document.getElementById('connection-church-select');
+    if (churchSelect) {
+        churchSelect.value = church.id;
     }
 
     // Inject and Conditionally Render Direct Giving Details (Bank & Mobile Money)
@@ -168,10 +319,10 @@ function renderChurch(church) {
         getDirectionsBtn.href = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
     }
 
-    if (church.physical_address) {
+    if (church.address || church.location) {
         const baseUrl = "https://maps.google.com/maps?q=";
         const urlParams = "&t=&z=15&ie=UTF8&iwloc=&output=embed";
-        const mapSrc = baseUrl + encodeURIComponent(church.physical_address) + urlParams;
+        const mapSrc = baseUrl + encodeURIComponent(church.address || church.location) + urlParams;
         
         const mapIframe = document.getElementById("church-map-iframe");
         if (mapIframe) {
@@ -184,27 +335,11 @@ function renderChurch(church) {
             mapIframe.style.display = "none";
         }
     }
-
-    if (church.service_times && Array.isArray(church.service_times)) {
-        const scheduleContainer = document.getElementById('service-schedule-container');
-        if (scheduleContainer) {
-            scheduleContainer.innerHTML = church.service_times.map(service => `
-                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start space-x-3">
-                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 mt-0.5 border border-blue-100">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-slate-900 text-sm">${escapeHTML(service.title || service.name || 'Worship Service')}</h4>
-                        <p class="text-xs text-slate-600 mt-0.5">${escapeHTML(service.time || service.schedule || '')}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-    }
 }
 
 async function fetchChurchActivities() {
     const container = document.getElementById('activities-container');
+    if (!container) return;
     
     let activitiesQuery = publicSupabase.from('events').select('*');
     if (currentChurchId) {
@@ -241,6 +376,7 @@ async function fetchChurchActivities() {
 
 function renderActivities(items) {
     const container = document.getElementById('activities-container');
+    if (!container) return;
     container.innerHTML = items.map(item => {
         const title = item.title || item.name || 'Church Program';
         const description = item.description || 'Join us for this uplifting church activity.';
@@ -432,73 +568,113 @@ function navigateWidgetVerse(direction) {
     fetchAndRenderWidgetVerse(newRef);
 }
 
-// Handle 'Get Converted' Form Submission
+// Handle Complete Spiritual Connection Request Form Submission
 const conversionForm = document.getElementById('conversion-form');
 if (conversionForm) {
     conversionForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (!currentChurchId) {
-            alert("Church identification error. Please reload the page.");
+        const churchSelect = document.getElementById('connection-church-select');
+        const targetChurchId = churchSelect ? churchSelect.value : currentChurchId;
+
+        if (!targetChurchId) {
+            alert("Please select an approved target church before submitting your request.");
+            if (churchSelect) churchSelect.focus();
             return;
         }
 
         const fullName = document.getElementById('full-name').value.trim();
-        const phoneNumber = document.getElementById('phone-number').value.trim();
-        const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
-        const churchNameEl = document.getElementById('church-name');
-        const churchName = churchNameEl ? churchNameEl.textContent.trim() : '';
+        const contactDetail = document.getElementById('phone-number').value.trim();
+        const contactMethod = document.getElementById('contact-method').value;
+        const connectionCategory = document.getElementById('connection-category').value;
         const prayerRequest = document.getElementById('prayer-request') ? document.getElementById('prayer-request').value.trim() : '';
+        const consentChecked = document.getElementById('consent-checkbox').checked;
         const submitBtn = document.getElementById('submit-btn');
 
-        if (!fullName || !phoneNumber) {
-            alert("Please fill in your full name and phone number.");
+        if (!fullName || !contactDetail) {
+            alert("Please fill in your full name and contact detail.");
+            return;
+        }
+
+        if (!consentChecked) {
+            alert("Please provide informed consent to allow authorized church personnel to contact you.");
             return;
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...`;
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting Request...`;
 
         try {
+            // Server-side validation check that target church is approved in church_directory
+            const { data: approvedCheck, error: checkErr } = await publicSupabase
+                .from('church_directory')
+                .select('id, name')
+                .eq('id', targetChurchId)
+                .maybeSingle();
+
+            if (checkErr || !approvedCheck) {
+                throw new Error("Selected church is not currently approved or valid.");
+            }
+
             const payload = {
-                church_id: currentChurchId,
+                church_id: targetChurchId,
                 full_name: fullName,
-                phone: phoneNumber,
-                email: email || null,
+                category: connectionCategory,
                 prayer_request: prayerRequest || null,
+                contact_method: contactMethod,
+                contact_detail: contactDetail,
+                phone_number: contactMethod !== 'email' ? contactDetail : (document.getElementById('fallback-phone') ? document.getElementById('fallback-phone').value.trim() : null),
+                email: contactMethod === 'email' ? contactDetail : null,
+                consent_given: true,
+                consent_timestamp: new Date().toISOString(),
                 status: 'pending'
             };
 
-            const { error } = await publicSupabase.from('church_join_requests').insert([payload]);
+            // Insert into conversion_requests table
+            const { error: insertErr } = await publicSupabase.from('conversion_requests').insert([payload]);
 
-            if (error) throw error;
+            if (insertErr) throw insertErr;
 
-            // Insert public notification for church join request
-            const publicJoinNotificationPayload = {
-                user_id: null,
-                church_id: null,
-                title: 'New Public Church Request',
-                message: `New join request received from ${fullName || 'a guest'}.`,
-                type: 'church_join',
-                is_read: false
-            };
-            await publicSupabase.from('notifications').insert([publicJoinNotificationPayload]);
-
-            console.log('Successfully submitted join request to church_join_requests:', payload);
-            if (typeof showNotification === 'function') {
-                showNotification('Your join request has been sent successfully!', 'success');
-            } else {
-                alert('Your join request has been sent successfully!');
+            // Also fallback insert into church_join_requests if conversion_requests fails or for cross-compatibility
+            try {
+                await publicSupabase.from('church_join_requests').insert([{
+                    church_id: targetChurchId,
+                    full_name: fullName,
+                    phone: contactDetail,
+                    prayer_request: prayerRequest || null,
+                    status: 'pending'
+                }]);
+            } catch (e) {
+                // ignore secondary table errors if primary succeeded
             }
 
+            // Insert notification for church staff
+            const notificationPayload = {
+                user_id: null,
+                church_id: targetChurchId,
+                title: 'New Spiritual Connection Request',
+                message: `New request from ${fullName} (${connectionCategory.replace(/_/g, ' ')}).`,
+                type: 'spiritual_connection',
+                is_read: false
+            };
+            await publicSupabase.from('notifications').insert([notificationPayload]);
+
+            console.log('Successfully submitted conversion/spiritual connection request:', payload);
+            
+            const churchNameDisp = approvedCheck.name || 'Selected Church';
+            document.getElementById('success-church-confirmation').textContent = `Your connection request has been securely received by ${churchNameDisp}. An authorized church leader will contact you shortly via ${contactMethod}.`;
             document.getElementById('success-message').classList.remove('hidden');
             conversionForm.reset();
             conversionForm.classList.add('hidden');
+
+            if (typeof showNotification === 'function') {
+                showNotification('Spiritual connection request submitted successfully!', 'success');
+            }
         } catch (err) {
             console.error("Submission error:", err);
-            alert("Failed to submit request: " + (err.message || 'Please try again later.'));
+            alert("Failed to submit connection request: " + (err.message || 'Please try again later.'));
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span>Submit Request</span> <i class="fas fa-paper-plane"></i>`;
+            submitBtn.innerHTML = `<span>Submit Spiritual Connection Request</span> <i class="fas fa-paper-plane"></i>`;
         }
     });
 }
@@ -508,11 +684,6 @@ const prayerForm = document.getElementById('prayer-form');
 if (prayerForm) {
     prayerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        if (!currentChurchId) {
-            alert("Church identification error. Please reload the page.");
-            return;
-        }
 
         const fullName = document.getElementById('prayer-full-name').value.trim();
         const contactInfo = document.getElementById('prayer-contact-info').value.trim();
@@ -529,7 +700,7 @@ if (prayerForm) {
 
         try {
             const { error } = await publicSupabase.from('prayer_requests').insert({
-                church_id: currentChurchId,
+                church_id: currentChurchId || null,
                 full_name: fullName,
                 contact_info: contactInfo || null,
                 prayer_request: prayerRequestText,
@@ -538,10 +709,9 @@ if (prayerForm) {
 
             if (error) throw error;
 
-            // Insert public notification for prayer request
             const publicPrayerNotificationPayload = {
                 user_id: null,
-                church_id: null,
+                church_id: currentChurchId || null,
                 title: 'New Public Prayer Request',
                 message: `New prayer request received from ${fullName || 'a guest'}.`,
                 type: 'public_request',
@@ -549,7 +719,6 @@ if (prayerForm) {
             };
             await publicSupabase.from('notifications').insert([publicPrayerNotificationPayload]);
 
-            console.log('Successfully submitted request:', { type: 'prayer_request', church_id: currentChurchId, full_name: fullName });
             if (typeof showNotification === 'function') {
                 showNotification('Prayer request successfully submitted!', 'success');
             } else {
@@ -558,6 +727,7 @@ if (prayerForm) {
 
             document.getElementById('prayer-success-message').classList.remove('hidden');
             prayerForm.reset();
+
             prayerForm.classList.add('hidden');
         } catch (err) {
             console.error("Prayer request submission error:", err);
@@ -568,26 +738,18 @@ if (prayerForm) {
     });
 }
 
-// Handle Online Giving via Pesapal
+// Handle Online Giving through the shared BelieversMeet giving page
 function handleOnlineGiving() {
-    if (currentPesapalPaymentLink && currentPesapalPaymentLink.trim() !== '') {
-        if (confirm("You are about to proceed to the secure Pesapal checkout to support the ministry. Would you like to continue?")) {
-            window.location.href = currentPesapalPaymentLink;
-        }
-    } else {
-        alert("Online giving is currently being set up for this ministry. Please check back soon!");
+    if (!currentChurchId) {
+        alert("Church information is not available. Please refresh the page.");
+        return;
     }
+
+    const givingUrl = `giving.html?church_id=${encodeURIComponent(currentChurchId)}`;
+
+    window.location.href = givingUrl;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const pesapalBtn = document.getElementById('pesapal-giving-btn');
-    if (pesapalBtn) {
-        pesapalBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            handleOnlineGiving();
-        });
-    }
-});
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -607,9 +769,12 @@ async function fetchFellowshipGallery() {
 
     if (!currentChurchId) {
         gridContainer.innerHTML = `
-            <div class="col-span-full py-12 text-center text-slate-500">
-                <i class="fas fa-exclamation-circle text-3xl mb-2 text-blue-600"></i>
-                <p class="text-sm">Church identification required to load gallery photos.</p>
+            <div class="col-span-full py-16 text-center text-slate-500 space-y-3">
+                <div class="w-16 h-16 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fas fa-church"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Select a Church</h3>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Please select a church from the directory above to view its fellowship moments.</p>
             </div>
         `;
         return;
@@ -639,11 +804,11 @@ async function fetchFellowshipGallery() {
 
         if (!photos || photos.length === 0) {
             gridContainer.innerHTML = `
-                <div class="col-span-full py-16 text-center text-slate-500 space-y-3">
+                <div class="col-span-full py-16 text-center text-slate-500 space-y-3 bg-white rounded-2xl border border-slate-200">
                     <div class="w-16 h-16 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
                         <i class="fas fa-images"></i>
                     </div>
-                    <h3 class="text-base font-bold text-slate-900">No Fellowship Photos Yet</h3>
+                    <h3 class="text-base font-bold text-slate-900">No fellowship moments have been shared yet.</h3>
                     <p class="text-xs text-slate-500 max-w-sm mx-auto">Church admin has not published any moments of fellowship to this gallery yet.</p>
                 </div>
             `;
@@ -679,9 +844,10 @@ async function fetchFellowshipGallery() {
     } catch (err) {
         console.error("Error fetching fellowship gallery:", err);
         gridContainer.innerHTML = `
-            <div class="col-span-full py-12 text-center text-red-500">
-                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                <p class="text-xs">Failed to load gallery photos. Please try again later.</p>
+            <div class="col-span-full py-12 text-center text-red-500 bg-white rounded-2xl border border-slate-200 space-y-3">
+                <i class="fas fa-exclamation-triangle text-2xl mb-1"></i>
+                <p class="text-xs font-semibold">Failed to load fellowship moments.</p>
+                <button type="button" onclick="fetchFellowshipGallery()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition">Retry</button>
             </div>
         `;
     } finally {
@@ -691,74 +857,89 @@ async function fetchFellowshipGallery() {
     }
 }
 
-// Render Leadership Team from church_leaders table with fallback
+// Render Leadership Team from church_leaders table with fallback and reliable loading clearance
 async function renderLeadershipTeam() {
     const container = document.getElementById('leadership-container');
     if (!container) return;
 
-    let leaders = [];
-    if (publicSupabase && currentChurchId) {
-        try {
-            const { data, error } = await publicSupabase
-                .from('church_leaders')
-                .select('*')
-                .eq('church_id', currentChurchId)
-                .order('created_at', { ascending: true });
-
-            if (!error && data && data.length > 0) {
-                leaders = data;
-            }
-        } catch (err) {
-            console.log("church_leaders table might not exist yet or query failed:", err);
-        }
-    }
-
-    if (!leaders || leaders.length === 0) {
-        leaders = [
-            {
-                name: 'Pastor David Anderson',
-                role: 'Senior Pastor',
-                bio: 'Dedicated to preaching the uncompromised Word of God and guiding our community in fervent prayer, love, and discipleship.',
-                image_url: 'images/meet2.jpg'
-            },
-            {
-                name: 'Pastor Sarah Williams',
-                role: 'Associate Pastor & Worship Director',
-                bio: 'Passionate about ushering congregations into the glorious presence of God through heartfelt worship and community fellowship.',
-                image_url: 'images/adon-73308cbf.jpg'
-            },
-            {
-                name: 'Elder Michael Johnson',
-                role: 'Director of Outreach & Pastoral Care',
-                bio: 'Committed to serving families, comforting the brokenhearted, and expanding our reach into the local neighborhood with Christ’s love.',
-                image_url: 'images/roo-background.jpg.png'
-            }
-        ];
-    }
-
-    container.innerHTML = leaders.map(leader => {
-        const name = leader.name || leader.full_name || 'Church Leader';
-        const role = leader.role || leader.title || 'Pastor / Minister';
-        const bio = leader.bio || leader.description || 'Serving faithfully to build up the body of Christ in grace and truth.';
-        const rawLeaderUrl = leader.image_url || leader.photo_url || '';
-        const imageUrl = isValidImageUrl(rawLeaderUrl) ? rawLeaderUrl : 'assets/images/default-placeholder.png';
-
-        return `
-            <div class="gallery-item-hide group bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm space-y-4 flex flex-col items-center hover:scale-105 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300">
-                <div class="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-blue-200 shadow-sm group-hover:scale-105 transition-transform duration-500">
-                    <img src="${imageUrl}" alt="${escapeHTML(name)}" class="w-full h-full object-cover">
+    if (!currentChurchId) {
+        container.innerHTML = `
+            <div class="col-span-full py-16 text-center text-slate-500 space-y-3">
+                <div class="w-16 h-16 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fas fa-users"></i>
                 </div>
-                <div class="space-y-1">
-                    <h3 class="text-lg font-bold text-slate-900 tracking-wide">${escapeHTML(name)}</h3>
-                    <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest">${escapeHTML(role)}</p>
-                </div>
-                <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">${escapeHTML(bio)}</p>
+                <h3 class="text-base font-bold text-slate-900">Select a Church</h3>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Please select a church from the directory above to view its leadership team.</p>
             </div>
         `;
-    }).join('');
+        return;
+    }
 
-    if (typeof window.initAnimatedGallery === 'function') {
-        window.initAnimatedGallery('leadership-section');
+    try {
+        let leaders = [];
+        if (publicSupabase && currentChurchId) {
+            try {
+                const { data, error } = await publicSupabase
+                    .from('church_leaders')
+                    .select('*')
+                    .eq('church_id', currentChurchId)
+                    .order('created_at', { ascending: true });
+
+                if (!error && data && data.length > 0) {
+                    leaders = data;
+                }
+            } catch (err) {
+                console.log("church_leaders table query notice:", err);
+            }
+        }
+
+        if (!leaders || leaders.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full py-16 text-center text-slate-500 space-y-3 bg-white rounded-2xl border border-slate-200">
+                    <div class="w-16 h-16 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                        <i class="fas fa-users-slash"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900">No leadership team members have been listed yet.</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto">Check back soon as leaders are appointed and published for this ministry.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = leaders.map(leader => {
+            const name = leader.name || leader.full_name || 'Church Leader';
+            const role = leader.role || leader.title || 'Pastor / Minister';
+            const bio = leader.bio || leader.description || 'Serving faithfully to build up the body of Christ in grace and truth.';
+            const rawLeaderUrl = leader.image_url || leader.photo_url || '';
+            const imageUrl = isValidImageUrl(rawLeaderUrl) ? rawLeaderUrl : 'assets/images/default-placeholder.png';
+
+            return `
+                <div class="gallery-item-hide group bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm space-y-4 flex flex-col items-center hover:scale-105 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300">
+                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-blue-200 shadow-sm group-hover:scale-105 transition-transform duration-500">
+                        <img src="${imageUrl}" alt="${escapeHTML(name)}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-bold text-slate-900 tracking-wide">${escapeHTML(name)}</h3>
+                        <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest">${escapeHTML(role)}</p>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">${escapeHTML(bio)}</p>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error("Error fetching leadership team:", err);
+        container.innerHTML = `
+            <div class="col-span-full py-12 text-center text-red-500 bg-white rounded-2xl border border-slate-200 space-y-3">
+                <i class="fas fa-exclamation-triangle text-2xl mb-1"></i>
+                <p class="text-xs font-semibold">Failed to load leadership team.</p>
+                <button type="button" onclick="renderLeadershipTeam()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition">Retry</button>
+            </div>
+        `;
+    } finally {
+        if (typeof window.initAnimatedGallery === 'function') {
+            window.initAnimatedGallery('leadership-section');
+        }
     }
 }
 
@@ -792,7 +973,6 @@ async function loadPublicProgrammes(churchId) {
   container.innerHTML = '<div class="text-center p-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading service schedule...</div>';
 
   try {
-    // Build query - filter by church_id if available
     let query = publicSupabase.from('programmes').select('*').order('created_at', { ascending: true });
     if (churchId) {
       query = query.eq('church_id', churchId);
@@ -800,8 +980,6 @@ async function loadPublicProgrammes(churchId) {
 
     const { data: programmes, error } = await query;
     if (error) throw error;
-
-    console.log('Fetched public programmes:', programmes);
 
     if (!programmes || programmes.length === 0) {
       container.innerHTML = `
@@ -812,7 +990,6 @@ async function loadPublicProgrammes(churchId) {
       return;
     }
 
-    // Render live programs
     let html = '<div class="d-flex flex-column gap-3">';
     programmes.forEach(prog => {
       const title = prog.title || prog.name || 'Worship Service';
@@ -845,4 +1022,3 @@ async function loadPublicProgrammes(churchId) {
     container.innerHTML = `<div class="alert alert-warning small py-2">Could not load schedule: ${err.message}</div>`;
   }
 }
-
