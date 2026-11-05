@@ -476,12 +476,52 @@
             avatarPlaceholder.textContent = (targetUser.full_name || 'U').charAt(0).toUpperCase();
         }
 
-        // Setup Video Call Room Link
+        // Create a database-authorized video-call invitation.
         const videoBtn = document.getElementById('start-video-call');
-        videoBtn.onclick = () => {
-            const room = [currentUser.id.substring(0, 12), targetUser.id.substring(0, 12)].sort().join('-');
-            window.location.href = `video-call.html?room=${room}`;
-        };
+
+        if (videoBtn) {
+            videoBtn.onclick = async () => {
+                if (!currentUser?.id || !targetUser?.id) {
+                    alert('Select a member before starting a video call.');
+                    return;
+                }
+
+                if (currentUser.id === targetUser.id) {
+                    alert('You cannot call yourself.');
+                    return;
+                }
+
+                const originalTitle = videoBtn.title;
+                videoBtn.disabled = true;
+                videoBtn.title = 'Sending video-call invitation...';
+
+                try {
+                    const { data: invitationId, error } =
+                        await window.sbClient.rpc('create_video_call_invitation', {
+                            p_recipient_id: targetUser.id
+                        });
+
+                    if (error) throw error;
+
+                    if (
+                        typeof invitationId !== 'string' ||
+                        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(invitationId)
+                    ) {
+                        throw new Error('The server returned an invalid call invitation.');
+                    }
+
+                    window.location.assign(
+                        `video-call.html?invitation=${encodeURIComponent(invitationId)}`
+                    );
+                } catch (error) {
+                    console.error('Unable to create video-call invitation:', error);
+                    alert(error.message || 'Could not start the video call. Please try again.');
+                } finally {
+                    videoBtn.disabled = false;
+                    videoBtn.title = originalTitle;
+                }
+            };
+        }
 
         if (activeChannel) {
             window.sbClient.removeChannel(activeChannel);
@@ -707,6 +747,7 @@
 
         const { data: profile } = await window.sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
         currentUser = { ...user, role: profile?.role, church_id: profile?.church_id };
+        window.believersMeetCurrentUser = currentUser;
 
         // Show finance tab if user has finance or admin/super_admin role
         const financeBtn = document.getElementById('tab-finance-inquiries');
@@ -830,6 +871,6 @@
     })();
 </script>
 <script src="js/notifications.js"></script>
-<script src="js/video-call.js"></script>
+
 </body>
 </html>

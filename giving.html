@@ -283,10 +283,10 @@
     </div>
 
     <!-- Payment Methods Grid Layout (Manual Bank / Mobile Money info) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+    <div id="manual-giving-methods" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
 
         <!-- Card 1: Bank Transfer -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+        <div id="bank-giving-card" class="hidden bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
             <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                     <i class="fas fa-university"></i>
@@ -300,16 +300,16 @@
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500 font-medium">Bank Name:</span>
-                        <span id="display-bank-name" class="font-semibold text-gray-900 text-right">Equity Bank / Standard Bank</span>
+                        <span id="display-bank-name" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500 font-medium">Account Name:</span>
-                        <span id="display-account-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Ministries</span>
+                        <span id="display-account-name" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500 font-medium">Account Number:</span>
                         <div class="flex items-center gap-2">
-                            <span id="bank-acc-num" class="font-mono font-bold text-emerald-700">1002938472910</span>
+                            <span id="bank-acc-num" class="font-mono font-bold text-emerald-700"></span>
                             <button onclick="copyToClipboard(document.getElementById('bank-acc-num').innerText, this)" class="bg-gray-100 hover:bg-emerald-100 text-gray-600 hover:text-emerald-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Account Number">
                                 <i class="fas fa-clipboard"></i>
                             </button>
@@ -317,7 +317,7 @@
                     </div>
                     <div class="flex justify-between items-center py-2">
                         <span class="text-gray-500 font-medium">Branch:</span>
-                        <span id="display-branch" class="font-semibold text-gray-900 text-right">Main City Branch (Code: 045)</span>
+                        <span id="display-branch" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                 </div>
 
@@ -328,7 +328,7 @@
         </div>
 
         <!-- Card 2: MTN Mobile Money -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+        <div id="momo-giving-card" class="hidden bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
             <div class="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                     <i class="fas fa-mobile-alt"></i>
@@ -342,12 +342,12 @@
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500 font-medium">Merchant Name:</span>
-                        <span id="display-momo-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Tithes</span>
+                        <span id="display-momo-name" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-center py-2">
                         <span class="text-gray-500 font-medium">Merchant Number:</span>
                         <div class="flex items-center gap-2">
-                            <span id="mtn-code" class="font-mono font-bold text-amber-700">889922</span>
+                            <span id="mtn-code" class="font-mono font-bold text-amber-700"></span>
                             <button onclick="copyToClipboard(document.getElementById('mtn-code').innerText, this)" class="bg-gray-100 hover:bg-amber-100 text-gray-600 hover:text-amber-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Momo Number">
                                 <i class="fas fa-clipboard"></i>
                             </button>
@@ -361,7 +361,7 @@
         </div>
 
         <!-- Card 3: Airtel Money -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+        <div id="airtel-giving-card" class="hidden bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
             <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                     <i class="fas fa-wallet"></i>
@@ -375,12 +375,12 @@
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500 font-medium">Merchant Name:</span>
-                        <span id="display-airtel-name" class="font-semibold text-gray-900 text-right">Believers Fellowship Offerings</span>
+                        <span id="display-airtel-name" class="font-semibold text-gray-900 text-right"></span>
                     </div>
                     <div class="flex justify-between items-center py-2">
                         <span class="text-gray-500 font-medium">Merchant Number:</span>
                         <div class="flex items-center gap-2">
-                            <span id="airtel-code" class="font-mono font-bold text-red-700">554433</span>
+                            <span id="airtel-code" class="font-mono font-bold text-red-700"></span>
                             <button onclick="copyToClipboard(document.getElementById('airtel-code').innerText, this)" class="bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-700 p-1.5 rounded-md transition text-xs flex items-center gap-1" title="Copy Airtel Number">
                                 <i class="fas fa-clipboard"></i>
                             </button>
@@ -394,7 +394,9 @@
         </div>
 
     </div>
-
+    <p id="no-giving-details" class="hidden mt-6 text-center text-sm text-gray-500">
+        This church has not published direct bank or mobile-money giving instructions yet.
+    </p>
     <!-- Additional Information Section -->
     <div class="mt-8 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-4xl mx-auto">
         <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -445,39 +447,21 @@
             <button onclick="closeEditGivingModal()" class="text-blue-100 hover:text-white text-xl font-bold">&times;</button>
         </div>
         <form id="edit-giving-form" onsubmit="saveGivingSettings(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Bank Name</label>
-                <input type="text" id="input-bank-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
+            <div><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Bank Name</label><input type="text" id="input-bank-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Name</label><input type="text" id="input-account-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Number</label><input type="text" id="input-account-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Branch (optional)</label><input type="text" id="input-branch" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div class="border-t pt-4"><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">MTN Mobile Money Name</label><input type="text" id="input-momo-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">MTN Mobile Money Number / Code</label><input type="text" id="input-momo-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div class="border-t pt-4"><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Airtel Money Name</label><input type="text" id="input-airtel-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Airtel Money Number / Code</label><input type="text" id="input-airtel-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+            <div class="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                <label class="flex items-start gap-3 text-sm font-semibold text-gray-800">
+                    <input type="checkbox" id="input-giving-published" class="mt-1">
+                    <span>Publish these instructions to the public church profile and Giving page.</span>
+                </label>
+                <p class="mt-1 ml-6 text-xs text-gray-600">When unchecked, only authorised church staff can view the saved details.</p>
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Name</label>
-                <input type="text" id="input-account-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Account Number</label>
-                <input type="text" id="input-account-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Branch</label>
-                <input type="text" id="input-branch" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-            <div class="border-t pt-4">
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">MTN Mobile Money Name</label>
-                <input type="text" id="input-momo-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">MTN Mobile Money Number / Code</label>
-                <input type="text" id="input-momo-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-            <div class="border-t pt-4">
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Airtel Money Name</label>
-                <input type="text" id="input-airtel-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Airtel Money Number / Code</label>
-                <input type="text" id="input-airtel-number" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500" required>
-            </div>
-
             <div class="flex justify-end gap-3 pt-4 border-t">
                 <button type="button" onclick="closeEditGivingModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
                     Cancel
@@ -502,6 +486,10 @@
     let loggedInUser = null;
     let currentGivingData = null;
     let selectedAmountValue = 0;
+    let selectedGivingChurchId = null;
+    let currentGivingProfile = null;
+    let currentGivingIsSuperAdmin = false;
+    let currentGivingCanManage = false;
     // International phone number selector
     const donorPhoneElement = document.getElementById('donor-phone');
 
@@ -565,48 +553,65 @@ if (donorPhoneInput && profile?.phone) {
     phoneIti.setNumber(profile.phone);
 }
 
+    }
+
+    currentGivingProfile = profile;
+
+    if (user) {
+        const { data: superAdminResult, error: superAdminError } =
+            await window.sbClient.rpc('is_super_admin');
+
+        if (superAdminError) {
+            console.warn('Could not verify platform administrator status:', superAdminError.message);
+        } else {
+            currentGivingIsSuperAdmin = superAdminResult === true;
+        }
+    }
+
     if (profile) {
-        if (profile.role === 'admin' || profile.role === 'super_admin') {
+        const isChurchStaff =
+            ['church_admin', 'finance'].includes(profile.role) &&
+            profile.status === 'active' &&
+            profile.is_blocked !== true;
+        const isGivingStaff = isChurchStaff || currentGivingIsSuperAdmin;
+
+        if (profile.role === 'church_admin' || currentGivingIsSuperAdmin) {
             const adminLink = document.getElementById('admin-nav-link');
             if (adminLink) adminLink.classList.remove('hidden');
         }
 
-        if (['admin', 'super_admin', 'finance'].includes(profile.role)) {
-            const editContainer = document.getElementById('edit-giving-container');
-            if (editContainer) editContainer.classList.remove('hidden');
-        }
+        currentGivingCanManage = Boolean(
+            currentGivingIsSuperAdmin ||
+            (profile.church_id && isChurchStaff)
+        );
 
         const contactFinanceBtn = document.getElementById('contactFinanceBtn');
         if (contactFinanceBtn) {
-            const isStaff = ['admin', 'super_admin', 'finance'].includes(profile.role);
-
-            if (!isStaff) {
-                contactFinanceBtn.style.display = 'block';
-            } else {
-                contactFinanceBtn.style.display = 'none';
-            }
+            contactFinanceBtn.style.display = isGivingStaff ? 'none' : 'block';
         }
     }
-}
-await fetchGivingSettings();
 
-// Identify the member's attached church and any public-page selection.
-const requestedChurchId = new URLSearchParams(window.location.search).get('church_id');
-const memberChurchId = profile?.church_id || null;
+    const requestedChurchId = new URLSearchParams(window.location.search).get('church_id');
+    const profileChurchId = profile?.church_id || null;
 
-// A member's own church always takes priority over the URL.
-const selectedChurchId = memberChurchId || requestedChurchId;
+    // Ordinary signed-in users and church staff stay on their own church.
+    // A platform administrator may choose another approved church.
+    selectedGivingChurchId = currentGivingIsSuperAdmin
+        ? (requestedChurchId || profileChurchId)
+        : (profileChurchId || requestedChurchId);
 
-await loadChurchesDropdown(selectedChurchId);
+    await loadChurchesDropdown(selectedGivingChurchId);
 
-// Members do not need a church-selection dropdown.
-const churchSelector = document.getElementById('giving-church-select')?.parentElement;
+    const churchSelector = document.getElementById('giving-church-select')?.parentElement;
+    if (churchSelector) {
+        churchSelector.classList.toggle(
+            'hidden',
+            Boolean(profileChurchId && !currentGivingIsSuperAdmin)
+        );
+    }
 
-if (churchSelector) {
-    churchSelector.classList.toggle('hidden', Boolean(memberChurchId));
-}
-
-await checkPesapalCallback();
+    await fetchGivingSettings(selectedGivingChurchId);
+    await checkPesapalCallback();
     }
 
     async function loadChurchesDropdown(selectedChurchId) {
@@ -639,9 +644,9 @@ await checkPesapalCallback();
         }
     }
 
-    function onChurchSelectionChange(churchId) {
-        // Can be used if giving details change per church
-        console.log("Active church context changed to:", churchId);
+    async function onChurchSelectionChange(churchId) {
+        selectedGivingChurchId = churchId || null;
+        await fetchGivingSettings(selectedGivingChurchId);
     }
 
     function selectPresetAmount(amount, btnElement) {
@@ -720,6 +725,7 @@ await checkPesapalCallback();
     const payerCountry = donorCountryInput?.value || '';
 
     const selectedChurchId =
+        selectedGivingChurchId ||
         document.getElementById('giving-church-select')?.value;
 
     if (!selectedChurchId) {
@@ -878,54 +884,137 @@ await checkPesapalCallback();
         clearPresetSelection();
     }
 
-    async function fetchGivingSettings() {
+    async function fetchGivingSettings(churchId) {
+        const editContainer = document.getElementById('edit-giving-container');
+        const isManager = Boolean(
+            currentGivingIsSuperAdmin ||
+            (currentGivingProfile?.church_id &&
+                currentGivingProfile.status === 'active' &&
+                currentGivingProfile.is_blocked !== true &&
+                ['church_admin', 'finance'].includes(currentGivingProfile.role))
+        );
+
+        currentGivingCanManage = isManager;
+        if (editContainer) {
+            editContainer.classList.toggle('hidden', !isManager || !churchId);
+        }
+
+        currentGivingData = null;
+        updateGivingUI(null);
+
+        if (!churchId || !window.sbClient) {
+            currentGivingData = isManager && churchId
+                ? { church_id: churchId, is_published: false }
+                : null;
+            return;
+        }
+
         try {
-            const { data, error } = await window.sbClient
-                .from('giving_settings')
-                .select('*')
-                .eq('id', 1)
-                .maybeSingle();
+            let data = null;
 
-            if (error) {
-                console.warn("Error fetching giving settings:", error.message);
-                return;
+            if (isManager) {
+                const { data: rows, error } = await window.sbClient.rpc(
+                    'get_church_giving_settings',
+                    { p_church_id: churchId }
+                );
+                if (error) throw error;
+
+                data = Array.isArray(rows) ? (rows[0] || null) : rows;
+                currentGivingData = data || {
+                    church_id: churchId,
+                    bank_name: '',
+                    account_name: '',
+                    account_number: '',
+                    branch: '',
+                    momo_name: '',
+                    momo_number: '',
+                    airtel_name: '',
+                    airtel_number: '',
+                    is_published: false
+                };
+            } else {
+                const { data: publicData, error } = await window.sbClient
+                    .from('church_giving_directory')
+                    .select('church_id, bank_name, account_name, account_number, branch, momo_name, momo_number, airtel_name, airtel_number')
+                    .eq('church_id', churchId)
+                    .maybeSingle();
+
+                if (error) throw error;
+                data = publicData;
+                currentGivingData = publicData;
             }
 
-            if (data) {
-                currentGivingData = data;
-                updateGivingUI(data);
-            }
+            updateGivingUI(currentGivingData);
         } catch (err) {
-            console.error("Exception fetching giving settings:", err);
+            console.error('Error loading church giving settings:', err);
+            currentGivingData = isManager
+                ? { church_id: churchId, is_published: false }
+                : null;
+            updateGivingUI(currentGivingData);
         }
     }
 
     function updateGivingUI(data) {
-        if (!data) return;
-        
-        document.getElementById('display-bank-name').innerText = data.bank_name || '';
-        document.getElementById('display-account-name').innerText = data.account_name || '';
-        document.getElementById('bank-acc-num').innerText = data.account_number || '';
-        document.getElementById('display-branch').innerText = data.branch || '';
-        
-        document.getElementById('mtn-code').innerText = data.momo_number || '';
-        document.getElementById('display-momo-name').innerText = data.momo_name || '';
-        
-        document.getElementById('airtel-code').innerText = data.airtel_number || '';
-        document.getElementById('display-airtel-name').innerText = data.airtel_name || '';
+        const setText = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value || '';
+        };
+
+        const isVisibleToDonors = Boolean(
+            data && (!currentGivingCanManage || data.is_published === true)
+        );
+
+        const hasBank = isVisibleToDonors &&
+            Boolean(data.bank_name && data.account_name && data.account_number);
+        const hasMomo = isVisibleToDonors &&
+            Boolean(data.momo_name && data.momo_number);
+        const hasAirtel = isVisibleToDonors &&
+            Boolean(data.airtel_name && data.airtel_number);
+
+        setText('display-bank-name', data?.bank_name);
+        setText('display-account-name', data?.account_name);
+        setText('bank-acc-num', data?.account_number);
+        setText('display-branch', data?.branch);
+        setText('mtn-code', data?.momo_number);
+        setText('display-momo-name', data?.momo_name);
+        setText('airtel-code', data?.airtel_number);
+        setText('display-airtel-name', data?.airtel_name);
+
+        document.getElementById('bank-giving-card')?.classList.toggle('hidden', !hasBank);
+        document.getElementById('momo-giving-card')?.classList.toggle('hidden', !hasMomo);
+        document.getElementById('airtel-giving-card')?.classList.toggle('hidden', !hasAirtel);
+
+        const anyMethod = hasBank || hasMomo || hasAirtel;
+        document.getElementById('manual-giving-methods')?.classList.toggle('hidden', !anyMethod);
+
+        const emptyMessage = document.getElementById('no-giving-details');
+        if (emptyMessage) emptyMessage.classList.toggle('hidden', anyMethod);
+
+        const editContainer = document.getElementById('edit-giving-container');
+        if (editContainer) {
+            editContainer.classList.toggle(
+                'hidden',
+                !currentGivingCanManage || !selectedGivingChurchId
+            );
+        }
     }
 
     function openEditGivingModal() {
-        if (!currentGivingData) return;
+        if (!currentGivingCanManage || !selectedGivingChurchId) {
+            alert('You are not authorised to edit these giving details.');
+            return;
+        }
 
-        document.getElementById('input-bank-name').value = currentGivingData.bank_name || '';
-        document.getElementById('input-account-name').value = currentGivingData.account_name || '';
-        document.getElementById('input-account-number').value = currentGivingData.account_number || '';
-        document.getElementById('input-branch').value = currentGivingData.branch || '';
-        document.getElementById('input-momo-name').value = currentGivingData.momo_name || '';
-        document.getElementById('input-momo-number').value = currentGivingData.momo_number || '';
-        document.getElementById('input-airtel-name').value = currentGivingData.airtel_name || '';
-        document.getElementById('input-airtel-number').value = currentGivingData.airtel_number || '';
+        const data = currentGivingData || {};
+        document.getElementById('input-bank-name').value = data.bank_name || '';
+        document.getElementById('input-account-name').value = data.account_name || '';
+        document.getElementById('input-account-number').value = data.account_number || '';
+        document.getElementById('input-branch').value = data.branch || '';
+        document.getElementById('input-momo-name').value = data.momo_name || '';
+        document.getElementById('input-momo-number').value = data.momo_number || '';
+        document.getElementById('input-airtel-name').value = data.airtel_name || '';
+        document.getElementById('input-airtel-number').value = data.airtel_number || '';
+        document.getElementById('input-giving-published').checked = data.is_published === true;
 
         document.getElementById('edit-giving-modal').classList.remove('hidden');
     }
@@ -937,11 +1026,16 @@ await checkPesapalCallback();
     async function saveGivingSettings(event) {
         event.preventDefault();
 
+        if (!currentGivingCanManage || !selectedGivingChurchId) {
+            alert('You are not authorised to edit these giving details.');
+            return;
+        }
+
         const saveBtn = document.getElementById('save-giving-btn');
         saveBtn.disabled = true;
         saveBtn.innerText = 'Saving...';
 
-        const updatedData = {
+        const values = {
             bank_name: document.getElementById('input-bank-name').value.trim(),
             account_name: document.getElementById('input-account-name').value.trim(),
             account_number: document.getElementById('input-account-number').value.trim(),
@@ -950,35 +1044,55 @@ await checkPesapalCallback();
             momo_number: document.getElementById('input-momo-number').value.trim(),
             airtel_name: document.getElementById('input-airtel-name').value.trim(),
             airtel_number: document.getElementById('input-airtel-number').value.trim(),
-            updated_at: new Date().toISOString()
+            is_published: document.getElementById('input-giving-published').checked
         };
 
+        const hasCompleteBank = Boolean(
+            values.bank_name && values.account_name && values.account_number
+        );
+        const hasCompleteMomo = Boolean(values.momo_name && values.momo_number);
+        const hasCompleteAirtel = Boolean(values.airtel_name && values.airtel_number);
+
+        if (values.is_published && !hasCompleteBank && !hasCompleteMomo && !hasCompleteAirtel) {
+            alert('Add at least one complete payment method before publishing the giving instructions.');
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Changes';
+            return;
+        }
+
         try {
-            const { error } = await window.sbClient
-                .from('giving_settings')
-                .update(updatedData)
-                .eq('id', 1);
+            const { error } = await window.sbClient.rpc(
+                'save_church_giving_settings',
+                {
+                    p_church_id: selectedGivingChurchId,
+                    p_bank_name: values.bank_name || null,
+                    p_account_name: values.account_name || null,
+                    p_account_number: values.account_number || null,
+                    p_branch: values.branch || null,
+                    p_momo_name: values.momo_name || null,
+                    p_momo_number: values.momo_number || null,
+                    p_airtel_name: values.airtel_name || null,
+                    p_airtel_number: values.airtel_number || null,
+                    p_is_published: values.is_published
+                }
+            );
+            if (error) throw error;
 
-            if (error) {
-                throw error;
-            }
-
-            currentGivingData = { id: 1, ...updatedData };
-            updateGivingUI(currentGivingData);
-
+            await fetchGivingSettings(selectedGivingChurchId);
             closeEditGivingModal();
-
-            showSuccessToast('Giving settings updated successfully!');
-
+            showSuccessToast(
+                values.is_published
+                    ? 'Giving instructions saved and published.'
+                    : 'Giving instructions saved privately.'
+            );
         } catch (err) {
-            console.error("Error saving giving settings:", err);
-            alert("Failed to update giving settings: " + (err.message || err));
+            console.error('Error saving church giving settings:', err);
+            alert('Failed to save giving settings: ' + (err.message || err));
         } finally {
             saveBtn.disabled = false;
             saveBtn.innerText = 'Save Changes';
         }
     }
-
     function showSuccessToast(message) {
         const toast = document.getElementById('success-toast');
         const msgEl = document.getElementById('success-toast-msg');
@@ -1044,15 +1158,17 @@ await checkPesapalCallback();
             if (!financeError && financeProfiles && financeProfiles.length > 0) {
                 financeUser = financeProfiles[0];
             } else {
-                const { data: adminProfiles, error: adminError } = await window.sbClient
+                const { data: churchAdmins, error: churchAdminError } = await window.sbClient
                     .from('profiles')
                     .select('id, role, full_name, email, church_id')
-                    .or('role.eq.admin,role.eq.super_admin')
+                    .eq('role', 'church_admin')
                     .eq('church_id', userChurchId)
+                    .eq('status', 'active')
+                    .eq('is_blocked', false)
                     .limit(1);
 
-                if (!adminError && adminProfiles && adminProfiles.length > 0) {
-                    financeUser = adminProfiles[0];
+                if (!churchAdminError && churchAdmins && churchAdmins.length > 0) {
+                    financeUser = churchAdmins[0];
                 }
             }
 

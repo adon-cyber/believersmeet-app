@@ -202,7 +202,7 @@ export default async function handler(req, res) {
             throw new Error('Church Pesapal credentials are not configured.');
         }
 
-        const baseUrl = getBaseUrl(church.pesapal_env || 'sandbox');
+        const baseUrl = getBaseUrl((process.env.VERCEL_ENV || '').toLowerCase() === 'preview' ? 'sandbox' : (church.pesapal_env || 'sandbox'));
 
         const token = await getPesapalToken(
             church.pesapal_consumer_key.trim(),

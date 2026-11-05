@@ -249,7 +249,7 @@
         async function loadGalleryMemories() {
             const { data, error } = await window.sbClient
                 .from('gallery_images')
-                .select('*')
+                .select('created_at, image_url, caption, uploader_name')
                 .order('created_at', { ascending: false });
 
             console.log('Supabase Data:', data);

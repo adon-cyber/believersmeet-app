@@ -187,126 +187,148 @@
             await checkConnectionStatus(currentUser?.id, targetUserId);
         }
 
-        let currentConnectionState = 'none'; // 'none', 'pending', 'accepted'
+        let currentConnectionState = 'none';
+
+        function setConnectButtonState(state) {
+            currentConnectionState = state;
+
+            const btn = document.getElementById('connect-btn');
+            if (!btn) return;
+
+            const states = {
+                none: {
+                    html: '<i class="fas fa-user-plus"></i> Connect',
+                    disabled: false,
+                    className: 'px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2'
+                },
+                pending: {
+                    html: '<i class="fas fa-clock"></i> Request Pending',
+                    disabled: true,
+                    className: 'px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2'
+                },
+                accepted: {
+                    html: '<i class="fas fa-check"></i> Connected',
+                    disabled: true,
+                    className: 'px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2'
+                },
+                rejected_sent: {
+                    html: '<i class="fas fa-redo"></i> Resend Request',
+                    disabled: false,
+                    className: 'px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2'
+                },
+                rejected_received: {
+                    html: '<i class="fas fa-ban"></i> Request Declined',
+                    disabled: true,
+                    className: 'px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2'
+                }
+            };
+
+            const config = states[state] || states.none;
+            btn.innerHTML = config.html;
+            btn.disabled = config.disabled;
+            btn.className = config.className;
+        }
 
         async function checkConnectionStatus(currentUserId, viewedUserId) {
+            const btn = document.getElementById('connect-btn');
+
             if (!currentUserId || !viewedUserId || currentUserId === viewedUserId) {
-                const btn = document.getElementById('connect-btn');
-                if (btn && currentUserId === viewedUserId) btn.style.display = 'none';
+                if (btn && currentUserId === viewedUserId) {
+                    btn.style.display = 'none';
+                }
                 return;
             }
 
             try {
                 const { data, error } = await window.sbClient
                     .from('connections')
-                    .select('*')
+                    .select('id,requester_id,recipient_id,status')
                     .or(`and(requester_id.eq.${currentUserId},recipient_id.eq.${viewedUserId}),and(requester_id.eq.${viewedUserId},recipient_id.eq.${currentUserId})`)
                     .maybeSingle();
 
-                const btn = document.getElementById('connect-btn');
-                if (!btn) return;
+                if (error) throw error;
 
-                if (data) {
-                    if (data.status === 'accepted') {
-                        currentConnectionState = 'accepted';
-                        btn.innerHTML = `<i class="fas fa-check"></i> Connected`;
-                        btn.disabled = true;
-                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
-                    } else if (data.status === 'pending') {
-                        currentConnectionState = 'pending';
-                        btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
-                        btn.disabled = true;
-                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
-                    }
+                if (!data) {
+                    setConnectButtonState('none');
+                } else if (data.status === 'accepted') {
+                    setConnectButtonState('accepted');
+                } else if (data.status === 'pending') {
+                    setConnectButtonState('pending');
+                } else if (data.status === 'rejected') {
+                    setConnectButtonState(
+                        data.requester_id === currentUserId
+                            ? 'rejected_sent'
+                            : 'rejected_received'
+                    );
                 } else {
-                    currentConnectionState = 'none';
-                    btn.innerHTML = `<i class="fas fa-user-plus"></i> Connect`;
-                    btn.disabled = false;
-                    btn.className = "px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2";
+                    setConnectButtonState('none');
                 }
             } catch (e) {
-                console.error("Error checking connection status:", e);
+                console.error('Error checking connection status:', e);
             }
         }
 
         async function handleConnectClick() {
             if (!loggedInUser) {
-                alert("Please log in to connect with members.");
+                alert('Please log in to connect with members.');
                 return;
             }
+
             if (!targetUserId || loggedInUser.id === targetUserId) return;
 
             const btn = document.getElementById('connect-btn');
+            if (!btn || btn.disabled) return;
+
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking...`;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
             try {
-                const { data: existingConn } = await window.sbClient
-                    .from('connections')
-                    .select('*')
-                    .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},recipient_id.eq.${loggedInUser.id})`)
-                    .maybeSingle();
+                const { data: requestResult, error } = await window.sbClient.rpc(
+                    'request_connection',
+                    { p_recipient_id: targetUserId }
+                );
 
-                if (existingConn) {
-                    if (existingConn.status === 'accepted') {
-                        currentConnectionState = 'accepted';
-                        btn.innerHTML = `<i class="fas fa-check"></i> Connected`;
-                        btn.disabled = true;
-                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
-                    } else {
-                        currentConnectionState = 'pending';
-                        btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
-                        btn.disabled = true;
-                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
-                    }
-                    alert("Connection request already exists");
+                if (error) throw error;
+                if (!requestResult || !requestResult.status) {
+                    throw new Error('The connection request returned an unexpected response.');
+                }
+
+                if (requestResult.status === 'accepted') {
+                    setConnectButtonState('accepted');
                     return;
                 }
 
-                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending...`;
-                const { error } = await window.sbClient
-                    .from('connections')
-                    .insert([{
-                        requester_id: loggedInUser.id,
-                        recipient_id: targetUserId,
-                        status: 'pending'
-                    }]);
-
-                if (error) {
-                    if (error.code === '23505' || (error.message && error.message.includes('unique constraint'))) {
-                        alert("Connection request already exists");
-                        currentConnectionState = 'pending';
-                        btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
-                        btn.disabled = true;
-                        btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
-                    } else {
-                        alert("Could not send connection request: " + error.message);
-                        btn.disabled = false;
-                        btn.innerHTML = `<i class="fas fa-user-plus"></i> Connect`;
-                        btn.className = "px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2";
-                    }
+                if (requestResult.status === 'pending') {
+                    setConnectButtonState('pending');
+                } else if (requestResult.status === 'rejected') {
+                    setConnectButtonState('rejected_received');
                 } else {
-                    currentConnectionState = 'pending';
-                    btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
-                    btn.disabled = true;
-                    btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
+                    throw new Error('Unexpected connection status: ' + requestResult.status);
+                }
 
-                    // Trigger notification for connection request recipient using window.sendNotification
+                if (requestResult.request_sent === true) {
                     if (typeof window.sendNotification === 'function') {
                         try {
                             let senderName = 'A believer';
-                            const { data: senderProf } = await window.sbClient
+
+                            const { data: senderProf, error: profileError } = await window.sbClient
                                 .from('profiles')
                                 .select('full_name')
                                 .eq('id', loggedInUser.id)
                                 .maybeSingle();
-                            if (senderProf && senderProf.full_name) {
+
+                            if (!profileError && senderProf?.full_name) {
                                 senderName = senderProf.full_name;
                             }
+
                             await window.sendNotification(
                                 targetUserId,
-                                'New Connection Request',
-                                `${senderName} sent you a connection request.`,
+                                requestResult.resent
+                                    ? 'Connection Request Resent'
+                                    : 'New Connection Request',
+                                requestResult.resent
+                                    ? `${senderName} resent a connection request.`
+                                    : `${senderName} sent you a connection request.`,
                                 '/profile.html'
                             );
                         } catch (notifErr) {
@@ -315,22 +337,15 @@
                     }
                 }
             } catch (e) {
-                console.error("Error sending connection request:", e);
-                if (e.code === '23505' || (e.message && e.message.includes('unique constraint'))) {
-                    alert("Connection request already exists");
-                    currentConnectionState = 'pending';
-                    btn.innerHTML = `<i class="fas fa-clock"></i> Request Pending`;
-                    btn.disabled = true;
-                    btn.className = "px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl text-sm cursor-not-allowed flex items-center gap-2";
-                } else {
-                    alert("Could not send connection request: " + (e.message || e));
-                    btn.disabled = false;
-                    btn.innerHTML = `<i class="fas fa-user-plus"></i> Connect`;
-                    btn.className = "px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition text-sm flex items-center gap-2";
-                }
+                console.error('Error sending connection request:', e);
+                alert('Could not send connection request: ' + (e.message || e));
+                setConnectButtonState(
+                    currentConnectionState === 'rejected_sent'
+                        ? 'rejected_sent'
+                        : 'none'
+                );
             }
         }
-
         function handleChatClick() {
             if (!targetUserId) {
                 alert("Target user not specified.");

@@ -69,6 +69,161 @@
 
     window.updateNotificationCount = updateNotificationCount;
 
+    // Receive incoming video-call invitations on authenticated pages.
+    function setupIncomingVideoCallSubscription() {
+        if (!sbClient || !currentUser?.id) return;
+
+        const userId = currentUser.id;
+        const uuidPattern =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+        const processedInvitations = new Set();
+        let channel = null;
+        let queue = Promise.resolve();
+        let pendingLoaded = false;
+
+        async function handleIncomingInvitation(invitation) {
+            if (
+                !invitation ||
+                !uuidPattern.test(invitation.id || '') ||
+                invitation.recipient_id !== userId ||
+                invitation.status !== 'ringing' ||
+                processedInvitations.has(invitation.id)
+            ) {
+                return;
+            }
+
+            processedInvitations.add(invitation.id);
+
+            try {
+                // Ask PostgreSQL to decide whether the invitation
+                // is still active. Do not rely on the browser clock.
+                const { data: currentStatus, error: expiryError } =
+                    await sbClient.rpc('expire_video_call_invitation', {
+                        p_invitation_id: invitation.id
+                    });
+
+                if (expiryError) throw expiryError;
+                if (currentStatus !== 'ringing') return;
+
+                let callerName = 'a member';
+
+                const { data: caller, error: callerError } = await sbClient
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', invitation.caller_id)
+                    .maybeSingle();
+
+                if (callerError) {
+                    console.warn('Could not retrieve caller name:', callerError);
+                } else {
+                    callerName = caller?.full_name || callerName;
+                }
+
+                const accepted = window.confirm(
+                    `Incoming video call from ${callerName}. Accept?`
+                );
+
+                const { data: responseStatus, error } = await sbClient.rpc(
+                    'respond_to_video_call_invitation',
+                    {
+                        p_invitation_id: invitation.id,
+                        p_action: accepted ? 'accepted' : 'declined'
+                    }
+                );
+
+                if (error) throw error;
+
+                if (accepted && responseStatus === 'accepted') {
+                    window.location.assign(
+                        `video-call.html?invitation=${encodeURIComponent(invitation.id)}`
+                    );
+                    return;
+                }
+
+                if (accepted) {
+                    const messages = {
+                        expired: 'This video-call invitation has expired.',
+                        cancelled: 'This video-call invitation is no longer available.',
+                        ended: 'This video call has already ended.'
+                    };
+
+                    window.alert(
+                        messages[responseStatus] ||
+                        'The video-call invitation could not be accepted.'
+                    );
+                }
+            } catch (error) {
+                processedInvitations.delete(invitation.id);
+                console.error('Incoming video-call invitation failed:', error);
+                window.alert(
+                    error.message ||
+                    'Could not process the incoming video-call invitation.'
+                );
+            }
+        }
+
+        function enqueueInvitation(invitation) {
+            queue = queue.then(
+                () => handleIncomingInvitation(invitation)
+            );
+        }
+
+        async function loadPendingInvitations() {
+            try {
+                const { data, error } = await sbClient
+                    .from('video_call_invitations')
+                    .select('id, caller_id, recipient_id, status, created_at')
+                    .eq('recipient_id', userId)
+                    .eq('status', 'ringing')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                for (const invitation of data || []) {
+                    enqueueInvitation(invitation);
+                }
+            } catch (error) {
+                console.error('Could not load pending video-call invitations:', error);
+            }
+        }
+
+        channel = sbClient
+            .channel(`video-call-invitations-recipient-${userId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'video_call_invitations',
+                    filter: `recipient_id=eq.${userId}`
+                },
+                payload => enqueueInvitation(payload.new)
+            )
+            .subscribe(status => {
+                if (status === 'SUBSCRIBED' && !pendingLoaded) {
+                    pendingLoaded = true;
+                    void loadPendingInvitations();
+                }
+
+                if (
+                    status === 'CHANNEL_ERROR' ||
+                    status === 'TIMED_OUT'
+                ) {
+                    console.error(
+                        'Video-call invitation subscription status:',
+                        status
+                    );
+                }
+            });
+
+        window.addEventListener('pagehide', () => {
+            if (channel) void sbClient.removeChannel(channel);
+        }, { once: true });
+
+        console.log('Incoming video-call listener initialized.');
+    }
     async function initInAppNotifications() {
         // Wait for Supabase client
         let attempts = 0;
@@ -83,6 +238,7 @@
             const { data: { user } } = await sbClient.auth.getUser();
             if (!user) return;
             currentUser = user;
+            setupIncomingVideoCallSubscription();
 
             // 1. Inject Notification Bell UI into nav bars if not already present
             injectNotificationBellUI();

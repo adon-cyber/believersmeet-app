@@ -272,7 +272,7 @@
                     console.warn("Retrying query without explicit constraint name:", error.message);
                     const fallbackRes = await window.sbClient
                         .from('connections')
-                        .select('*, profiles:requester_id(id, full_name, avatar_url, home_cell)')
+                        .select('id, requester_id, recipient_id, status, created_at, profiles:requester_id(id, full_name, avatar_url, home_cell)')
                         .eq('recipient_id', loggedInUser.id)
                         .eq('status', 'pending');
                     
@@ -326,12 +326,18 @@
 
         async function acceptRequest(requestId) {
             try {
-                const { error } = await window.sbClient
-                    .from('connections')
-                    .update({ status: 'accepted', updated_at: new Date().toISOString() })
-                    .eq('id', requestId);
+                const { data, error } = await window.sbClient.rpc(
+                    'respond_to_connection',
+                    {
+                        p_connection_id: requestId,
+                        p_response: 'accepted'
+                    }
+                );
 
                 if (error) throw error;
+                if (data?.status !== 'accepted') {
+                    throw new Error('The connection request was not accepted.');
+                }
 
                 showSuccessToast("Praise God! Connection request accepted.");
                 const card = document.getElementById(`request-card-${requestId}`);
@@ -352,13 +358,18 @@
 
         async function declineRequest(requestId) {
             try {
-                // Update row status to 'declined' instead of deleting
-                const { error } = await window.sbClient
-                    .from('connections')
-                    .update({ status: 'declined', updated_at: new Date().toISOString() })
-                    .eq('id', requestId);
+                const { data, error } = await window.sbClient.rpc(
+                    'respond_to_connection',
+                    {
+                        p_connection_id: requestId,
+                        p_response: 'rejected'
+                    }
+                );
 
                 if (error) throw error;
+                if (data?.status !== 'rejected') {
+                    throw new Error('The connection request was not declined.');
+                }
 
                 showSuccessToast("Connection request declined.");
                 const card = document.getElementById(`request-card-${requestId}`);
@@ -376,7 +387,6 @@
                 alert("Failed to decline request: " + err.message);
             }
         }
-
         async function uploadAvatar() {
             const fileInput = document.getElementById('file-upload');
             const file = fileInput.files[0];

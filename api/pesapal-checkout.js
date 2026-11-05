@@ -254,7 +254,7 @@ if (authenticatedUser) {
             return res.status(400).json({ success: false, error: 'This church has not completed its Pesapal payment setup.' });
         }
 
-        const baseUrl = getPesapalBaseUrl(church.pesapal_env || 'sandbox');
+        const baseUrl = getPesapalBaseUrl((process.env.VERCEL_ENV || '').toLowerCase() === 'preview' ? 'sandbox' : (church.pesapal_env || 'sandbox'));
         const token = await getPesapalToken(
             church.pesapal_consumer_key.trim(),
             church.pesapal_consumer_secret.trim(),

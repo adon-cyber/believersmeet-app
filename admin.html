@@ -1572,24 +1572,24 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
             // Super Admin Exception (evaluated before profile query validation)
         
 
-            // 1. Fetch logged-in admin's church id and church name from Supabase using the real table relationship
-            const { data: profile, error: profileError } = await window.sbClient
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
-
-            let backendSuperAdmin = false;
+            // Resolve platform-admin authority from the database allowlist first.
+            // Never bind this privilege to a hard-coded Auth UUID.
             try {
-                const { data: rpcRes, error: rpcError } = await window.sbClient.rpc('is_super_admin');
+                const { data: rpcRes, error: rpcError } =
+                    await window.sbClient.rpc('is_super_admin');
                 if (rpcError) throw rpcError;
-                backendSuperAdmin = !!rpcRes;
+                isSuperAdmin = rpcRes === true;
             } catch (e) {
                 console.warn('is_super_admin RPC check failed (failing closed):', e);
-                backendSuperAdmin = false;
+                isSuperAdmin = false;
             }
 
-            isSuperAdmin = backendSuperAdmin && user.id === '45e7b5df-8f08-4cc7-9356-35e405618329';
+            // Read only the profile fields this dashboard needs.
+            const { data: profile, error: profileError } = await window.sbClient
+                .from('profiles')
+                .select('id,email,role,church_id,full_name')
+                .eq('id', user.id)
+                .maybeSingle();
 
             if ((profileError || !profile) && !isSuperAdmin) {
     const diagnostic = profileError
@@ -1983,9 +1983,9 @@ const church = churchDetails?.[0] || null;
             }
 
             container.innerHTML = programmes && programmes.length > 0 ? programmes.map(p => {
-                const dayStr = p.day || p.schedule || '';
+                const dayStr = p.day_of_week || '';
                 const timeStr = p.start_time && p.end_time ? `${p.start_time} - ${p.end_time}` : (p.start_time || p.time || '');
-                const scheduleDisplay = [dayStr, timeStr].filter(Boolean).join(', ');
+                const scheduleDisplay = p.schedule_text || [dayStr, timeStr].filter(Boolean).join(', ');
 
                 return `
                     <div class="py-3 flex items-center justify-between">
@@ -2236,14 +2236,28 @@ try {
         }
 
         // --- USER MANAGEMENT HANDLERS ---
-        async function loadAllMembers(churchId, isSuperAdmin) {
+        async function loadAllMembers(churchId, platformAdmin) {
             const container = document.getElementById('admin-list');
             container.innerHTML = '<p class="text-slate-500 py-4">Loading user profiles...</p>';
-            
-            let query = window.sbClient.from('profiles').select('*');
-            if (!isSuperAdmin && churchId) {
-                query = query.eq('church_id', churchId);
+
+            // The allowlist RPC result is the sole client-side source of platform-admin authority.
+            const effectivePlatformAdmin = isSuperAdmin === true;
+            const effectiveChurchId = churchId || (effectivePlatformAdmin
+                ? activeDashboardChurchId
+                : currentUserProfile?.church_id);
+
+            let query = window.sbClient
+                .from('profiles')
+                .select('id,full_name,email,role,church_id');
+
+            if (!effectivePlatformAdmin) {
+                if (!effectiveChurchId) {
+                    container.innerHTML = '<p class="text-red-400 py-4">Your church assignment could not be verified. Member list access is blocked.</p>';
+                    return;
+                }
+                query = query.eq('church_id', effectiveChurchId);
             }
+
             const { data: profiles, error } = await query;
 
             if (error) {
@@ -2255,6 +2269,10 @@ try {
                 container.innerHTML = '<p class="text-slate-500 py-4">No user profiles found in this church.</p>';
                 return;
             }
+
+            const allowedRoles = effectivePlatformAdmin
+                ? ['member', 'finance', 'pastor', 'church_admin']
+                : ['member', 'finance', 'pastor'];
 
             container.innerHTML = `
                 <div class="overflow-x-auto">
@@ -2268,33 +2286,48 @@ try {
                             </tr>
                         </thead>
                         <tbody>
-                            ${profiles.map(p => `
-                                <tr>
-                                    <td class="px-4 py-3 fw-semibold text-dark">
-                                        ${escapeHTML(p.full_name || 'Unnamed Member')}
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <span class="text-secondary small">${escapeHTML(p.email || p.id)}</span>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <span class="badge bg-primary rounded-pill px-3 py-2">
-                                            ${escapeHTML(p.role || 'user')}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-end">
-                                        <div class="d-inline-flex align-items-center gap-2">
-                                            <select id="role-select-${p.id}" class="form-select form-select-sm bg-slate-950 text-slate-100 border-slate-700">
-                                                <option value="user" ${p.role === 'user' ? 'selected' : ''}>user</option>
-                                                <option value="finance" ${p.role === 'finance' ? 'selected' : ''}>finance</option>
-                                                <option value="admin" ${p.role === 'admin' ? 'selected' : ''}>admin</option>
-                                            </select>
-                                            <button onclick="updateUserRole('${p.id}')" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill">
-                                                Update Role
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
+                            ${profiles.map(p => {
+                                const canonicalRoles = ['member', 'finance', 'pastor', 'church_admin'];
+                                const isSupportedCurrentRole = canonicalRoles.includes(p.role);
+                                const canManageRoles = !!currentUserProfile &&
+                                    !currentUserProfile.missing_profile &&
+                                    (effectivePlatformAdmin || currentUserProfile.role === 'church_admin');
+                                const isProtectedTargetRole = ['super_admin', 'super-admin'].includes(p.role);
+                                const roleChangeAllowed = canManageRoles &&
+                                    p.id !== currentUserProfile.id &&
+                                    !isProtectedTargetRole &&
+                                    (effectivePlatformAdmin || !['admin', 'church_admin'].includes(p.role)) &&
+                                    isSupportedCurrentRole;
+                                const roleOptions = isSupportedCurrentRole
+                                    ? [...new Set([p.role, ...allowedRoles])]
+                                    : [];
+                                return `
+                                    <tr>
+                                        <td class="px-4 py-3 fw-semibold text-dark">
+                                            ${escapeHTML(p.full_name || 'Unnamed Member')}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="text-secondary small">${escapeHTML(p.email || p.id)}</span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="badge bg-primary rounded-pill px-3 py-2">
+                                                ${escapeHTML(p.role || 'member')}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-end">
+                                            <div class="d-inline-flex align-items-center gap-2">
+                                                <select id="role-select-${p.id}" class="form-select form-select-sm bg-slate-950 text-slate-100 border-slate-700" ${roleChangeAllowed ? '' : 'disabled'}>
+                                                    ${!isSupportedCurrentRole ? `<option value="" selected>Unsupported role: ${escapeHTML(p.role || 'unknown')} (read only)</option>` : ''}
+                                                    ${roleOptions.map(role => `<option value="${escapeHTML(role)}" ${p.role === role ? 'selected' : ''}>${escapeHTML(role.replace(/_/g, ' '))}</option>`).join('')}
+                                                </select>
+                                                <button onclick="updateUserRole('${p.id}')" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill" ${roleChangeAllowed ? '' : 'disabled'}>
+                                                    Update Role
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -2303,19 +2336,37 @@ try {
 
         async function updateUserRole(userId) {
             const selectEl = document.getElementById(`role-select-${userId}`);
-            if (!selectEl) return;
+            if (!selectEl || selectEl.disabled) return;
+            if (!currentUserProfile || currentUserProfile.missing_profile) {
+                showNotification('Your admin profile must be provisioned before role management is available.', 'error');
+                return;
+            }
+            if (!isSuperAdmin && currentUserProfile.role !== 'church_admin') {
+                showNotification('Only Platform Admins and Church Admins may manage roles.', 'error');
+                return;
+            }
             const selectedRole = selectEl.value;
+            const permittedRoles = isSuperAdmin
+                ? ['member', 'finance', 'pastor', 'church_admin']
+                : ['member', 'finance', 'pastor'];
+            if (!permittedRoles.includes(selectedRole)) {
+                showNotification('That role is not permitted for your account.', 'error');
+                return;
+            }
 
             try {
-                const { data, error } = await window.sbClient
-                    .from('profiles')
-                    .update({ role: selectedRole })
-                    .eq('id', userId);
+                const rpcName = isSuperAdmin
+                    ? 'super_admin_update_user_role'
+                    : 'assign_profile_role';
+                const rpcArgs = isSuperAdmin
+                    ? { target_user_id: userId, new_role: selectedRole }
+                    : { p_target_profile_id: userId, p_new_role: selectedRole };
 
+                const { error } = await window.sbClient.rpc(rpcName, rpcArgs);
                 if (error) throw error;
 
                 showNotification("User role updated successfully!", "success");
-                loadAllMembers();
+                await loadAllMembers();
             } catch (err) {
                 showNotification("Failed to update role: " + err.message, "error");
             }
@@ -2425,6 +2476,19 @@ try {
                 const categoryInput = document.getElementById('media-category-input');
                 const fileInput = document.getElementById('song-file-input');
                 const youtubeInput = document.getElementById('youtube-url-input');
+                const uploadChurchId = isSuperAdmin
+                    ? activeDashboardChurchId
+                    : (currentUserProfile?.role === 'church_admin'
+                        ? currentUserProfile.church_id
+                        : null);
+
+                if (!uploadChurchId) {
+                    throw new Error(
+                        isSuperAdmin
+                            ? 'Select a church before uploading media.'
+                            : 'Only an assigned Church Admin or Super Admin can upload church media.'
+                    );
+                }
 
                 const mediaType = mediaTypeInput.value;
                 const category = categoryInput.value;
@@ -2464,11 +2528,7 @@ try {
                     media_type: mediaType,
                     category: category
                 };
-                if (currentUserProfile && currentUserProfile.church_id) {
-                    insertPayload.church_id = currentUserProfile.church_id;
-                } else {
-                    insertPayload.church_id = null;
-                }
+                insertPayload.church_id = uploadChurchId;
 
                 const { error: dbError } = await window.sbClient.from('sermons').insert([insertPayload]);
 
@@ -2496,6 +2556,19 @@ try {
             try {
                 const fileInput = document.getElementById('gallery-file-input');
                 const captionInput = document.getElementById('gallery-caption-input');
+                const uploadChurchId = isSuperAdmin
+                    ? activeDashboardChurchId
+                    : (currentUserProfile?.role === 'church_admin'
+                        ? currentUserProfile.church_id
+                        : null);
+
+                if (!uploadChurchId) {
+                    throw new Error(
+                        isSuperAdmin
+                            ? 'Select a church before uploading media.'
+                            : 'Only an assigned Church Admin or Super Admin can upload church media.'
+                    );
+                }
                 
                 if (!fileInput.files || fileInput.files.length === 0) {
                     throw new Error("Please select an image file to upload.");
@@ -2523,7 +2596,7 @@ try {
                 const { error: dbError } = await window.sbClient.from('gallery_images').insert([{
                     image_url: publicUrl,
                     caption: captionInput.value.trim(),
-                    church_id: currentUserProfile?.church_id || null,
+                    church_id: uploadChurchId,
                     uploader_name: currentUserProfile?.full_name || user.user_metadata?.full_name || 'Admin'
                 }]);
 

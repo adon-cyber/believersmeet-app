@@ -87,7 +87,15 @@
                 <h3 class="text-sm font-bold text-amber-300 flex items-center gap-2">
                     <i class="fas fa-tools"></i> Church Manager Live Stream Control
                 </h3>
-                <div class="space-y-2">
+                <div id="super-admin-live-church-selector" class="hidden space-y-1">
+                    <label for="super-admin-live-church-select" class="block text-xs font-semibold text-slate-300">Platform Administrator: Select an approved church</label>
+                    <select id="super-admin-live-church-select"
+                        onchange="handleLiveChurchSelectionChange(this.value)"
+                        class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Choose an approved church...</option>
+                    </select>
+                    <p class="text-[11px] text-slate-400">The selected church is checked again by the database before any broadcast change.</p>
+                </div>                <div class="space-y-2">
                     <label class="block text-xs font-semibold text-slate-300">YouTube Live Stream Link / URL</label>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <input type="text" id="admin-stream-url-input" placeholder="Paste YouTube watch, share (youtu.be), or live URL..." class="flex-grow px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -282,6 +290,10 @@
     <script src="js/app-utils.js"></script>
     <script>
         let currentUserProfile = null;
+        let currentUserIsSuperAdmin = false;
+        let currentUserCanManageChurchContent = false;
+        let selectedLiveChurchId = null;
+        const approvedLiveChurchIds = new Set();
         let activeScopeTab = 'fellow'; // 'fellow' or 'other'
         let activeCategoryTab = 'All'; // 'All', 'Sermon', 'Gospel Song'
         let fetchedMediaRecords = [];
@@ -314,15 +326,58 @@
             
             currentUserProfile = profile;
 
-            if (profile) {
-                if (profile.role === 'admin' || profile.role === 'super_admin') {
-                    const adminLink = document.getElementById('admin-nav-link');
-                    if (adminLink) adminLink.classList.remove('hidden');
-                    const uploadBtn = document.getElementById('open-upload-modal-btn');
-                    if (uploadBtn) uploadBtn.classList.remove('hidden');
-                    const adminLivePanel = document.getElementById('admin-live-control-panel');
-                    if (adminLivePanel) adminLivePanel.classList.remove('hidden');
+            const profileCanBeVerified = Boolean(
+                profile &&
+                profile.status === 'active' &&
+                profile.is_blocked === false
+            );
+
+            if (profileCanBeVerified && profile.role === 'super_admin') {
+                const { data: superAdminResult, error: superAdminError } =
+                    await window.sbClient.rpc('is_super_admin');
+
+                if (superAdminError) {
+                    console.warn('Could not verify platform administrator:', superAdminError.message);
+                } else {
+                    currentUserIsSuperAdmin = superAdminResult === true;
                 }
+            }
+
+            if (profileCanBeVerified && profile.church_id) {
+                const { data: manageResult, error: manageError } =
+                    await window.sbClient.rpc('can_manage_church_content', {
+                        p_church_id: profile.church_id
+                    });
+
+                if (manageError) {
+                    console.warn('Could not verify church content permissions:', manageError.message);
+                } else {
+                    currentUserCanManageChurchContent = manageResult === true;
+                }
+            }
+
+            if (currentUserIsSuperAdmin || currentUserCanManageChurchContent) {
+                const adminLink = document.getElementById('admin-nav-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+            }
+
+            if (currentUserCanManageChurchContent) {
+                const uploadBtn = document.getElementById('open-upload-modal-btn');
+                if (uploadBtn) uploadBtn.classList.remove('hidden');
+            }
+
+            if (currentUserCanManageChurchContent || currentUserIsSuperAdmin) {
+                const adminLivePanel = document.getElementById('admin-live-control-panel');
+                if (adminLivePanel) adminLivePanel.classList.remove('hidden');
+            }
+
+            if (currentUserIsSuperAdmin) {
+                const selectorWrap = document.getElementById('super-admin-live-church-selector');
+                if (selectorWrap) selectorWrap.classList.remove('hidden');
+
+                await populateSuperAdminLiveChurchSelector();
+            } else {
+                selectedLiveChurchId = profile?.church_id || null;
             }
 
             loadChurchLiveStatus();
@@ -331,18 +386,107 @@
             setupAudioListeners();
         }
 
+        async function populateSuperAdminLiveChurchSelector() {
+            const selector = document.getElementById('super-admin-live-church-select');
+            if (!currentUserIsSuperAdmin || !selector) return;
+
+            selectedLiveChurchId = null;
+            approvedLiveChurchIds.clear();
+            selector.disabled = true;
+            selector.replaceChildren();
+
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Loading approved churches...';
+            selector.appendChild(placeholder);
+
+            const { data: churches, error } = await window.sbClient
+                .from('church_directory')
+                .select('id, name')
+                .order('name', { ascending: true });
+
+            if (error) {
+                console.error('Could not load approved churches:', error);
+                placeholder.textContent = 'Could not load approved churches';
+                return;
+            }
+
+            selector.replaceChildren();
+
+            const chooseOption = document.createElement('option');
+            chooseOption.value = '';
+            chooseOption.textContent = 'Choose an approved church...';
+            selector.appendChild(chooseOption);
+
+            if (!churches || churches.length === 0) {
+                chooseOption.textContent = 'No approved churches available';
+                selector.disabled = true;
+                return;
+            }
+
+            for (const church of churches) {
+                if (!church.id) continue;
+
+                approvedLiveChurchIds.add(church.id);
+
+                const option = document.createElement('option');
+                option.value = church.id;
+                option.textContent = church.name || 'Approved church';
+                selector.appendChild(option);
+            }
+
+            const preferredChurchId = currentUserProfile?.church_id;
+            const initialChurchId =
+                preferredChurchId && approvedLiveChurchIds.has(preferredChurchId)
+                    ? preferredChurchId
+                    : null;
+
+            if (initialChurchId) {
+                selector.value = initialChurchId;
+                selectedLiveChurchId = initialChurchId;
+            } else {
+                selector.value = '';
+                selectedLiveChurchId = null;
+                chooseOption.textContent = approvedLiveChurchIds.size > 0
+                    ? 'Choose an approved church...'
+                    : 'No approved churches available';
+            }
+
+            selector.disabled = approvedLiveChurchIds.size === 0;
+        }
+
+        async function handleLiveChurchSelectionChange(churchId) {
+            if (!currentUserIsSuperAdmin) return;
+            if (!approvedLiveChurchIds.has(churchId)) return;
+
+            selectedLiveChurchId = churchId;
+
+            const input = document.getElementById('admin-stream-url-input');
+            if (input) input.value = '';
+
+            await loadChurchLiveStatus();
+        }
         function initRealtimeSync() {
             window.sbClient
                 .channel('sermons-media-realtime')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sermons' }, () => {
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'sermons'
+                }, () => {
                     loadMediaRecords();
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'church_directory' }, (payload) => {
-                    if (currentUserProfile && payload.new && payload.new.id === currentUserProfile.church_id) {
-                        updateLiveStreamUI(payload.new);
-                    }
-                })
                 .subscribe();
+
+            const refreshLiveStatus = () => {
+                if (!document.hidden && selectedLiveChurchId) {
+                    loadChurchLiveStatus();
+                }
+            };
+
+            window.addEventListener('focus', refreshLiveStatus);
+            document.addEventListener('visibilitychange', refreshLiveStatus);
+            setInterval(refreshLiveStatus, 60000);
         }
 
         // 2. JS helper function to extract 11-character YouTube video ID
@@ -354,27 +498,41 @@
         }
 
         async function loadChurchLiveStatus() {
-            if (!currentUserProfile || !currentUserProfile.church_id) return;
+            if (!selectedLiveChurchId) {
+                updateLiveStreamUI({ is_live: false, live_stream_id: null });
+                return;
+            }
+
+            const requestedChurchId = selectedLiveChurchId;
 
             const { data: church, error } = await window.sbClient
                 .from('church_directory')
                 .select('id, live_stream_id, is_live, name')
-                .eq('id', currentUserProfile.church_id)
+                .eq('id', requestedChurchId)
                 .maybeSingle();
+
+            if (requestedChurchId !== selectedLiveChurchId) return;
+
+            const input = document.getElementById('admin-stream-url-input');
 
             if (error) {
                 console.error('Error loading church live status:', error);
+                updateLiveStreamUI({ is_live: false, live_stream_id: null });
+                if (input) input.value = '';
                 return;
             }
 
             if (church) {
                 updateLiveStreamUI(church);
-                if (church.live_stream_id) {
-                    const input = document.getElementById('admin-stream-url-input');
-                    if (input && !input.value) {
-                        input.value = `https://www.youtube.com/watch?v=${church.live_stream_id}`;
-                    }
+
+                if (input) {
+                    input.value = church.live_stream_id
+                        ? `https://www.youtube.com/watch?v=${church.live_stream_id}`
+                        : '';
                 }
+            } else {
+                updateLiveStreamUI({ is_live: false, live_stream_id: null });
+                if (input) input.value = '';
             }
         }
 
@@ -401,8 +559,15 @@
 
         // 3. & 4. Save live_stream_id and is_live status into Supabase on submit
         async function handleGoLive() {
-            if (!currentUserProfile || !currentUserProfile.church_id) {
-                alert('Church profile not found.');
+            if (!currentUserCanManageChurchContent && !currentUserIsSuperAdmin) {
+                alert('You are not authorized to manage this church broadcast.');
+                return;
+            }
+
+            const targetChurchId = selectedLiveChurchId;
+
+            if (!targetChurchId) {
+                alert('Please select an approved church first.');
                 return;
             }
 
@@ -416,49 +581,55 @@
 
             const videoId = extractYouTubeVideoId(rawUrl);
             if (!videoId || videoId.length !== 11) {
-                alert('Invalid YouTube URL. Please provide a valid watch link, share link (youtu.be), or live stream URL containing an 11-character video ID.');
+                alert('Invalid YouTube URL. Please provide a valid link containing an 11-character video ID.');
                 return;
             }
 
-            const { error } = await window.sbClient
-                .from('church_directory')
-                .update({
-                    live_stream_id: videoId,
-                    is_live: true
-                })
-                .eq('id', currentUserProfile.church_id);
+            try {
+                const { error } = await window.sbClient.rpc('set_church_live_stream', {
+                    p_church_id: targetChurchId,
+                    p_live_stream_id: videoId,
+                    p_is_live: true
+                });
 
-            if (error) {
-                console.error('Error starting live stream:', error);
-                alert('Failed to go live: ' + error.message);
-                return;
+                if (error) throw error;
+
+                alert('Broadcast is now LIVE!');
+                await loadChurchLiveStatus();
+            } catch (err) {
+                console.error('Error starting live stream:', err);
+                alert('Failed to go live: ' + (err.message || err));
             }
-
-            alert('🔴 Broadcast is now LIVE!');
-            loadChurchLiveStatus();
         }
 
         async function handleEndStream() {
-            if (!currentUserProfile || !currentUserProfile.church_id) {
-                alert('Church profile not found.');
+            if (!currentUserCanManageChurchContent && !currentUserIsSuperAdmin) {
+                alert('You are not authorized to manage this church broadcast.');
                 return;
             }
 
-            const { error } = await window.sbClient
-                .from('church_directory')
-                .update({
-                    is_live: false
-                })
-                .eq('id', currentUserProfile.church_id);
+            const targetChurchId = selectedLiveChurchId;
 
-            if (error) {
-                console.error('Error ending live stream:', error);
-                alert('Failed to end stream: ' + error.message);
+            if (!targetChurchId) {
+                alert('Please select an approved church first.');
                 return;
             }
 
-            alert('⏹️ Live stream has been ended and set to offline.');
-            loadChurchLiveStatus();
+            try {
+                const { error } = await window.sbClient.rpc('set_church_live_stream', {
+                    p_church_id: targetChurchId,
+                    p_live_stream_id: null,
+                    p_is_live: false
+                });
+
+                if (error) throw error;
+
+                alert('Live stream has been ended and set to offline.');
+                await loadChurchLiveStatus();
+            } catch (err) {
+                console.error('Error ending live stream:', err);
+                alert('Failed to end stream: ' + (err.message || err));
+            }
         }
 
         function switchScopeTab(tab) {
@@ -899,7 +1070,7 @@
                     return;
                 }
 
-                const isAdmin = currentUserProfile && (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin');
+                const isAdmin = currentUserCanManageChurchContent;
 
                 grid.innerHTML = data.map(video => {
                     const safeVideo = encodeURIComponent(JSON.stringify(video));
@@ -993,6 +1164,7 @@
         }
 
         async function saveYouTubeToChurchLibrary(encodedVideo) {
+            if (!currentUserCanManageChurchContent) { alert('You are not authorized to manage this church library.'); return; }
             const video = JSON.parse(decodeURIComponent(encodedVideo));
 
             if (!currentUserProfile || !currentUserProfile.church_id) {
@@ -1032,6 +1204,7 @@
 
         // --- Upload Media Modal & Direct Supabase Submission ---
         async function openUploadModal() {
+            if (!currentUserCanManageChurchContent) { alert('You are not authorized to upload church media.'); return; }
             let modal = document.getElementById('uploadMediaModal');
             if (!modal) {
                 modal = document.createElement('div');
@@ -1122,6 +1295,7 @@
 
         async function handleUploadMediaSubmit(e) {
             e.preventDefault();
+            if (!currentUserCanManageChurchContent) { alert('You are not authorized to upload church media.'); return; }
 
             if (!currentUserProfile || !currentUserProfile.church_id) {
                 alert('User profile or church ID missing.');

@@ -199,7 +199,7 @@ export default async function handler(req, res) {
             });
         }
 
-        const baseUrl = getPesapalBaseUrl(church.pesapal_env || 'sandbox');
+        const baseUrl = getPesapalBaseUrl((process.env.VERCEL_ENV || '').toLowerCase() === 'preview' ? 'sandbox' : (church.pesapal_env || 'sandbox'));
 
         const token = await getPesapalToken(
             church.pesapal_consumer_key.trim(),

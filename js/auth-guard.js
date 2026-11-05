@@ -130,12 +130,27 @@ const isAuthEntryPage =
             .eq('id', session.user.id)
             .maybeSingle();
             
-        // Adjust this condition based on the exact column name in the database (e.g., 'role', 'is_admin')
-        const isAdmin = profile && (
-            profile.role === 'admin' || 
-            profile.role === 'super-admin' || 
-            profile.role === 'super_admin' || 
-            profile.is_admin === true
+        // Determine administrator routing from the canonical profile role.
+        const profileRole = profile && typeof profile.role === 'string'
+            ? profile.role.trim().toLowerCase()
+            : '';
+
+        // Platform Super Admin status must come from the database allowlist.
+        let isPlatformAdmin = false;
+
+        try {
+            const { data: platformAdminResult, error: platformAdminError } =
+                await window.sbClient.rpc('is_super_admin');
+
+            if (platformAdminError) throw platformAdminError;
+            isPlatformAdmin = platformAdminResult === true;
+        } catch (err) {
+            console.warn('Platform administrator check failed (failing closed):', err);
+        }
+
+        const isAdmin = Boolean(profile) && (
+            ['admin', 'church_admin'].includes(profileRole) ||
+            isPlatformAdmin
         );
 
         if (isAuthEntryPage) {

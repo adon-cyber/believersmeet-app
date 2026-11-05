@@ -32,9 +32,9 @@ async function initSuperAdmin() {
         return;
     }
 
-    // Client-side route guard: Verify active session state using getSession()
+    // Require an authenticated session first.
     const { data: { session }, error: sessionError } = await window.sbClient.auth.getSession();
-    if (sessionError || !session || !session.user || session.user.email !== 'adonstance@gmail.com') {
+    if (sessionError || !session?.user) {
         console.warn("Unauthorized access or invalid session. Redirecting to login.");
         window.location.replace('login.html');
         return;
@@ -42,29 +42,31 @@ async function initSuperAdmin() {
 
     const user = session.user;
 
-    // Fetch user profile to verify role
+    // Platform-wide authority is determined only by the private database allowlist.
+    const { data: platformAdmin, error: platformAdminError } =
+        await window.sbClient.rpc('is_super_admin');
+    if (platformAdminError || platformAdmin !== true) {
+        console.warn("Platform Admin allowlist check failed. Redirecting.", platformAdminError);
+        window.location.replace('login.html');
+        return;
+    }
+
+    // The Foundation requires the allowlisted account to have its canonical profile.
     const { data: profile, error: profileError } = await window.sbClient
         .from('profiles')
-        .select('*')
+        .select('id,email,role,church_id,full_name')
         .eq('id', user.id)
         .maybeSingle();
 
-    if (profileError || !profile) {
-        console.error("Profile record not found.", profileError);
+    if (profileError || !profile || profile.role !== 'super_admin') {
+        console.error("Platform Admin profile is missing or not provisioned with the canonical role.", profileError);
+        alert("Your Platform Admin identity is allowlisted, but its profile is not correctly provisioned. Contact the system administrator.");
         window.location.replace('login.html');
         return;
     }
 
     currentUserProfile = profile;
-    console.log("Authenticated user role:", currentUserProfile.role);
-
-    // SECURITY CHECK: If role is NOT super_admin or email doesn't match, redirect away
-    if (currentUserProfile.role !== 'super_admin' && user.email !== 'adonstance@gmail.com') {
-        alert("Access Denied: The Developer Control Center requires Super Administrator privileges.");
-        window.location.replace('index.html');
-        return;
-    }
-
+    console.log("Platform Admin verified by database allowlist.");
     // If verified as super_admin, load all users and churches
     await loadAllUsersAndChurches();
     await loadPendingChurches();
@@ -144,9 +146,7 @@ async function loadViolationReports() {
 
     try {
         const { data: violations, error } = await window.sbClient
-            .from('violations_view')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .rpc('super_admin_list_violation_reports');
 
         if (error) throw error;
 
@@ -160,8 +160,8 @@ async function loadViolationReports() {
             tableTbody.innerHTML = violations.map(v => {
                 const reportedName = v.offender_name || v.offender_email || 'Unknown User';
                 const reporterName = v.reporter_name || v.reporter_email || 'Anonymous / System';
-                const isBlocked = v.offender_is_blocked;
-                const statusColor = v.status === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                const isBlocked = v.offender_is_blocked === true;
+                const statusColor = (v.status || 'pending') === 'pending' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
                 const proofHtml = v.proof_url ? `<a href="${escapeHTML(v.proof_url)}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-semibold underline flex items-center gap-1">View Proof</a>` : `<span class="text-gray-400 italic">None</span>`;
 
                 return `
@@ -175,15 +175,15 @@ async function loadViolationReports() {
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">${proofHtml}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-full ${statusColor}">${escapeHTML(v.status.toUpperCase())}</span>
+                            <span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-full ${statusColor}">${escapeHTML((v.status || 'pending').toUpperCase())}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
                                 <button onclick="updateViolationStatus('${v.id}', 'reviewed')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg font-medium">Review</button>
-                                ${isBlocked ? 
+                                ${v.reported_user_id ? (isBlocked ?
                                     `<button onclick="toggleBlockUser('${v.reported_user_id}', false)" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold">Unblock</button>` :
                                     `<button onclick="toggleBlockUser('${v.reported_user_id}', true)" class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold">Block</button>`
-                                }
+                                ) : `<span class="text-gray-400 text-xs italic">Account no longer available</span>`}
                             </div>
                         </td>
                     </tr>
@@ -199,7 +199,10 @@ async function loadViolationReports() {
 
 async function updateViolationStatus(violationId, newStatus) {
     try {
-        const { error } = await window.sbClient.from('violations').update({ status: newStatus }).eq('id', violationId);
+        const { error } = await window.sbClient.rpc(
+            'super_admin_update_violation_status',
+            { p_violation_id: violationId, p_new_status: newStatus }
+        );
         if (error) throw error;
         showNotification("Violation report status updated.", "success");
         await loadViolationReports();
@@ -213,7 +216,10 @@ async function toggleBlockUser(targetUserId, blockStatus) {
     if (!confirm(`Are you sure you want to ${blockStatus ? 'BLOCK' : 'UNBLOCK'} this user account?`)) return;
 
     try {
-        const { error } = await window.sbClient.from('profiles').update({ is_blocked: blockStatus }).eq('id', targetUserId);
+        const { error } = await window.sbClient.rpc(
+            'super_admin_set_profile_blocked',
+            { p_target_user_id: targetUserId, p_is_blocked: blockStatus }
+        );
         if (error) throw error;
         showNotification(`User account successfully ${blockStatus ? 'blocked' : 'unblocked'}.`, "success");
         await loadAllUsersAndChurches();
@@ -250,8 +256,8 @@ async function loadAllUsersAndChurches() {
         // 2. Fetch all profiles from the database
         const { data: profiles, error: profilesError } = await window.sbClient
             .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('id,church_id,role,email,full_name')
+            .order('full_name', { ascending: true });
 
         if (profilesError) throw profilesError;
 
@@ -340,7 +346,7 @@ function renderUsersTable(users) {
 
                         </select>
                         <button onclick="updateUserRole('${user.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-semibold shadow transition">Update</button>
-                        <button onclick="deleteUserAccount('${user.id}', '${escapeHTML(user.full_name || user.email || 'User')}')" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs px-3 py-2 rounded-lg font-semibold border border-red-200 transition" title="Delete Account">
+                        <button type="button" disabled title="Account deletion is unavailable until secure Auth-user deletion is implemented" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs px-3 py-2 rounded-lg font-semibold border border-red-200 transition" title="Delete Account">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -479,24 +485,12 @@ async function updateUserRole(userId) {
 
 
 async function deleteUserAccount(userId, userName) {
-    if (userId === currentUserProfile.id) {
-        alert("Security restriction: You cannot delete your own Super Administrator account.");
-        return;
-    }
-
-    if (!confirm(`WARNING: Delete account for "${userName}"?`)) return;
-
-    try {
-        const { error: profileDelError } = await window.sbClient.from('profiles').delete().eq('id', userId);
-        if (profileDelError) throw profileDelError;
-
-        showNotification(`Account for "${userName}" deleted successfully.`, "success");
-        await loadAllUsersAndChurches();
-    } catch (err) {
-        showNotification("Failed to delete account: " + err.message, "error");
-    }
+    showNotification(
+        'Account deletion is temporarily disabled until a server-side Auth-user deletion workflow with audit logging is implemented.',
+        'error'
+    );
+    return;
 }
-
 let pendingChurchesData = [];
 
 async function loadPendingChurches() {
@@ -527,6 +521,7 @@ async function loadPendingChurches() {
             address: c.church_address,
             created_at: c.submitted_at,
             status: c.application_status,
+            applicant_user_id: c.applicant_user_id,
             applicant_full_name: c.applicant_full_name,
             applicant_email: c.applicant_email,
             admin_feedback: c.admin_feedback
@@ -586,7 +581,7 @@ function renderPendingChurchesTable(churches) {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     <div class="font-medium">Church Leader / Admin</div>
-                    <div class="text-xs text-gray-400">ID: ${escapeHTML((church.admin_user_id || church.id).substring(0, 8))}...</div>
+                    <div class="text-xs text-gray-400">ID: ${escapeHTML((church.applicant_user_id || church.id).substring(0, 8))}...</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${dateStr}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -624,12 +619,11 @@ async function openChurchReviewModal(churchId) {
     const existingModal = document.getElementById('church-review-modal');
     if (existingModal) existingModal.remove();
 
-    let adminProfile = null;
-    if (church.admin_user_id) {
-        const { data: p } = await window.sbClient.from('profiles').select('*').eq('id', church.admin_user_id).maybeSingle();
-        adminProfile = p;
-    }
-
+    // The Foundation RPC returns applicant identity fields directly; churches has
+    // applicant_user_id, not the legacy admin_user_id column.
+    const applicantName = church.applicant_full_name || 'Not linked / Unknown';
+    const applicantEmail = church.applicant_email || 'No email';
+    const applicantUserId = church.applicant_user_id || null;
     const modal = document.createElement('div');
     modal.id = 'church-review-modal';
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4';
@@ -674,9 +668,9 @@ async function openChurchReviewModal(churchId) {
                 <div class="border-t border-gray-100 pt-3">
                     <h5 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5"><i class="fas fa-user-shield text-purple-600"></i> Applicant Leader Information</h5>
                     <div class="bg-purple-50/50 p-4 rounded-xl text-sm space-y-1">
-                        <p><strong>Name:</strong> ${escapeHTML(adminProfile?.full_name || 'Not linked / Unknown')} (${escapeHTML(adminProfile?.email || 'No email')})</p>
-                        <p><strong>Role:</strong> <span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-bold">${escapeHTML(adminProfile?.role || 'admin')}</span></p>
-                        <p><strong>User ID:</strong> <span class="font-mono text-xs text-gray-600">${escapeHTML(church.admin_user_id || 'N/A')}</span></p>
+                        <p><strong>Name:</strong> ${escapeHTML(applicantName)} (${escapeHTML(applicantEmail)})</p>
+                        <p><strong>Role:</strong> <span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-bold">${escapeHTML('member (pending application)')}</span></p>
+                        <p><strong>User ID:</strong> <span class="font-mono text-xs text-gray-600">${escapeHTML(applicantUserId || 'N/A')}</span></p>
                     </div>
                 </div>
             </div>
@@ -700,7 +694,7 @@ async function approveChurchApplication(churchId) {
 
         if (error) throw error;
 
-        showNotification("Church application approved successfully. Six-month trial activated.", "success");
+        showNotification("Church application approved successfully. 60-day trial activated.", "success");
         await loadPendingChurches();
         await loadAllUsersAndChurches();
     } catch (err) {

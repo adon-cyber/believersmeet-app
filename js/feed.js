@@ -112,33 +112,42 @@ async function renderCurrentDiscoveryCard() {
         const rawAvatarUrl = profile.avatar_url || '';
         const avatarUrl = isValidImageUrl(rawAvatarUrl) ? rawAvatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Believer')}&background=2563eb&color=fff`;
 
-        // Check if connection already exists between loggedInUser and profile
+        // Check the single connection record shared by both participants.
         let connectionState = 'none';
         try {
-            const { data: connData } = await window.sbClient
+            const { data: connData, error: connError } = await window.sbClient
                 .from('connections')
-                .select('*')
+                .select('id, requester_id, recipient_id, status')
                 .or(`and(requester_id.eq.${loggedInUser.id},recipient_id.eq.${profile.id}),and(requester_id.eq.${profile.id},recipient_id.eq.${loggedInUser.id})`)
                 .maybeSingle();
-            
+
+            if (connError) throw connError;
+
             if (connData) {
                 if (connData.status === 'accepted') {
                     connectionState = 'accepted';
                 } else if (connData.status === 'pending') {
                     connectionState = 'pending';
+                } else if (connData.status === 'rejected') {
+                    connectionState = connData.requester_id === loggedInUser.id
+                        ? 'rejected_sent'
+                        : 'rejected_received';
                 }
             }
         } catch (e) {
             console.error("Error checking connection status for card:", e);
         }
+        let buttonHTML = `<button onclick="sendFriendRequest('${profile.id}', this)" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">Connect</button>`;
 
-        let buttonHTML = `<button onclick="sendFriendRequest('${profile.id}', this)" class="flex-1 sm:flex-initial px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">🤝 Connect</button>`;
         if (connectionState === 'pending') {
-            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 shadow-sm">⏳ Request Pending</button>`;
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold cursor-not-allowed opacity-90">Request Pending</button>`;
         } else if (connectionState === 'accepted') {
-            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-green-600 text-white font-bold rounded-lg text-xs cursor-not-allowed shadow-none flex items-center justify-center gap-1.5">✓ Connected</button>`;
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-6 py-2 bg-green-600 text-white font-bold rounded-lg text-xs cursor-not-allowed">Connected</button>`;
+        } else if (connectionState === 'rejected_sent') {
+            buttonHTML = `<button onclick="sendFriendRequest('${profile.id}', this)" class="flex-1 sm:flex-initial px-5 py-2 bg-amber-600 text-white hover:bg-amber-700 font-bold rounded-xl text-xs transition shadow-sm">Resend Request</button>`;
+        } else if (connectionState === 'rejected_received') {
+            buttonHTML = `<button disabled class="flex-1 sm:flex-initial px-5 py-2 bg-slate-200 text-slate-600 font-semibold rounded-xl text-xs cursor-not-allowed">Request Declined</button>`;
         }
-
         container.innerHTML = `
             <div class="w-full bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row gap-5 items-center">
                 <img src="${avatarUrl}" alt="Profile Photo" class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-50 shadow-inner flex-shrink-0">
@@ -180,79 +189,86 @@ async function sendFriendRequest(receiverId, buttonElement) {
         return;
     }
 
-    // Preserve original content in case of error
     const originalHtml = buttonElement.innerHTML;
     const originalClass = buttonElement.className;
-
-    // 1. Immediately update UI to Pending state
-    buttonElement.disabled = true;
-    buttonElement.innerHTML = `<span>⏳ Request Pending</span>`;
-    buttonElement.className = "px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 transition-all shadow-sm";
-
-    // 2. Perform Supabase database insert
     const client = window.sbClient || window.supabaseClient;
-    const { data: { user } } = await client.auth.getUser();
 
-    if (!user) {
-        buttonElement.disabled = false;
-        buttonElement.innerHTML = originalHtml;
-        buttonElement.className = originalClass;
-        alert('Please log in to send friend requests.');
-        return;
-    }
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = 'Sending...';
 
-    const { error } = await client
-        .from('connections')
-        .insert([
-            { requester_id: user.id, recipient_id: receiverId, status: 'pending' }
-        ]);
+    try {
+        const { data: authData, error: authError } = await client.auth.getUser();
+        if (authError) throw authError;
 
-    if (!error) {
-        // Trigger notification for connection request recipient using window.sendNotification
-        if (typeof window.sendNotification === 'function') {
+        const user = authData?.user;
+        if (!user) {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalHtml;
+            buttonElement.className = originalClass;
+            alert('Please log in to send connection requests.');
+            return;
+        }
+
+        const { data: requestResult, error } = await client.rpc(
+            'request_connection',
+            { p_recipient_id: receiverId }
+        );
+
+        if (error) throw error;
+
+        if (!requestResult || !['pending', 'accepted', 'rejected'].includes(requestResult.status)) {
+            throw new Error('The server returned an unexpected connection status.');
+        }
+
+        if (requestResult.status === 'accepted') {
+            buttonElement.innerHTML = 'Connected';
+            buttonElement.className = 'flex-1 sm:flex-initial px-6 py-2 bg-green-600 text-white font-bold rounded-lg text-xs cursor-not-allowed';
+            buttonElement.disabled = true;
+        } else if (requestResult.status === 'pending') {
+            buttonElement.innerHTML = 'Request Pending';
+            buttonElement.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold cursor-not-allowed';
+            buttonElement.disabled = true;
+        } else {
+            buttonElement.innerHTML = 'Request Declined';
+            buttonElement.className = 'flex-1 sm:flex-initial px-5 py-2 bg-slate-200 text-slate-600 font-semibold rounded-xl text-xs cursor-not-allowed';
+            buttonElement.disabled = true;
+        }
+
+        // Notify only when a new request was created or a rejected request was resent.
+        if (requestResult.request_sent && typeof window.sendNotification === 'function') {
             try {
-                // Fetch sender's profile name if available
-                let senderName = 'A believer';
-                if (currentUserProfile && currentUserProfile.full_name) {
-                    senderName = currentUserProfile.full_name;
-                } else {
+                let senderName = currentUserProfile?.full_name || 'A believer';
+
+                if (!currentUserProfile?.full_name) {
                     const { data: senderProf } = await client
                         .from('profiles')
                         .select('full_name')
                         .eq('id', user.id)
                         .maybeSingle();
-                    if (senderProf && senderProf.full_name) {
-                        senderName = senderProf.full_name;
-                    }
+
+                    if (senderProf?.full_name) senderName = senderProf.full_name;
                 }
+
+                const message = requestResult.resent
+                    ? `${senderName} resent you a connection request.`
+                    : `${senderName} sent you a connection request.`;
+
                 await window.sendNotification(
                     receiverId,
                     'New Connection Request',
-                    `${senderName} sent you a connection request.`,
+                    message,
                     '/profile.html'
                 );
             } catch (notifErr) {
                 console.error('Failed to send connection request notification:', notifErr);
             }
         }
-    }
-
-    if (error) {
-        console.error('Connection request failed:', error);
-        // Check if error is duplicate key violation (code '23505' or message contains 'duplicate key')
-        if (error.code === '23505' || (error.message && error.message.includes('duplicate key'))) {
-            // Keep button in disabled pending state as requested or friendly alert
-            buttonElement.disabled = true;
-            buttonElement.innerHTML = `<span>⏳ Request Pending</span>`;
-            buttonElement.className = "px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-amber-400/90 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 transition-all shadow-sm";
-            alert('You have already sent a request to this member!');
-        } else {
-            // Revert UI if any other error
-            buttonElement.disabled = false;
-            buttonElement.innerHTML = originalHtml;
-            buttonElement.className = originalClass;
-            alert('Error sending request: ' + error.message);
-        }
+    } catch (err) {
+        console.error('Connection request failed:', err);
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalHtml;
+        buttonElement.className = originalClass;
+        alert('Error sending request: ' + (err.message || err));
     }
 }
 
@@ -433,7 +449,7 @@ async function loadFeedGallery() {
     try {
         let query = window.sbClient
             .from('gallery_images')
-            .select('*');
+            .select('created_at, image_url, caption, church_id, uploader_name');
 
         if (currentUserProfile.church_id !== 'global-fellowship') {
             query = query.eq('church_id', currentUserProfile.church_id);

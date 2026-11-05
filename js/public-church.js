@@ -11,7 +11,7 @@ const churchIdParam = urlParams.get('id');
 const churchCodeParam = urlParams.get('code');
 
 let currentChurchId = null;
-let currentPesapalPaymentLink = null;
+
 let approvedChurchesCache = [];
 let currentFetchedVerse = {
     reference: 'John 3:16',
@@ -233,12 +233,22 @@ async function fetchChurchDetails() {
         throw new Error("No matching approved church found.");
     }
 
-    renderChurch(data);
+    const { data: givingData, error: givingError } = await publicSupabase
+        .from('church_giving_directory')
+        .select('church_id, bank_name, account_name, account_number, branch, momo_name, momo_number, airtel_name, airtel_number')
+        .eq('church_id', data.id)
+        .maybeSingle();
+
+    if (givingError) {
+        console.warn("Could not load published church giving instructions:", givingError.message);
+    }
+
+    renderChurch(data, givingError ? null : givingData);
 }
 
-function renderChurch(church) {
+function renderChurch(church, givingData = null) {
     currentChurchId = church.id;
-    currentPesapalPaymentLink = church.pesapal_payment_link || church.pesapal_link || null;
+
     const churchName = church.name || 'Our Church';
     const address = church.address || church.location || 'Location not specified';
     const logoUrl = church.logo_url || 'images/BELIEVERS.LOGO.png';
@@ -259,7 +269,7 @@ function renderChurch(church) {
         churchSelect.value = church.id;
     }
 
-    // Inject and Conditionally Render Direct Giving Details (Bank & Mobile Money)
+    // Display only published instructions from church_giving_directory.
     const bankNameEl = document.getElementById('bank-name');
     const bankAccountNameEl = document.getElementById('bank-account-name');
     const bankAccountNumberEl = document.getElementById('bank-account-number');
@@ -271,43 +281,36 @@ function renderChurch(church) {
     const momoDetailsCard = document.getElementById('momo-details-card');
     const directGivingDivider = document.getElementById('direct-giving-divider');
 
-    const bankName = church.bank_name;
-    const bankAccountName = church.account_name;
-    const bankAccountNumber = church.account_number;
+    const bankName = givingData?.bank_name || '';
+    const bankAccountName = givingData?.account_name || '';
+    const bankAccountNumber = givingData?.account_number || '';
 
-    const momoProvider = church.momo_provider;
-    const momoNumber = church.momo_number;
-    const momoRegisteredName = church.momo_registered_name;
+    const momoNumber = givingData?.momo_number || '';
+    const momoRegisteredName = givingData?.momo_name || '';
 
-    let hasBank = false;
-    let hasMomo = false;
+    if (bankNameEl) bankNameEl.textContent = bankName;
+    if (bankAccountNameEl) bankAccountNameEl.textContent = bankAccountName;
+    if (bankAccountNumberEl) bankAccountNumberEl.textContent = bankAccountNumber;
 
-    if (bankName || bankAccountName || bankAccountNumber) {
-        if (bankNameEl) bankNameEl.textContent = bankName || 'Not specified';
-        if (bankAccountNameEl) bankAccountNameEl.textContent = bankAccountName || 'Not specified';
-        if (bankAccountNumberEl) bankAccountNumberEl.textContent = bankAccountNumber || 'Not specified';
-        if (bankDetailsCard) bankDetailsCard.classList.remove('hidden');
-        hasBank = true;
-    } else {
-        if (bankDetailsCard) bankDetailsCard.classList.add('hidden');
+    if (momoNumberEl) momoNumberEl.textContent = momoNumber;
+    if (momoNameEl) momoNameEl.textContent = momoRegisteredName;
+
+    // The public giving view has no provider field. Do not invent one.
+    if (momoProviderEl) {
+        momoProviderEl.textContent = '';
+        const providerRow = momoProviderEl.closest('p');
+        if (providerRow) providerRow.classList.add('hidden');
     }
 
-    if (momoProvider || momoNumber || momoRegisteredName) {
-        if (momoProviderEl) momoProviderEl.textContent = momoProvider || 'Not specified';
-        if (momoNumberEl) momoNumberEl.textContent = momoNumber || 'Not specified';
-        if (momoNameEl) momoNameEl.textContent = momoRegisteredName || 'Not specified';
-        if (momoDetailsCard) momoDetailsCard.classList.remove('hidden');
-        hasMomo = true;
-    } else {
-        if (momoDetailsCard) momoDetailsCard.classList.add('hidden');
-    }
+    const hasBank = Boolean(bankName || bankAccountName || bankAccountNumber);
+    const hasMomo = Boolean(momoNumber || momoRegisteredName);
 
-    if (!hasBank && !hasMomo) {
-        if (directGivingDivider) directGivingDivider.classList.add('hidden');
-    } else {
-        if (directGivingDivider) directGivingDivider.classList.remove('hidden');
-    }
+    if (bankDetailsCard) bankDetailsCard.classList.toggle('hidden', !hasBank);
+    if (momoDetailsCard) momoDetailsCard.classList.toggle('hidden', !hasMomo);
 
+    if (directGivingDivider) {
+        directGivingDivider.classList.toggle('hidden', !hasBank && !hasMomo);
+    }
     // Dynamic Plan a Visit Section Updates:
     const planVisitAddressEl = document.getElementById('plan-visit-address');
     if (planVisitAddressEl) {
@@ -785,22 +788,12 @@ async function fetchFellowshipGallery() {
         
         const { data, error } = await publicSupabase
             .from('gallery_images')
-            .select('*')
+            .select('created_at, image_url, caption, church_id, uploader_name')
             .eq('church_id', currentChurchId)
             .order('created_at', { ascending: false });
 
-        if (!error && data) {
-            photos = data;
-        } else {
-            const { data: mediaData, error: mediaErr } = await publicSupabase
-                .from('gallery_media')
-                .select('*')
-                .eq('church_id', currentChurchId)
-                .order('created_at', { ascending: false });
-            if (!mediaErr && mediaData) {
-                photos = mediaData;
-            }
-        }
+        if (error) throw error;
+        photos = data || [];
 
         if (!photos || photos.length === 0) {
             gridContainer.innerHTML = `
