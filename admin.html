@@ -843,179 +843,187 @@
         let isSuperAdmin = false;
         let activeDashboardChurchId = null;
 
-        async function loadAdminEventRegistrationsSection() {
-            const eventsSelectorContainer = document.getElementById('admin-events-selector-container');
-            const rosterContainer = document.getElementById('admin-event-roster-container');
+                async function loadAdminEventRegistrationsSection() {
+            const eventsSelectorContainer =
+                document.getElementById('admin-events-selector-container');
+
+            const rosterContainer =
+                document.getElementById('admin-event-roster-container');
+
             if (!eventsSelectorContainer) return;
 
-            eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading events...</div>`;
+            eventsSelectorContainer.innerHTML =
+                '<div class="text-center py-8 text-slate-400 text-sm">Loading events...</div>';
 
             const db = getDbClient();
+
             if (!db) {
-                eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Supabase database client not available.</div>`;
+                eventsSelectorContainer.innerHTML =
+                    '<div class="text-center py-8 text-red-400 text-sm">Database client unavailable.</div>';
                 return;
             }
 
             try {
-                // Fetch churches for church name mapping
-                // =====================================================
-// 1. Load church names using the safe public directory
-// =====================================================
+                // Read only the church names needed for event labels.
+                const {
+                    data: churches,
+                    error: churchesError
+                } = await db
+                    .from('church_directory')
+                    .select('id, name');
 
-const {
-    data: churches,
-    error: churchesError
-} = await db
-    .from('church_directory')
-    .select('id, name');
+                churchesMapCache = {};
 
-churchesMapCache = {};
+                if (churchesError) {
+                    console.warn('Church name lookup failed:', churchesError);
+                } else {
+                    (churches || []).forEach(church => {
+                        churchesMapCache[church.id] = church.name;
+                    });
+                }
 
-if (churchesError) {
-    console.warn('Church name lookup failed:', churchesError);
-} else {
-    (churches || []).forEach(church => {
-        churchesMapCache[church.id] = church.name;
-    });
-}
+                // Super Admin may select a church or retain global scope.
+                // Other administrators are restricted by the database RPC.
+                const selectedChurchId = isSuperAdmin
+                    ? (activeDashboardChurchId || null)
+                    : null;
 
-// =====================================================
-// 2. Determine scope using verified authorization
-// =====================================================
+                const {
+                    data: events,
+                    error: eventsError
+                } = await db.rpc('get_managed_events', {
+                    p_church_id: selectedChurchId
+                });
 
-// Super Admin: global scope unless a church is selected.
-// Other authorized users: their assigned church only.
-const adminChurchId = isSuperAdmin
-    ? (activeDashboardChurchId || null)
-    : (currentUserProfile?.church_id || null);
-
-// Never allow an ordinary administrator to run an
-// unfiltered query because their church context is missing.
-if (!isSuperAdmin && !adminChurchId) {
-    throw new Error(
-        'Your assigned church could not be determined.'
-    );
-}
-
-// =====================================================
-// 3. Load events within the authorized dashboard scope
-// =====================================================
-
-let query = db
-    .from('events')
-    .select('*');
-
-if (adminChurchId) {
-    query = query.or(
-        `church_id.eq.${adminChurchId},` +
-        `host_church_id.eq.${adminChurchId},` +
-        `invited_church_ids.cs.{${adminChurchId}}`
-    );
-}
-
-// A Super Admin with no selected church remains global.
-
-                const { data: events, error } = await query.order('event_date', { ascending: false });
-
-                if (error) throw error;
+                if (eventsError) throw eventsError;
 
                 if (!events || events.length === 0) {
-                    eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">No events found. Schedule an event to view registrations.</div>`;
-                    if (rosterContainer) rosterContainer.classList.add('hidden');
+                    eventsSelectorContainer.innerHTML =
+                        '<div class="text-center py-8 text-slate-500 text-sm">No events found. Schedule an event to view registrations.</div>';
+
+                    if (rosterContainer) {
+                        rosterContainer.classList.add('hidden');
+                    }
+
                     return;
                 }
 
-                // Fetch registration counts for each event
-                let eventsHtml = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+                // Fetch aggregate counts only. Attendee details are
+                // retrieved later when an authorised organiser opens
+                // an individual roster.
+                const {
+                    data: stats,
+                    error: statsError
+                } = await db.rpc('get_event_registration_stats', {
+                    p_event_ids: events.map(evt => evt.id)
+                });
+
+                if (statsError) throw statsError;
+
+                const statsMap = new Map(
+                    (stats || []).map(stat => [
+                        stat.event_id,
+                        stat
+                    ])
+                );
+
+                let eventsHtml =
+                    '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
 
                 for (const evt of events) {
-                    // Fetch attendees count & list for each
-                    const attendees = await fetchEventRegistrationsDetailedSafe(evt.id);
-                    const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'TBD';
-                    const churchName = churchesMapCache[evt.church_id || evt.host_church_id] || 'BelieversMeet Church';
+                    const attendeeCount = Number(
+                        statsMap.get(evt.id)?.registration_count || 0
+                    );
 
-                    const isUpcoming = new Date(evt.event_date || Date.now()) >= new Date();
+                    const eventDate = evt.event_date
+                        ? new Date(evt.event_date).toLocaleString()
+                        : 'TBD';
+
+                    const churchName =
+                        churchesMapCache[evt.church_id || evt.host_church_id] ||
+                        'BelieversMeet Church';
+
+                    const isUpcoming =
+                        new Date(evt.event_date || Date.now()) >= new Date();
+
                     const statusBadge = isUpcoming
-                        ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">Upcoming</span>`
-                        : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600">Past</span>`;
+                        ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">Upcoming</span>'
+                        : '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-700 text-slate-300 border border-slate-600">Past</span>';
 
                     eventsHtml += `
-                        <div onclick="selectEventForRoster('${evt.id}', '${escapeHTML(evt.title)}', '${escapeHTML(eventDate)}', '${escapeHTML(churchName)}', ${attendees.length})"
+                        <div onclick="selectEventForRoster('${evt.id}', '${escapeHTML(evt.title)}', '${escapeHTML(eventDate)}', '${escapeHTML(churchName)}', ${attendeeCount})"
                              class="bg-slate-900/80 border ${currentSelectedEventId === evt.id ? 'border-blue-500 ring-2 ring-blue-500/30 shadow-blue-500/10' : 'border-slate-700/80 hover:border-slate-600'} rounded-2xl p-5 shadow-lg cursor-pointer transition-all flex flex-col justify-between">
                             <div>
                                 <div class="flex justify-between items-start gap-2 mb-2">
                                     <h4 class="font-bold text-slate-100 text-base line-clamp-1">${escapeHTML(evt.title)}</h4>
                                     ${statusBadge}
                                 </div>
-                                <p class="text-xs text-slate-400 mb-1"><i class="fas fa-calendar-alt text-blue-400 mr-1.5"></i> ${escapeHTML(eventDate)}</p>
-                                <p class="text-xs text-slate-400 mb-3"><i class="fas fa-church text-indigo-400 mr-1.5"></i> ${escapeHTML(churchName)}</p>
+                                <p class="text-xs text-slate-400 mb-1">
+                                    <i class="fas fa-calendar-alt text-blue-400 mr-1.5"></i>
+                                    ${escapeHTML(eventDate)}
+                                </p>
+                                <p class="text-xs text-slate-400 mb-3">
+                                    <i class="fas fa-church text-indigo-400 mr-1.5"></i>
+                                    ${escapeHTML(churchName)}
+                                </p>
                             </div>
+
                             <div class="flex items-center justify-between pt-3 border-t border-slate-800 text-xs font-semibold">
-                                <span class="text-slate-300 flex items-center gap-1.5"><i class="fas fa-users text-blue-400"></i> ${attendees.length} Registered</span>
-                                <span class="text-blue-400 hover:text-blue-300">View Roster &rarr;</span>
+                                <span class="text-slate-300 flex items-center gap-1.5">
+                                    <i class="fas fa-users text-blue-400"></i>
+                                    ${attendeeCount} Registered
+                                </span>
+                                <span class="text-blue-400 hover:text-blue-300">
+                                    View Roster &rarr;
+                                </span>
                             </div>
                         </div>
                     `;
                 }
+
                 eventsHtml += '</div>';
                 eventsSelectorContainer.innerHTML = eventsHtml;
 
-                // If an event is currently selected, refresh its roster view
                 if (currentSelectedEventId) {
                     await selectEventForRoster(currentSelectedEventId);
                 }
 
             } catch (err) {
-                console.error("Error loading events for registrations:", err);
-                eventsSelectorContainer.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Failed to load events: ${escapeHTML(err.message)}</div>`;
+                console.error(
+                    'Error loading authorised event listings:',
+                    err
+                );
+
+                eventsSelectorContainer.innerHTML =
+                    `<div class="text-center py-8 text-red-400 text-sm">Failed to load events: ${escapeHTML(err.message)}</div>`;
             }
         }
 
         async function fetchEventRegistrationsDetailedSafe(eventId) {
             const db = getDbClient();
-            if (!db) return [];
 
-            try {
-                const { data: registrations, error: regError } = await db
-                    .from('event_registrations')
-                    .select('*')
-                    .eq('event_id', eventId);
+            if (!db || !eventId) return [];
 
-                if (regError || !registrations) return [];
+            const {
+                data: registrations,
+                error
+            } = await db.rpc('get_event_roster', {
+                p_event_id: eventId
+            });
 
-                const profileIds = registrations.map(r => r.profile_id).filter(Boolean);
-                let profilesMap = {};
-                if (profileIds.length > 0) {
-                    const { data: profiles } = await db
-                        .from('profiles')
-                        .select('id, full_name, email, avatar_url')
-                        .in('id', profileIds);
-                    if (profiles) {
-                        profiles.forEach(p => { profilesMap[p.id] = p; });
-                    }
-                }
+            if (error) {
+                console.error(
+                    'Authorised event roster lookup failed:',
+                    error
+                );
 
-                return registrations.map(reg => {
-                    const profile = profilesMap[reg.profile_id] || {};
-                    return {
-                        registration_id: reg.id,
-                        profile_id: reg.profile_id,
-                        full_name: reg.attendee_name || profile.full_name || 'Valued Attendee',
-                        email: reg.attendee_email || profile.email || 'N/A',
-                        avatar_url: reg.photo_url || profile.avatar_url || null,
-                        coupon_number: reg.coupon_number || reg.coupon || 'N/A',
-                        amount_paid: reg.amount_paid !== undefined ? reg.amount_paid : (reg.amount || 0),
-                        is_free: reg.is_free !== undefined ? reg.is_free : true,
-                        created_at: reg.created_at
-                    };
-                });
-            } catch (e) {
-                console.warn("Detailed registration fetch failed:", e);
-                return [];
+                throw error;
             }
+
+            return registrations || [];
         }
 
-        async function selectEventForRoster(eventId, eventTitle, eventDate, churchName, regCount) {
+async function selectEventForRoster(eventId, eventTitle, eventDate, churchName, regCount) {
             currentSelectedEventId = eventId;
             const rosterContainer = document.getElementById('admin-event-roster-container');
             const titleEl = document.getElementById('roster-event-title');
@@ -1135,21 +1143,40 @@ if (adminChurchId) {
             showNotification("Event registration CSV exported successfully!", "success");
         }
 
-        async function removeAdminAttendeeRegistration(registrationId) {
-            if (!confirm("Are you sure you want to remove this registration?")) return;
+                async function removeAdminAttendeeRegistration(registrationId) {
+            if (!confirm("Are you sure you want to remove this registration?")) {
+                return;
+            }
+
             const db = getDbClient();
             if (!db) return;
 
             try {
-                const { error } = await db.from('event_registrations').delete().eq('id', registrationId);
+                const { error } = await db.rpc(
+                    'remove_event_registration',
+                    {
+                        p_registration_id: registrationId
+                    }
+                );
+
                 if (error) throw error;
-                showNotification("Registration removed successfully.", "success");
+
+                showNotification(
+                    "Registration removed successfully.",
+                    "success"
+                );
+
                 if (currentSelectedEventId) {
                     await selectEventForRoster(currentSelectedEventId);
                     await loadAdminEventRegistrationsSection();
                 }
+
             } catch (err) {
-                console.error("Error removing registration:", err);
+                console.error(
+                    "Error removing authorised registration:",
+                    err
+                );
+
                 alert("Failed to remove registration: " + err.message);
             }
         }
@@ -1171,132 +1198,105 @@ function getDbClient() {
   return null;
 }
 
-// FETCH PUBLIC JOIN CHURCH REQUESTS WITH MULTI-TABLE FALLBACK
-async function loadJoinChurchRequests() {
-  const container = document.getElementById('join-requests-container') || document.getElementById('public-join-requests');
-  if (!container) return;
+ // Load connection requests after authentication and church scope are verified.
+async function loadJoinChurchRequests(churchId, platformAdmin) {
+    const container = document.getElementById('join-requests-container');
+    if (!container) return;
 
-  const db = getDbClient();
-  if (!db) {
-    setTimeout(loadJoinChurchRequests, 1000);
-    return;
-  }
+    const db = getDbClient();
+    const isGlobalAdmin = platformAdmin === true;
 
-  try {
-    // Query church_join_requests
-    let { data, error } = await db
-      .from('church_join_requests')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    // Fallback check on public_church_requests if empty
-    if ((!data || data.length === 0) && !error) {
-      const fallback = await db.from('public_church_requests').select('*').order('created_at', { ascending: false });
-      if (fallback.data && fallback.data.length > 0) data = fallback.data;
+    if (!db) {
+        container.innerHTML = '<p class="text-red-400 text-sm">Database connection unavailable.</p>';
+        return;
     }
 
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No church join requests found.</div>';
-      return;
+    if (!isGlobalAdmin && currentUserProfile?.role !== 'church_admin') {
+        container.innerHTML = '<p class="text-slate-400 text-sm">You are not authorized to review connection requests.</p>';
+        return;
     }
 
-    let html = '<div class="d-flex flex-column gap-2 my-2">';
-    data.forEach(req => {
-      const name = req.full_name || req.name || req.phone || req.phone_number || req.email || req.user_email || 'Anonymous';
-      const phone = req.phone || req.phone_number || req.contact || req.mobile || 'No phone provided';
-      const email = req.email || req.user_email || '';
-      const church = req.church_name || req.church || '';
-      const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
+    if (!isGlobalAdmin && !churchId) {
+        container.innerHTML = '<p class="text-red-400 text-sm">Church assignment could not be verified. Access is blocked.</p>';
+        return;
+    }
 
-      html += `
-        <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #ffffff;">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <strong class="text-primary fs-6">👤 ${name}</strong>
-            ${dateStr ? `<span style="font-size: 0.72rem;" class="badge bg-secondary">${dateStr}</span>` : ''}
-          </div>
-          ${church ? `<div class="small text-info mb-1">🏛️ ${church}</div>` : ''}
-          <div class="small text-muted d-flex flex-wrap gap-3 mt-1">
-            <span>📞 ${phone}</span>
-            ${email ? `<span>✉️ ${email}</span>` : ''}
-          </div>
-        </div>
-      `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
+    container.innerHTML = '<p class="text-slate-400 text-sm">Loading connection requests...</p>';
 
-  } catch (err) {
-    console.error('Error loading join requests:', err);
-    container.innerHTML = `<div class="alert alert-danger py-2 small">Could not load join requests: ${err.message}</div>`;
-  }
+    try {
+        let query = db
+            .from('conversion_requests')
+            .select('id, church_id, full_name, phone_number, email, prayer_request, status, created_at, category, contact_method, contact_detail')
+            .order('created_at', { ascending: false });
+
+        if (!isGlobalAdmin) {
+            query = query.eq('church_id', churchId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="text-slate-400 text-center py-3 text-sm">No church connection requests found.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(req => {
+            const requestId = String(req.id || '').replace(/[^0-9a-f-]/gi, '');
+            const name = escapeHTML(req.full_name || 'Anonymous');
+            const phone = escapeHTML(req.phone_number || req.contact_detail || 'No phone provided');
+            const email = escapeHTML(req.email || '');
+            const details = escapeHTML(req.prayer_request || req.category || 'Church connection request');
+            const status = String(req.status || 'pending');
+            const dateStr = req.created_at
+                ? new Date(req.created_at).toLocaleDateString()
+                : '';
+
+            const statusClass = status === 'pending'
+                ? 'bg-amber-900/40 text-amber-300'
+                : (['contacted', 'completed', 'approved'].includes(status)
+                    ? 'bg-green-900/40 text-green-300'
+                    : 'bg-slate-700 text-slate-300');
+
+            const actions = status === 'pending' ? `
+                <div class="flex gap-2 mt-3">
+                    <button onclick="updateConversionRequestStatus('${requestId}', 'approved')"
+                        class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded">
+                        Approve
+                    </button>
+                    <button onclick="updateConversionRequestStatus('${requestId}', 'rejected')"
+                        class="px-3 py-1 bg-red-700 hover:bg-red-600 text-white text-xs rounded">
+                        Reject
+                    </button>
+                </div>
+            ` : '';
+
+            return `
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-3 mb-2 text-white">
+                    <div class="flex justify-between items-center gap-2 mb-2">
+                        <strong>${name}</strong>
+                        <span class="text-xs text-slate-400">${dateStr}</span>
+                    </div>
+                    <p class="text-sm text-slate-300 mb-2">${details}</p>
+                    <div class="text-sm text-slate-400">${phone}${email ? ' · ' + email : ''}</div>
+                    <span class="inline-block mt-2 px-2 py-1 rounded text-xs ${statusClass}">${escapeHTML(status)}</span>
+                    ${actions}
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('Error loading church connection requests:', err);
+        container.innerHTML = `<p class="text-red-400 text-sm">Could not load requests: ${escapeHTML(err.message)}</p>`;
+    }
 }
 
-// FETCH PUBLIC PRAYER REQUESTS WITH EXHAUSTIVE COLUMN MAPPINGS & DETAILS DISPLAY FIX
-async function loadPublicPrayerRequests() {
-  const container = document.getElementById('prayer-requests-container') || document.getElementById('public-prayer-requests');
-  if (!container) return;
-
-  const db = getDbClient();
-  if (!db) {
-    setTimeout(loadPublicPrayerRequests, 1000);
-    return;
-  }
-
-  try {
-    let { data, error } = await db.from('prayer_requests').select('*').order('created_at', { ascending: false });
-
-    if (error) {
-      const fallback = await db.from('ministry_requests').select('*').order('created_at', { ascending: false });
-      data = fallback.data;
-      error = fallback.error;
-    }
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      container.innerHTML = '<div class="alert alert-dark border-secondary text-muted text-center py-3 my-2 small">No prayer requests found.</div>';
-      return;
-    }
-
-    let html = '<div class="d-flex flex-column gap-2 my-2">';
-    data.forEach(req => {
-      // Exhaustive property mapping supporting prayer_request, request, prayer, message, details, description, content
-      const name = req.full_name || req.name || req.author || req.user_email || 'Anonymous';
-      const phone = req.phone || req.phone_number || req.contact || req.mobile || req.contact_info || 'No phone provided';
-      const details = req.prayer_request || req.message || req.details || req.description || req.request || req.prayer || req.content || req.notes || 'No details provided.';
-      const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString() : '';
-
-      html += `
-        <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #ffffff;">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <strong class="text-info fs-6">🙏 ${name}</strong>
-            ${dateStr ? `<span style="font-size: 0.72rem;" class="badge bg-secondary">${dateStr}</span>` : ''}
-          </div>
-          <p style="background-color: #0f172a; border: 1px solid #334155; padding: 8px; border-radius: 6px;" class="small text-light mb-1 mt-2">${details}</p>
-          <small class="text-muted">📞 ${phone}</small>
-        </div>
-      `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
-
-  } catch (err) {
-    console.error('Error loading prayer requests:', err);
-    container.innerHTML = `<div class="alert alert-danger py-2 small">Could not load prayer requests: ${err.message}</div>`;
-  }
+// Prayer-request review remains paused until its separate privacy policies are secured.
+const prayerContainer = document.getElementById('prayer-requests-container');
+if (prayerContainer) {
+    prayerContainer.innerHTML = '<p class="text-slate-400 text-sm">Prayer request review is temporarily paused while privacy access is secured.</p>';
 }
 
-// Trigger both fetchers on load
-document.addEventListener('DOMContentLoaded', () => {
-  loadJoinChurchRequests();
-  loadPublicPrayerRequests();
-});
-if (document.readyState === 'interactive' || document.readyState === 'complete') {
-  loadJoinChurchRequests();
-  loadPublicPrayerRequests();
-}
 
         async function updateConversionRequestStatus(id, newStatus) {
             try {
@@ -1308,29 +1308,13 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 if (error) throw error;
 
                 showNotification(`Join church request status updated to ${newStatus}.`, "success");
-                loadAdminPrayerRequests();
+                await loadJoinChurchRequests(isSuperAdmin ? activeDashboardChurchId : currentUserProfile?.church_id, isSuperAdmin);
             } catch (err) {
                 console.error("Error updating conversion request status:", err);
                 alert("Failed to update status: " + err.message);
             }
         }
 
-        async function updatePrayerRequestStatus(id, newStatus) {
-            try {
-                const { error } = await window.sbClient
-                    .from('prayer_requests')
-                    .update({ status: newStatus })
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                showNotification(`Prayer request status updated to ${newStatus}.`, "success");
-                loadAdminPrayerRequests();
-            } catch (err) {
-                console.error("Error updating prayer request status:", err);
-                alert("Failed to update status: " + err.message);
-            }
-        }
 
         window.switchAdminView = function(selected) {
             const mapping = {
@@ -1494,7 +1478,6 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
                 if (pesapalView) { pesapalView.classList.add('hidden'); pesapalView.classList.remove('block'); }
                 if (businessesView) { businessesView.classList.add('hidden'); businessesView.classList.remove('block'); }
                 if (btnPrayer) btnPrayer.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
-                if (typeof loadAdminPrayerRequests === 'function') loadAdminPrayerRequests();
             } else if (tab === 'businesses') {
                 if (businessesView) {
                     businessesView.classList.remove('hidden');
@@ -1698,15 +1681,22 @@ let adminChurchId = isSuperAdmin
 ) {
                     const pubSec = document.getElementById('publish-section');
                     if (pubSec) pubSec.classList.remove('hidden');
-                    const usrMgmt = document.getElementById('user-management-section');
-                    if (usrMgmt) usrMgmt.classList.remove('hidden');
                     
                     // 2. Scope all admin queries to adminChurchId
                     loadInboxInquiries(adminChurchId, isSuperAdmin);
-                    loadAllMembers(adminChurchId, isSuperAdmin);
+                    if (isSuperAdmin || currentUserProfile?.role === 'church_admin') {
+                        loadJoinChurchRequests(adminChurchId, isSuperAdmin);
+                    }
                     loadChurchJoinCode(adminChurchId);
                     if (typeof loadAdminEvents === 'function') loadAdminEvents(adminChurchId, isSuperAdmin);
                     if (typeof loadChurchVolunteerSlots === 'function') loadChurchVolunteerSlots(adminChurchId);
+                }
+
+                // Global profile management is restricted to verified platform admins.
+                if (isSuperAdmin) {
+                    const usrMgmt = document.getElementById('user-management-section');
+                    if (usrMgmt) usrMgmt.classList.remove('hidden');
+                    loadAllMembers(adminChurchId, true);
                 }
 
                 const urlParams = new URLSearchParams(window.location.search);
@@ -2970,53 +2960,35 @@ if (!isSuperAdmin && !adminChurchId) {
         </div>`;
     return;
 }
-                let query = window.sbClient
-                    .from('volunteer_roster')
-                    .select('*');
+                const { data: rosterData, error: rosterError } =
+                    await window.sbClient.rpc('get_admin_volunteer_roster', {
+                        p_church_id: adminChurchId
+                    });
 
-                    if (adminChurchId) {
-    query = query.eq('church_id', adminChurchId);
-}
-                let { data: slots, error: rosterError } = await query.order('event_date', { ascending: true });
                 if (rosterError) throw rosterError;
 
-                let { data: signups, error: signupsError } = await window.sbClient
-                    .from('volunteer_signups')
-                    .select('*');
+                const { data: signupData, error: signupsError } =
+                    await window.sbClient.rpc('get_admin_church_volunteer_signups', {
+                        p_church_id: adminChurchId
+                    });
 
-                if (signupsError) {
-                    console.warn('Could not fetch volunteer signups safely:', signupsError);
-                } else if (signups && signups.length > 0) {
-                    const userIds = signups.map(s => s.user_id).filter(Boolean);
-                    if (userIds.length > 0) {
-                        try {
-                            const { data: profiles } = await window.sbClient
-                                .from('profiles')
-                                .select('*')
-                                .in('id', userIds);
-                            if (profiles) {
-                                const profileMap = {};
-                                profiles.forEach(p => { profileMap[p.id] = p; });
-                                signups = signups.map(s => ({
-                                    ...s,
-                                    profiles: profileMap[s.user_id] || null
-                                }));
+                if (signupsError) throw signupsError;
+
+                const signups = signupData || [];
+
+                let slots = (rosterData || []).map(slot => ({
+                    ...slot,
+                    volunteer_signups: signups
+                        .filter(signup => signup.slot_id === slot.id)
+                        .map(signup => ({
+                            ...signup,
+                            profiles: {
+                                full_name: signup.full_name,
+                                email: signup.user_email,
+                                phone: signup.phone
                             }
-                        } catch (profErr) {
-                            console.warn('Could not fetch profiles for volunteer signups:', profErr);
-                        }
-                    }
-                }
-
-                slots = (slots || []).map(slot => {
-                    return {
-                        ...slot,
-                        volunteer_signups: signups
-    ? signups.filter(s => s.slot_id === slot.id)
-    : []
-                    };
-                });
-
+                        }))
+                }));
                 if (!slots || slots.length === 0) {
                     container.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">No volunteer serving slots created yet.</div>`;
                     return;
@@ -3126,8 +3098,7 @@ if (!isSuperAdmin && !adminChurchId) {
             try {
                 const { data, error } = await window.sbClient
                     .from('volunteer_roster')
-                    .insert([payload])
-                    .select();
+                    .insert([payload]);
 
                 if (error) {
                     alert('Failed to create slot: ' + error.message);
@@ -3673,219 +3644,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         window.viewSlotMembers = async function(slotId, slotName) {
-          const titleEl = document.getElementById('volunteerModalTitle');
-          const listEl = document.getElementById('volunteer-members-list');
-          
-          if (titleEl) titleEl.innerText = `Volunteers for ${slotName}`;
-          if (listEl) listEl.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading members...</p></div>';
-          
-          // Show Bootstrap Modal
-          const modalEl = document.getElementById('volunteerMembersModal');
-          const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-          modal.show();
+            const titleEl = document.getElementById('volunteerModalTitle');
+            const listEl = document.getElementById('volunteer-members-list');
 
-          try {
-            // Safe robust lookup with try/catch and fallback to signup record fields
-            let signups = [];
+            if (!listEl) return;
+
+            if (titleEl) titleEl.innerText = `Volunteers for ${slotName}`;
+            listEl.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading members...</p></div>';
+
+            const modalEl = document.getElementById('volunteerMembersModal');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+
             try {
-              const { data, error } = await supabase
-                .from('volunteer_signups')
-                .select('*')
-                .eq('slot_id', slotId);
-              if (!error && data) {
-                signups = data;
-              }
-            } catch (innerErr) {
-              console.warn('Direct signup query failed:', innerErr.message);
-            }
-
-            if (!signups || signups.length === 0) {
-              listEl.innerHTML = '<div class="text-center text-muted p-4">No members have signed up for this slot yet.</div>';
-              return;
-            }
-
-            // Fetch profiles separately if user_ids exist
-            const userIds = signups.map(s => s.user_id).filter(Boolean);
-            let profilesMap = {};
-            if (userIds.length > 0) {
-              try {
-                const { data: profs } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .in('id', userIds);
-                if (profs) {
-                  profs.forEach(p => { profilesMap[p.id] = p; });
-                }
-              } catch (profErr) {
-                console.warn('Profile batch lookup skipped:', profErr.message);
-              }
-            }
-
-            let html = '<ul class="list-group list-group-flush">';
-            signups.forEach(item => {
-              const profile = profilesMap[item.user_id] || {};
-              const fallbackEmail = item.user_email || item.email;
-              const name = profile.full_name || profile.name || item.full_name || item.name || (fallbackEmail ? fallbackEmail.split('@')[0] : 'Volunteer');
-              const email = profile.email || fallbackEmail || 'No email provided';
-              const phone = profile.phone || profile.phone_number || item.phone || 'No phone';
-              const date = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
-
-              html += `
-                <li class="list-group-item d-flex justify-content-between align-items-center py-2">
-                  <div>
-                    <strong class="d-block">${escapeHTML(name)}</strong>
-                    <small class="text-muted">${escapeHTML(email)} ${phone && phone !== 'No phone' ? '• ' + escapeHTML(phone) : ''}</small>
-                  </div>
-                  ${date ? `<span class="badge bg-light text-dark">${date}</span>` : ''}
-                </li>
-              `;
-            });
-            html += '</ul>';
-            listEl.innerHTML = html;
-          } catch (err) {
-            console.error('Error loading volunteers:', err);
-            listEl.innerHTML = `<div class="alert alert-danger">Failed to load volunteers: ${escapeHTML(err.message)}</div>`;
-          }
-        };
-
-        async function loadChurchVolunteerSlots(churchId) {
-    const container = document.getElementById('volunteer-slots-container');
-    if (!container) return;
-
-    if (!churchId) {
-        container.innerHTML = `
-            <div class="text-center text-muted py-3">
-                Select a church to view its volunteer signups.
-            </div>`;
-        return;
-    }
-
-    container.innerHTML = `
-        <div class="text-center p-3 text-muted">
-            <div class="spinner-border spinner-border-sm me-2"></div>
-            Loading volunteer signups...
-        </div>`;
-
-    const db = window.sbClient;
-
-    if (!db) {
-        container.innerHTML = `
-            <div class="text-danger small py-2">
-                Supabase database client is unavailable.
-            </div>`;
-        return;
-    }
-
-    try {
-        // 1. Fetch roster slots belonging to the selected church.
-        const {
-            data: rosterSlots,
-            error: rosterError
-        } = await db
-            .from('volunteer_roster')
-            .select('*')
-            .eq('church_id', churchId);
-
-        if (rosterError) throw rosterError;
-
-        const slots = rosterSlots || [];
-        const slotIds = slots.map(slot => slot.id).filter(Boolean);
-
-        if (slotIds.length === 0) {
-            container.innerHTML = `
-                <div class="text-center text-muted py-3">
-                    No volunteer slots found for this church.
-                </div>`;
-            return;
-        }
-
-        // 2. Fetch signups attached only to those roster slots.
-        const {
-            data: signups,
-            error: signupError
-        } = await db
-            .from('volunteer_signups')
-            .select('*')
-            .in('slot_id', slotIds)
-            .order('created_at', { ascending: false });
-
-        if (signupError) throw signupError;
-
-        if (!signups || signups.length === 0) {
-            container.innerHTML = `
-                <div class="text-center text-muted py-3">
-                    No members have signed up to volunteer yet.
-                </div>`;
-            return;
-        }
-
-        // 3. Fetch only the profile fields needed for display.
-        const userIds = [
-            ...new Set(signups.map(s => s.user_id).filter(Boolean))
-        ];
-
-        const profilesMap = {};
-
-        if (userIds.length > 0) {
-            const {
-                data: profiles,
-                error: profilesError
-            } = await db
-                .from('profiles')
-                .select('id, full_name, phone, email')
-                .in('id', userIds);
-
-            if (profilesError) {
-                console.warn(
-                    'Could not load volunteer profile details:',
-                    profilesError.message
+                const { data: signups, error } = await window.sbClient.rpc(
+                    'get_admin_slot_volunteer_signups',
+                    { p_slot_id: slotId }
                 );
-            } else {
-                (profiles || []).forEach(profile => {
-                    profilesMap[profile.id] = profile;
+
+                if (error) throw error;
+
+                if (!signups || signups.length === 0) {
+                    listEl.innerHTML = '<div class="text-center text-muted p-4">No members have signed up for this slot yet.</div>';
+                    return;
+                }
+
+                let html = '<ul class="list-group list-group-flush">';
+
+                signups.forEach(item => {
+                    const name = item.full_name || 'Volunteer';
+                    const email = item.user_email || 'No email provided';
+                    const phone = item.phone || 'No phone';
+                    const date = item.created_at
+                        ? new Date(item.created_at).toLocaleDateString()
+                        : '';
+
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div>
+                                <strong class="d-block">${escapeHTML(name)}</strong>
+                                <small class="text-muted">${escapeHTML(email)} ${phone !== 'No phone' ? ' • ' + escapeHTML(phone) : ''}</small>
+                            </div>
+                            ${date ? `<span class="badge bg-light text-dark">${escapeHTML(date)}</span>` : ''}
+                        </li>
+                    `;
                 });
+
+                html += '</ul>';
+                listEl.innerHTML = html;
+
+            } catch (err) {
+                console.error('Error loading volunteers:', err);
+                listEl.innerHTML = `<div class="alert alert-danger">Failed to load volunteers: ${escapeHTML(err.message)}</div>`;
+            }
+        };
+        async function loadChurchVolunteerSlots(churchId) {
+            const container = document.getElementById('volunteer-slots-container');
+            if (!container) return;
+
+            if (!churchId) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        Select a church to view its volunteer signups.
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="text-center p-3 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Loading volunteer signups...
+                </div>`;
+
+            const db = window.sbClient;
+            if (!db) {
+                container.innerHTML = `
+                    <div class="text-danger small py-2">
+                        Supabase database client is unavailable.
+                    </div>`;
+                return;
+            }
+
+            try {
+                const { data: signups, error } = await db.rpc(
+                    'get_admin_church_volunteer_signups',
+                    { p_church_id: churchId }
+                );
+
+                if (error) throw error;
+
+                renderVolunteerList(signups || [], container);
+            } catch (err) {
+                console.error('Error loading volunteer signups:', err);
+                container.innerHTML = `
+                    <div class="text-danger small py-2">
+                        Failed to load volunteer roster:
+                        ${escapeHTML(err.message)}
+                    </div>`;
             }
         }
-
-        // 4. Map the selected church's roster slots.
-        const slotsMap = {};
-
-        slots.forEach(slot => {
-            slotsMap[slot.id] = slot;
-        });
-
-        // 5. Attach profile and slot information to each signup.
-        const enrichedSignups = signups.map(item => {
-            const profile = profilesMap[item.user_id] || {};
-            const rosterSlot = slotsMap[item.slot_id] || {};
-
-            return {
-                ...item,
-                profiles: profile,
-                slot_title:
-                    rosterSlot.title ||
-                    rosterSlot.role ||
-                    rosterSlot.name ||
-                    item.slot_title ||
-                    item.slot_name ||
-                    item.role ||
-                    item.title ||
-                    'General Volunteer'
-            };
-        });
-
-        renderVolunteerList(enrichedSignups, container);
-
-    } catch (err) {
-        console.error('Error loading volunteer signups:', err);
-
-        container.innerHTML = `
-            <div class="text-danger small py-2">
-                Failed to load volunteer roster:
-                ${escapeHTML(err.message)}
-            </div>`;
-    }
-}
 function renderVolunteerList(signups, container) {
   if (!container) return;
   

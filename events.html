@@ -400,125 +400,148 @@
     }
 
     function initRealtimeSync() {
-        window.sbClient
-            .channel('events-realtime')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
-                loadEvents();
-                loadAdminEventsDropdown();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => {
-                loadEvents();
-            })
-            .subscribe();
-    }
+    if (!window.sbClient) return;
 
-    async function loadEvents() {
-        const container = document.getElementById('events-container');
-        const archiveContainer = document.getElementById('events-archive-container');
+    window.sbClient
+        .channel('events-realtime')
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'events'
+        }, () => {
+            loadEvents();
+            loadAdminEventsDropdown();
+        })
+        .subscribe();
+}
 
-        const { data: events, error } = await window.sbClient
-            .from('events')
-            .select('*')
-            .order('event_date', { ascending: true });
+async function loadEvents() {
+    const container = document.getElementById('events-container');
+    const archiveContainer = document.getElementById('events-archive-container');
 
-        if (error) {
-            const errMsg = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500">Error loading events: ${escapeHtml(error.message)}</div>`;
-            if (container) container.innerHTML = errMsg;
-            if (archiveContainer) archiveContainer.innerHTML = errMsg;
-            return;
-        }
+    try {
+        const { data: events, error } =
+            await window.sbClient.rpc('get_visible_events');
+
+        if (error) throw error;
 
         if (!events || events.length === 0) {
-            const emptyMsg = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-200 text-center"><p class="text-gray-500">No community events found.</p></div>`;
-            if (container) container.innerHTML = emptyMsg;
-            if (archiveContainer) archiveContainer.innerHTML = emptyMsg;
+            allEvents = [];
+            window.pastEvents = [];
+
+            const empty = `
+                <div class="col-span-full bg-white p-8 rounded-xl border text-center">
+                    <p class="text-gray-500">No community events found.</p>
+                </div>`;
+
+            if (container) container.innerHTML = empty;
+            if (archiveContainer) archiveContainer.innerHTML = empty;
             return;
         }
 
-        // Get current logged-in user's ID and registrations
-        let userRegisteredEventIds = [];
-        try {
-            const { data: { user } } = await window.sbClient.auth.getUser();
-            if (user) {
-                const { data: regs, error: regError } = await window.sbClient
-                    .from('event_registrations')
-                    .select('event_id')
-                    .eq('profile_id', user.id);
-                if (!regError && regs) {
-                    userRegisteredEventIds = regs.map(r => r.event_id);
-                }
-            }
-        } catch (e) {
-            console.error('Error fetching user registrations:', e);
-        }
+        const { data: stats, error: statsError } =
+            await window.sbClient.rpc('get_event_registration_stats', {
+                p_event_ids: events.map(e => e.id)
+            });
 
-        // Filter events based on logged-in user's church_id against host_church_id (or church_id) and invited_church_ids array.
-        const userChurchId = currentUserProfile?.church_id;
-        const isSuperAdmin = currentUserProfile?.role === 'super_admin';
+        if (statsError) throw statsError;
 
-        const filteredEvents = isSuperAdmin ? events : events.filter(evt => {
-            const hostId = evt.host_church_id || evt.church_id;
-            const invitedIds = evt.invited_church_ids || [];
-            
-            if (userChurchId) {
-                return hostId === userChurchId || invitedIds.includes(userChurchId);
-            }
-            return !hostId || hostId === '';
-        });
+        const statsMap = new Map(
+            (stats || []).map(s => [s.event_id, s])
+        );
 
-        // Determine Upcoming vs Past events based on actual event date and end time (or calendar day if no end time)
-        const now = new Date();
-        const upcomingList = [];
-        const pastList = [];
+        const enriched = events.map(evt => {
+            const stat = statsMap.get(evt.id);
+            const count = Math.max(
+                0,
+                Math.floor(Number(stat?.registration_count || 0))
+            );
 
-        filteredEvents.forEach(evt => {
-            const startDate = new Date(evt.event_date);
-            // If end_time or end_date column exists, use it; otherwise if only date, treat as active for that calendar day (until end of that calendar day)
-            let endDate = evt.end_time ? new Date(evt.end_time) : (evt.end_date ? new Date(evt.end_date) : null);
-            if (!endDate) {
-                // Default: end of the event's calendar day (23:59:59)
-                endDate = new Date(startDate);
-                endDate.setHours(23, 59, 59, 999);
-            }
-
-            const isEnded = now > endDate;
-
-            const enhancedEvt = {
+            return {
                 ...evt,
-                is_user_registered: userRegisteredEventIds.includes(evt.id),
-                is_ended: isEnded
+                registration_count: count,
+                is_user_registered: Boolean(stat?.is_registered),
+                event_registrations: Array.from(
+                    { length: count },
+                    () => ({})
+                )
             };
-
-            if (isEnded) {
-                pastList.push(enhancedEvt);
-            } else {
-                upcomingList.push(enhancedEvt);
-            }
         });
 
-        // Sort upcoming events by date, nearest first (ascending)
-        upcomingList.sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+        const now = new Date();
+        const upcoming = [];
+        const past = [];
 
-        // Sort past events archive by most recent first (descending)
-        pastList.sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
+        enriched.forEach(evt => {
+            const start = new Date(evt.event_date);
 
-        allEvents = upcomingList;
-        window.pastEvents = pastList;
+            let end = evt.end_time
+                ? new Date(evt.end_time)
+                : (evt.end_date ? new Date(evt.end_date) : null);
+
+            if (!end) {
+                end = new Date(start);
+                end.setHours(23, 59, 59, 999);
+            }
+
+            const item = { ...evt, is_ended: now > end };
+
+            if (item.is_ended) past.push(item);
+            else upcoming.push(item);
+        });
+
+        upcoming.sort((a,b) =>
+            new Date(a.event_date) - new Date(b.event_date)
+        );
+
+        past.sort((a,b) =>
+            new Date(b.event_date) - new Date(a.event_date)
+        );
+
+        allEvents = upcoming;
+        window.pastEvents = past;
 
         renderFilteredEvents();
-        renderArchiveEvents(pastList);
+        renderArchiveEvents(past);
+
+    } catch (error) {
+        console.error('Event loading failed:', error);
+
+        const message = `
+            <div class="col-span-full bg-white p-8 rounded-xl border text-center text-red-500">
+                Error loading events: ${escapeHtml(error.message)}
+            </div>`;
+
+        if (container) container.innerHTML = message;
+        if (archiveContainer) archiveContainer.innerHTML = message;
+    }
+}
+
+async function loadAdminEventsDropdown() {
+    const select = document.getElementById('admin-event-select');
+    if (!select || !window.sbClient) return;
+
+    select.innerHTML = '<option value="">Loading events...</option>';
+
+    const { data: events, error } = await window.sbClient.rpc(
+        'get_managed_events',
+        { p_church_id: null }
+    );
+
+    if (error) {
+        console.error('Managed event lookup failed:', error);
+        select.innerHTML = '<option value="">Events unavailable</option>';
+        return;
     }
 
-    async function loadAdminEventsDropdown() {
-        const select = document.getElementById('admin-event-select');
-        if (!select) return;
-        const { data: events } = await window.sbClient.from('events').select('id, title, event_date').order('event_date', { ascending: true });
-        if (events) {
-            select.innerHTML = '<option value="">Select Event...</option>' + events.map(e => `<option value="${e.id}">${escapeHtml(e.title)} (${new Date(e.event_date).toLocaleDateString()})</option>`).join('');
-        }
-    }
+    select.innerHTML =
+        '<option value="">Select Event...</option>' +
+        (events || []).map(evt =>
+            `<option value="${escapeHtml(evt.id)}">${escapeHtml(evt.title)} (${new Date(evt.event_date).toLocaleDateString()})</option>`
+        ).join('');
+}
 
-    function generateCouponCode() {
+function generateCouponCode() {
         const randomNum = Math.floor(1000 + Math.random() * 9000);
         document.getElementById('admin-coupon-number').value = `CPN-${randomNum}`;
     }
@@ -536,74 +559,85 @@
     }
 
     async function handleAdminRegister(e) {
-        e.preventDefault();
-        if (!['admin', 'super_admin'].includes(currentUserProfile?.role)) {
-            alert('Only administrators can issue event coupons.');
-            return;
-        }
-        const eventId = document.getElementById('admin-event-select').value;
-        const attendeeName = document.getElementById('admin-attendee-name').value.trim();
-        const attendeeEmail = document.getElementById('admin-attendee-email').value.trim();
-        const couponNumber = document.getElementById('admin-coupon-number').value.trim().toUpperCase();
-        const isFree = document.getElementById('admin-free-checkbox').checked;
-        const amountPaid = isFree ? 0 : parseFloat(document.getElementById('admin-amount-paid').value || 0);
-        
-        const photoFile = document.getElementById('admin-attendee-photo-file').files[0];
-        const photoUrlInput = document.getElementById('admin-attendee-photo-url').value.trim();
+    e.preventDefault();
 
-        let photoUrl = photoUrlInput || null;
-        if (photoFile) {
-            const filePath = `attendee-photos/${Date.now()}_${photoFile.name}`;
-            const { error: uploadError } = await window.sbClient.storage.from('attendee-photos').upload(filePath, photoFile);
-            if (uploadError) {
-                alert("Attendee photo upload failed: " + uploadError.message);
-                return;
-            }
-            const { data: urlData } = window.sbClient.storage.from('attendee-photos').getPublicUrl(filePath);
-            photoUrl = urlData?.publicUrl || null;
-        }
-
-        // Link the issued coupon to the attendee's own account so their RLS-protected
-        // coupon search can find it. Never attach an attendee coupon to the admin account.
-        const { data: attendeeProfile, error: attendeeProfileError } = await window.sbClient
-            .from('profiles')
-            .select('id')
-            .ilike('email', attendeeEmail)
-            .maybeSingle();
-
-        if (attendeeProfileError) {
-            alert('Could not verify the attendee account: ' + attendeeProfileError.message);
-            return;
-        }
-        if (!attendeeProfile?.id) {
-            alert('No BelieversMeet account was found for this email. Ask the attendee to create an account using this email, then issue the coupon again.');
-            return;
-        }
-
-        const { error } = await window.sbClient.from('event_registrations').insert([{
-            event_id: eventId,
-            profile_id: attendeeProfile.id,
-            attendee_name: attendeeName,
-            attendee_email: attendeeEmail,
-            coupon_number: couponNumber,
-            amount_paid: amountPaid,
-            is_free: isFree,
-            photo_url: photoUrl
-        }]);
-
-        if (error) {
-            if (error.code === '23505') alert("Coupon number or registration already exists.");
-            else alert("Error issuing coupon: " + error.message);
-        } else {
-            alert(`Coupon ${couponNumber} issued successfully for ${attendeeName}!`);
-            document.getElementById('admin-register-form').reset();
-            document.getElementById('admin-amount-paid').disabled = false;
-            document.getElementById('admin-amount-paid').classList.remove('bg-gray-100', 'text-gray-400');
-            loadEvents();
-        }
+    if (!['admin','church_admin','super_admin'].includes(currentUserProfile?.role)) {
+        alert('Only authorised event administrators can issue coupons.');
+        return;
     }
 
-    function renderFilteredEvents() {
+    const eventId = document.getElementById('admin-event-select').value;
+    const attendeeName = document.getElementById('admin-attendee-name').value.trim();
+    const attendeeEmail = document.getElementById('admin-attendee-email').value.trim();
+    const couponNumber = document.getElementById('admin-coupon-number').value.trim().toUpperCase();
+
+    const isFree = document.getElementById('admin-free-checkbox').checked;
+    const amountPaid = isFree
+        ? 0
+        : Number(document.getElementById('admin-amount-paid').value || 0);
+
+    if (!eventId || !attendeeEmail || !couponNumber) {
+        alert('Select an event and enter attendee email and coupon number.');
+        return;
+    }
+
+    if (!Number.isFinite(amountPaid) || amountPaid < 0) {
+        alert('Enter a valid payment amount.');
+        return;
+    }
+
+    const photoFile = document.getElementById('admin-attendee-photo-file').files[0];
+    const photoInput = document.getElementById('admin-attendee-photo-url').value.trim();
+
+    let photoUrl = photoInput || null;
+
+    if (photoFile) {
+        const filePath = `attendee-photos/${Date.now()}_${photoFile.name}`;
+
+        const { error: uploadError } = await window.sbClient.storage
+            .from('attendee-photos')
+            .upload(filePath, photoFile);
+
+        if (uploadError) {
+            alert('Photo upload failed: ' + uploadError.message);
+            return;
+        }
+
+        const { data: urlData } = window.sbClient.storage
+            .from('attendee-photos')
+            .getPublicUrl(filePath);
+
+        photoUrl = urlData?.publicUrl || null;
+    }
+
+    const { error } = await window.sbClient.rpc('issue_event_coupon', {
+        p_event_id: eventId,
+        p_attendee_email: attendeeEmail,
+        p_attendee_name: attendeeName,
+        p_coupon_number: couponNumber,
+        p_amount_paid: amountPaid,
+        p_is_free: isFree,
+        p_photo_url: photoUrl
+    });
+
+    if (error) {
+        console.error('Coupon issuance failed:', error);
+        alert('Error issuing coupon: ' + error.message);
+        return;
+    }
+
+    alert(`Coupon ${couponNumber} issued successfully.`);
+
+    document.getElementById('admin-register-form').reset();
+
+    const amountInput = document.getElementById('admin-amount-paid');
+    amountInput.disabled = false;
+    amountInput.classList.remove('bg-gray-100','text-gray-400');
+
+    await loadEvents();
+}
+
+function renderFilteredEvents() {
         const container = document.getElementById('events-container');
         if (!container) return;
 
@@ -706,102 +740,57 @@
     }
 
     async function toggleRsvp(eventId) {
-        const btn = document.getElementById(`rsvp-btn-${eventId}`);
-        const countSpan = document.getElementById(`attendee-count-${eventId}`);
-        
-        const evt = allEvents.find(e => e.id === eventId);
-        if (!evt) {
-            loadEvents();
-            return;
-        }
+    const btn = document.getElementById(`rsvp-btn-${eventId}`);
+    const evt = allEvents.find(e => e.id === eventId);
 
-        if (!evt.event_registrations) {
-            evt.event_registrations = [];
-        }
-
-        const userId = loggedInUser.id;
-        let hasRsvp = evt.event_registrations.some(r => r.profile_id === userId);
-
-        if (hasRsvp) {
-            // --- OPT OUT LOGIC (DELETE) ---
-            if (btn) {
-                btn.disabled = true;
-                btn.innerText = "Opting out...";
-                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-gray-400 text-white cursor-not-allowed';
-            }
-
-            const { error: deleteError } = await window.sbClient
-                .from('event_registrations')
-                .delete()
-                .eq('event_id', eventId)
-                .eq('profile_id', userId);
-
-            if (deleteError) {
-                console.error('Failed to opt out:', deleteError);
-                showSuccessToast("Could not cancel registration. Please try again.", true);
-                loadEvents();
-                return;
-            }
-
-            evt.event_registrations = evt.event_registrations.filter(r => r.profile_id !== userId);
-            const newCount = evt.event_registrations.length;
-
-            if (countSpan) {
-                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
-            }
-            if (btn) {
-                btn.disabled = false;
-                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700';
-                btn.innerText = 'Register';
-            }
-            showSuccessToast("Successfully opted out of event.");
-        } else {
-            // --- REGISTER LOGIC (INSERT) ---
-            if (btn) {
-                btn.disabled = true;
-                btn.innerText = "Registering...";
-                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-gray-400 text-white cursor-not-allowed';
-            }
-
-            const payload = {
-                event_id: eventId,
-                profile_id: userId,
-                attendee_name: currentUserProfile?.full_name || loggedInUser.email || 'Member',
-                attendee_email: loggedInUser.email
-            };
-
-            const { error: insertError } = await window.sbClient
-                .from('event_registrations')
-                .insert([payload]);
-
-            if (insertError) {
-                if (insertError.code === '23505' || insertError.status === 409 || (insertError.message && insertError.message.includes('duplicate key'))) {
-                    console.warn('User is already registered for this event.');
-                    showSuccessToast("You are already registered for this event!", true);
-                } else {
-                    console.error('Registration failed:', insertError);
-                    showSuccessToast("Error registering: " + (insertError.message || 'Unknown error'), true);
-                }
-                loadEvents();
-                return;
-            }
-
-            evt.event_registrations.push({ profile_id: userId });
-            const newCount = evt.event_registrations.length;
-
-            if (countSpan) {
-                countSpan.innerText = `👥 ${newCount} ${newCount === 1 ? 'Attendee' : 'Attendees'}`;
-            }
-            if (btn) {
-                btn.disabled = false;
-                btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-red-600 text-white hover:bg-red-700';
-                btn.innerText = 'Opt Out';
-            }
-            showSuccessToast('Successfully registered! An administrator must issue your coupon.');
-        }
+    if (!evt) {
+        await loadEvents();
+        return;
     }
 
-    async function searchCoupon() {
+    const { data: authData, error: authError } =
+        await window.sbClient.auth.getUser();
+
+    if (authError || !authData?.user) {
+        alert('Please log in before registering.');
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Please wait...';
+    }
+
+    try {
+        const result = evt.is_user_registered
+            ? await window.sbClient.rpc('cancel_event_registration', {
+                p_event_id: eventId
+              })
+            : await window.sbClient.rpc('register_for_event', {
+                p_event_id: eventId
+              });
+
+        if (result.error) throw result.error;
+
+        await loadEvents();
+
+        showSuccessToast(
+            evt.is_user_registered
+                ? 'Successfully opted out of event.'
+                : 'Successfully registered! An administrator must issue your coupon.'
+        );
+
+    } catch (error) {
+        console.error('Registration update failed:', error);
+        showSuccessToast(error.message || 'Registration update failed.', true);
+        await loadEvents();
+
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+async function searchCoupon() {
         const query = document.getElementById('coupon-search-input').value.trim();
         const container = document.getElementById('coupon-result-container');
         if (!query) {
@@ -811,27 +800,10 @@
 
         container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">Searching coupon records...</div>';
 
-        const { data, error } = await window.sbClient
-            .from('event_registrations')
-            .select('*, events(*)')
-            .or(`attendee_email.eq.${query},coupon_number.eq.${query}`);
-
-        // Try direct query with exact match or ilike if query has '@'
-        let regList = data;
-        if ((!regList || regList.length === 0) && query.includes('@')) {
-            const { data: dataEmail } = await window.sbClient
-                .from('event_registrations')
-                .select('*, events(*)')
-                .ilike('attendee_email', `%${query}%`);
-            regList = dataEmail;
-        } else if (!regList || regList.length === 0) {
-            const { data: dataCoupon } = await window.sbClient
-                .from('event_registrations')
-                .select('*, events(*)')
-                .ilike('coupon_number', `%${query}%`);
-            regList = dataCoupon;
-        }
-
+        const { data: regList, error } = await window.sbClient.rpc(
+            'search_event_coupons',
+            { p_search: query }
+        );
         if (error || !regList || regList.length === 0) {
             container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">No ticket or coupon found matching "${escapeHtml(query)}".</div>`;
             return;
@@ -1330,58 +1302,76 @@
     }
 
     async function loadUserCoupons() {
-        const container = document.getElementById('coupon-result-container');
-        if (!container || !loggedInUser || !window.sbClient) return;
+    const container = document.getElementById('coupon-result-container');
 
-        container.innerHTML = '<div class="text-center py-6 text-gray-500 text-sm">Loading coupons...</div>';
-        const isAdmin = ['admin', 'super_admin'].includes(currentUserProfile?.role);
-        let query = window.sbClient.from('event_registrations').select('*, events(*)');
-        if (!isAdmin) query = query.eq('profile_id', loggedInUser.id);
-        const { data: coupons, error } = await query;
+    if (!container || !loggedInUser || !window.sbClient) return;
 
-        if (error) {
-            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">Error loading coupons: ${escapeHtml(error.message)}</div>`;
-            return;
-        }
-        if (!coupons || coupons.length === 0) {
-            container.innerHTML = `<div class="bg-gray-50 text-gray-500 p-8 rounded-2xl text-center text-sm font-medium border border-gray-200">${isAdmin ? 'No coupon records found. Use the admin section to issue a coupon.' : 'You do not have any admission coupons yet. Once an administrator issues a coupon linked to your account, it will appear here.'}</div>`;
-            return;
-        }
-        renderCouponCards(coupons);
+    container.innerHTML =
+        '<div class="text-center py-6 text-gray-500 text-sm">Loading coupons...</div>';
+
+    const { data: coupons, error } = await window.sbClient.rpc(
+        'search_event_coupons',
+        { p_search: null }
+    );
+
+    if (error) {
+        container.innerHTML =
+            `<div class="bg-red-50 text-red-600 p-4 rounded-xl">
+                Error loading coupons: ${escapeHtml(error.message)}
+            </div>`;
+        return;
     }
 
-    async function searchCoupon() {
-        const queryVal = document.getElementById('coupon-search-input')?.value.trim() || '';
-        const container = document.getElementById('coupon-result-container');
-        if (!container || !window.sbClient) return;
-        const isAdmin = ['admin', 'super_admin'].includes(currentUserProfile?.role);
-        if (!queryVal) {
-            await loadUserCoupons();
-            return;
-        }
-
-        container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">Searching coupon records...</div>';
-        let query = window.sbClient.from('event_registrations').select('*, events(*)');
-        if (isAdmin) {
-            // Admins may search all records by attendee email or coupon code.
-            query = query.or(`attendee_email.ilike.%${queryVal}%,coupon_number.ilike.%${queryVal}%`);
-        } else {
-            // Keep attendee search strictly scoped to the signed-in attendee. RLS is an additional safeguard.
-            query = query.eq('profile_id', loggedInUser.id).ilike('coupon_number', `%${queryVal}%`);
-        }
-        const { data: regList, error } = await query;
-        if (error) {
-            container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center text-sm font-medium">Could not search coupons: ${escapeHtml(error.message)}</div>`;
-            return;
-        }
-        if (!regList || regList.length === 0) {
-            container.innerHTML = `<div class="bg-gray-50 text-gray-600 p-4 rounded-xl text-center text-sm">No coupon found matching "${escapeHtml(queryVal)}"${isAdmin ? '.' : ' in your account.'}</div>`;
-            return;
-        }
-        renderCouponCards(regList);
+    if (!coupons || coupons.length === 0) {
+        container.innerHTML =
+            '<div class="bg-gray-50 text-gray-500 p-8 rounded-2xl text-center">No coupon records are available for your account or authorised events.</div>';
+        return;
     }
 
-    function renderCouponCards(regList) {
+    renderCouponCards(coupons);
+}
+
+async function searchCoupon() {
+    const queryVal =
+        document.getElementById('coupon-search-input')?.value.trim() || '';
+
+    const container = document.getElementById('coupon-result-container');
+
+    if (!container || !window.sbClient) return;
+
+    if (!queryVal) {
+        await loadUserCoupons();
+        return;
+    }
+
+    container.innerHTML =
+        '<div class="text-center py-4 text-gray-500">Searching coupons...</div>';
+
+    const { data: regList, error } = await window.sbClient.rpc(
+        'search_event_coupons',
+        { p_search: queryVal }
+    );
+
+    if (error) {
+        container.innerHTML =
+            `<div class="bg-red-50 text-red-600 p-4 rounded-xl">
+                Could not search coupons: ${escapeHtml(error.message)}
+            </div>`;
+        return;
+    }
+
+    if (!regList || regList.length === 0) {
+        container.innerHTML =
+            `<div class="bg-gray-50 text-gray-600 p-4 rounded-xl">
+                No coupon found matching "${escapeHtml(queryVal)}".
+            </div>`;
+        return;
+    }
+
+    renderCouponCards(regList);
+}
+
+function renderCouponCards(regList) {
         const container = document.getElementById('coupon-result-container');
         if (!container) return;
 

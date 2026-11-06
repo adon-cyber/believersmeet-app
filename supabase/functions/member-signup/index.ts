@@ -7,6 +7,7 @@ const RATE_LIMIT_SALT = Deno.env.get("MEMBER_SIGNUP_RATE_LIMIT_SALT") ?? "";
 
 const ALLOWED_ORIGINS = new Set<string>([
   "https://believersmeet-app.vercel.app",
+  "https://believersmeet-app-git-staging-adoniakasango-3522s-projects.vercel.app",
   "http://127.0.0.1:5500",
   "http://localhost:5500",
 ]);

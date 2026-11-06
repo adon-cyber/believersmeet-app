@@ -1,4 +1,4 @@
-/**
+﻿/**
  * js/notifications.js
  * In-App Notification System
  * - Real-time fetching from `notifications` table (id, user_id, title, message, is_read, created_at)
@@ -20,7 +20,7 @@
                 .from('notifications')
                 .select('*', { count: 'exact', head: true })
                 .eq('is_read', false)
-                .or(`user_id.eq.${currentUser.id},type.eq.broadcast`);
+                .eq('user_id', currentUser.id);
 
             if (error) {
                 console.error('Error getting notification count:', error);
@@ -365,7 +365,7 @@
             const { data: sysNotifs, error: sysErr } = await sbClient
                 .from('notifications')
                 .select('*')
-                .or(`user_id.eq.${currentUser.id},type.eq.broadcast`)
+                .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
 
             if (!sysErr && sysNotifs) {
@@ -572,7 +572,7 @@
     };
 
     window.markAsRead = async function(notificationId) {
-        if (!sbClient) return;
+        if (!sbClient || !currentUser) return;
 
         // Extract the raw UUID if a prefix was attached (e.g. 'prayer-1234-...')
         let cleanId = notificationId;
@@ -624,7 +624,8 @@
             let { error } = await sbClient
                 .from('notifications')
                 .update({ is_read: true })
-                .eq('id', cleanId);
+                .eq('id', cleanId)
+                .eq('user_id', currentUser.id);
 
             // 5. If update returns an authorization error (JWT expired / 401 / PGRST303), try one manual refresh and retry once
             if (error && (error.code === 'PGRST303' || error.status === 401 || (error.message && error.message.toLowerCase().includes('jwt')))) {
@@ -635,7 +636,8 @@
                         const retryRes = await sbClient
                             .from('notifications')
                             .update({ is_read: true })
-                            .eq('id', cleanId);
+                            .eq('id', cleanId)
+                .eq('user_id', currentUser.id);
                         error = retryRes.error;
                     }
                 }

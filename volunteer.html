@@ -101,55 +101,38 @@
             try {
                 console.log('🚨 FORCING RAW FETCH FROM volunteer_roster...');
                 
-                // 2. Fetch rosters safely, then signups and stitch them in JS
                 let { data: slots, error: rosterError } = await window.sbClient
-                .from('church_volunteer_roster')
-                .select('id, title, description, event_date, church_id, max_capacity, is_active');
+                    .from('church_volunteer_roster')
+                    .select('id, title, description, event_date, church_id, max_capacity, is_active');
+
                 if (rosterError) throw rosterError;
 
-                let { data: signups, error: signupsError } = await window.sbClient
-                    .from('volunteer_signups')
-                    .select('*');
+                const slotIds = (slots || []).map(slot => slot.id).filter(Boolean);
+                let summaryMap = {};
 
-                if (signupsError) {
-                    console.warn('Could not fetch volunteer signups:', signupsError);
+                if (slotIds.length > 0) {
+                    const { data: summaries, error: summaryError } =
+                        await window.sbClient.rpc('get_volunteer_slot_summaries', {
+                            p_slot_ids: slotIds
+                        });
+
+                    if (summaryError) throw summaryError;
+
+                    (summaries || []).forEach(summary => {
+                        summaryMap[summary.slot_id] = summary;
+                    });
                 }
 
-                // Fetch profiles separately if needed to match pattern
-                let profilesMap = {};
-                if (signups && signups.length > 0) {
-                    const userIds = [...new Set(signups.map(s => s.user_id).filter(Boolean))];
-                    if (userIds.length > 0) {
-                        const { data: profiles, error: profError } = await window.sbClient
-                            .from('profiles')
-                            .select('id, full_name, email, phone, avatar_url')
-                            .in('id', userIds);
-                        if (!profError && profiles) {
-                            profiles.forEach(p => {
-                                profilesMap[p.id] = p;
-                            });
-                        }
-                    }
-                }
+                slots = (slots || []).map(slot => ({
+                    ...slot,
+                    signup_summary: summaryMap[slot.id] || {
+                        signup_count: 0,
+                        is_signed_up_by_me: false
+                    },
+                    volunteer_signups: []
+                }));
 
-                slots = (slots || []).map(slot => {
-                    const slotSignups = signups ? signups.filter(s => s.roster_id === slot.id || s.event_id === slot.id || s.slot_id === slot.id) : [];
-                    return {
-                        ...slot,
-                        volunteer_signups: slotSignups.map(s => ({
-                            ...s,
-                            profiles: profilesMap[s.user_id] || {
-                                full_name: s.full_name || s.name || 'Anonymous Member',
-                                email: s.email || '',
-                                phone: s.phone || '',
-                                avatar_url: 'images/image-2.png'
-                            }
-                        }))
-                    };
-                });
-
-                console.log('🚨 RAW DATABASE RESPONSE DATA:', slots);
-
+                console.log('Volunteer slots and private signup summaries loaded:', slots);
                 if (!slots || slots.length === 0) {
                     container.innerHTML = '<div class="col-span-full bg-slate-800 border border-red-500/50 p-6 rounded-2xl text-center text-red-300">The database query worked, but exactly 0 slots were returned. The table is empty or data is not saving.</div>';
                     return;
@@ -253,9 +236,9 @@
 
                 const roleName = slot.role || 'Usher';
                 const totalNeeded = slot.max_capacity || slot.spots || slot.total_spots || 5;
-                const signups = slot.volunteer_signups || [];
-                const filledSpots = signups.length;
-                const isSignedUpByMe = currentUser && signups.some(s => s.user_id === currentUser.id);
+                const summary = slot.signup_summary || {};
+                const filledSpots = Number(summary.signup_count || 0);
+                const isSignedUpByMe = summary.is_signed_up_by_me === true;
                 const isFull = filledSpots >= totalNeeded;
 
                 let badgeHtml = '';
@@ -284,44 +267,15 @@
                     `;
                 }
 
-                // Render signed up volunteers list
-                let signupsListHtml = '';
-                if (signups.length > 0) {
-                    signupsListHtml = `
-                        <div class="mt-3 space-y-2 border-t border-slate-700/60 pt-3">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Signed Up Volunteers (${filledSpots}/${totalNeeded}):</span>
-                            <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                                ${signups.map(signup => {
-                                    const memberName = signup.profiles?.full_name || signup.full_name || signup.name || 'Anonymous Member';
-                                    const contactInfo = signup.profiles?.email || signup.email || signup.profiles?.phone || signup.phone || '';
-                                    const avatarUrl = signup.profiles?.avatar_url || 'images/image-2.png';
-                                    return `
-                                        <div class="flex items-center justify-between bg-slate-900/70 p-2 rounded-xl border border-slate-700/50 text-xs">
-                                            <div class="flex items-center gap-2">
-                                                <img src="${escapeHTML(avatarUrl)}" class="w-6 h-6 rounded-full object-cover border border-slate-700" onerror="this.src='images/image-2.png'">
-                                                <div>
-                                                    <span class="font-semibold text-slate-200">${escapeHTML(memberName)}</span>
-                                                    ${contactInfo ? `<span class="block text-[10px] text-slate-400">${escapeHTML(contactInfo)}</span>` : ''}
-                                                </div>
-                                            </div>
-                                            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium">Serving</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    signupsListHtml = `
-                        <div class="mt-3 space-y-2 border-t border-slate-700/60 pt-3">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Signed Up Volunteers (${filledSpots}/${totalNeeded}):</span>
-                            <p class="text-muted small text-xs text-slate-400 italic bg-slate-900/40 p-2.5 rounded-xl border border-slate-800">No volunteers signed up yet. Be the first!</p>
-                        </div>
-                    `;
-                }
+                const signupsListHtml = filledSpots > 0
+                    ? `<div class="mt-3 border-t border-slate-700/60 pt-3">
+                        <p class="text-xs text-slate-400">Volunteer names and contact details are visible to church leadership only.</p>
+                       </div>`
+                    : `<div class="mt-3 border-t border-slate-700/60 pt-3">
+                        <p class="text-xs text-slate-400 italic">No volunteers have signed up yet. Be the first!</p>
+                       </div>`;
 
-                return `
-                    <div id="slot-card-${slot.id}" class="bg-slate-800/70 backdrop-blur-md border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
+                return `                    <div id="slot-card-${slot.id}" class="bg-slate-800/70 backdrop-blur-md border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6 hover:border-blue-500/50 transition-all">
                         <div class="space-y-3">
                             <div class="flex justify-between items-start gap-2">
                                 <span class="text-xs font-bold uppercase tracking-wider text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">${escapeHTML(roleName)}</span>
@@ -430,37 +384,39 @@ async function renderVolunteerSlotsWithState(slots, container) {
                     return;
                 }
 
-                const { data: existingSignups, error: signupsErr } = await db
-                    .from('volunteer_signups')
-                    .select('*')
-                    .eq('slot_id', slotId);
+                const { data: summaries, error: summaryErr } = await db
+                    .rpc('get_volunteer_slot_summaries', {
+                        p_slot_ids: [slotId]
+                    });
 
-                if (signupsErr) throw signupsErr;
+                if (summaryErr) throw summaryErr;
+
+                const summary = summaries?.[0] || {
+                    signup_count: 0,
+                    is_signed_up_by_me: false
+                };
 
                 const maxCap = targetSlot.max_capacity || targetSlot.spots || targetSlot.total_spots || 5;
-                if (existingSignups && existingSignups.length >= maxCap) {
+
+                if (Number(summary.signup_count || 0) >= maxCap) {
                     alert(`Sorry, "${slotTitle}" is already at full capacity (${maxCap}/${maxCap}). Please choose another slot.`);
                     await loadVolunteerSlots();
                     return;
                 }
 
-                // 2. Check if user is already signed up for THIS exact slot
-                const alreadyThisSlot = existingSignups.find(s => s.user_id === user.id);
-                if (alreadyThisSlot) {
+                if (summary.is_signed_up_by_me) {
                     alert(`You are already signed up for "${slotTitle}"!`);
                     await loadVolunteerSlots();
                     return;
                 }
 
-                // 3. ENFORCE ONE ACTIVE SLOT PER USER (Safe Replacement Strategy):
-                // First check if user has ANY other active signup in volunteer_signups
+                // This query returns only the current member's own signups.
                 const { data: userActiveSignups, error: userActiveErr } = await db
                     .from('volunteer_signups')
-                    .select('*')
+                    .select('slot_id')
                     .eq('user_id', user.id);
 
                 if (userActiveErr) throw userActiveErr;
-
                 // Disable button and show loading state to prevent rapid double clicks
                 if (btnElement) {
                     btnElement.disabled = true;

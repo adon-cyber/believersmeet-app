@@ -77,6 +77,12 @@
                 <p class="text-gray-400 italic">Loading groups...</p>
             </div>
             
+            <div id="group-pending-requests" class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-md font-semibold text-gray-800 mb-3">Pending Group Membership Requests</h4>
+                <div id="group-pending-requests-list" class="space-y-2">
+                    <p class="text-sm text-gray-400 italic">Loading requests...</p>
+                </div>
+            </div>
             <!-- Church Settings / Sub-groups Info Save Form -->
             <form id="church-info-form" class="mt-6 pt-6 border-t border-gray-200 space-y-4">
                 <h4 class="text-md font-semibold text-gray-800">Church Information & Sub-group Settings</h4>
@@ -151,6 +157,7 @@
     let currentUserProfile = null;
     let currentUser = null;
     let joinedGroupIds = new Set();
+    let pendingGroupIds = new Set();
     let editingGroupId = null;
 
     async function initApp() {
@@ -178,7 +185,7 @@
         currentUserProfile = profile;
 
         if (profile) {
-            if (profile.role === 'admin' || profile.role === 'super_admin') {
+            if (profile.role === 'admin' || profile.role === 'church_admin' || profile.role === 'super_admin') {
                 const adminLink = document.getElementById('admin-nav-link');
                 if (adminLink) adminLink.classList.remove('hidden');
 
@@ -205,33 +212,58 @@
             .subscribe();
     }
 
-    async function fetchUserMemberships() {
+        async function fetchUserMemberships() {
         if (!currentUser) return;
+
         const { data, error } = await window.sbClient
             .from('group_members')
-            .select('group_id')
+            .select('group_id,status')
             .eq('user_id', currentUser.id);
-        
-        if (!error && data) {
-            joinedGroupIds = new Set(data.map(m => m.group_id));
+
+        if (error) {
+            console.error('Error fetching memberships:', error);
+            return;
         }
+
+        joinedGroupIds = new Set(
+            (data || []).filter(m => m.status === 'approved').map(m => m.group_id)
+        );
+
+        pendingGroupIds = new Set(
+            (data || []).filter(m => m.status === 'pending').map(m => m.group_id)
+        );
     }
 
     async function joinGroup(groupId) {
         if (!currentUser) return;
-        const { error } = await window.sbClient
-            .from('group_members')
-            .insert([{ group_id: groupId, user_id: currentUser.id }]);
+
+        const { data: membershipStatus, error } =
+            await window.sbClient.rpc('join_group', {
+                p_group_id: groupId
+            });
 
         if (error) {
-            alert('Error joining group: ' + error.message);
-        } else {
-            await fetchUserMemberships();
-            loadGroups();
+            console.error('Error requesting group membership:', error);
+            alert(error.message || 'Unable to join this group.');
+            return;
         }
-    }
 
-    async function leaveGroup(groupId) {
+        if (membershipStatus === 'approved') {
+            joinedGroupIds.add(groupId);
+            pendingGroupIds.delete(groupId);
+            alert('You have joined this group.');
+        } else if (membershipStatus === 'pending') {
+            joinedGroupIds.delete(groupId);
+            pendingGroupIds.add(groupId);
+            alert('Your membership request has been sent for approval.');
+        } else {
+            alert('Unexpected response from the membership service.');
+            return;
+        }
+
+        await loadGroups();
+    }
+async function leaveGroup(groupId) {
         if (!currentUser) return;
         const { error } = await window.sbClient
             .from('group_members')
@@ -251,7 +283,7 @@
         
         const query = window.sbClient
             .from('groups')
-            .select('*, group_members(*, profiles(*))')
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (currentUserProfile?.church_id) {
@@ -270,14 +302,20 @@
             return;
         }
 
-        const isAdmin = currentUserProfile && (currentUserProfile.role === 'admin' || currentUserProfile.role === 'super_admin');
+        const isAdmin = currentUserProfile && (currentUserProfile.role === 'admin' || currentUserProfile.role === 'church_admin' || currentUserProfile.role === 'super_admin');
 
-        container.innerHTML = groups.map(group => {
-            const statusBadge = group.allow_instant_join 
+        container.innerHTML = (await Promise.all(groups.map(async group => {
+            const statusBadge = group.allow_instant_join
                 ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">● Open (Instant Join)</span>`
                 : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">● Locked (Requires Approval)</span>`;
 
+            const isMember = joinedGroupIds.has(group.id);
+            const isPending = pendingGroupIds.has(group.id);
+            const canManageGroup = isAdmin;
+            const canAccessGroup = isMember || canManageGroup;
+
             let dynamicActionRow = "";
+
             if (isAdmin) {
                 dynamicActionRow = `
                     <div class="flex gap-2 pt-4 border-t border-gray-100 mt-4">
@@ -287,17 +325,22 @@
                 `;
             }
 
-            const isMember = joinedGroupIds.has(group.id);
-            
-            if (isMember) {
+            if (canAccessGroup) {
                 dynamicActionRow += `
                     <div class="pt-3 flex flex-col gap-2 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
                         <a href="group-chat.html?groupId=${group.id}" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 text-center">
                             <span>💬 Enter Group Chat</span>
                         </a>
-                        <button onclick="leaveGroup('${group.id}')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition shadow-sm flex items-center justify-center gap-2">
-                            <span>Leave Group</span>
-                        </button>
+                        ${isMember ? `
+                            <button onclick="leaveGroup('${group.id}')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition shadow-sm">Leave Group</button>
+                        ` : ''}
+                    </div>
+                `;
+            } else if (isPending) {
+                dynamicActionRow += `
+                    <div class="pt-3 ${isAdmin ? '' : 'pt-4 border-t border-gray-100 mt-4'}">
+                        <div class="w-full py-2.5 bg-amber-50 text-amber-800 text-sm font-bold rounded-xl text-center">Request Pending</div>
+                        <button onclick="leaveGroup('${group.id}')" class="w-full mt-2 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl">Cancel Request</button>
                     </div>
                 `;
             } else {
@@ -310,22 +353,22 @@
                 `;
             }
 
-            let membersHtml = '<p class="text-xs text-gray-400 italic">No members in this group yet.</p>';
-            if (isMember && group.group_members && group.group_members.length > 0) {
-                const churchFilteredMembers = group.group_members.filter(m => {
-                    const p = m.profiles;
-                    if (!p) return false;
-                    if (currentUserProfile?.church_id && p.church_id && p.church_id !== currentUserProfile.church_id) {
-                        return false;
-                    }
-                    return true;
-                });
+            let membersHtml = '<p class="text-xs text-gray-400 italic">Member list is available to approved members and group managers.</p>';
 
-                if (churchFilteredMembers.length > 0) {
-                    membersHtml = churchFilteredMembers.map(m => {
-                        const p = m.profiles || {};
-                        const avatar = p.avatar_url || 'images/BELIEVERS.LOGO.png';
-                        const name = p.full_name || 'Fellowship Member';
+            if (canAccessGroup) {
+                const { data: roster, error: rosterError } =
+                    await window.sbClient.rpc('get_group_member_roster', {
+                        p_group_id: group.id
+                    });
+
+                if (rosterError) {
+                    console.error('Could not load group roster:', rosterError);
+                    membersHtml = '<p class="text-xs text-red-500">Unable to load group members.</p>';
+                } else if (roster && roster.length > 0) {
+                    membersHtml = roster.map(member => {
+                        const avatar = member.avatar_url || 'images/BELIEVERS.LOGO.png';
+                        const name = member.full_name || member.display_name || 'Fellowship Member';
+
                         return `
                             <div class="flex items-center justify-between text-xs py-1 px-2 bg-blue-50 rounded-lg">
                                 <div class="flex items-center space-x-2">
@@ -337,7 +380,7 @@
                         `;
                     }).join('');
                 } else {
-                    membersHtml = '<p class="text-xs text-gray-400 italic">No church members found in this group.</p>';
+                    membersHtml = '<p class="text-xs text-gray-400 italic">No approved members in this group yet.</p>';
                 }
             }
 
@@ -347,13 +390,15 @@
                         <div>${statusBadge}</div>
                         <h3 class="text-lg font-bold text-gray-900">${escapeHtml(group.name)}</h3>
                         <div class="space-y-1.5 text-sm text-gray-600">
-                            <div class="flex items-center gap-2"><span>📍</span><span>${escapeHtml(group.location)}</span></div>
-                            <div class="flex items-center gap-2"><span>🕒</span><span>${escapeHtml(group.meeting_time)}</span></div>
-                            <div class="flex items-center gap-2"><span>👤</span><span>Led by ${escapeHtml(group.leader_name)}</span></div>
+                            <div class="flex items-center gap-2"><span>📍</span><span>${escapeHtml(group.location || 'Location not set')}</span></div>
+                            <div class="flex items-center gap-2"><span>🕒</span><span>${escapeHtml(group.meeting_time || 'Meeting time not set')}</span></div>
+                            <div class="flex items-center gap-2"><span>👤</span><span>Led by ${escapeHtml(group.leader_name || 'Not specified')}</span></div>
                         </div>
-                        ${isMember ? `
+                        ${canAccessGroup ? `
                             <div class="mt-4 pt-4 border-t border-gray-100">
-                                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-users text-blue-600"></i> Group Members</h4>
+                                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                    <i class="fas fa-users text-blue-600"></i> Group Members
+                                </h4>
                                 <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
                                     ${membersHtml}
                                 </div>
@@ -363,15 +408,95 @@
                     ${dynamicActionRow}
                 </div>
             `;
-        }).join('');
+        }))).join('');
     }
 
+    async function loadPendingGroupRequests(groups) {
+        const container = document.getElementById('group-pending-requests-list');
+        if (!container) return;
+
+        try {
+            const results = await Promise.all((groups || []).map(async group => {
+                const { data, error } = await window.sbClient.rpc('get_pending_group_requests', {
+                    p_group_id: group.id
+                });
+                if (error) throw error;
+
+                return (data || []).map(request => ({
+                    ...request,
+                    group_id: group.id,
+                    group_name: group.name
+                }));
+            }));
+
+            const requests = results.flat();
+
+            if (requests.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500 italic">There are no pending membership requests.</p>';
+                return;
+            }
+
+            container.innerHTML = requests.map(request => {
+                const name = request.full_name || request.display_name || 'Member';
+                const avatar = request.avatar_url || 'images/BELIEVERS.LOGO.png';
+
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white border rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" class="w-9 h-9 rounded-full object-cover">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">${escapeHtml(name)}</p>
+                                <p class="text-xs text-gray-500">Request to join ${escapeHtml(request.group_name)}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="reviewGroupRequest('${request.group_id}', '${request.user_id}', 'approved')" class="px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg">Approve</button>
+                            <button onclick="reviewGroupRequest('${request.group_id}', '${request.user_id}', 'rejected')" class="px-3 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-lg border border-red-200">Reject</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading pending group requests:', error);
+            container.innerHTML = `<p class="text-sm text-red-500">Could not load pending requests: ${escapeHtml(error.message)}</p>`;
+        }
+    }
+
+    async function reviewGroupRequest(groupId, userId, decision) {
+        const action = decision === 'approved' ? 'approve' : 'reject';
+        if (!confirm(`Are you sure you want to ${action} this membership request?`)) return;
+
+        const { data, error } = await window.sbClient.rpc('review_group_membership', {
+            p_group_id: groupId,
+            p_user_id: userId,
+            p_decision: decision
+        });
+
+        if (error) {
+            console.error('Membership review failed:', error);
+            alert(error.message || 'Unable to review this request.');
+            return;
+        }
+
+        if (data !== true) {
+            alert('This request is no longer pending. Refreshing the list.');
+        } else {
+            alert(`Membership request ${decision}.`);
+        }
+
+        await fetchUserMemberships();
+        await loadGroups();
+        await loadChurchGroups(currentUserProfile?.church_id || null);
+    }
     async function loadChurchGroups(churchId) {
         const container = document.getElementById('church-groups-list');
         if (!container) return;
         try {
-            const { data: groups, error } = await window.sbClient.from('groups').select('*').eq('church_id', churchId).order('created_at', { ascending: false });
+            let groupQuery = window.sbClient.from('groups').select('*').order('created_at', { ascending: false });
+            if (churchId) groupQuery = groupQuery.eq('church_id', churchId);
+            const { data: groups, error } = await groupQuery;
             if (error) throw error;
+            await loadPendingGroupRequests(groups || []);
             if (!groups || groups.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 italic text-sm p-2">No sub-groups configured yet.</p>';
                 return;

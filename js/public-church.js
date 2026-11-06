@@ -344,12 +344,21 @@ async function fetchChurchActivities() {
     const container = document.getElementById('activities-container');
     if (!container) return;
     
-    let activitiesQuery = publicSupabase.from('events').select('*');
-    if (currentChurchId) {
-        activitiesQuery = activitiesQuery.or(`church_id.eq.${currentChurchId},host_church_id.eq.${currentChurchId}`);
-    }
+    let events = [];
+    let error = null;
 
-    const { data: events, error } = await activitiesQuery.order('event_date', { ascending: true }).limit(6);
+    if (currentChurchId) {
+        const result = await publicSupabase.rpc(
+            'get_public_church_events',
+            {
+                p_church_id: currentChurchId,
+                p_limit: 6
+            }
+        );
+
+        events = result.data || [];
+        error = result.error;
+    }
 
     if (error || !events || events.length === 0) {
         try {
@@ -638,18 +647,6 @@ if (conversionForm) {
 
             if (insertErr) throw insertErr;
 
-            // Also fallback insert into church_join_requests if conversion_requests fails or for cross-compatibility
-            try {
-                await publicSupabase.from('church_join_requests').insert([{
-                    church_id: targetChurchId,
-                    full_name: fullName,
-                    phone: contactDetail,
-                    prayer_request: prayerRequest || null,
-                    status: 'pending'
-                }]);
-            } catch (e) {
-                // ignore secondary table errors if primary succeeded
-            }
 
             // Insert notification for church staff
             const notificationPayload = {

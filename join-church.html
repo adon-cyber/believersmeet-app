@@ -269,6 +269,8 @@
         let turnstileReady = false;
         let isSubmitting = false;
         let hasExistingSession = false;
+        let sessionStateResolved = false;
+        let turnstileApiLoaded = false;
 
         const TURNSTILE_SITE_KEY = '0x4AAAAAAFtJHsphXNU4LTKs';
 
@@ -307,6 +309,7 @@
 
         function updateFormForSession(sessionExists) {
             hasExistingSession = sessionExists;
+            sessionStateResolved = true;
 
             const accountInputs = accountFields.querySelectorAll('input');
 
@@ -328,11 +331,19 @@
             // Existing signed-in members do not need the signup CAPTCHA.
             document.getElementById('turnstile-container')
                 .classList.toggle('hidden', sessionExists);
+            if (!sessionExists) {
+                initializeTurnstile();
+            }
         }
 
-        window.onTurnstileLoaded = function () {
-            if (!window.turnstile) {
-                console.error('Cloudflare Turnstile did not load.');
+        function initializeTurnstile() {
+            if (
+                !sessionStateResolved ||
+                hasExistingSession ||
+                !turnstileApiLoaded ||
+                !window.turnstile ||
+                turnstileWidgetId !== null
+            ) {
                 return;
             }
 
@@ -360,10 +371,19 @@
                 });
 
                 turnstileReady = true;
-
             } catch (error) {
                 console.error('Turnstile initialization failed:', error);
             }
+        }
+
+        window.onTurnstileLoaded = function () {
+            if (!window.turnstile) {
+                console.error('Cloudflare Turnstile did not load.');
+                return;
+            }
+
+            turnstileApiLoaded = true;
+            initializeTurnstile();
         };
 
         function resetTurnstile() {

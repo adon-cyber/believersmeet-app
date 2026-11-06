@@ -234,35 +234,6 @@ async function sendFriendRequest(receiverId, buttonElement) {
             buttonElement.disabled = true;
         }
 
-        // Notify only when a new request was created or a rejected request was resent.
-        if (requestResult.request_sent && typeof window.sendNotification === 'function') {
-            try {
-                let senderName = currentUserProfile?.full_name || 'A believer';
-
-                if (!currentUserProfile?.full_name) {
-                    const { data: senderProf } = await client
-                        .from('profiles')
-                        .select('full_name')
-                        .eq('id', user.id)
-                        .maybeSingle();
-
-                    if (senderProf?.full_name) senderName = senderProf.full_name;
-                }
-
-                const message = requestResult.resent
-                    ? `${senderName} resent you a connection request.`
-                    : `${senderName} sent you a connection request.`;
-
-                await window.sendNotification(
-                    receiverId,
-                    'New Connection Request',
-                    message,
-                    '/profile.html'
-                );
-            } catch (notifErr) {
-                console.error('Failed to send connection request notification:', notifErr);
-            }
-        }
     } catch (err) {
         console.error('Connection request failed:', err);
         buttonElement.disabled = false;
@@ -1498,18 +1469,20 @@ async function loadChurchProgrammes() {
 
     // Fetch programmes belonging to this church,
     // hosted by this church, or shared with this church.
-    const { data: programmes, error } = await db
-        .from('events')
-        .select('*')
-        .or(
-            `church_id.eq.${currentChurchId},host_church_id.eq.${currentChurchId},invited_church_ids.cs.{${currentChurchId}}`
-        )
-        .gte('event_date', new Date().toISOString())
-        .order('event_date', { ascending: true })
-        .limit(5);
+    const { data: visibleEvents, error } =
+    await db.rpc('get_visible_events');
 
+const programmes = (visibleEvents || [])
+    .filter(evt =>
+        evt.event_date &&
+        new Date(evt.event_date) >= new Date()
+    )
+    .sort((a, b) =>
+        new Date(a.event_date) - new Date(b.event_date)
+    )
+    .slice(0, 5);
 
-    // If no events found with church_id or category, try fallback query without church filter or fetch general events
+// If no events found with church_id or category, try fallback query without church filter or fetch general events
     if (error) {
         console.error('Error loading church programmes:', error);
     
@@ -1588,31 +1561,47 @@ async function loadChurchProgrammes() {
 }
 
 window.optOutEvent = async function(eventId) {
-  try {
-    const db = window.sbClient || window.supabaseClient;
-    if (!db) return alert("Database client not found.");
-    
-    const { data: { user } } = await db.auth.getUser();
-    if (!user) return alert("Please log in first.");
+    try {
+        const db = window.sbClient || window.supabaseClient;
 
-    if (!confirm("Are you sure you want to opt out of this event?")) return;
+        if (!db) {
+            alert("Database client not found.");
+            return;
+        }
 
-    const { error } = await db
-      .from('event_registrations')
-      .delete()
-      .eq('event_id', eventId)
-      .eq('profile_id', user.id);
+        const { data: authData, error: authError } =
+            await db.auth.getUser();
 
-    if (error) throw error;
-    
-    alert("You have successfully opted out.");
-    
-    if (typeof loadEvents === 'function') loadEvents();
-    if (typeof loadChurchProgrammes === 'function') loadChurchProgrammes();
-  } catch (err) {
-    console.error('Error opting out:', err);
-    alert("Failed to opt out. Please try again.");
-  }
+        if (authError || !authData?.user) {
+            alert("Please log in first.");
+            return;
+        }
+
+        if (!confirm("Are you sure you want to opt out of this event?")) {
+            return;
+        }
+
+        const { error } = await db.rpc(
+            'cancel_event_registration',
+            { p_event_id: eventId }
+        );
+
+        if (error) throw error;
+
+        alert("You have successfully opted out.");
+
+        if (typeof loadEvents === 'function') {
+            loadEvents();
+        }
+
+        if (typeof loadChurchProgrammes === 'function') {
+            loadChurchProgrammes();
+        }
+
+    } catch (err) {
+        console.error('Error opting out:', err);
+        alert("Failed to opt out. Please try again.");
+    }
 };
 
 // --- Daily Scripture & Personal Reflections (VOTD & Reflections) ---

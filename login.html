@@ -93,7 +93,7 @@
 
     <!-- Script Section -->
     <script>
-        const SUPER_ADMIN_ID = '45e7b5df-8f08-4cc7-9356-35e405618329';
+
     
         async function waitForSupabase() {
             let attempts = 0;
@@ -149,22 +149,23 @@
                     throw new Error('Sign-in could not be completed.');
                 }
     
-              // Verify Super Admin through the backend RPC and exact UUID.
-// If verification fails, stop login routing completely.
-if (data.user.id === SUPER_ADMIN_ID) {
-    const { data: rpcResult, error: rpcError } =
-        await sb.rpc('is_super_admin');
+                // Resolve platform Super Admin authority from the private database allowlist.
+                // Do not bind global privileges to a hard-coded user UUID.
+                const {
+                    data: isPlatformAdmin,
+                    error: platformAdminError
+                } = await sb.rpc('is_super_admin');
 
-    if (rpcError || rpcResult !== true) {
-        throw new Error(
-            'Unable to verify Super Admin privileges. Please contact support.'
-        );
-    }
+                if (platformAdminError) {
+                    throw new Error(
+                        'Unable to verify Super Admin privileges. Please try again.'
+                    );
+                }
 
-    window.location.replace('super-admin.html');
-    return;
-}
-
+                if (isPlatformAdmin === true) {
+                    window.location.replace('super-admin.html');
+                    return;
+                }
 // Load the signed-in user's profile.
 const { data: profile, error: profileError } = await sb
     .from('profiles')

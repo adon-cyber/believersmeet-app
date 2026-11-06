@@ -12,34 +12,22 @@ async function inviteChurchToEvent(eventId, targetChurchId) {
         return false;
     }
 
-    const { data: eventData, error: fetchError } = await window.sbClient
-        .from('events')
-        .select('invited_church_ids')
-        .eq('id', eventId)
-        .single();
+    const { data, error } = await window.sbClient.rpc(
+        'invite_church_to_event',
+        {
+            p_event_id: eventId,
+            p_target_church_id: targetChurchId
+        }
+    );
 
-    if (fetchError) {
-        console.error('Error fetching event:', fetchError);
-        alert('Failed to fetch event details: ' + fetchError.message);
+    if (error) {
+        console.error('Church invitation failed:', error);
+        alert('Failed to invite church: ' + error.message);
         return false;
     }
 
-    let invitedIds = eventData.invited_church_ids || [];
-    if (!invitedIds.includes(targetChurchId)) {
-        invitedIds.push(targetChurchId);
-    } else {
-        alert('This church is already invited to this event.');
-        return false;
-    }
-
-    const { error: updateError } = await window.sbClient
-        .from('events')
-        .update({ invited_church_ids: invitedIds })
-        .eq('id', eventId);
-
-    if (updateError) {
-        console.error('Error inviting church:', updateError);
-        alert('Failed to invite church: ' + updateError.message);
+    if (data === false) {
+        alert('This church is already invited.');
         return false;
     }
 
@@ -51,15 +39,19 @@ async function inviteChurchToEvent(eventId, targetChurchId) {
 async function inviteMember(memberId, eventId) {
     if (!memberId || !eventId) {
         alert('Please select a member and an event.');
-        return;
+        return false;
     }
 
-    const { data, error } = await window.sbClient
-        .from('event_invitations')
-        .insert([{ event_id: eventId, member_id: memberId }]);
+    const { data, error } = await window.sbClient.rpc(
+        'invite_member_to_event',
+        {
+            p_event_id: eventId,
+            p_member_id: memberId
+        }
+    );
 
     if (error) {
-        console.error('Error inviting member:', error);
+        console.error('Member invitation failed:', error);
         alert('Failed to invite member: ' + error.message);
         return false;
     }
@@ -70,54 +62,19 @@ async function inviteMember(memberId, eventId) {
 }
 
 async function fetchEventRegistrationsDetailed(eventId) {
-    // Step 1: Fetch registrations for this event including registration id, profile_id, attendee details, etc.
-    const { data: registrations, error: regError } = await window.sbClient
-        .from('event_registrations')
-        .select('*') // Swapped to wildcard to prevent 400 schema mismatch errors
-        .eq('event_id', eventId);
+    if (!eventId || !window.sbClient) return [];
 
-    if (regError) {
-        console.error("Error fetching registrations:", regError);
-        return [];
+    const { data, error } = await window.sbClient.rpc(
+        'get_event_roster',
+        { p_event_id: eventId }
+    );
+
+    if (error) {
+        console.error('Authorised roster lookup failed:', error);
+        throw error;
     }
 
-    if (!registrations || registrations.length === 0) {
-        return [];
-    }
-
-    // Collect profile IDs
-    const profileIds = registrations.map(r => r.profile_id).filter(Boolean);
-
-    // Step 2: Fetch profiles for these profile IDs
-    let profilesMap = {};
-    if (profileIds.length > 0) {
-        const { data: profiles, error: profError } = await window.sbClient
-            .from('profiles')
-            .select('id, full_name, email, avatar_url')
-            .in('id', profileIds);
-
-        if (!profError && profiles) {
-            profiles.forEach(p => {
-                profilesMap[p.id] = p;
-            });
-        }
-    }
-
-    // Merge registration info with profile info
-    return registrations.map(reg => {
-        const profile = profilesMap[reg.profile_id] || {};
-        return {
-            registration_id: reg.id,
-            profile_id: reg.profile_id,
-            full_name: reg.attendee_name || profile.full_name || 'Valued Attendee',
-            email: reg.attendee_email || profile.email || 'N/A',
-            avatar_url: reg.photo_url || profile.avatar_url || null,
-            coupon_number: reg.coupon_number || 'N/A',
-            amount_paid: reg.amount_paid || 0,
-            is_free: reg.is_free,
-            created_at: reg.created_at
-        };
-    });
+    return data || [];
 }
 
 async function removeAttendeeRegistration(registrationId, eventId) {
@@ -125,20 +82,20 @@ async function removeAttendeeRegistration(registrationId, eventId) {
         return;
     }
 
-    const { error } = await window.sbClient
-        .from('event_registrations')
-        .delete()
-        .eq('id', registrationId);
+    const { error } = await window.sbClient.rpc(
+        'remove_event_registration',
+        { p_registration_id: registrationId }
+    );
 
     if (error) {
-        console.error('Error removing attendee registration:', error);
+        console.error('Registration removal failed:', error);
         alert('Failed to remove attendee: ' + error.message);
         return;
     }
 
     alert('Attendee successfully removed from event.');
-    // Refresh admin modal or event list
-    openAttendeesModal(eventId);
+
+    await openAttendeesModal(eventId);
     await loadAdminEvents();
 }
 
@@ -207,132 +164,180 @@ async function openAttendeesModal(eventId) {
 }
 
 async function loadAdminEvents() {
-    const container = document.getElementById('admin-events-list') || document.getElementById('admin-events-container');
+    const container =
+        document.getElementById('admin-events-list') ||
+        document.getElementById('admin-events-container');
+
     if (!container) return;
 
-    // Fetch all events
-    const { data: events, error: eventsError } = await window.sbClient
-        .from('events')
-        .select('*')
-        .order('event_date', { ascending: true });
+    container.innerHTML =
+        '<div class="text-center py-6 text-gray-500">Loading events...</div>';
 
-    if (eventsError) {
-        container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-red-500 shadow-sm">Error loading events: ${escapeHTML(eventsError.message)}</div>`;
-        return;
-    }
+    try {
+        const { data: events, error: eventsError } =
+            await window.sbClient.rpc('get_managed_events', {
+                p_church_id: null
+            });
 
-    if (!events || events.length === 0) {
-        container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500 shadow-sm"><p>No events found.</p></div>`;
-        return;
-    }
+        if (eventsError) throw eventsError;
 
-    // Fetch all profiles for member invites
-    const { data: profiles } = await window.sbClient
-        .from('profiles')
-        .select('id, full_name, email')
-        .order('full_name', { ascending: true });
+        if (!events || events.length === 0) {
+            container.innerHTML =
+                '<div class="bg-white p-8 rounded-xl text-center text-gray-500">No events found.</div>';
+            return;
+        }
 
-    const profilesList = profiles || [];
+        const htmlParts = [];
 
-    // Fetch all churches for church code search/invites
-    const { data: churches } = await window.sbClient
-        .from('churches')
-        .select('id, name, code, join_code')
-        .order('name', { ascending: true });
+        for (const evt of events) {
+            const [
+                statsResult,
+                membersResult,
+                churchesResult
+            ] = await Promise.all([
+                window.sbClient.rpc('get_event_registration_stats', {
+                    p_event_ids: [evt.id]
+                }),
+                window.sbClient.rpc('get_event_invitable_members', {
+                    p_event_id: evt.id
+                }),
+                window.sbClient.rpc('get_event_invitable_churches', {
+                    p_event_id: evt.id
+                })
+            ]);
 
-    const churchesList = churches || [];
-    const churchesMap = {};
-    churchesList.forEach(c => { churchesMap[c.id] = c; });
+            if (statsResult.error) throw statsResult.error;
+            if (membersResult.error) throw membersResult.error;
+            if (churchesResult.error) throw churchesResult.error;
 
-    let html = '';
-    for (const evt of events) {
-        const attendees = await fetchEventRegistrationsDetailed(evt.id);
-        const eventDate = evt.event_date ? new Date(evt.event_date).toLocaleString() : 'TBD';
-        const invitedChurchIds = evt.invited_church_ids || [];
+            const attendeeCount =
+                Number(statsResult.data?.[0]?.registration_count || 0);
 
-        html += `
-        <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 border-b pb-4">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900">${escapeHTML(evt.title)}</h3>
-                    <p class="text-sm text-gray-500"><i class="fas fa-calendar-alt mr-1 text-blue-600"></i> ${escapeHTML(eventDate)}</p>
-                    ${evt.description ? `<p class="text-sm text-gray-600 mt-1">${escapeHTML(evt.description)}</p>` : ''}
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="openAttendeesModal('${evt.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-xl border border-blue-200 text-xs transition flex items-center gap-2 shadow-sm">
-                        <i class="fas fa-users"></i> View Attendees (${attendees.length})
-                    </button>
-                    <div class="bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-2 rounded-xl border border-gray-200">
-                        Host: ${escapeHTML(churchesMap[evt.church_id || evt.host_church_id]?.name || 'Primary Church')}
+            const members = membersResult.data || [];
+            const churches = churchesResult.data || [];
+            const invitedIds = evt.invited_church_ids || [];
+
+            const churchMap = {};
+            churches.forEach(c => {
+                churchMap[c.id] = c;
+            });
+
+            const invitedHtml = invitedIds.length === 0
+                ? '<p class="text-sm text-gray-400 italic">No other churches invited.</p>'
+                : invitedIds.map(id => {
+                    const church = churchMap[id];
+                    return `
+                        <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-200 text-sm">
+                            <span class="font-medium text-gray-800">
+                                ${escapeHTML(church?.name || 'Unavailable church')}
+                            </span>
+                            <span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded">
+                                Invited
+                            </span>
+                        </div>`;
+                }).join('');
+
+            const churchOptions = churches.map(c =>
+                `<option value="${escapeHTML(c.id)}">${escapeHTML(c.name)}</option>`
+            ).join('');
+
+            const memberOptions = members.map(m =>
+                `<option value="${escapeHTML(m.id)}">${escapeHTML(m.full_name || 'Member')}</option>`
+            ).join('');
+
+            const eventDate = evt.event_date
+                ? new Date(evt.event_date).toLocaleString()
+                : 'TBD';
+
+            const host =
+                churchMap[evt.church_id || evt.host_church_id]?.name ||
+                'Primary Church';
+
+            htmlParts.push(`
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 border-b pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">
+                                ${escapeHTML(evt.title)}
+                            </h3>
+                            <p class="text-sm text-gray-500">
+                                ${escapeHTML(eventDate)}
+                            </p>
+                            ${evt.description ? `
+                                <p class="text-sm text-gray-600 mt-1">
+                                    ${escapeHTML(evt.description)}
+                                </p>` : ''}
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button
+                                onclick="openAttendeesModal('${evt.id}')"
+                                class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-xl border border-blue-200 text-xs">
+                                View Attendees (${attendeeCount})
+                            </button>
+                            <div class="bg-gray-50 text-gray-700 text-xs px-3 py-2 rounded-xl border">
+                                Host: ${escapeHTML(host)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">
+                                Invited Churches (${invitedIds.length})
+                            </h4>
+                            <div class="bg-gray-50 rounded-xl p-4 border max-h-48 overflow-y-auto space-y-2">
+                                ${invitedHtml}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">
+                                Invite Church
+                            </h4>
+                            <form onsubmit="handleChurchInviteSubmit(event, '${evt.id}')">
+                                <select id="invite-church-select-${evt.id}"
+                                    required class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                                    <option value="">Choose church...</option>
+                                    ${churchOptions}
+                                </select>
+                                <button type="submit"
+                                    class="w-full mt-3 bg-emerald-600 text-white py-2 px-4 rounded-lg text-sm">
+                                    Invite Church
+                                </button>
+                            </form>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-3">
+                                Invite Member
+                            </h4>
+                            <form onsubmit="handleInviteSubmit(event, '${evt.id}')">
+                                <select id="invite-member-select-${evt.id}"
+                                    required class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                                    <option value="">Choose member...</option>
+                                    ${memberOptions}
+                                </select>
+                                <button type="submit"
+                                    class="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm">
+                                    Invite Member
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
+            `);
+        }
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Current Invited Churches Section -->
-                <div>
-                    <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fas fa-church text-blue-600"></i> Invited Churches (${invitedChurchIds.length})
-                    </h4>
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 max-h-48 overflow-y-auto space-y-2">
-                        ${invitedChurchIds.length === 0 ? '<p class="text-sm text-gray-400 italic">No other churches invited.</p>' :
-                            invitedChurchIds.map(cId => {
-                                const church = churchesMap[cId];
-                                return `
-                                <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-200 text-sm">
-                                    <div>
-                                        <p class="font-medium text-gray-800">${escapeHTML(church ? church.name : 'Church ID: ' + cId.substring(0,8))}</p>
-                                        <p class="text-xs text-gray-500">Code: ${escapeHTML(church?.code || church?.join_code || 'N/A')}</p>
-                                    </div>
-                                    <span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-medium">Invited</span>
-                                </div>`;
-                            }).join('')
-                        }
-                    </div>
-                </div>
+        container.innerHTML = htmlParts.join('');
 
-                <!-- Invite Church Form -->
-                <div>
-                    <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-blue-600"></i> Invite Church
-                    </h4>
-                    <form onsubmit="handleChurchInviteSubmit(event, '${evt.id}')" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Search/Select Church (Code or Name)</label>
-                            <select id="invite-church-select-${evt.id}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
-                                <option value="">Choose church code...</option>
-                                ${churchesList.map(c => `<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.code || c.join_code || 'No Code')})</option>`).join('')}
-                            </select>
-                        </div>
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-paper-plane"></i> Invite Church
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Invite Member Form -->
-                <div>
-                    <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fas fa-user-plus text-blue-600"></i> Invite Member
-                    </h4>
-                    <form onsubmit="handleInviteSubmit(event, '${evt.id}')" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Select Member</label>
-                            <select id="invite-member-select-${evt.id}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
-                                <option value="">Choose member...</option>
-                                ${profilesList.map(p => `<option value="${p.id}">${escapeHTML(p.full_name || p.email || p.id)}</option>`).join('')}
-                            </select>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-paper-plane"></i> Invite Member
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>`;
+    } catch (err) {
+        console.error('Admin event loading failed:', err);
+        container.innerHTML = `
+            <div class="bg-red-50 p-6 rounded-xl text-red-600">
+                Could not load authorised events: ${escapeHTML(err.message)}
+            </div>`;
     }
-
-    container.innerHTML = html;
 }
 
 async function handleChurchInviteSubmit(event, eventId) {
