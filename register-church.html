@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Your Church | BelieversMeet</title>
     <!-- Tailwind CSS CDN -->
@@ -13,7 +13,7 @@
 
     <!-- Header / Navbar -->
     <header class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="index.html" class="text-xl font-bold text-indigo-600 hover:text-indigo-500">BelieversMeet</a>
             <div class="text-sm" id="auth-header-action">
                 <span class="text-gray-500">Already have an account?</span>
@@ -54,6 +54,28 @@
                     <div>
                         <label for="church-address" class="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
                         <input type="text" id="church-address" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Plot 12 Main Street">
+                    </div>
+                    <div>
+                        <label for="church-country" class="block text-sm font-medium text-gray-700 mb-1">Church Country</label>
+                        <select id="church-country" required class="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">Select country</option>
+                            <option value="UG">Uganda</option>
+                            <option value="KE">Kenya</option>
+                            <option value="TZ">Tanzania</option>
+                            <option value="OTHER">Other country / International</option>
+                        </select>
+                    </div>
+
+                    <div id="other-country-code-container" class="hidden">
+                        <label for="other-country-code" class="block text-sm font-medium text-gray-700 mb-1">Two-letter Country Code</label>
+                        <input type="text" id="other-country-code" minlength="2" maxlength="2" pattern="[A-Za-z]{2}" autocomplete="off" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm sm:text-sm" placeholder="Example: RW">
+                    </div>
+
+                    <div>
+                        <label for="church-billing-currency" class="block text-sm font-medium text-gray-700 mb-1">Subscription Billing Currency</label>
+                        <input type="text" id="church-billing-currency" readonly required class="block w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-lg sm:text-sm" placeholder="Select your country first">
+                        <p class="mt-1 text-xs text-gray-500">Uganda: UGX · Kenya: KES · Tanzania: TZS · Other countries: USD.</p>
+                        <p class="mt-1 text-xs text-amber-700">Only UGX pricing is currently enabled. Applications using KES, TZS or USD can be submitted, but approval must wait until their subscription prices are configured.</p>
                     </div>
 
                     <div>
@@ -103,12 +125,35 @@
                                 <input type="email" id="pastor-email" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="pastor@church.com">
                             </div>
 
-                            <div>
+                                                        <div>
                                 <label for="pastor-password" class="block text-sm font-medium text-gray-700 mb-1">Create Secure Password</label>
                                 <div class="relative">
-                                    <input type="password" id="pastor-password" minlength="6" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16" placeholder="••••••••">
-                                    <button type="button" onclick="togglePasswordVisibility('pastor-password')" class="absolute inset-y-0 right-0 px-3 flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none">Show/Hide</button>
+                                    <input type="password" id="pastor-password" minlength="10" maxlength="128" autocomplete="new-password" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16" placeholder="10+ characters with mixed characters">
+                                    <button type="button" onclick="togglePasswordVisibility('pastor-password', this)" aria-label="Show password" title="Show password" class="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-gray-500 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-r-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
                                 </div>
+
+                                <div id="pastor-password-strength" class="mt-2 space-y-2" aria-live="polite">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="font-medium text-gray-600">Password requirements</span>
+                                        <span id="pastor-password-strength-label" class="font-semibold text-gray-500">Not set</span>
+                                    </div>
+                                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                        <div id="pastor-password-strength-bar" class="h-2 w-0 rounded-full bg-rose-500 transition-all duration-200"></div>
+                                    </div>
+                                    <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-500">
+                                        <li id="pastor-check-length">○ 10–128 characters</li>
+                                        <li id="pastor-check-lower">○ Lowercase letter (a–z)</li>
+                                        <li id="pastor-check-upper">○ Uppercase letter (A–Z)</li>
+                                        <li id="pastor-check-number">○ At least one number</li>
+                                        <li id="pastor-check-special">○ At least one special character</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="pastor-confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                <div class="relative"><input type="password" id="pastor-confirm-password" maxlength="128" autocomplete="new-password" class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-12" placeholder="Re-enter your password"><button type="button" onclick="togglePasswordVisibility('pastor-confirm-password', this)" aria-label="Show password" title="Show password" class="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-gray-500 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-r-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+                                <p id="pastor-confirm-password-message" class="hidden mt-1 text-xs" aria-live="polite"></p>
                             </div>
                         </div>
                     </div>
@@ -223,11 +268,68 @@
                 document.getElementById('auth-header-action').innerHTML = `<span class="text-xs text-gray-600">Logged in as <strong>${user.email}</strong></span>`;
             }
         });
+        const passwordEyeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        const passwordEyeOffIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17.5 17.5 0 0 1-3.1 3.9"></path><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 4-.8"></path></svg>';
 
-        function togglePasswordVisibility(fieldId) {
+        function togglePasswordVisibility(fieldId, button) {
             const inputField = document.getElementById(fieldId);
-            inputField.type = inputField.type === 'password' ? 'text' : 'password';
+            if (!inputField || !button) return;
+
+            const showing = inputField.type === 'password';
+            inputField.type = showing ? 'text' : 'password';
+            button.innerHTML = showing ? passwordEyeOffIcon : passwordEyeIcon;
+            button.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+            button.setAttribute('title', showing ? 'Hide password' : 'Show password');
         }
+
+        // Live password strength and confirmation feedback.
+        const pastorPasswordInput = document.getElementById('pastor-password');
+        const pastorConfirmInput = document.getElementById('pastor-confirm-password');
+
+        function updatePastorPasswordFeedback() {
+            const value = pastorPasswordInput.value;
+            const checks = [
+                ['pastor-check-length', value.length >= 10 && value.length <= 128, '10–128 characters'],
+                ['pastor-check-lower', /[a-z]/.test(value), 'Lowercase letter (a–z)'],
+                ['pastor-check-upper', /[A-Z]/.test(value), 'Uppercase letter (A–Z)'],
+                ['pastor-check-number', /[0-9]/.test(value), 'At least one number'],
+                ['pastor-check-special', /[^A-Za-z0-9]/.test(value), 'At least one special character']
+            ];
+
+            let passed = 0;
+            checks.forEach(([id, valid, label]) => {
+                const item = document.getElementById(id);
+                item.textContent = `${valid ? '✓' : '○'} ${label}`;
+                item.classList.toggle('text-emerald-600', valid);
+                item.classList.toggle('text-gray-500', !valid);
+                passed += valid ? 1 : 0;
+            });
+
+            const bar = document.getElementById('pastor-password-strength-bar');
+            const strengthLabel = document.getElementById('pastor-password-strength-label');
+            bar.style.width = `${passed * 20}%`;
+            bar.className = 'h-2 rounded-full transition-all duration-200 ' +
+                (passed === 5 ? 'bg-emerald-500' : passed >= 3 ? 'bg-amber-500' : 'bg-rose-500');
+            strengthLabel.textContent = value ? `${passed}/5 requirements met` : 'Not set';
+
+            const message = document.getElementById('pastor-confirm-password-message');
+            if (!pastorConfirmInput.value) {
+                message.classList.add('hidden');
+                message.textContent = '';
+            } else {
+                message.classList.remove('hidden');
+                message.textContent = pastorConfirmInput.value === value
+                    ? 'Passwords match.'
+                    : 'Passwords do not match.';
+                message.className = 'mt-1 text-xs ' +
+                    (pastorConfirmInput.value === value ? 'text-emerald-600' : 'text-rose-600');
+            }
+        }
+
+        pastorPasswordInput.addEventListener('input', updatePastorPasswordFeedback);
+        pastorConfirmInput.addEventListener('input', updatePastorPasswordFeedback);
+        updatePastorPasswordFeedback();
+
 
         document.getElementById('church-logo-file').addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -243,6 +345,34 @@
             }
         });
 
+        // Country and billing currency selection
+        const churchCountrySelect = document.getElementById('church-country');
+        const otherCountryCodeContainer = document.getElementById('other-country-code-container');
+        const otherCountryCodeInput = document.getElementById('other-country-code');
+        const churchBillingCurrencyInput = document.getElementById('church-billing-currency');
+
+        function updateChurchBillingCurrency() {
+            const country = churchCountrySelect.value;
+            const currencyMap = {
+                UG: 'UGX',
+                KE: 'KES',
+                TZ: 'TZS',
+                OTHER: 'USD'
+            };
+
+            churchBillingCurrencyInput.value = currencyMap[country] || '';
+
+            const isOtherCountry = country === 'OTHER';
+            otherCountryCodeContainer.classList.toggle('hidden', !isOtherCountry);
+            otherCountryCodeInput.required = isOtherCountry;
+
+            if (!isOtherCountry) {
+                otherCountryCodeInput.value = '';
+            }
+        }
+
+        churchCountrySelect.addEventListener('change', updateChurchBillingCurrency);
+        updateChurchBillingCurrency();
         // Step navigation
         document.getElementById('next-to-step-2').addEventListener('click', () => {
             const name = document.getElementById('church-name').value.trim();
@@ -250,6 +380,24 @@
             const address = document.getElementById('church-address').value.trim();
             const errBox = document.getElementById('error-message');
             errBox.classList.add('hidden');
+
+            const selectedCountry = churchCountrySelect.value;
+            const selectedCurrency = churchBillingCurrencyInput.value.trim();
+            const selectedCountryCode = (selectedCountry === 'OTHER'
+                ? otherCountryCodeInput.value.trim()
+                : selectedCountry).toUpperCase();
+
+            if (!selectedCountry || !selectedCurrency || !/^[A-Z]{2}$/.test(selectedCountryCode)) {
+                errBox.textContent = 'Please select your church country and provide a valid two-letter country code where required.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            if (selectedCountry === 'OTHER' && ['UG', 'KE', 'TZ'].includes(selectedCountryCode)) {
+                errBox.textContent = 'Please select the dedicated option for Uganda, Kenya or Tanzania.';
+                errBox.classList.remove('hidden');
+                return;
+            }
 
             if (!name || !location || !address) {
                 errBox.textContent = "Please fill in all church information fields (Name, Location, Address).";
@@ -287,10 +435,23 @@
             const logoUrlInput = document.getElementById('church-logo-url').value.trim();
             const logoFile = document.getElementById('church-logo-file').files[0];
             const adminPosition = document.getElementById('admin-position').value;
+            const churchCountrySelection = churchCountrySelect.value;
+            const churchCountryCode = (churchCountrySelection === 'OTHER'
+                ? otherCountryCodeInput.value.trim()
+                : churchCountrySelection).toUpperCase();
+            const churchBillingCurrency = churchBillingCurrencyInput.value.trim().toUpperCase();
 
             let authDataUser = currentUser;
 
             try {
+                if (!churchCountrySelection || !churchBillingCurrency || !/^[A-Z]{2}$/.test(churchCountryCode)) {
+                    throw new Error('Please select a valid church country and billing currency.');
+                }
+
+                if (churchCountrySelection === 'OTHER' && ['UG', 'KE', 'TZ'].includes(churchCountryCode)) {
+                    throw new Error('Please use the dedicated country option for Uganda, Kenya or Tanzania.');
+                }
+
                 // 1. Check / Recover Session & Refresh if needed
                 let { data: sessionData, error: sessionError } = await window.sbClient.auth.getSession();
                 
@@ -317,8 +478,25 @@
                     const pastorEmail = document.getElementById('pastor-email').value.trim();
                     const pastorPassword = document.getElementById('pastor-password').value;
 
-                    if (!pastorName || !pastorEmail || !pastorPassword || pastorPassword.trim() === "") {
+                                        const pastorConfirmPassword = document.getElementById('pastor-confirm-password').value;
+                    const passwordChecks = [
+                        pastorPassword.length >= 10 && pastorPassword.length <= 128,
+                        /[a-z]/.test(pastorPassword),
+                        /[A-Z]/.test(pastorPassword),
+                        /[0-9]/.test(pastorPassword),
+                        /[^A-Za-z0-9]/.test(pastorPassword)
+                    ];
+
+                    if (!pastorName || !pastorEmail || !pastorPassword) {
                         throw new Error("Full name, email address, and secure password are required to register your admin account.");
+                    }
+
+                    if (!passwordChecks.every(Boolean)) {
+                        throw new Error("Password must be 10–128 characters and include uppercase, lowercase, a number, and a special character.");
+                    }
+
+                    if (pastorPassword !== pastorConfirmPassword) {
+                        throw new Error("Your passwords do not match.");
                     }
 
                     // Check if a church application or user already exists / prevent duplicate registration
@@ -397,7 +575,9 @@
                         p_location: churchLocation || null,
                         p_address: churchAddress || null,
                         p_logo_url: logoUrl,
-                        p_admin_position: adminPosition || null
+                        p_admin_position: adminPosition || null,
+                        p_country_code: churchCountryCode,
+                        p_billing_currency: churchBillingCurrency
                     });
 
                 if (applicationError) {
