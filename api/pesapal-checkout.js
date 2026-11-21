@@ -347,13 +347,48 @@ if (authenticatedUser) {
             });
 
             if (matchingIpns.length !== 1) {
-                throw new Error(
+                const registrations = registeredIpns.slice(0, 50).map((entry) => {
+                    let sanitizedUrl = null;
+                    let hasQuery = false;
+
+                    if (typeof entry?.url === 'string') {
+                        try {
+                            const parsedUrl = new URL(entry.url);
+                            sanitizedUrl = parsedUrl.origin + parsedUrl.pathname;
+                            hasQuery = Boolean(parsedUrl.search);
+                        } catch {
+                            // Do not expose malformed raw URLs.
+                        }
+                    }
+
+                    return {
+                        url: sanitizedUrl,
+                        has_query: hasQuery,
+                        status: entry?.status ?? null,
+                        has_ipn_id: typeof entry?.ipn_id === 'string' && Boolean(entry.ipn_id.trim()),
+                        has_error: entry?.error !== null && entry?.error !== undefined
+                    };
+                });
+
+                const diagnosticError = new Error(
                     matchingIpns.length === 0
                         ? 'No matching Pesapal IPN registration was found. No new IPN was created. Manual review is required.'
                         : 'Multiple Pesapal IPN registrations match this URL. Manual review is required.'
                 );
-            }
 
+                if ((process.env.VERCEL_ENV || '').toLowerCase() === 'preview') {
+                    diagnosticError.previewDiagnostic = {
+                        stage: 'ipn_list',
+                        expected_url: expectedUrl.origin + expectedUrl.pathname,
+                        returned_count: registeredIpns.length,
+                        matching_count: matchingIpns.length,
+                        truncated: registeredIpns.length > registrations.length,
+                        registrations
+                    };
+                }
+
+                throw diagnosticError;
+            }
             ipnId = matchingIpns[0].ipn_id.trim();
 
             console.log(
@@ -489,7 +524,10 @@ if (authenticatedUser) {
 
         return res.status(500).json({
             success: false,
-            error: error.message || 'Unable to initialize the payment. Please try again.'
+            error: error.message || 'Unable to initialize the payment. Please try again.',
+            ...( (process.env.VERCEL_ENV || '').toLowerCase() === 'preview' && error?.previewDiagnostic
+                ? { diagnostic: error.previewDiagnostic }
+                : {})
         });
     }
 }
