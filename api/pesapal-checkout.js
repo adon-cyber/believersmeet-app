@@ -114,6 +114,40 @@ async function registerPesapalIpn(token, ipnUrl, baseUrl) {
     return data.ipn_id;
 }
 
+async function getRegisteredPesapalIpns(token, baseUrl) {
+    const response = await fetch(`${baseUrl}/api/URLSetup/GetIpnList`, {
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const responseText = await response.text();
+    let payload;
+
+    try {
+        payload = JSON.parse(responseText);
+    } catch {
+        throw new Error('Pesapal registered IPN list returned an unreadable response.');
+    }
+
+    if (!response.ok) {
+        const message =
+            payload?.error?.message ||
+            payload?.message ||
+            `Pesapal registered IPN lookup failed (${response.status}).`;
+
+        throw new Error(message);
+    }
+
+    if (!Array.isArray(payload)) {
+        throw new Error('Pesapal registered IPN list returned an unexpected response.');
+    }
+
+    return payload;
+}
+
 function normalizeAmount(value, currency) {
     const amount = Number(value);
     if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
@@ -282,19 +316,68 @@ if (authenticatedUser) {
         );
 
         let ipnId = church.pesapal_ipn_id;
+
         if (!ipnId) {
-            ipnId = await registerPesapalIpn(token, ipnUrl, baseUrl);
-            const { error: ipnSaveError } = await supabaseAdmin
+            const registeredIpns = await getRegisteredPesapalIpns(token, baseUrl);
+            const expectedUrl = new URL(ipnUrl);
+
+            const matchingIpns = registeredIpns.filter((entry) => {
+                if (
+                    String(entry?.status) !== '200' ||
+                    (entry?.error !== null && entry?.error !== undefined) ||
+                    typeof entry?.url !== 'string' ||
+                    typeof entry?.ipn_id !== 'string' ||
+                    !entry.ipn_id.trim()
+                ) {
+                    return false;
+                }
+
+                try {
+                    const candidateUrl = new URL(entry.url);
+
+                    return (
+                        candidateUrl.origin === expectedUrl.origin &&
+                        candidateUrl.pathname.replace(/\/+$/, '') ===
+                            expectedUrl.pathname.replace(/\/+$/, '') &&
+                        candidateUrl.search === expectedUrl.search
+                    );
+                } catch {
+                    return false;
+                }
+            });
+
+            if (matchingIpns.length !== 1) {
+                throw new Error(
+                    matchingIpns.length === 0
+                        ? 'No matching Pesapal IPN registration was found. No new IPN was created. Manual review is required.'
+                        : 'Multiple Pesapal IPN registrations match this URL. Manual review is required.'
+                );
+            }
+
+            ipnId = matchingIpns[0].ipn_id.trim();
+
+            console.log(
+                '[pesapal-checkout] Reusing the existing Pesapal IPN registration.'
+            );
+
+            const { data: savedIpnRow, error: ipnSaveError } = await supabaseAdmin
                 .from('churches')
                 .update({ pesapal_ipn_id: ipnId })
-                .eq('id', church.id);
+                .eq('id', church.id)
+                .select('id')
+                .maybeSingle();
 
-            if (ipnSaveError) {
-                console.error('Failed to save church Pesapal IPN ID:', ipnSaveError.message);
-                throw new Error('Pesapal IPN was registered, but its ID could not be saved. Please retry.');
+            if (ipnSaveError || !savedIpnRow) {
+                console.error('Failed to save church Pesapal IPN ID:', {
+                    code: ipnSaveError?.code || null,
+                    message: ipnSaveError?.message || 'Church row was not updated.'
+                });
+
+                throw new Error(
+                    'Pesapal IPN recovery succeeded, but saving its ID failed. Manual review is required.'
+                );
             }
         }
-
         const merchantReference = `BM-GIVE-${randomUUID()}`;
         const description = `BelieversMeet Giving - ${category}`.slice(0, 100);
         const { first_name: firstName, last_name: lastName } = splitDonorName(payerName);
