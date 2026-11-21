@@ -322,8 +322,19 @@ if (authenticatedUser) {
             const expectedUrl = new URL(ipnUrl);
 
             const matchingIpns = registeredIpns.filter((entry) => {
+                const entryResponseStatus = String(entry?.status ?? '');
+                const entryIpnStatus = entry?.ipn_status;
+                // Support the observed Sandbox response only when its IPN is explicitly Active.
+                const acceptedListEntryStatus =
+                    entryResponseStatus === '200' ||
+                    (entryResponseStatus === '1' && Number(entryIpnStatus) === 1);
+                const activeIpnStatus =
+                    entryIpnStatus === null ||
+                    entryIpnStatus === undefined ||
+                    Number(entryIpnStatus) === 1;
                 if (
-                    String(entry?.status) !== '200' ||
+                    !acceptedListEntryStatus ||
+                    !activeIpnStatus ||
                     (entry?.error !== null && entry?.error !== undefined) ||
                     typeof entry?.url !== 'string' ||
                     typeof entry?.ipn_id !== 'string' ||
