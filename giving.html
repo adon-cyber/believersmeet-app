@@ -416,27 +416,35 @@
   </div>
 </main>
 
-<!-- Tailwind Success Modal (Hidden by Default) -->
+<!-- Pesapal Payment Result Modal -->
 <div id="success-donation-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4 animate-fade-in">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all p-8 text-center">
-        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
-            <i class="fas fa-check"></i>
+        <div id="modal-result-icon" class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+            <i id="modal-result-icon-symbol" class="fas fa-clock"></i>
         </div>
-        <h3 class="text-2xl font-black text-gray-900 mb-2">Donation Successful!</h3>
-        <p class="text-gray-600 text-sm mb-6 leading-relaxed">
-            Thank you for your generous worship and support. Your transaction has been successfully processed and recorded.
+        <h3 id="modal-result-title" class="text-2xl font-black text-gray-900 mb-2">Checking your payment...</h3>
+        <p id="modal-result-message" class="text-gray-600 text-sm mb-6 leading-relaxed">
+            We are checking your payment directly with Pesapal.
         </p>
         <div class="bg-gray-50 rounded-xl p-4 text-left text-xs space-y-2 mb-6 border border-gray-100">
-            <div class="flex justify-between"><span class="text-gray-500">Transaction Ref:</span> <span id="modal-tx-ref" class="font-mono font-bold text-gray-800"></span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Amount:</span> <span id="modal-amount" class="font-bold text-emerald-600"></span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="font-bold text-emerald-600 uppercase">Successful</span></div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Transaction Ref:</span>
+                <span id="modal-tx-ref" class="font-mono font-bold text-gray-800"></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Amount:</span>
+                <span id="modal-amount" class="font-bold text-gray-800">—</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Status:</span>
+                <span id="modal-payment-status" class="font-bold text-amber-600 uppercase">Checking</span>
+            </div>
         </div>
         <button onclick="closeSuccessModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors">
             Continue
         </button>
     </div>
 </div>
-
 <!-- Tailwind Edit Modal (Hidden by Default) -->
 <div id="edit-giving-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden transform transition-all">
@@ -860,23 +868,223 @@ if (donorPhoneInput && profile?.phone) {
     }
 
     async function handlePesapalSuccessCallback(transactionReference, orderTrackingId) {
-    // Payment completion must only be confirmed by the server
-    // after checking the transaction status directly with Pesapal.
+        const modal = document.getElementById('success-donation-modal');
+        const iconContainer = document.getElementById('modal-result-icon');
+        const icon = document.getElementById('modal-result-icon-symbol');
+        const titleNode = document.getElementById('modal-result-title');
+        const messageNode = document.getElementById('modal-result-message');
+        const statusNode = document.getElementById('modal-payment-status');
+        const referenceNode = document.getElementById('modal-tx-ref');
+        const amountNode = document.getElementById('modal-amount');
 
-    console.log(
-        'Pesapal returned a payment callback.',
-        {
-            merchantReference: transactionReference,
-            trackingId: orderTrackingId
+        if (!modal || !iconContainer || !icon || !titleNode ||
+            !messageNode || !statusNode || !referenceNode || !amountNode) {
+            console.error('Pesapal payment result elements are missing.');
+            return;
         }
-    );
 
-    console.warn(
-        'Payment has not yet been verified. ' +
-        'Browser-side transaction updates are disabled.'
-    );
-}
+        const styles = {
+            success: {
+                container: 'bg-emerald-100 text-emerald-600',
+                icon: 'fas fa-check',
+                status: 'text-emerald-600'
+            },
+            warning: {
+                container: 'bg-amber-100 text-amber-600',
+                icon: 'fas fa-clock',
+                status: 'text-amber-600'
+            },
+            failure: {
+                container: 'bg-red-100 text-red-600',
+                icon: 'fas fa-times',
+                status: 'text-red-600'
+            }
+        };
 
+        const renderResult = (title, message, status, tone, amountText) => {
+            const style = styles[tone] || styles.warning;
+
+            iconContainer.className =
+                `w-20 h-20 ${style.container} rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner`;
+
+            icon.className = style.icon;
+            titleNode.textContent = title;
+            messageNode.textContent = message;
+            statusNode.className = `font-bold uppercase ${style.status}`;
+            statusNode.textContent = status;
+
+            if (amountText !== undefined) {
+                amountNode.textContent = amountText;
+            }
+        };
+
+        const formatAmount = (value, currencyValue) => {
+            const amount = Number(value);
+            const currency = String(currencyValue || 'UGX').toUpperCase();
+
+            if (!Number.isFinite(amount)) return '—';
+
+            try {
+                return new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency,
+                    maximumFractionDigits: currency === 'UGX' ? 0 : 2
+                }).format(amount);
+            } catch {
+                return `${currency} ${amount.toLocaleString()}`;
+            }
+        };
+
+        referenceNode.textContent = transactionReference;
+        amountNode.textContent = '—';
+
+        renderResult(
+            'Verifying your payment',
+            'Please wait while our server confirms the payment directly with Pesapal.',
+            'Checking',
+            'warning'
+        );
+
+        modal.classList.remove('hidden');
+
+        try {
+            // This endpoint supports guest donations. It independently verifies
+            // the reference, tracking ID, amount and currency with Pesapal.
+            const response = await fetch('/api/pesapal-verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    merchant_reference: transactionReference,
+                    order_tracking_id: orderTrackingId
+                })
+            });
+
+            const result = await response.json().catch(() => null);
+
+            if (!result || typeof result !== 'object') {
+                throw new Error('The payment verification service returned an unreadable response.');
+            }
+
+            // HTTP 503 means payment status was saved, but accounting capture
+            // is still pending. Do not tell the donor to pay again.
+            if (
+                response.status === 503 &&
+                result.verified === true &&
+                result.payment_status_saved === true
+            ) {
+                const savedStatus = String(result.status || '').toUpperCase();
+
+                if (savedStatus === 'REVERSED') {
+                    renderResult(
+                        'Payment reversed — review pending',
+                        'Pesapal confirmed that this payment was reversed. The accounting update is pending. Please contact your church finance team.',
+                        'Reversed — review required',
+                        'warning'
+                    );
+                } else {
+                    renderResult(
+                        'Payment confirmed — accounting update pending',
+                        'Pesapal confirmed your payment, but its accounting record is still being processed. Please do not submit another payment for this donation. Contact your church finance team if this message persists.',
+                        'Confirmed — accounting pending',
+                        'warning'
+                    );
+                }
+
+                return;
+            }
+
+            if (!response.ok || result.success !== true || result.verified !== true) {
+                renderResult(
+                    'Payment verification pending',
+                    `${result.error || 'We could not confirm this payment yet.'} Please do not submit another payment for the same donation. Contact your church finance team if this persists.`,
+                    'Not confirmed',
+                    'warning'
+                );
+                return;
+            }
+
+            if (
+                result.merchant_reference !== transactionReference ||
+                result.order_tracking_id !== orderTrackingId
+            ) {
+                renderResult(
+                    'Payment details could not be matched',
+                    'The verification response did not match this donation. Please contact your church finance team.',
+                    'Needs review',
+                    'warning'
+                );
+                return;
+            }
+
+            const paymentStatus = String(result.status || '').toUpperCase();
+            const amountText = formatAmount(result.amount, result.currency);
+
+            amountNode.textContent = amountText;
+
+            switch (paymentStatus) {
+                case 'COMPLETED':
+                    renderResult(
+                        'Donation successful!',
+                        'Pesapal has confirmed your payment. Thank you for your generous support.',
+                        'Successful',
+                        'success',
+                        amountText
+                    );
+                    break;
+
+                case 'PENDING':
+                    renderResult(
+                        'Payment is still pending',
+                        'Pesapal has not confirmed this payment yet. Please do not submit another payment for the same donation. Check again shortly or contact your church finance team.',
+                        'Pending',
+                        'warning',
+                        amountText
+                    );
+                    break;
+
+                case 'FAILED':
+                    renderResult(
+                        'Payment not completed',
+                        'Pesapal reports that this payment attempt failed. No successful donation was confirmed. You may start a new payment attempt if you still wish to give.',
+                        'Failed',
+                        'failure',
+                        amountText
+                    );
+                    break;
+
+                case 'REVERSED':
+                    renderResult(
+                        'Payment reversed',
+                        'Pesapal reports that this payment was reversed. Please contact your church finance team because reconciliation may be required.',
+                        'Reversed — review required',
+                        'warning',
+                        amountText
+                    );
+                    break;
+
+                default:
+                    renderResult(
+                        'Payment status needs review',
+                        'The payment status could not be safely identified. Please contact your church finance team before making another payment.',
+                        'Needs review',
+                        'warning',
+                        amountText
+                    );
+                    break;
+            }
+        } catch (error) {
+            console.error('Pesapal callback verification failed:', error);
+
+            renderResult(
+                'Payment verification unavailable',
+                'We could not reach the verification service. Do not submit another payment for this donation until its status has been checked. Please contact your church finance team and provide the transaction reference.',
+                'Not confirmed',
+                'warning'
+            );
+        }
+    }
     function closeSuccessModal() {
         document.getElementById('success-donation-modal').classList.add('hidden');
         // Reset form
