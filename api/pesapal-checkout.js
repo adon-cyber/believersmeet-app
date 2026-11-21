@@ -347,28 +347,34 @@ if (authenticatedUser) {
             });
 
             if (matchingIpns.length !== 1) {
-                const registrations = registeredIpns.slice(0, 50).map((entry) => {
-                    let sanitizedUrl = null;
-                    let hasQuery = false;
-
-                    if (typeof entry?.url === 'string') {
-                        try {
-                            const parsedUrl = new URL(entry.url);
-                            sanitizedUrl = parsedUrl.origin + parsedUrl.pathname;
-                            hasQuery = Boolean(parsedUrl.search);
-                        } catch {
-                            // Do not expose malformed raw URLs.
-                        }
+                const urlMatchCandidates = registeredIpns.filter((entry) => {
+                    if (typeof entry?.url !== 'string') return false;
+                    try {
+                        const candidateUrl = new URL(entry.url);
+                        return (
+                            candidateUrl.origin === expectedUrl.origin &&
+                            candidateUrl.pathname.replace(/\/+$/, '') ===
+                                expectedUrl.pathname.replace(/\/+$/, '') &&
+                            candidateUrl.search === expectedUrl.search
+                        );
+                    } catch {
+                        return false;
                     }
-
-                    return {
-                        url: sanitizedUrl,
-                        has_query: hasQuery,
-                        status: entry?.status ?? null,
-                        has_ipn_id: typeof entry?.ipn_id === 'string' && Boolean(entry.ipn_id.trim()),
-                        has_error: entry?.error !== null && entry?.error !== undefined
-                    };
                 });
+
+                const statusCounts = {};
+                for (const entry of registeredIpns) {
+                    const status = String(entry?.status ?? '<missing>');
+                    statusCounts[status] = (statusCounts[status] || 0) + 1;
+                }
+
+                const matchingCandidates = urlMatchCandidates.slice(0, 10).map((entry) => ({
+                    status: entry?.status ?? null,
+                    ipn_status: entry?.ipn_status ?? null,
+                    ipn_status_description: entry?.ipn_status_description ?? null,
+                    has_ipn_id: typeof entry?.ipn_id === 'string' && Boolean(entry.ipn_id.trim()),
+                    has_error: entry?.error !== null && entry?.error !== undefined
+                }));
 
                 const diagnosticError = new Error(
                     matchingIpns.length === 0
@@ -382,8 +388,11 @@ if (authenticatedUser) {
                         expected_url: expectedUrl.origin + expectedUrl.pathname,
                         returned_count: registeredIpns.length,
                         matching_count: matchingIpns.length,
-                        truncated: registeredIpns.length > registrations.length,
-                        registrations
+                        url_match_count: urlMatchCandidates.length,
+                        candidate_count: matchingCandidates.length,
+                        candidates_truncated: urlMatchCandidates.length > matchingCandidates.length,
+                        status_counts: statusCounts,
+                        candidates: matchingCandidates
                     };
                 }
 
