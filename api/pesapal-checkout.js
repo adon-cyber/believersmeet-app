@@ -209,8 +209,28 @@ export default async function handler(req, res) {
                 .maybeSingle();
 
             if (profileError) {
-                console.error('Could not load donor profile:', profileError.message);
-                return res.status(500).json({ success: false, error: 'Could not verify your member profile. Please try again.' });
+                const diagnostic = {
+                    code: profileError.code || null,
+                    message: profileError.message || 'Unknown Supabase profile lookup error'
+                };
+
+                console.error('[pesapal-checkout] donor profile lookup failed:', diagnostic);
+
+                const responseBody = {
+                    success: false,
+                    error: 'Could not verify your member profile. Please try again.'
+                };
+
+                // Temporary diagnostics are returned only to Preview callers.
+                if ((process.env.VERCEL_ENV || '').toLowerCase() === 'preview') {
+                    responseBody.diagnostic = {
+                        stage: 'profile_lookup',
+                        code: diagnostic.code,
+                        message: diagnostic.message
+                    };
+                }
+
+                return res.status(500).json(responseBody);
             }
             profile = profileData;
         }
