@@ -311,6 +311,32 @@ export default async function handler(req, res) {
             throw new Error('Could not save the verified payment status.');
         }
 
+        if (nextStatus === 'COMPLETED' || nextStatus === 'REVERSED') {
+            const { data: accountingResult, error: accountingError } =
+                await supabase.rpc(
+                    'accounting_process_pesapal_transaction',
+                    {
+                        p_transaction_id: transaction.id,
+                        p_exchange_rate: null
+                    }
+                );
+
+            if (accountingError || !accountingResult || typeof accountingResult.status !== 'string') {
+                console.error(
+                    'IPN accounting capture failed:',
+                    accountingError?.message || 'Unexpected RPC response.'
+                );
+                throw new Error('Verified payment status was saved, but accounting capture failed.');
+            }
+
+            if (accountingResult.status === 'requires_review') {
+                console.warn(
+                    'Pesapal payment requires accounting review:',
+                    { transactionId: transaction.id, eventId: accountingResult.event_id }
+                );
+            }
+        }
+
         return res.status(200).json(
             acknowledgement(
                 notificationType,

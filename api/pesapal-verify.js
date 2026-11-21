@@ -336,6 +336,49 @@ export default async function handler(req, res) {
             });
         }
 
+        if (nextStatus === 'COMPLETED' || nextStatus === 'REVERSED') {
+            let accountingResult;
+
+            try {
+                const { data, error } = await supabaseAdmin.rpc(
+                    'accounting_process_pesapal_transaction',
+                    {
+                        p_transaction_id: transaction.id,
+                        p_exchange_rate: null
+                    }
+                );
+
+                if (error) throw error;
+
+                if (!data || typeof data.status !== 'string') {
+                    throw new Error('Unexpected accounting processor response.');
+                }
+
+                accountingResult = data;
+            } catch (captureError) {
+                console.error(
+                    'Verified payment accounting capture failed:',
+                    captureError?.message || 'Unknown accounting capture error.'
+                );
+
+                return res.status(503).json({
+                    success: false,
+                    verified: true,
+                    payment_status_saved: true,
+                    accounting_capture_pending: true,
+                    status: nextStatus,
+                    error: 'The payment status was saved, but its accounting capture is pending. Please retry verification or contact the church finance team.'
+                });
+            }
+
+            if (accountingResult.status === 'requires_review') {
+                console.warn(
+                    'Verified Pesapal payment requires accounting review:',
+                    { transactionId: transaction.id, eventId: accountingResult.event_id }
+                );
+            }
+        }
+
         return res.status(200).json({
             success: true,
             verified: true,
