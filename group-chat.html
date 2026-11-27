@@ -17,6 +17,10 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
@@ -80,40 +84,17 @@
                 </div>
             </div>
             <div>
-                <button id="start-video-call" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition transform hover:-translate-y-0.5 text-sm flex items-center gap-2">
-                    <i class="fas fa-video"></i> <span class="hidden sm:inline">Video Call</span>
+                <button id="start-video-call" type="button" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition transform hover:-translate-y-0.5 text-sm flex items-center gap-2">
+                    <i class="fas fa-video"></i> <span class="hidden sm:inline">Start Group Call</span>
                 </button>
             </div>
         </div>
-
-        <!-- Group Video Call Overlay UI (Multi-peer room link or multi-grid) -->
-        <div id="video-call-overlay" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between p-4">
-            <div class="flex justify-between items-center text-white p-2">
-                <h3 id="video-room-title" class="font-bold text-lg">Group Video Room</h3>
-                <button onclick="terminateGroupCall()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold">Leave Room</button>
+        <div id="group-call-banner" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <p class="font-bold text-blue-900"><i class="fas fa-video mr-2"></i>A group video call is active</p>
+                <p id="group-call-banner-text" class="text-sm text-blue-700 mt-1">Join your group members in the live room.</p>
             </div>
-            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-y-auto items-center justify-center">
-                <div class="relative bg-gray-900 rounded-xl overflow-hidden aspect-video border border-gray-700 flex items-center justify-center">
-                    <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
-                    <span class="absolute bottom-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
-                </div>
-                <!-- Multi-peer video placeholder container -->
-                <div class="relative bg-gray-900 rounded-xl overflow-hidden aspect-video border border-gray-700 flex items-center justify-center">
-                    <div id="remote-video-placeholder" class="text-gray-400 text-sm flex flex-col items-center">
-                        <i class="fas fa-users text-3xl mb-2"></i>
-                        <span>Waiting for group members to join room...</span>
-                    </div>
-                    <video id="remote-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
-                </div>
-            </div>
-            <div class="bg-gray-900/80 p-4 rounded-xl flex items-center justify-center space-x-4">
-                <button id="toggle-mic" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fas fa-microphone text-lg"></i>
-                </button>
-                <button id="toggle-camera" class="bg-gray-700 hover:bg-gray-600 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fas fa-video text-lg"></i>
-                </button>
-            </div>
+            <button id="join-group-call" type="button" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm">Join Call</button>
         </div>
 
         <!-- Message History Container Card -->
@@ -150,22 +131,32 @@
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('groupId') || urlParams.get('group');
         let groupData = null;
-        let localStream = null;
+        let currentProfile = null;
+        let activeGroupCall = null;
+        let groupCallPollTimer = null;
+        let canJoinGroupCall = false;
 
-        async function loadChurchLogo() {
+        async function loadChurchLogo(churchId) {
+            const img = document.getElementById('church-logo-img');
+            const placeholder = document.getElementById('church-logo-placeholder');
+            if (!img) return;
+            img.src = 'images/BELIEVERS.LOGO.png';
+            img.classList.remove('hidden');
+            if (placeholder) placeholder.classList.add('hidden');
+            if (!churchId || !window.sbClient) return;
             try {
-                const churchId = localStorage.getItem('church_id');
-                if (!churchId) return;
-                const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
-                if (church && church.logo_url) {
-                    const img = document.getElementById('church-logo-img');
-                    const placeholder = document.getElementById('church-logo-placeholder');
-                    img.src = church.logo_url;
-                    img.classList.remove('hidden');
-                    placeholder.classList.add('hidden');
+                const { data: church, error } = await window.sbClient
+                    .from('churches').select('logo_url, name').eq('id', churchId).maybeSingle();
+                if (error) throw error;
+                if (church?.logo_url) {
+                    const url = new URL(church.logo_url, window.location.href);
+                    if (['https:', 'http:'].includes(url.protocol)) {
+                        img.src = url.href;
+                        img.alt = `${church.name || 'Church'} logo`;
+                    }
                 }
-            } catch (e) {
-                console.error("Error loading church logo:", e);
+            } catch (error) {
+                console.warn('Church logo unavailable; using BelieversMeet fallback.', error);
             }
         }
 
@@ -185,17 +176,21 @@
 
             // Check admin status for navigation
             try {
-                const { data: profile } = await window.sbClient.from('profiles').select('role, church_id').eq('id', currentUser.id).maybeSingle();
-                if (profile) {
-                    if (profile.church_id && !localStorage.getItem('church_id')) {
-                        localStorage.setItem('church_id', profile.church_id);
-                    }
-                    if (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'church_admin') {
-                        const adminLink = document.getElementById('admin-nav-link');
-                        const adminLinkMobile = document.getElementById('admin-nav-link-mobile');
-                        if (adminLink) adminLink.classList.remove('hidden');
-                        if (adminLinkMobile) adminLinkMobile.classList.remove('hidden');
-                    }
+                const { data: profile, error: profileError } = await window.sbClient.from('profiles').select('role, church_id, status, is_blocked').eq('id', currentUser.id).maybeSingle();
+                if (profileError) throw profileError;
+                currentProfile = profile;
+                const { data: platformAdmin, error: platformAdminError } =
+                    await window.sbClient.rpc('is_super_admin');
+                if (platformAdminError) console.warn('Platform admin check failed:', platformAdminError);
+                const profileRole = String(profile?.role || '').trim().toLowerCase();
+                const accountActive = profile?.status === 'active' && profile?.is_blocked !== true;
+                const canOpenAdmin = platformAdmin === true || (accountActive &&
+                    ['admin', 'church_admin', 'finance', 'super_admin', 'super-admin'].includes(profileRole));
+                if (canOpenAdmin) {
+                    const adminLink = document.getElementById('admin-nav-link');
+                    const adminLinkMobile = document.getElementById('admin-nav-link-mobile');
+                    if (adminLink) adminLink.classList.remove('hidden');
+                    if (adminLinkMobile) adminLinkMobile.classList.remove('hidden');
                 }
             } catch (err) {
                 console.warn("Could not check admin status:", err);
@@ -210,6 +205,7 @@
             }
 
             groupData = group;
+            await loadChurchLogo(currentProfile?.church_id === groupData.church_id ? groupData.church_id : null);
 
             const { data: groupRoster, error: rosterAccessError } =
                 await window.sbClient.rpc('get_group_member_roster', {
@@ -224,10 +220,24 @@
             }
 
                         document.getElementById('group-name').textContent = groupData.name || 'Cell Group';
-            document.getElementById('video-room-title').textContent = `${groupData.name} - Video Room`;
+
+            const { data: canCall, error: membershipError } = await window.sbClient.rpc(
+                'is_approved_group_member', { p_group_id: groupId }
+            );
+            canJoinGroupCall = !membershipError && canCall === true;
+            if (!canJoinGroupCall) {
+                const callButton = document.getElementById('start-video-call');
+                if (callButton) {
+                    callButton.disabled = true;
+                    callButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    callButton.title = 'Only approved group members can start or join group calls.';
+                }
+            }
 
             await fetchGroupMessages();
             setupGroupRealtimeSubscription();
+            await loadActiveGroupCall();
+            groupCallPollTimer = window.setInterval(() => void loadActiveGroupCall(), 15000);
         }
 
         async function fetchGroupMessages() {
@@ -371,6 +381,7 @@
             window.sbClient
                 .channel(`group-${groupId}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `group_id=eq.${groupId}` }, payload => { appendMessageToUI(payload.new); })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'group_video_call_sessions', filter: `group_id=eq.${groupId}` }, () => { void loadActiveGroupCall(); })
                 .subscribe();
         }
 
@@ -381,26 +392,79 @@
             }
         }
 
-        // Video call trigger for group
-        document.getElementById('start-video-call').addEventListener('click', async () => {
-            const overlay = document.getElementById('video-call-overlay');
-            overlay.classList.remove('hidden');
+        async function loadActiveGroupCall() {
+            if (!window.sbClient || !groupId) return;
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('local-video').srcObject = localStream;
-            } catch (e) {
-                console.error("Camera/Mic access error:", e);
-                alert("Could not access camera or microphone.");
+                const { data, error } = await window.sbClient
+                    .from('group_video_call_sessions')
+                    .select('id, created_by, expires_at, status')
+                    .eq('group_id', groupId)
+                    .eq('status', 'active')
+                    .gt('expires_at', new Date().toISOString())
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+                if (error) throw error;
+                activeGroupCall = data || null;
+                const banner = document.getElementById('group-call-banner');
+                const joinButton = document.getElementById('join-group-call');
+                const text = document.getElementById('group-call-banner-text');
+                if (!banner || !joinButton || !text) return;
+                if (!activeGroupCall) {
+                    banner.classList.add('hidden');
+                    return;
+                }
+                text.textContent = activeGroupCall.created_by === currentUser?.id
+                    ? 'Your group call is active. Rejoin the room if needed.'
+                    : 'A group member has started a call. Join while the session is active.';
+                joinButton.disabled = !canJoinGroupCall;
+                joinButton.textContent = canJoinGroupCall ? 'Join Call' : 'Approved members only';
+                joinButton.title = canJoinGroupCall
+                    ? 'Join the active group video call'
+                    : 'Only approved members of this group can join the video call.';
+                banner.classList.remove('hidden');
+                joinButton.onclick = () => {
+                    if (!canJoinGroupCall) return;
+                    window.location.href = `group-video-call.html?session=${encodeURIComponent(activeGroupCall.id)}`;
+                };
+            } catch (error) {
+                // Read access is limited by RLS to approved group members and authorized managers.
+                console.warn('Active group call could not be checked:', error);
             }
-        });
-
-        function terminateGroupCall() {
-            if (localStream) {
-                localStream.getTracks().forEach(t => t.stop());
-                localStream = null;
-            }
-            document.getElementById('video-call-overlay').classList.add('hidden');
         }
+
+        async function startGroupVideoCall() {
+            const button = document.getElementById('start-video-call');
+            if (!button || button.disabled || !currentUser || !groupId) return;
+            const previous = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+            try {
+                const { data: isMember, error: membershipError } = await window.sbClient.rpc(
+                    'is_approved_group_member', { p_group_id: groupId }
+                );
+                if (membershipError) throw membershipError;
+                if (isMember !== true) {
+                    throw new Error('Only approved members of this group can start a group video call.');
+                }
+                const { data: sessionId, error } = await window.sbClient.rpc(
+                    'create_group_video_call', { p_group_id: groupId }
+                );
+                if (error) throw error;
+                if (typeof sessionId !== 'string') throw new Error('The group call service returned an invalid session.');
+                window.location.href = `group-video-call.html?session=${encodeURIComponent(sessionId)}`;
+            } catch (error) {
+                console.error('Unable to start group video call:', error);
+                alert(error.message || 'Unable to start the group video call.');
+                button.disabled = false;
+                button.innerHTML = previous;
+            }
+        }
+
+        document.getElementById('start-video-call')?.addEventListener('click', startGroupVideoCall);
+        window.addEventListener('beforeunload', () => {
+            if (groupCallPollTimer) window.clearInterval(groupCallPollTimer);
+        });
 
         function escapeHTML(str) {
             if (!str) return '';
@@ -430,7 +494,6 @@
 
             if (!window.sbClient) return;
 
-            await loadChurchLogo();
             await initGroupChat();
         })();
     </script>

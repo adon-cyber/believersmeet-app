@@ -22,7 +22,6 @@
 -- of the monthly fees before applying the 20% annual discount.
 
 BEGIN;
-
 -- ---------------------------------------------------------------------
 -- 1. Church country and billing currency.
 -- ---------------------------------------------------------------------
@@ -30,34 +29,28 @@ BEGIN;
 ALTER TABLE public.churches
     ADD COLUMN IF NOT EXISTS country_code text,
     ADD COLUMN IF NOT EXISTS billing_currency text;
-
 -- Preserve the existing subscription currency where a subscription exists.
 UPDATE public.churches AS c
    SET billing_currency = s.currency
   FROM public.church_subscriptions AS s
  WHERE s.church_id = c.id
    AND c.billing_currency IS NULL;
-
 -- Legacy rows without a subscription currency retain the historical UGX
 -- default. Country is deliberately left NULL; it must be collected/verified.
 UPDATE public.churches
    SET billing_currency = 'UGX'
  WHERE billing_currency IS NULL;
-
 ALTER TABLE public.churches
     ALTER COLUMN billing_currency SET DEFAULT 'UGX',
     ALTER COLUMN billing_currency SET NOT NULL;
-
 ALTER TABLE public.churches
     DROP CONSTRAINT IF EXISTS churches_country_code_format_check,
     DROP CONSTRAINT IF EXISTS churches_billing_currency_check;
-
 ALTER TABLE public.churches
     ADD CONSTRAINT churches_country_code_format_check
         CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$'),
     ADD CONSTRAINT churches_billing_currency_check
         CHECK (billing_currency IN ('UGX', 'KES', 'TZS', 'USD'));
-
 -- ---------------------------------------------------------------------
 -- 2. Currency-specific monthly pricing catalogue.
 -- KES/TZS/USD deliberately remain disabled and unpriced.
@@ -94,12 +87,10 @@ CREATE TABLE IF NOT EXISTS public.subscription_price_catalog (
             )
         )
 );
-
 ALTER TABLE public.subscription_price_catalog ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.subscription_price_catalog
     FROM PUBLIC, anon, authenticated, service_role;
 GRANT SELECT ON TABLE public.subscription_price_catalog TO service_role;
-
 INSERT INTO public.subscription_price_catalog (
     currency, monthly_base_fee, monthly_additional_member_fee, is_enabled
 )
@@ -109,12 +100,10 @@ VALUES
     ('TZS', NULL, NULL, false),
     ('USD', NULL, NULL, false)
 ON CONFLICT (currency) DO NOTHING;
-
 COMMENT ON TABLE public.subscription_price_catalog IS
     'Approved monthly subscription prices by billing currency. Annual billing snapshots twelve monthly periods then applies the 20% annual discount.';
 COMMENT ON COLUMN public.subscription_price_catalog.is_enabled IS
     'Only enabled currencies with configured prices may be used for new church approvals.';
-
 -- ---------------------------------------------------------------------
 -- 3. Decimal-capable amounts and supported-currency constraints.
 -- ---------------------------------------------------------------------
@@ -127,12 +116,10 @@ ALTER TABLE public.church_subscriptions
     DROP CONSTRAINT IF EXISTS church_subscriptions_additional_member_fee_check,
     DROP CONSTRAINT IF EXISTS church_subscriptions_currency_check,
     DROP CONSTRAINT IF EXISTS church_subscriptions_ugx_whole_amounts_check;
-
 ALTER TABLE public.church_subscriptions
     ALTER COLUMN base_fee TYPE numeric(18,2) USING base_fee::numeric(18,2),
     ALTER COLUMN additional_member_fee TYPE numeric(18,2)
         USING additional_member_fee::numeric(18,2);
-
 ALTER TABLE public.church_subscriptions
     ADD CONSTRAINT church_subscriptions_base_fee_check
         CHECK (base_fee >= 0),
@@ -148,7 +135,6 @@ ALTER TABLE public.church_subscriptions
                 AND additional_member_fee = trunc(additional_member_fee)
             )
         );
-
 ALTER TABLE public.church_invoices
     DROP CONSTRAINT IF EXISTS church_invoices_base_fee_check,
     DROP CONSTRAINT IF EXISTS church_invoices_additional_member_fee_check,
@@ -159,7 +145,6 @@ ALTER TABLE public.church_invoices
     DROP CONSTRAINT IF EXISTS church_invoices_currency_check,
     DROP CONSTRAINT IF EXISTS church_invoice_pricing_calculation_check,
     DROP CONSTRAINT IF EXISTS church_invoices_ugx_whole_amounts_check;
-
 ALTER TABLE public.church_invoices
     ALTER COLUMN base_fee TYPE numeric(18,2) USING base_fee::numeric(18,2),
     ALTER COLUMN additional_member_fee TYPE numeric(18,2)
@@ -172,7 +157,6 @@ ALTER TABLE public.church_invoices
         USING discount_amount::numeric(18,2),
     ALTER COLUMN total_amount TYPE numeric(18,2)
         USING total_amount::numeric(18,2);
-
 ALTER TABLE public.church_invoices
     ADD CONSTRAINT church_invoices_base_fee_check
         CHECK (base_fee >= 0),
@@ -216,15 +200,12 @@ ALTER TABLE public.church_invoices
                 AND total_amount = trunc(total_amount)
             )
         );
-
 ALTER TABLE public.church_payments
     DROP CONSTRAINT IF EXISTS church_payments_amount_check,
     DROP CONSTRAINT IF EXISTS church_payments_currency_check,
     DROP CONSTRAINT IF EXISTS church_payments_ugx_whole_amount_check;
-
 ALTER TABLE public.church_payments
     ALTER COLUMN amount TYPE numeric(18,2) USING amount::numeric(18,2);
-
 ALTER TABLE public.church_payments
     ADD CONSTRAINT church_payments_amount_check
         CHECK (amount > 0),
@@ -232,7 +213,6 @@ ALTER TABLE public.church_payments
         CHECK (currency IN ('UGX', 'KES', 'TZS', 'USD')),
     ADD CONSTRAINT church_payments_ugx_whole_amount_check
         CHECK (currency <> 'UGX' OR amount = trunc(amount));
-
 -- ---------------------------------------------------------------------
 -- 4. Referential integrity: invoice/subscription/payment must belong to
 -- the same church and use the same currency.
@@ -261,11 +241,9 @@ BEGIN
     END IF;
 END;
 $block$;
-
 ALTER TABLE public.church_subscriptions
     ADD CONSTRAINT church_subscriptions_id_church_currency_key
         UNIQUE (id, church_id, currency);
-
 ALTER TABLE public.church_invoices
     DROP CONSTRAINT IF EXISTS church_invoices_subscription_id_fkey,
     ADD CONSTRAINT church_invoices_id_church_currency_key
@@ -274,14 +252,12 @@ ALTER TABLE public.church_invoices
         FOREIGN KEY (subscription_id, church_id, currency)
         REFERENCES public.church_subscriptions (id, church_id, currency)
         ON DELETE RESTRICT;
-
 ALTER TABLE public.church_payments
     DROP CONSTRAINT IF EXISTS church_payments_invoice_id_fkey,
     ADD CONSTRAINT church_payments_invoice_church_currency_fkey
         FOREIGN KEY (invoice_id, church_id, currency)
         REFERENCES public.church_invoices (id, church_id, currency)
         ON DELETE RESTRICT;
-
 -- ---------------------------------------------------------------------
 -- 5. Billable member count: all active, unblocked profiles count,
 -- regardless of role. Keep execution owner-only for trusted billing RPCs.
@@ -317,10 +293,8 @@ BEGIN
     RETURN v_count;
 END;
 $function$;
-
 REVOKE ALL ON FUNCTION public.get_billable_member_count(uuid)
     FROM PUBLIC, anon, authenticated, service_role;
-
 -- ---------------------------------------------------------------------
 -- 6. Multi-currency church application RPC.
 -- The 7-argument version is used by the updated form. The existing
@@ -464,14 +438,12 @@ BEGIN
     RETURN QUERY SELECT v_church_id, v_join_code;
 END;
 $function$;
-
 REVOKE ALL ON FUNCTION public.submit_church_application(
     text, text, text, text, text, text, text
 ) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.submit_church_application(
     text, text, text, text, text, text, text
 ) TO authenticated;
-
 -- Preserve the previous RPC signature for already-cached clients. Legacy
 -- callers submit UGX and leave country_code unknown rather than guessing.
 CREATE OR REPLACE FUNCTION public.submit_church_application(
@@ -499,12 +471,10 @@ BEGIN
     );
 END;
 $function$;
-
 REVOKE ALL ON FUNCTION public.submit_church_application(text, text, text, text, text)
     FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.submit_church_application(text, text, text, text, text)
     TO authenticated;
-
 -- ---------------------------------------------------------------------
 -- 7. Church approval uses the selected currency's enabled price catalogue.
 -- Retains live validation, Super Admin check, role assignment, 60-day trial,
@@ -611,12 +581,10 @@ BEGIN
     );
 END;
 $function$;
-
 REVOKE ALL ON FUNCTION public.approve_church_application(uuid)
     FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.approve_church_application(uuid)
     TO authenticated;
-
 -- ---------------------------------------------------------------------
 -- 8. Least-privilege server-side billing table access.
 -- ---------------------------------------------------------------------
@@ -626,16 +594,13 @@ REVOKE ALL ON TABLE
     public.church_invoices,
     public.church_payments
 FROM PUBLIC, anon, authenticated, service_role;
-
 GRANT SELECT, INSERT, UPDATE ON TABLE
     public.church_subscriptions,
     public.church_invoices,
     public.church_payments
 TO service_role;
-
 -- Commit the reviewed subscription foundation changes.
 COMMIT;
-
 -- ---------------------------------------------------------------------
 -- Post-apply verification checklist (run separately after approval):
 -- 1. Price catalogue: UGX enabled at 30000/150; KES/TZS/USD disabled/unpriced.
@@ -647,4 +612,4 @@ COMMIT;
 -- 7. Billing FK constraints enforce same church and currency links.
 -- 8. anon/authenticated have no direct billing table privileges.
 -- 9. service_role has SELECT/INSERT/UPDATE but no DELETE on billing tables.
--- 10. Old function grants and Super Admin role checks remain correct.
+-- 10. Old function grants and Super Admin role checks remain correct.;

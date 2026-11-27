@@ -84,7 +84,7 @@ async function initPublicChurch() {
 async function loadApprovedChurchesDirectory() {
     const showcaseContainer = document.getElementById('churches-showcase-container');
     const churchSelect = document.getElementById('connection-church-select');
-    
+
     if (!showcaseContainer) return;
 
     try {
@@ -113,9 +113,9 @@ async function loadApprovedChurchesDirectory() {
 
         // Populate Connection Form Dropdown
         if (churchSelect) {
-            churchSelect.innerHTML = '<option value="">-- Select an Approved Church --</option>' + 
+            churchSelect.innerHTML = '<option value="">-- Select an Approved Church --</option>' +
                 approvedChurchesCache.map(c => `<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.location || 'General')})</option>`).join('');
-            
+
             if (currentChurchId) {
                 churchSelect.value = currentChurchId;
             }
@@ -189,8 +189,8 @@ function filterChurchesDirectory() {
 
     const filtered = approvedChurchesCache.filter(c => {
         const matchName = !nameQuery || (c.name && c.name.toLowerCase().includes(nameQuery));
-        const matchLocation = !locationQuery || 
-            (c.location && c.location.toLowerCase().includes(locationQuery)) || 
+        const matchLocation = !locationQuery ||
+            (c.location && c.location.toLowerCase().includes(locationQuery)) ||
             (c.address && c.address.toLowerCase().includes(locationQuery));
         return matchName && matchLocation;
     });
@@ -257,7 +257,7 @@ function renderChurch(church, givingData = null) {
     document.getElementById('church-name').textContent = churchName;
     document.getElementById('header-church-name').textContent = churchName;
     document.getElementById('church-address').innerHTML = `<i class="fas fa-location-dot mr-2 text-blue-200"></i> ${escapeHTML(address)}`;
-    
+
     const logoEl = document.getElementById('church-logo');
     if (logoEl) {
         const finalLogoUrl = isValidImageUrl(church.logo_url) ? church.logo_url : 'images/BELIEVERS.LOGO.png';
@@ -326,7 +326,7 @@ function renderChurch(church, givingData = null) {
         const baseUrl = "https://maps.google.com/maps?q=";
         const urlParams = "&t=&z=15&ie=UTF8&iwloc=&output=embed";
         const mapSrc = baseUrl + encodeURIComponent(church.address || church.location) + urlParams;
-        
+
         const mapIframe = document.getElementById("church-map-iframe");
         if (mapIframe) {
             mapIframe.src = mapSrc;
@@ -343,7 +343,7 @@ function renderChurch(church, givingData = null) {
 async function fetchChurchActivities() {
     const container = document.getElementById('activities-container');
     if (!container) return;
-    
+
     let events = [];
     let error = null;
 
@@ -444,7 +444,7 @@ async function fetchAndRenderWidgetVerse(query) {
             const res = await fetch(url);
             if (!res.ok) throw new Error('Scripture reference not found');
             const data = await res.json();
-            
+
             let passageText = '';
             let officialRef = data.reference || trimmedQuery;
             let translationName = data.translation_name || version.toUpperCase();
@@ -639,7 +639,7 @@ if (conversionForm) {
                 email: contactMethod === 'email' ? contactDetail : null,
                 consent_given: true,
                 consent_timestamp: new Date().toISOString(),
-                status: 'pending'
+
             };
 
             // Insert into conversion_requests table
@@ -660,7 +660,7 @@ if (conversionForm) {
             await publicSupabase.from('notifications').insert([notificationPayload]);
 
             console.log('Successfully submitted conversion/spiritual connection request:', payload);
-            
+
             const churchNameDisp = approvedCheck.name || 'Selected Church';
             document.getElementById('success-church-confirmation').textContent = `Your connection request has been securely received by ${churchNameDisp}. An authorized church leader will contact you shortly via ${contactMethod}.`;
             document.getElementById('success-message').classList.remove('hidden');
@@ -699,13 +699,18 @@ if (prayerForm) {
         prayerSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...`;
 
         try {
-            const { error } = await publicSupabase.from('prayer_requests').insert({
-                church_id: currentChurchId || null,
-                full_name: fullName,
-                contact_info: contactInfo || null,
-                prayer_request: prayerRequestText,
-                status: 'pending'
-            });
+            if (!currentChurchId) {
+    alert('Please select an approved church before submitting your prayer request.');
+    return;
+}
+
+const { error } = await publicSupabase.from('prayer_requests').insert({
+    church_id: currentChurchId,
+    full_name: fullName,
+    contact_info: contactInfo || null,
+    prayer_request: prayerRequestText,
+
+});
 
             if (error) throw error;
 
@@ -782,7 +787,7 @@ async function fetchFellowshipGallery() {
 
     try {
         let photos = [];
-        
+
         const { data, error } = await publicSupabase
             .from('gallery_images')
             .select('created_at, image_url, caption, church_id, uploader_name')
@@ -983,7 +988,7 @@ async function loadPublicProgrammes(churchId) {
     let html = '<div class="d-flex flex-column gap-3">';
     programmes.forEach(prog => {
       const title = prog.title || prog.name || 'Worship Service';
-      const scheduleDisplay = prog.schedule_text || 
+      const scheduleDisplay = prog.schedule_text ||
         (prog.day_of_week ? `${prog.day_of_week} • ${prog.time || prog.start_time || ''}` : prog.time || (prog.day ? `${prog.day} • ${prog.start_time && prog.end_time ? `${prog.start_time} - ${prog.end_time}` : (prog.start_time || '')}` : 'Schedule TBA'));
       const location = prog.location || prog.venue || '';
       const description = prog.description || '';

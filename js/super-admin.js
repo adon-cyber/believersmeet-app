@@ -357,31 +357,16 @@ function renderUsersTable(users) {
 }
 
 async function extendChurchTrial(churchId) {
-    const daysInput = prompt("Enter the number of days to extend this church's trial period (e.g., 30):", "30");
-    if (!daysInput || isNaN(daysInput)) return;
-    const daysToAdd = parseInt(daysInput, 10);
-
-    try {
-        const churchData = allChurchesMap[churchId];
-        const currentEnd = churchData && churchData.trial_ends_at ? new Date(churchData.trial_ends_at) : new Date();
-        const baseDate = currentEnd > new Date() ? currentEnd : new Date();
-        
-        const newTrialEndDate = new Date(baseDate.getTime() + (daysToAdd * 24 * 60 * 60 * 1000));
-
-        const { error } = await window.sbClient.rpc('extend_church_trial', {
-            p_church_id: churchId,
-            p_new_expiry: newTrialEndDate.toISOString()
-        });
-
-        if (error) throw error;
-
-        showNotification(`Church trial successfully extended by ${daysToAdd} days!`, "success");
-        await loadAllUsersAndChurches();
-    } catch (err) {
-        showNotification("Failed to extend church trial: " + err.message, "error");
+    if (typeof window.openSuperAdminTrialExtension !== "function") {
+        showNotification(
+            "The Billing trial-extension dialog is unavailable. Refresh the page and try again.",
+            "error"
+        );
+        return;
     }
-}
 
+    return window.openSuperAdminTrialExtension(churchId);
+}
 function filterAndRenderUsers(query) {
     if (!query || query.trim() === '') {
         renderUsersTable(allUsersData);

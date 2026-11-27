@@ -14,9 +14,159 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none !important; }
+        /* Chat page All Features dropdown */
+        .bm-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + .5rem);
+            left: 0;
+            min-width: 260px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
+            z-index: 99999;
+            padding: .5rem;
+        }
+        .bm-dropdown-menu.show {
+            display: block;
+            animation: bmDropdownFade .15s ease-out forwards;
+        }
+        @keyframes bmDropdownFade {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .bm-feature-link {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .5rem .75rem;
+            border-radius: .75rem;
+            color: #374151;
+            font-size: .875rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .bm-feature-link i { width: 1rem; text-align: center; }
+        .bm-feature-link:hover { background: #eff6ff; color: #2563eb; }
+        .bm-feature-link.bm-feature-active {
+            background: #2563eb;
+            color: white;
+            font-weight: 700;
+        }
+        @media (max-width: 768px) {
+            .bm-dropdown-menu {
+                left: auto;
+                right: 0;
+                width: 280px;
+                max-width: 90vw;
+            }
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            /* Chat page visual refinements - existing colour palette preserved */
+        #left-sidebar,
+        #right-chat-area,
+        #active-chat-container {
+            min-height: 0;
+            min-width: 0;
+        }
+
+        #left-sidebar {
+            background: #fff;
+        }
+
+        #users-directory {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        #users-directory [id^="user-row-"] {
+            padding: 1rem;
+            min-height: 76px;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+
+        #users-directory [id^="user-row-"]:hover {
+            background-color: #eff6ff;
+        }
+
+        #chat-header {
+            padding: 1rem 1.25rem;
+            min-height: 76px;
+            border-color: #e5e7eb;
+        }
+
+        #target-name {
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        #messages-container {
+            padding: clamp(1rem, 2.5vw, 2rem);
+            gap: .9rem;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        #messages-container [data-content] > div {
+            padding: .8rem 1rem;
+            line-height: 1.55;
+            font-size: .925rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+            overflow-wrap: anywhere;
+        }
+
+        #message-form {
+            gap: .75rem;
+        }
+
+        #message-input {
+            min-height: 48px;
+            padding: .75rem 1.1rem;
+            border-radius: 9999px;
+            background: #f9fafb;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        #message-input:focus {
+            background: #fff;
+        }
+
+        #send-btn {
+            min-height: 48px;
+            min-width: 82px;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 767px) {
+            #chat-header {
+                padding: .8rem 1rem;
+                min-height: 68px;
+            }
+
+            #messages-container {
+                padding: 1rem;
+            }
+
+            #message-form {
+                gap: .5rem;
+            }
+
+            #send-btn {
+                min-width: 68px;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
     </style>
+    <link rel="stylesheet" href="css/all-features.css?v=20261109-v2" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col overflow-x-hidden text-gray-800">
 
@@ -26,37 +176,52 @@
         <div class="flex items-center space-x-3 shrink-0">
             <a href="feed.html" class="flex items-center space-x-2">
                 <div id="church-logo-container" class="flex items-center space-x-2">
-                    <img id="church-logo-img" src="" alt="Church Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow hidden">
+                    <img id="church-logo-img" data-bm-church-logo src="images/BELIEVERS.LOGO.png" alt="Church Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
                     <span id="church-logo-placeholder" class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold border border-white/20 shadow">BM</span>
                 </div>
                 <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
             </a>
         </div>
-        <!-- Desktop Navigation Links -->
-        <nav class="hidden md:flex items-center space-x-6">
-            <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
-            <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
-            <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
-            <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
-            <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
-            <a href="chat.html" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap flex items-center gap-1.5">
-                Inbox <span id="unread-badge" class="badge bg-red-600 text-white px-1.5 py-0.2 rounded-full text-xs hidden">0</span>
-            </a>
-            <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
-        </nav>
-        <!-- Mobile Navigation Container (Horizontal Scrollable) -->
-        <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
-            <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
-            <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
-            <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
-            <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
-            <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
-            <a href="chat.html" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0 flex items-center gap-1">
-                Inbox <span id="unread-badge-mobile" class="badge bg-red-600 text-white px-1 rounded-full text-[10px] hidden">0</span>
-            </a>
-            <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
+        <!-- All Features Navigation -->
+        <div class="relative inline-block text-left shrink-0" id="all-features-dropdown-container">
+            <button type="button" id="all-features-menu-btn"
+                    onclick="toggleAllFeaturesDropdown(event)"
+                    aria-expanded="false" aria-controls="all-features-dropdown-menu"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-indigo-900 hover:bg-indigo-800 text-white shadow-md transition-all">
+                <i class="fas fa-th-large"></i>
+                <span>All Features</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div id="all-features-dropdown-menu" class="bm-dropdown-menu">
+                <div class="py-1 space-y-1">
+                    <div class="px-3 py-1.5 text-xs font-extrabold text-gray-400 uppercase tracking-wider">Member Navigation</div>
+                    <a href="feed.html" class="bm-feature-link"><i class="fas fa-newspaper"></i> Feed</a>
+                    <a href="events.html" class="bm-feature-link"><i class="fas fa-calendar-alt"></i> Events</a>
+                    <a href="groups.html" class="bm-feature-link"><i class="fas fa-users"></i> Groups</a>
+                    <a href="sermons.html" class="bm-feature-link"><i class="fas fa-bible"></i> Sermons</a>
+                    <a href="giving.html" class="bm-feature-link"><i class="fas fa-hand-holding-heart"></i> Giving</a>
+                    <a href="chat.html" class="bm-feature-link bm-feature-active"><i class="fas fa-comments"></i> Messages</a>
+                    <a href="directory.html" class="bm-feature-link"><i class="fas fa-address-book"></i> Directory</a>
+                    <a href="prayer-wall.html" class="bm-feature-link"><i class="fas fa-pray"></i> Prayer Wall</a>
+                    <a href="testimonies.html" class="bm-feature-link"><i class="fas fa-heart"></i> Testimonies</a>
+                    <a href="volunteer.html" class="bm-feature-link"><i class="fas fa-hands-helping"></i> Volunteer</a>
+                    <a href="gallery.html" class="bm-feature-link"><i class="fas fa-images"></i> Gallery</a>
+                    <a href="profile.html" class="bm-feature-link"><i class="fas fa-user"></i> My Profile</a>
+                    <div id="bm-admin-feature-links" class="hidden">
+                        <div class="border-t border-gray-200 my-2"></div>
+                        <a href="admin.html" class="bm-feature-link"><i class="fas fa-cog"></i> Admin Panel</a>
+                    </div>
+                    <div id="bm-super-admin-feature-link" class="hidden">
+                        <a href="super-admin.html" class="bm-feature-link"><i class="fas fa-shield-alt"></i> Super Admin</a>
+                    </div>
+                    <div class="border-t border-gray-200 my-2"></div>
+                    <button type="button" onclick="window.goBack()" class="bm-feature-link w-full text-left">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="flex items-center space-x-3 shrink-0">
+<div class="flex items-center space-x-3 shrink-0">
             <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
                 <i class="fas fa-user"></i>
             </a>
@@ -65,10 +230,76 @@
             </button>
         </div>
     </div>
+<script>
+(function () {
+    const container = document.getElementById('all-features-dropdown-container');
+    const menu = document.getElementById('all-features-dropdown-menu');
+    const button = document.getElementById('all-features-menu-btn');
+
+    window.toggleAllFeaturesDropdown = function (event) {
+        if (event) event.stopPropagation();
+        if (!menu || !button) return;
+        const open = menu.classList.toggle('show');
+        button.setAttribute('aria-expanded', String(open));
+    };
+
+    document.addEventListener('click', function (event) {
+        if (container && menu && !container.contains(event.target)) {
+            menu.classList.remove('show');
+            button.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && menu) {
+            menu.classList.remove('show');
+            button.setAttribute('aria-expanded', 'false');
+            button.focus();
+        }
+    });
+
+    async function loadRoleLinks() {
+        try {
+            if (!window.sbClient) return;
+            const { data: { user } } = await window.sbClient.auth.getUser();
+            if (!user) return;
+
+            const { data: platformAdminResult, error: platformAdminError } =
+                await window.sbClient.rpc('is_super_admin');
+            const isSuperAdmin = !platformAdminError && platformAdminResult === true;
+
+            if (platformAdminError) {
+                console.warn('Could not verify platform administrator navigation:', platformAdminError);
+            }
+
+            const { data: profile } = await window.sbClient
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            const role = profile?.role;
+            const isAdminOrLeader = isSuperAdmin ||
+                ['church_admin', 'admin', 'super_admin', 'super-admin', 'leader'].includes(role);
+
+            if (isAdminOrLeader) {
+                document.getElementById('bm-admin-feature-links')?.classList.remove('hidden');
+            }
+            if (isSuperAdmin) {
+                document.getElementById('bm-super-admin-feature-link')?.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.warn('Could not load navigation role links:', error);
+        }
+    }
+
+    loadRoleLinks();
+})();
+</script>
 </header>
 
 <!-- Main Unified Split-Screen Container -->
-<main class="flex flex-col md:flex-row w-full max-w-6xl mx-auto h-[calc(100vh-4rem)] overflow-hidden my-auto shadow-2xl bg-white rounded-none md:rounded-xl border border-gray-200">
+<main class="flex flex-col md:flex-row w-full max-w-7xl mx-auto h-[calc(100vh-4rem)] overflow-hidden shadow-xl bg-white rounded-none md:rounded-2xl border border-gray-200">
     
     <!-- Left Sidebar (The Inbox List) -->
     <div id="left-sidebar" class="w-full md:w-1/3 md:max-w-sm flex flex-col bg-white border-r border-gray-200 h-full flex-shrink-0">
@@ -147,7 +378,6 @@
                         type="submit" 
                         id="send-btn"
                         class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition-colors text-sm shadow-sm"
-                        style="background-color: #007bff;"
                     >
                         Send
                     </button>
@@ -185,22 +415,36 @@
     let currentUser = null;
     let targetUser = null;
     let activeTab = 'fellow'; // 'fellow' or 'other'
+    let activeDepartment = 'general';
+    let conversationSelectionVersion = 0;
     let activeChannel = null;
 
     async function loadChurchLogo() {
+        const img = document.getElementById('church-logo-img');
+        const placeholder = document.getElementById('church-logo-placeholder');
+        if (!img) return;
+
+        // BelieversMeet remains the safe fallback if the member has no church logo.
+        img.src = 'images/BELIEVERS.LOGO.png';
+        img.classList.remove('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
+
+        const churchId = currentUser?.church_id;
+        if (!churchId || !window.sbClient) return;
+
         try {
-            const churchId = localStorage.getItem('church_id');
-            if (!churchId) return;
-            const { data: church } = await window.sbClient.from('churches').select('logo_url').eq('id', churchId).maybeSingle();
-            if (church && church.logo_url) {
-                const img = document.getElementById('church-logo-img');
-                const placeholder = document.getElementById('church-logo-placeholder');
-                img.src = church.logo_url;
-                img.classList.remove('hidden');
-                placeholder.classList.add('hidden');
+            const { data: church, error } = await window.sbClient
+                .from('churches').select('logo_url, name').eq('id', churchId).maybeSingle();
+            if (error) throw error;
+            if (church?.logo_url) {
+                const url = new URL(church.logo_url, window.location.href);
+                if (['https:', 'http:'].includes(url.protocol)) {
+                    img.src = url.href;
+                    img.alt = `${church.name || 'Church'} logo`;
+                }
             }
-        } catch (e) {
-            console.error("Error loading church logo:", e);
+        } catch (error) {
+            console.warn('Church logo unavailable; using BelieversMeet fallback.', error);
         }
     }
 
@@ -232,74 +476,33 @@
 
     async function loadFinanceInquiries() {
         if (!currentUser) return;
+
         const directoryEl = document.getElementById('users-directory');
+        if (!directoryEl) return;
 
         try {
-            // Fetch messages with department = 'finance' without embedded churches
-            const { data: messages, error } = await window.sbClient
-                .from('messages')
-                .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, email, avatar_url, church_id)')
-                .eq('department', 'finance')
-                .order('created_at', { ascending: false });
+            const { data: threads, error } = await window.sbClient.rpc(
+                'get_finance_inquiries'
+            );
 
             if (error) throw error;
 
-            if (!messages || messages.length === 0) {
+            if (!threads || threads.length === 0) {
                 directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No finance inquiries found.</div>`;
                 return;
             }
 
-            // Gather all unique church IDs from sender profiles
-            const churchIds = [...new Set(messages.map(m => m.sender?.church_id).filter(Boolean))];
-            const churchMap = {};
-            if (churchIds.length > 0) {
-                const { data: churchesData } = await window.sbClient
-                    .from('church_directory')
-                    .select('id, name')
-                    .in('id', churchIds);
-                if (churchesData) {
-                    churchesData.forEach(c => {
-                        churchMap[c.id] = c.name;
-                    });
-                }
-            }
-
-            // Group by unique sender_id or conversation threads
-            const threadsMap = new Map();
-            messages.forEach(msg => {
-                const sId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-                // If I am the finance admin viewing inquiries, show senders who are not me
-                const senderProfile = msg.sender_id === currentUser.id ? null : msg.sender;
-                if (senderProfile) {
-                    senderProfile.church_name = senderProfile.church_id ? (churchMap[senderProfile.church_id] || 'Church Member') : 'Church Member';
-                }
-                const contactId = msg.sender_id === currentUser.id ? (msg.receiver_id || msg.recipient_id) : msg.sender_id;
-
-                if (contactId && !threadsMap.has(contactId)) {
-                    threadsMap.set(contactId, {
-                        contactId: contactId,
-                        profile: senderProfile || { full_name: 'Church Member', email: '' },
-                        lastMessage: msg.content,
-                        created_at: msg.created_at
-                    });
-                }
-            });
-
-            const threads = Array.from(threadsMap.values());
-
-            if (threads.length === 0) {
-                directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No finance inquiries found.</div>`;
-                return;
-            }
-
-            directoryEl.innerHTML = threads.map(t => {
-                const displayName = escapeHTML(t.profile.full_name || t.profile.email || 'Member');
-                const initial = displayName.charAt(0).toUpperCase();
-                const churchName = t.profile.church_name ? t.profile.church_name : 'Finance Inquiry';
-                const isSelected = targetUser && targetUser.id === t.contactId;
+            directoryEl.innerHTML = threads.map(thread => {
+                const displayName = escapeHTML(thread.contact_full_name || 'Church Member');
+                const lastMessage = escapeHTML(thread.last_message || 'No message content');
+                const contactId = thread.contact_id;
+                const isSelected = targetUser && targetUser.id === contactId;
 
                 return `
-                    <div id="user-row-${t.contactId}" onclick="selectFinanceUser('${t.contactId}')" class="p-3.5 hover:bg-blue-50/60 cursor-pointer transition flex items-center gap-3 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600 font-semibold' : ''}">
+                    <div
+                        id="user-row-${contactId}"
+                        onclick="selectFinanceUser('${contactId}')"
+                        class="p-3.5 hover:bg-blue-50/60 cursor-pointer transition flex items-center gap-3 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600 font-semibold' : ''}">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
                             <i class="fas fa-wallet text-xs"></i>
                         </div>
@@ -308,132 +511,213 @@
                                 <span class="text-sm font-bold text-gray-900 truncate">${displayName}</span>
                                 <span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium">Finance</span>
                             </div>
-                            <p class="text-xs text-gray-500 truncate mt-0.5">${escapeHTML(t.lastMessage)}</p>
+                            <p class="text-xs text-gray-500 truncate mt-0.5">${lastMessage}</p>
                         </div>
                     </div>
                 `;
             }).join('');
 
-        } catch (e) {
-            console.error("Error loading finance inquiries:", e);
+        } catch (error) {
+            console.error("Error loading secure finance inquiries:", error);
             directoryEl.innerHTML = `<div class="p-6 text-center text-red-500 text-sm">Error loading finance inquiries.</div>`;
         }
     }
-
     async function selectFinanceUser(userId) {
         await selectUser(userId, 'finance');
     }
 
     async function loadUserDirectory() {
         if (!currentUser) return;
+
         const directoryEl = document.getElementById('users-directory');
+        if (!directoryEl) return;
 
         try {
-            const { data: blocks } = await window.sbClient.from('blocks')
-                .select('blocked_id, blocker_id')
-                .or(`blocker_id.eq.${currentUser.id},blocked_id.eq.${currentUser.id}`);
-            
-            const blockedIds = blocks ? blocks.map(b => b.blocker_id === currentUser.id ? b.blocked_id : b.blocker_id) : [];
-            const excludedIds = [currentUser.id, ...blockedIds];
+            const sameChurch = activeTab === 'fellow';
 
-            let query = window.sbClient
-                .from('profiles')
-                .select('*')
-                .not('id', 'in', `(${excludedIds.join(',')})`);
+            const { data: profiles, error } = await window.sbClient.rpc(
+                'get_chat_directory',
+                { p_same_church: sameChurch }
+            );
 
-            const userChurchId = currentUser.church_id || localStorage.getItem('church_id');
-            if (userChurchId) {
-                if (activeTab === 'fellow') {
-                    query = query.eq('church_id', userChurchId);
-                } else {
-                    query = query.neq('church_id', userChurchId);
-                }
-            } else {
-                if (activeTab === 'fellow') {
-                    query = query.is('church_id', null);
-                } else {
-                    query = query.not('church_id', 'is', null);
-                }
-            }
-
-            const { data: profiles, error } = await query.order('full_name', { ascending: true });
             if (error) throw error;
 
             if (!profiles || profiles.length === 0) {
-                directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No members found in this tab.</div>`;
+                directoryEl.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm">No eligible members found in this tab.</div>`;
                 return;
             }
 
-            // Fetch church names separately from church_directory view
             const churchIds = [...new Set(profiles.map(p => p.church_id).filter(Boolean))];
             const churchMap = {};
+
             if (churchIds.length > 0) {
-                const { data: churchesData } = await window.sbClient
+                const { data: churchesData, error: churchError } = await window.sbClient
                     .from('church_directory')
                     .select('id, name')
                     .in('id', churchIds);
-                if (churchesData) {
-                    churchesData.forEach(c => {
-                        churchMap[c.id] = c.name;
-                    });
-                }
+
+                if (churchError) throw churchError;
+
+                (churchesData || []).forEach(c => {
+                    churchMap[c.id] = c.name;
+                });
             }
 
             directoryEl.innerHTML = profiles.map(p => {
-                const displayName = escapeHTML(p.full_name || p.email || 'Member');
+                const displayName = escapeHTML(p.full_name || 'Member');
                 const initial = displayName.charAt(0).toUpperCase();
-                const churchName = p.church_id ? (churchMap[p.church_id] || 'Independent') : 'Independent';
-                const isSelected = targetUser && targetUser.id === p.id;
+                const avatarUrl = getSafeImageUrl(p.avatar_url);
+                const churchName = p.church_id
+                    ? (churchMap[p.church_id] || 'Church member')
+                    : 'Church member';
+
+                const sameChurchMember =
+                    Boolean(currentUser.church_id) &&
+                    p.church_id === currentUser.church_id;
+
+                const connected = p.connection_status === 'accepted';
+                const canOpen = sameChurchMember || connected;
+
+                let actionHtml = '';
+
+                if (!canOpen) {
+                    if (p.connection_status === 'pending') {
+                        actionHtml = p.connection_requester_id === currentUser.id
+                            ? `<span class="text-xs text-amber-600 font-semibold">Request pending</span>`
+                            : `<a href="profile.html" onclick="event.stopPropagation()" class="text-xs font-semibold text-blue-600">Review request</a>`;
+                    } else if (
+                        p.connection_status === 'rejected' &&
+                        p.connection_requester_id !== currentUser.id
+                    ) {
+                        actionHtml = `<span class="text-xs text-gray-500">Request declined</span>`;
+                    } else {
+                        actionHtml = `<button type="button" onclick="event.stopPropagation(); requestChatConnection('${p.id}')" class="text-xs font-semibold text-blue-600 hover:text-blue-800">Connect</button>`;
+                    }
+                } else {
+                    actionHtml = connected
+                        ? `<span class="text-xs text-green-600 font-semibold">Connected</span>`
+                        : '';
+                }
 
                 return `
-                    <div id="user-row-${p.id}" onclick="selectUser('${p.id}')" class="p-3.5 hover:bg-blue-50/60 cursor-pointer transition flex items-center gap-3 ${isSelected ? 'bg-blue-50 border-l-4 border-blue-600 font-semibold' : ''}">
-                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
-                            ${initial}
+                    <div id="user-row-${p.id}"
+                         ${canOpen ? `onclick="selectUser('${p.id}')"` : ''}
+                         class="p-3.5 hover:bg-blue-50/60 ${canOpen ? 'cursor-pointer' : 'cursor-default'} transition flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm overflow-hidden">
+
+                            ${avatarUrl ? `<img src="${escapeHTML(avatarUrl)}" alt="${displayName}" loading="lazy" class="chat-contact-avatar w-full h-full object-cover">` : ''}
+
+                            <span class="chat-contact-initial ${avatarUrl ? 'hidden' : ''}" aria-hidden="true">${initial}</span>
+
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-sm font-bold text-gray-900 truncate">${displayName}</span>
-                                ${p.is_verified ? '<span class="text-blue-500 text-xs" title="Verified">✅</span>' : ''}
+                                ${p.is_verified ? '<span class="text-blue-500 text-xs" title="Verified">✓</span>' : ''}
                             </div>
-                            <p class="text-xs text-gray-500 truncate mt-0.5">⛪ ${escapeHTML(churchName)}</p>
+                            <p class="text-xs text-gray-500 truncate mt-0.5">${escapeHTML(churchName)}</p>
                         </div>
+                        <div class="flex-shrink-0">${actionHtml}</div>
                     </div>
                 `;
             }).join('');
 
+            directoryEl.querySelectorAll('.chat-contact-avatar').forEach(img => {
+                img.addEventListener('error', () => {
+                    img.classList.add('hidden');
+                    img.nextElementSibling?.classList.remove('hidden');
+                }, { once: true });
+            });
+
         } catch (e) {
-            console.error("Error loading directory:", e);
+            console.error("Error loading secure chat directory:", e);
             directoryEl.innerHTML = `<div class="p-6 text-center text-red-500 text-sm">Error loading contacts.</div>`;
         }
     }
 
+    async function requestChatConnection(userId) {
+        if (!currentUser || !userId || userId === currentUser.id) return;
+
+        try {
+            const { data: result, error } = await window.sbClient.rpc(
+                'request_connection',
+                { p_recipient_id: userId }
+            );
+
+            if (error) throw error;
+
+            if (!result || !['pending', 'accepted', 'rejected'].includes(result.status)) {
+                throw new Error('Unexpected connection response.');
+            }
+
+            alert(result.status === 'accepted'
+                ? 'You are connected. You can now open the conversation.'
+                : result.status === 'pending'
+                    ? 'Connection request sent. Chat will be available after acceptance.'
+                    : 'The connection request was declined.');
+
+            await loadUserDirectory();
+        } catch (error) {
+            console.error('Unable to send connection request:', error);
+            alert(error.message || 'Could not send the connection request.');
+        }
+    }
     async function selectUser(userId, departmentOverride = null) {
-        if (!userId) return;
-        
-        // Fetch profile without embedded churches
-        const { data: profile, error } = await window.sbClient.from('profiles').select('*').eq('id', userId).maybeSingle();
-        if (error || !profile) {
-            alert("Could not load user profile.");
+        if (!userId || !currentUser || !window.sbClient) return;
+        const selectionVersion = ++conversationSelectionVersion;
+
+        // Retrieve the contact through the secure directory RPC.
+        const { data: contactRows, error } = await window.sbClient.rpc(
+            'get_chat_contact',
+            { p_user_id: userId }
+        );
+
+        if (selectionVersion !== conversationSelectionVersion) return;
+
+        if (error || !contactRows || contactRows.length === 0) {
+            console.error('Unable to load authorized chat contact:', error);
+            alert("This member is not currently available for chat.");
             return;
         }
 
-        // Fetch church name separately if church_id exists
+        const profile = contactRows[0];
+
+        const sameChurchMember =
+            Boolean(currentUser?.church_id) &&
+            profile.church_id === currentUser.church_id;
+
+        if (!sameChurchMember && profile.connection_status !== 'accepted') {
+            alert("Cross-church messaging requires an accepted connection first.");
+            await loadUserDirectory();
+            return;
+        }
+
         let churchNameVal = '';
         if (profile.church_id) {
-            const { data: churchData } = await window.sbClient.from('church_directory').select('name').eq('id', profile.church_id).maybeSingle();
-            if (churchData) {
-                churchNameVal = churchData.name;
+            const { data: churchData, error: churchError } = await window.sbClient
+                .from('church_directory')
+                .select('name')
+                .eq('id', profile.church_id)
+                .maybeSingle();
+
+            if (churchError) {
+                console.warn('Could not load contact church name:', churchError.message);
             }
-        }
-        profile.church_name = churchNameVal;
-        if (error || !profile) {
-            alert("Could not load user profile.");
-            return;
+
+            if (churchData) churchNameVal = churchData.name;
         }
 
+        if (selectionVersion !== conversationSelectionVersion) return;
+
+        // Remove the previous conversation subscription before changing targetUser.
+        await removeActiveChannel();
+        if (selectionVersion !== conversationSelectionVersion) return;
+
+        profile.church_name = churchNameVal;
         targetUser = profile;
-        const urlParams = new URLSearchParams(window.location.search);
-        const dept = departmentOverride || urlParams.get('department');
+        // A finance conversation is selected explicitly; do not inherit a stale URL value.
+        const dept = departmentOverride === 'finance' ? 'finance' : 'general';
+        activeDepartment = dept;
         
         if (dept === 'finance') {
             window.history.pushState({}, '', `?user=${userId}&department=finance`);
@@ -452,21 +736,29 @@
         // Populate Chat Header with Department support
         if (dept === 'finance') {
             document.getElementById('target-name').textContent = 'Finance Department';
-            document.getElementById('target-church-sub').textContent = targetUser.churches?.name ? `${targetUser.churches.name} - Giving & Finance` : 'Giving & Finance';
+            document.getElementById('target-church-sub').textContent = targetUser.church_name ? `${targetUser.church_name} - Giving & Finance` : 'Giving & Finance';
         } else {
             document.getElementById('target-name').textContent = targetUser.full_name || 'Member';
-            document.getElementById('target-church-sub').textContent = targetUser.churches?.name ? targetUser.churches.name : 'Direct Message';
+            document.getElementById('target-church-sub').textContent = targetUser.church_name || 'Direct Message';
         }
 
         const avatarImg = document.getElementById('target-avatar');
         const avatarPlaceholder = document.getElementById('target-avatar-placeholder');
+        avatarImg.onerror = null;
         if (dept === 'finance') {
             avatarImg.classList.add('hidden');
             avatarPlaceholder.classList.remove('hidden');
             avatarPlaceholder.className = "w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm";
             avatarPlaceholder.innerHTML = '<i class="fas fa-wallet"></i>';
-        } else if (targetUser.avatar_url) {
-            avatarImg.src = targetUser.avatar_url;
+        } else if (getSafeImageUrl(targetUser.avatar_url)) {
+            avatarImg.onerror = () => {
+                if (targetUser?.id !== userId) return;
+                avatarImg.classList.add('hidden');
+                avatarPlaceholder.classList.remove('hidden');
+                avatarPlaceholder.className = "w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm";
+                avatarPlaceholder.textContent = (targetUser?.full_name || 'U').charAt(0).toUpperCase();
+            };
+            avatarImg.src = getSafeImageUrl(targetUser.avatar_url);
             avatarImg.classList.remove('hidden');
             avatarPlaceholder.classList.add('hidden');
         } else {
@@ -523,17 +815,33 @@
             };
         }
 
-        if (activeChannel) {
-            window.sbClient.removeChannel(activeChannel);
-        }
-
         await fetchMessages();
+        if (selectionVersion !== conversationSelectionVersion || targetUser?.id !== userId) return;
         setupRealtimeSubscription();
     }
 
+    async function removeActiveChannel() {
+        const channel = activeChannel;
+        activeChannel = null;
+        if (!channel || !window.sbClient) return;
+
+        try {
+            await window.sbClient.removeChannel(channel);
+        } catch (error) {
+            console.warn('Could not clean up the previous chat subscription:', error);
+        }
+    }
+
     function clearSelectedUser() {
+        conversationSelectionVersion++;
+        void removeActiveChannel();
         targetUser = null;
-        window.history.pushState({}, '', window.location.pathname);
+        activeDepartment = 'general';
+
+        const nextUrl = new URL(window.location.href);
+        ['user', 'department', 'prefill'].forEach(key => nextUrl.searchParams.delete(key));
+        window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+
         document.querySelectorAll('[id^="user-row-"]').forEach(el => el.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-600'));
         applyResponsiveLayout();
     }
@@ -570,40 +878,53 @@
 
     async function markMessagesAsRead(senderId) {
         if (!currentUser || !senderId) return;
+
         try {
-            await window.sbClient
+            const { error } = await window.sbClient
                 .from('messages')
                 .update({ is_read: true })
                 .eq('sender_id', senderId)
-                .eq('recipient_id', currentUser.id)
-                .eq('is_read', false);
+                .eq('is_read', false)
+                .or(`receiver_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`);
+
+            if (error) throw error;
         } catch (e) {
             console.error("Error marking messages as read:", e);
         }
     }
-
     async function fetchMessages() {
         if (!currentUser || !targetUser) return;
+
+        const conversationUserId = targetUser.id;
+        const currentUserId = currentUser.id;
         const container = document.getElementById('messages-container');
 
         try {
+            const pairFilter =
+                `and(sender_id.eq.${currentUserId},receiver_id.eq.${conversationUserId}),` +
+                `and(sender_id.eq.${conversationUserId},receiver_id.eq.${currentUserId}),` +
+                `and(sender_id.eq.${currentUserId},recipient_id.eq.${conversationUserId}),` +
+                `and(sender_id.eq.${conversationUserId},recipient_id.eq.${currentUserId})`;
+
             const { data: messages, error } = await window.sbClient
                 .from('messages')
                 .select('*')
-                .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${targetUser.id}),and(sender_id.eq.${targetUser.id},receiver_id.eq.${currentUser.id})`)
+                .is('group_id', null)
+                .or(pairFilter)
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
-            renderMessages(messages || []);
+            if (targetUser?.id !== conversationUserId || currentUser?.id !== currentUserId) return;
 
-            // Mark incoming messages from targetUser as read
-            await markMessagesAsRead(targetUser.id);
+            renderMessages(messages || []);
+            await markMessagesAsRead(conversationUserId);
+
         } catch (e) {
+            if (targetUser?.id !== conversationUserId || currentUser?.id !== currentUserId) return;
             console.error("Error fetching messages:", e);
             container.innerHTML = `<div class="text-center text-red-500 py-4">Error loading messages.</div>`;
         }
     }
-
     function renderMessages(messages) {
         const container = document.getElementById('messages-container');
         if (messages.length === 0) {
@@ -616,7 +937,7 @@
             const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
                 <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}" data-content="${escapeHTML(msg.content)}">
-                    <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words ${isMe ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none shadow-sm'}" ${isMe ? 'style="background-color: #007bff;"' : ''}>
+                    <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words ${isMe ? 'bg-blue-600 text-white rounded-br-none shadow-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none shadow-sm'}">
                         ${escapeHTML(msg.content)}
                     </div>
                     <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
@@ -629,19 +950,19 @@
 
     async function sendMessage(e) {
         e.preventDefault();
+
         const input = document.getElementById('message-input');
         const content = input.value.trim();
+
         if (!content || !currentUser || !targetUser) return;
 
-        input.value = '';
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const dept = urlParams.get('department') || 'general';
+        const dept = activeDepartment;
 
         try {
             const insertPayload = {
                 sender_id: currentUser.id,
                 receiver_id: targetUser.id,
+                recipient_id: dept === 'finance' ? targetUser.id : null,
                 content: content,
                 department: dept
             };
@@ -650,62 +971,62 @@
                 .from('messages')
                 .insert([insertPayload]);
 
-            if (error) {
-                alert("Failed to send message: " + error.message);
-            } else {
-                // Trigger notification for recipient non-blockingly with exact schema
-                if (typeof window.sbClient !== 'undefined') {
-                    try {
-                        await window.sbClient.from('notifications').insert([{
-                            user_id: targetUser.id,
-                            title: 'New Message',
-                            message: 'You have a new message.',
-                            link: '/chat.html',
-                            is_read: false
-                        }]);
-                    } catch (notifErr) {
-                        console.error('Notification creation failed, but message was sent successfully:', notifErr);
-                    }
-                }
+            if (error) throw error;
 
-                const container = document.getElementById('messages-container');
-                if (container.querySelector('.text-center')) {
-                    container.innerHTML = '';
-                }
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                container.innerHTML += `
-                    <div class="flex flex-col items-end" data-content="${escapeHTML(content)}">
-                        <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words bg-blue-600 text-white rounded-br-none shadow-sm" style="background-color: #007bff;">
-                            ${escapeHTML(content)}
-                        </div>
-                        <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
-                    </div>
-                `;
-                container.scrollTop = container.scrollHeight;
-            }
+            input.value = '';
+
+            // Refresh from the database after a successful insert.
+            await fetchMessages();
+
+
         } catch (e) {
             console.error("Error sending message:", e);
+            alert("Failed to send message: " + (e.message || 'Please try again.'));
         }
     }
-
     function setupRealtimeSubscription() {
-        if (!targetUser) return;
+        if (!targetUser || !currentUser || !window.sbClient) return;
+
+        const subscribedUserId = targetUser.id;
+        const subscribedCurrentUserId = currentUser.id;
+
         activeChannel = window.sbClient
-            .channel(`chat-direct-${currentUser.id}-${targetUser.id}`)
+            .channel(`chat-direct-${subscribedCurrentUserId}-${subscribedUserId}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'messages'
             }, payload => {
                 const newMsg = payload.new;
-                if (
-                    (newMsg.sender_id === currentUser.id && newMsg.receiver_id === targetUser.id) ||
-                    (newMsg.sender_id === targetUser.id && newMsg.receiver_id === currentUser.id)
-                ) {
-                    fetchMessages();
+
+                // Ignore late events for a conversation that is no longer selected.
+                if (!targetUser || targetUser.id !== subscribedUserId ||
+                    !currentUser || currentUser.id !== subscribedCurrentUserId) return;
+
+                const incomingOrOutgoing =
+                    (newMsg.sender_id === subscribedCurrentUserId &&
+                        (newMsg.receiver_id === subscribedUserId ||
+                         newMsg.recipient_id === subscribedUserId)) ||
+                    (newMsg.sender_id === subscribedUserId &&
+                        (newMsg.receiver_id === subscribedCurrentUserId ||
+                         newMsg.recipient_id === subscribedCurrentUserId));
+
+                if (incomingOrOutgoing && !newMsg.group_id) {
+                    void fetchMessages();
                 }
             })
             .subscribe();
+    }
+
+    function getSafeImageUrl(value) {
+        if (typeof value !== 'string' || !value.trim()) return '';
+
+        try {
+            const parsed = new URL(value, window.location.origin);
+            return ['https:', 'http:'].includes(parsed.protocol) ? parsed.href : '';
+        } catch (_) {
+            return '';
+        }
     }
 
     function escapeHTML(str) {
@@ -751,126 +1072,67 @@
 
         // Show finance tab if user has finance or admin/super_admin role
         const financeBtn = document.getElementById('tab-finance-inquiries');
-        if (financeBtn && currentUser && (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin')) {
+        if (financeBtn && currentUser && ['finance', 'church_admin', 'admin', 'super_admin'].includes(currentUser.role)) {
             financeBtn.classList.remove('hidden');
         }
 
         await loadChurchLogo();
         await loadUserDirectory();
 
-        // Check URL parameter ?user=ID and prefill/department on load
+        // Resolve the selected conversation and optional message draft.
         const urlParams = new URLSearchParams(window.location.search);
         const initialUserId = urlParams.get('user');
         const prefillParam = urlParams.get('prefill');
         const deptParam = urlParams.get('department');
-        const autoSendParam = urlParams.get('autoSend');
 
-        if (deptParam === 'finance' && !initialUserId && currentUser.church_id) {
-            // Find the finance admin or church admin for the user's church to auto-select and auto-send to
+        if (initialUserId) {
+            await selectUser(
+                initialUserId,
+                deptParam === 'finance' ? 'finance' : null
+            );
+        } else if (
+            deptParam === 'finance' &&
+            ['finance', 'admin', 'super_admin'].includes(currentUser.role)
+        ) {
+            switchTab('finance');
+        } else if (deptParam === 'finance') {
             try {
-                let financeUser = null;
-                const { data: financeProfiles } = await window.sbClient
-                    .from('profiles')
-                    .select('id')
-                    .eq('role', 'finance')
-                    .eq('church_id', currentUser.church_id)
-                    .limit(1);
+                const { data: financeContacts, error } =
+                    await window.sbClient.rpc('get_my_church_finance_contact');
 
-                if (financeProfiles && financeProfiles.length > 0) {
-                    financeUser = financeProfiles[0];
+                if (error) throw error;
+
+                const financeContact = financeContacts?.[0];
+
+                if (financeContact?.id) {
+                    await selectUser(financeContact.id, 'finance');
                 } else {
-                    const { data: adminProfiles } = await window.sbClient
-                        .from('profiles')
-                        .select('id')
-                        .or('role.eq.admin,role.eq.super_admin')
-                        .eq('church_id', currentUser.church_id)
-                        .limit(1);
-                    if (adminProfiles && adminProfiles.length > 0) {
-                        financeUser = adminProfiles[0];
-                    }
+                    alert('Your church finance contact has not been assigned yet.');
+                    applyResponsiveLayout();
                 }
-
-                if (financeUser) {
-                    // Select the finance user / admin first
-                    await selectUser(financeUser.id, 'finance');
-
-                    if (autoSendParam === 'true' && prefillParam) {
-                        const decodedContent = decodeURIComponent(prefillParam);
-                        const { error: insertError } = await window.sbClient
-                            .from('messages')
-                            .insert([{
-                                sender_id: currentUser.id,
-                                receiver_id: financeUser.id,
-                                recipient_id: financeUser.id,
-                                content: decodedContent,
-                                department: 'finance',
-                                church_id: currentUser.church_id
-                            }]);
-
-                        if (!insertError) {
-                            // Also insert non-blocking notification for finance user
-                            try {
-                                await window.sbClient.from('notifications').insert([{
-                                    user_id: financeUser.id,
-                                    title: 'New Finance Inquiry',
-                                    message: 'You have a new message.',
-                                    link: '/chat.html?department=finance',
-                                    is_read: false
-                                }]);
-                            } catch (notifErr) {
-                                console.error('Notification creation failed during auto-send, but message was sent:', notifErr);
-                            }
-
-                            // Display immediately in chat UI
-                            const container = document.getElementById('messages-container');
-                            if (container.querySelector('.text-center')) {
-                                container.innerHTML = '';
-                            }
-                            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            container.innerHTML += `
-                                <div class="flex flex-col items-end" data-content="${escapeHTML(decodedContent)}">
-                                    <div class="max-w-[85%] sm:max-w-md px-4 py-2.5 rounded-2xl text-sm break-words bg-blue-600 text-white rounded-br-none shadow-sm" style="background-color: #007bff;">
-                                        ${escapeHTML(decodedContent)}
-                                    </div>
-                                    <span class="text-xs text-gray-400 mt-1 px-1">${timeStr}</span>
-                                </div>
-                            `;
-                            container.scrollTop = container.scrollHeight;
-                        }
-                    }
-
-                    // Prevent duplicate submissions on refresh by stripping prefill and autoSend
-                    window.history.replaceState({}, document.title, window.location.pathname + "?department=finance");
-                } else {
-                    if (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin') {
-                        switchTab('finance');
-                    } else {
-                        applyResponsiveLayout();
-                    }
-                }
-            } catch (e) {
-                console.error("Error handling auto-send finance message:", e);
+            } catch (error) {
+                console.error('Unable to load church finance contact:', error);
+                alert('Could not open your church finance conversation. Please try again.');
                 applyResponsiveLayout();
             }
-        } else if (deptParam === 'finance' && !initialUserId && (currentUser.role === 'finance' || currentUser.role === 'admin' || currentUser.role === 'super_admin')) {
-            // If finance view without specific user, auto switch to finance tab
-            switchTab('finance');
-        } else if (initialUserId) {
-            await selectUser(initialUserId);
         } else {
             applyResponsiveLayout();
         }
 
-        // Handle prefill parameter if present (when not auto-sent)
-        if (prefillParam && autoSendParam !== 'true') {
+        // URLSearchParams already decodes the preset message.
+        // Fill the composer only; the member must press Send.
+        if (prefillParam) {
             const msgInput = document.getElementById('message-input');
+
             if (msgInput) {
-                msgInput.value = decodeURIComponent(prefillParam);
+                msgInput.value = prefillParam;
+                msgInput.focus();
             }
         }
     })();
 </script>
 <script src="js/notifications.js"></script>
 
+<script src="js/go-back.js"></script>
 </body>
 </html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020617">
+    <title>Accounting | BelieversMeet</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .bm-card { background: rgba(15, 23, 42, .88); border: 1px solid rgb(51 65 85 / .72); }
+        .bm-muted { color: #94a3b8; }
+        .bm-kicker { color: #94a3b8; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .bm-table th { color: #94a3b8; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+        .bm-table td, .bm-table th { padding: .85rem 1rem; text-align: left; white-space: nowrap; }
+        .bm-table tbody tr { border-top: 1px solid rgb(51 65 85 / .55); }
+        .bm-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .bm-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+        .bm-focus:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }
+        @media (prefers-reduced-motion: no-preference) {
+            .bm-card { transition: border-color .18s ease, transform .18s ease; }
+            .bm-card:hover { border-color: rgb(96 165 250 / .55); }
+        }
+            .bm-wide-metric {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            gap: 1rem 2rem;
+        }
+        .bm-wide-metric > * { margin: 0 !important; }
+        .bm-wide-metric > :nth-child(2) { text-align: center; }
+        .bm-wide-metric > :nth-child(3) { text-align: right; }
+
+        .bm-wide-period {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
+            align-items: center;
+            gap: 1rem 2rem;
+        }
+        .bm-wide-period > :nth-child(1) { grid-column: 1; grid-row: 1; }
+        .bm-wide-period > :nth-child(2) { grid-column: 1; grid-row: 2; margin: 0; }
+        .bm-wide-period > :nth-child(3) { grid-column: 2; grid-row: 1 / span 2; margin: 0; }
+        .bm-wide-period > :nth-child(4) { grid-column: 3; grid-row: 1 / span 2; margin: 0; }
+
+        @media (max-width: 768px) {
+            .bm-wide-metric,
+            .bm-wide-period {
+                display: block !important;
+            }
+            .bm-wide-metric > *,
+            .bm-wide-period > * {
+                margin: .5rem 0 !important;
+                text-align: left !important;
+            }
+            .bm-wide-period > * {
+                grid-column: auto !important;
+                grid-row: auto !important;
+            }
+        }
+</style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <nav class="sticky top-0 z-40 border-b border-slate-800 bg-blue-700 shadow-lg shadow-slate-950/20">
+        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <a href="feed.html" class="flex shrink-0 items-center gap-2 text-lg font-bold text-white bm-focus rounded">
+                <img data-bm-church-logo src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" class="h-10 w-10 rounded-full object-cover border-2 border-white/20 shadow">
+                <span>BelieversMeet</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a id="accounting-admin-link" href="admin.html" class="bm-focus rounded-md px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-blue-600 sm:text-sm">Church Admin</a>
+                <a href="feed.html" class="bm-focus rounded-md px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-blue-600 sm:text-sm">Back to app</a>
+                <button id="logout-button" type="button" class="bm-focus rounded-md border border-blue-300/40 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-600 sm:text-sm">Log out</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+        <section class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+                <p class="bm-kicker mb-2">Finance & stewardship</p>
+                <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">Accounting dashboard</h1>
+                <p id="church-context" class="mt-2 text-sm text-slate-400">Checking your church access…</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="last-updated" class="hidden text-xs text-slate-500 sm:inline">Not yet refreshed</span>
+                <button id="refresh-button" type="button" disabled class="bm-focus inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
+                    <span aria-hidden="true">↻</span> Refresh
+                </button>
+            </div>
+        </section>
+
+        <div id="page-alert" role="status" aria-live="polite" class="mb-6 hidden rounded-xl border px-4 py-3 text-sm"></div>
+
+        <section id="access-loading" class="bm-card rounded-2xl p-8 text-center">
+            <div class="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-slate-600 border-t-blue-400" aria-hidden="true"></div>
+            <p class="font-semibold text-white">Verifying accounting access</p>
+            <p class="mt-1 text-sm text-slate-400">Loading your secure church workspace.</p>
+        </section>
+
+        <section id="access-denied" class="hidden rounded-2xl border border-rose-900/70 bg-rose-950/30 p-6" role="alert">
+            <h2 class="text-lg font-bold text-rose-200">Accounting access unavailable</h2>
+            <p id="access-denied-message" class="mt-2 text-sm leading-6 text-rose-100/80">Your account could not be authorized for this page.</p>
+            <a href="feed.html" class="mt-4 inline-flex rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">Return to app</a>
+        </section>
+
+        <div id="dashboard-content" class="hidden space-y-7">
+            <section aria-label="Financial summary" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article class="bm-card rounded-2xl p-5">
+                    <p class="bm-kicker">Posted income · this month</p>
+                    <p id="metric-income" class="mt-3 text-2xl font-bold tabular-nums text-white">—</p>
+                    <p class="mt-2 text-xs text-slate-500">Posted journals only</p>
+                </article>
+                <article class="bm-card rounded-2xl p-5">
+                    <p class="bm-kicker">Posted expenses · this month</p>
+                    <p id="metric-expenses" class="mt-3 text-2xl font-bold tabular-nums text-white">—</p>
+                    <p class="mt-2 text-xs text-slate-500">Posted journals only</p>
+                </article>
+                <article class="bm-card rounded-2xl p-5">
+                    <p class="bm-kicker">Pending approvals</p>
+                    <p id="metric-approvals" class="mt-3 text-2xl font-bold tabular-nums text-white">—</p>
+                    <p class="mt-2 text-xs text-slate-500">Submitted journals requiring approval</p>
+                </article>
+                <article class="bm-card rounded-2xl p-5">
+                    <p class="bm-kicker">Active funds</p>
+                    <p id="metric-funds" class="mt-3 text-2xl font-bold tabular-nums text-white">—</p>
+                    <p class="mt-2 text-xs text-slate-500">Funds visible to your account</p>
+                </article>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                <article class="bm-card rounded-2xl p-5 lg:col-span-2">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <p class="bm-kicker">Financial activity</p>
+                            <h2 class="mt-1 text-lg font-bold text-white">This month's ledger movement</h2>
+                        </div>
+                        <span id="currency-label" class="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">Currency —</span>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div>
+                            <div class="mb-2 flex items-center justify-between gap-3">
+                                <span class="text-sm font-medium text-slate-300">Income</span>
+                                <span id="activity-income" class="text-sm font-semibold tabular-nums text-emerald-300">—</span>
+                            </div>
+                            <div class="h-2.5 overflow-hidden rounded-full bg-slate-800"><div id="income-bar" class="h-full rounded-full bg-emerald-500" style="width:0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="mb-2 flex items-center justify-between gap-3">
+                                <span class="text-sm font-medium text-slate-300">Expenses</span>
+                                <span id="activity-expenses" class="text-sm font-semibold tabular-nums text-amber-300">—</span>
+                            </div>
+                            <div class="h-2.5 overflow-hidden rounded-full bg-slate-800"><div id="expenses-bar" class="h-full rounded-full bg-amber-500" style="width:0%"></div></div>
+                        </div>
+                    </div>
+                    <p id="activity-caption" class="mt-5 text-xs leading-5 text-slate-500">Figures are calculated from posted journal lines; submitted and draft journals are excluded.</p>
+                </article>
+
+                <article class="bm-card rounded-2xl p-5">
+                    <p class="bm-kicker">Accounting period</p>
+                    <h2 class="mt-1 text-lg font-bold text-white">Current period</h2>
+                    <div id="current-period" class="mt-5">
+                        <p class="text-sm text-slate-400">Loading open period…</p>
+                    </div>
+                    <div class="mt-5 border-t border-slate-800 pt-4">
+                        <p class="bm-kicker">Functional currency</p>
+                        <p id="functional-currency" class="mt-1 text-base font-semibold text-white">—</p>
+                        <p id="timezone-label" class="mt-1 text-xs text-slate-500"> </p>
+                    </div>
+                </article>
+            </section>
+
+            <section id="journals" class="bm-card overflow-hidden rounded-2xl">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+                    <div>
+                        <p class="bm-kicker">Ledger workflow</p>
+                        <h2 class="mt-1 text-lg font-bold text-white">Recent journals</h2>
+                    </div>
+                    <span class="text-xs text-slate-500">Latest 8 visible entries</span>
+                </div>
+                <div class="bm-scroll overflow-x-auto">
+                    <table class="bm-table w-full min-w-[720px] text-sm">
+                        <thead><tr><th>Journal</th><th>Date</th><th>Description</th><th>Status</th><th class="text-right">Debits</th><th class="text-right">Credits</th></tr></thead>
+                        <tbody id="journal-rows"><tr><td colspan="6" class="text-slate-400">Loading journals…</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <article id="accounts" class="bm-card overflow-hidden rounded-2xl">
+                    <div class="border-b border-slate-800 px-5 py-4">
+                        <p class="bm-kicker">Ledger structure</p>
+                        <h2 class="mt-1 text-lg font-bold text-white">Chart of accounts</h2>
+                    </div>
+                    <div id="account-list" class="divide-y divide-slate-800/80 px-5">Loading accounts…</div>
+                </article>
+
+                <article id="funds" class="bm-card overflow-hidden rounded-2xl">
+                    <div class="border-b border-slate-800 px-5 py-4">
+                        <p class="bm-kicker">Fund accounting</p>
+                        <h2 class="mt-1 text-lg font-bold text-white">Active funds</h2>
+                    </div>
+                    <div id="fund-list" class="divide-y divide-slate-800/80 px-5">Loading funds…</div>
+                </article>
+            </section>
+
+            <section id="reviews" class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <article class="bm-card overflow-hidden rounded-2xl">
+                    <div class="border-b border-slate-800 px-5 py-4">
+                        <p class="bm-kicker">Reconciliation attention</p>
+                        <h2 class="mt-1 text-lg font-bold text-white">Source events needing review</h2>
+                    </div>
+                    <div id="review-list" class="divide-y divide-slate-800/80 px-5">Loading review queue…</div>
+                </article>
+
+                <article id="budget-workspace" class="bm-card rounded-2xl p-5">
+                    <p class="bm-kicker">Planning workspace</p>
+                    <h2 class="mt-1 text-lg font-bold text-white">Budgets & forecasts</h2>
+                    <p class="mt-3 text-sm leading-6 text-slate-400">Loading budget plans and monthly allocations in the church functional currency…</p>
+                    <span class="mt-4 inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-400">Loading finance workspace</span>
+                </article>
+            </section>
+
+                    <section id="trial-balance-workspace" class="bm-card hidden overflow-hidden rounded-2xl">
+            <div class="border-b border-slate-800 px-5 py-4">
+                <p class="bm-kicker">Financial reporting</p>
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="text-lg font-bold text-white">Trial Balance</h2>
+                    <span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">Posted journals only</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-400">Review opening balances, period debits and credits, and closing balances in your church functional currency.</p>
+            </div>
+            <div class="p-5">
+                <form id="trial-balance-form" class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    <label class="block text-sm text-slate-300">
+                        <span class="mb-2 block font-medium">Start date</span>
+                        <input id="trial-balance-start" type="date" required class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+                    </label>
+                    <label class="block text-sm text-slate-300">
+                        <span class="mb-2 block font-medium">End date</span>
+                        <input id="trial-balance-end" type="date" required class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+                    </label>
+                    <label id="trial-balance-fund-filter" class="block text-sm text-slate-300">
+                        <span class="mb-2 block font-medium">Fund</span>
+                        <select id="trial-balance-fund" class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+                            <option value="">All funds</option>
+                        </select>
+                    </label>
+                    <button id="trial-balance-run" type="submit" class="bm-focus rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50">Run report</button>
+                    <button id="trial-balance-export" type="button" disabled class="bm-focus rounded-lg border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">Export CSV</button>
+                </form>
+                <div id="trial-balance-message" role="status" aria-live="polite" class="hidden mt-4 rounded-lg border px-3 py-2 text-sm"></div>
+                <div id="trial-balance-summary" class="mt-5"></div>
+            </div>
+            <div class="bm-scroll overflow-x-auto border-t border-slate-800">
+                <table class="bm-table w-full min-w-[1100px] text-sm">
+                    <thead>
+                        <tr>
+                            <th>Account code</th>
+                            <th>Account name</th>
+                            <th>Type</th>
+                            <th class="text-right">Opening Dr</th>
+                            <th class="text-right">Opening Cr</th>
+                            <th class="text-right">Period Dr</th>
+                            <th class="text-right">Period Cr</th>
+                            <th class="text-right">Closing Dr</th>
+                            <th class="text-right">Closing Cr</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trial-balance-rows">
+                        <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Choose a date range and run the report.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="border-t border-slate-800 px-5 py-3 text-xs leading-5 text-slate-500">Opening balances are calculated from posted journal lines before the selected start date. Period movement and closing balances are calculated through the selected end date. Amounts are reported in the church functional currency.</p>
+        </section>
+<section id="income-expenditure-workspace" class="bm-card hidden overflow-hidden rounded-2xl">
+    <div class="border-b border-slate-800 px-5 py-4">
+        <p class="bm-kicker">Financial reporting</p>
+        <div class="mt-1 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-lg font-bold text-white">Income &amp; Expenditure Statement</h2>
+            <span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">Posted journal activity</span>
+        </div>
+        <p class="mt-2 text-sm leading-6 text-slate-400">Review income, expenditure and the resulting surplus or deficit for the selected period in your church functional currency.</p>
+    </div>
+    <div class="p-5">
+        <form id="income-expenditure-form" class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <label class="block text-sm text-slate-300">
+                <span class="mb-2 block font-medium">Start date</span>
+                <input id="income-expenditure-start" type="date" required class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+            </label>
+            <label class="block text-sm text-slate-300">
+                <span class="mb-2 block font-medium">End date</span>
+                <input id="income-expenditure-end" type="date" required class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+            </label>
+            <label id="income-expenditure-fund-filter" class="block text-sm text-slate-300">
+                <span class="mb-2 block font-medium">Fund</span>
+                <select id="income-expenditure-fund" class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+                    <option value="">All funds</option>
+                </select>
+            </label>
+            <button id="income-expenditure-run" type="submit" class="bm-focus rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50">Run statement</button>
+            <button id="income-expenditure-export" type="button" disabled class="bm-focus rounded-lg border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">Export CSV</button>
+        </form>
+        <div id="income-expenditure-message" role="status" aria-live="polite" class="hidden"></div>
+        <div id="income-expenditure-summary" class="mt-5"></div>
+    </div>
+    <div class="grid grid-cols-1 gap-5 border-t border-slate-800 p-5 xl:grid-cols-2">
+        <article class="overflow-hidden rounded-xl border border-slate-800">
+            <div class="border-b border-slate-800 px-4 py-3">
+                <h3 class="font-semibold text-white">Income</h3>
+                <p class="mt-1 text-xs text-slate-400">Credits less debits on income accounts</p>
+            </div>
+            <div class="bm-scroll overflow-x-auto">
+                <table class="bm-table w-full min-w-[420px] text-sm">
+                    <thead><tr><th>Account code</th><th>Account name</th><th class="text-right">Amount</th></tr></thead>
+                    <tbody id="income-expenditure-income-rows"><tr><td colspan="3" class="px-3 py-5 text-center text-slate-400">Run the statement to view income.</td></tr></tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between gap-3 border-t border-slate-800 bg-slate-900/50 px-4 py-3 text-sm">
+                <span class="font-semibold text-slate-200">Total income</span>
+                <strong id="income-expenditure-income-total" class="tabular-nums text-white">â€”</strong>
+            </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-800">
+            <div class="border-b border-slate-800 px-4 py-3">
+                <h3 class="font-semibold text-white">Expenditure</h3>
+                <p class="mt-1 text-xs text-slate-400">Debits less credits on expense accounts</p>
+            </div>
+            <div class="bm-scroll overflow-x-auto">
+                <table class="bm-table w-full min-w-[420px] text-sm">
+                    <thead><tr><th>Account code</th><th>Account name</th><th class="text-right">Amount</th></tr></thead>
+                    <tbody id="income-expenditure-expense-rows"><tr><td colspan="3" class="px-3 py-5 text-center text-slate-400">Run the statement to view expenditure.</td></tr></tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between gap-3 border-t border-slate-800 bg-slate-900/50 px-4 py-3 text-sm">
+                <span class="font-semibold text-slate-200">Total expenditure</span>
+                <strong id="income-expenditure-expense-total" class="tabular-nums text-white">â€”</strong>
+            </div>
+        </article>
+    </div>
+    <div class="border-t border-slate-800 px-5 py-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+            <div>
+                <p id="income-expenditure-result-label" class="text-sm font-semibold text-slate-200">Net surplus / deficit</p>
+                <p class="mt-1 text-xs text-slate-400">Total income less total expenditure</p>
+            </div>
+            <strong id="income-expenditure-net-result" class="text-xl font-bold tabular-nums text-white">â€”</strong>
+        </div>
+    </div>
+    <p class="border-t border-slate-800 px-5 py-3 text-xs leading-5 text-slate-500">Amounts are derived from period debit and credit movements returned by the church-scoped Trial Balance RPC. Income is credits less debits; expenditure is debits less credits. Opening balances and balance-sheet accounts are excluded.</p>
+</section>
+
+        <section id="financial-position-workspace" class="bm-card hidden overflow-hidden rounded-2xl">
+            <div class="border-b border-slate-800 px-5 py-4">
+                <p class="bm-kicker">Financial reporting</p>
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="text-lg font-bold text-white">Statement of Financial Position</h2>
+                    <span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">As-of-date balances</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-400">Assets, liabilities and net assets in the church functional currency. Operating results not yet transferred by formal closing journals are shown separately.</p>
+            </div>
+            <div class="p-5">
+                <form id="financial-position-form" class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <label class="block text-sm text-slate-300">
+                        <span class="mb-2 block font-medium">Statement date</span>
+                        <input id="financial-position-as-of" type="date" required class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+                    </label>
+                    <label id="financial-position-fund-filter" class="block text-sm text-slate-300">
+                        <span class="mb-2 block font-medium">Fund</span>
+                        <select id="financial-position-fund" class="bm-focus w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-white">
+                            <option value="">All funds</option>
+                        </select>
+                    </label>
+                    <button id="financial-position-run" type="submit" class="bm-focus rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50">Run statement</button>
+                    <button id="financial-position-export" type="button" disabled class="bm-focus rounded-lg border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">Export CSV</button>
+                </form>
+                <div id="financial-position-message" role="status" aria-live="polite" class="hidden"></div>
+                <div id="financial-position-summary" class="mt-5"></div>
+            </div>
+
+            <div class="space-y-5 border-t border-slate-800 p-5">
+                <section class="overflow-hidden rounded-xl border border-slate-800">
+                    <div class="border-b border-slate-800 bg-slate-900/50 px-4 py-3">
+                        <h3 class="font-semibold text-white">Assets</h3>
+                        <p class="mt-1 text-xs text-slate-400">Debit balances less any contra-asset credit balances.</p>
+                    </div>
+                    <div class="bm-scroll overflow-x-auto">
+                        <table class="bm-table w-full min-w-[620px] text-sm">
+                            <thead><tr><th>Account code</th><th>Account</th><th class="text-right">Balance</th></tr></thead>
+                            <tbody id="financial-position-asset-rows"><tr><td colspan="3" class="px-3 py-5 text-center text-slate-400">Run the statement to view asset balances.</td></tr></tbody>
+                            <tfoot><tr class="border-t-2 border-slate-600 bg-slate-800/70 font-bold text-white"><td colspan="2" class="px-3 py-3">Total assets</td><td id="financial-position-assets-total" class="px-3 py-3 text-right tabular-nums">—</td></tr></tfoot>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                    <section class="overflow-hidden rounded-xl border border-slate-800">
+                        <div class="border-b border-slate-800 bg-slate-900/50 px-4 py-3">
+                            <h3 class="font-semibold text-white">Liabilities</h3>
+                            <p class="mt-1 text-xs text-slate-400">Credit balances less any debit balances.</p>
+                        </div>
+                        <div class="bm-scroll overflow-x-auto">
+                            <table class="bm-table w-full min-w-[520px] text-sm">
+                                <thead><tr><th>Account code</th><th>Account</th><th class="text-right">Balance</th></tr></thead>
+                                <tbody id="financial-position-liability-rows"><tr><td colspan="3" class="px-3 py-5 text-center text-slate-400">Run the statement to view liability balances.</td></tr></tbody>
+                                <tfoot><tr class="border-t-2 border-slate-600 bg-slate-800/70 font-bold text-white"><td colspan="2" class="px-3 py-3">Total liabilities</td><td id="financial-position-liabilities-total" class="px-3 py-3 text-right tabular-nums">—</td></tr></tfoot>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="overflow-hidden rounded-xl border border-slate-800">
+                        <div class="border-b border-slate-800 bg-slate-900/50 px-4 py-3">
+                            <h3 class="font-semibold text-white">Net assets</h3>
+                            <p class="mt-1 text-xs text-slate-400">Recorded net asset accounts plus operating results not yet formally closed.</p>
+                        </div>
+                        <div class="bm-scroll overflow-x-auto">
+                            <table class="bm-table w-full min-w-[520px] text-sm">
+                                <thead><tr><th>Account code</th><th>Account</th><th class="text-right">Balance</th></tr></thead>
+                                <tbody id="financial-position-net-asset-rows"><tr><td colspan="3" class="px-3 py-5 text-center text-slate-400">Run the statement to view net asset balances.</td></tr></tbody>
+                                <tfoot><tr class="border-t-2 border-slate-600 bg-slate-800/70 font-bold text-white"><td colspan="2" class="px-3 py-3">Total net assets including unclosed results</td><td id="financial-position-net-assets-total" class="px-3 py-3 text-right tabular-nums">—</td></tr></tfoot>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-semibold text-white">Unclosed operating results</h3>
+                            <p class="mt-1 text-xs leading-5 text-slate-400">Income and expenditure still held in their original accounts, rather than transferred through a formal closing journal.</p>
+                        </div>
+                        <span class="text-xs text-slate-400">Included in net assets above</span>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div><p class="text-xs text-slate-400">Unclosed income</p><p id="financial-position-operating-income" class="mt-1 font-semibold tabular-nums text-white">—</p></div>
+                        <div><p class="text-xs text-slate-400">Unclosed expenditure</p><p id="financial-position-operating-expenditure" class="mt-1 font-semibold tabular-nums text-white">—</p></div>
+                        <div><p class="text-xs text-slate-400">Net unclosed operating result</p><p id="financial-position-operating-result" class="mt-1 font-semibold tabular-nums text-white">—</p></div>
+                    </div>
+                </section>
+
+                <section class="rounded-xl border border-slate-800 p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="bm-kicker">Accounting equation</p>
+                            <h3 class="mt-1 font-semibold text-white">Liabilities + net assets</h3>
+                        </div>
+                        <span id="financial-position-status" class="inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300">Awaiting report</span>
+                    </div>
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        <span class="text-sm text-slate-300">Total liabilities and net assets</span>
+                        <strong id="financial-position-liabilities-net-assets-total" class="text-lg tabular-nums text-white">—</strong>
+                    </div>
+                    <p class="mt-3 text-xs leading-5 text-slate-500">The statement reconciles when total assets equal total liabilities plus net assets, including any unclosed operating result. No closing journals are created by this report.</p>
+                </section>
+            </div>
+        </section>
+
+<footer class="border-t border-slate-800 pt-5 text-xs leading-5 text-slate-500">
+                Accounting figures are sourced from your church's Staging ledger and are subject to the financial permissions assigned to your account. Only posted journals contribute to the income and expense totals above.
+            </footer>
+        </div>
+    </main>
+
+    <script src="js/accounting-currency.js"></script>
+    <script src="js/accounting.js"></script>
+    <script src="js/accounting-journals.js"></script>
+    <script src="js/accounting-budgets.js"></script>
+    <script src="js/accounting-reconciliation-v2.js"></script>
+    <script src="js/accounting-exchange-rates.js"></script>
+    <script src="js/accounting-fx-valuation.js"></script>
+    <script src="js/accounting-reports.js"></script>
+    <script src="js/accounting-income-expenditure.js"></script>
+    <script src="js/accounting-financial-position.js"></script>
+    <script src="js/church-branding.js"></script>
+</body>
+</html>

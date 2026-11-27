@@ -1,8 +1,6 @@
 BEGIN;
-
 ALTER TABLE public.churches
 DROP CONSTRAINT IF EXISTS churches_country_currency_match_check;
-
 ALTER TABLE public.churches
 ADD CONSTRAINT churches_country_currency_match_check
 CHECK (
@@ -21,5 +19,4 @@ CHECK (
             AND billing_currency = 'USD'
     END
 );
-
 COMMIT;

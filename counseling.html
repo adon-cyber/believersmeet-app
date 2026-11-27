@@ -6,6 +6,7 @@
     <title>Schedule Counseling | BelieversMeet</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="js/church-branding.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,12 +14,16 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body style="display: none;" class="bg-gray-50 min-h-screen flex flex-col text-gray-900 antialiased">
 
 <!-- Navigation Header Container -->
     <div id="navbar"></div>
-    <script src="js/nav.js"></script>
+    <script src="js/nav.js?v=20261109-v2"></script>
 
 <!-- Main Container -->
 <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full space-y-8">
@@ -83,32 +88,24 @@
 </main>
 
 <!-- Footer -->
-<footer class="bg-slate-900 border-t border-slate-800/80 py-12 text-slate-400 font-sans mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
-            <div class="space-y-3">
-                <div class="flex items-center justify-center md:justify-start space-x-2">
-                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border border-white/20 shadow">
-                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-                </div>
-                <p class="text-slate-400 text-xs sm:text-sm">Connecting believers, empowering churches, and strengthening faith communities worldwide.</p>
+<footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
             </div>
-            <div class="flex flex-col items-center md:items-end space-y-2 text-sm">
-                <div class="flex items-center space-x-4">
-                    <a href="about-developer.html" class="text-slate-400 hover:text-blue-400 transition text-xs sm:text-sm underline">About Developer</a>
-                    <a href="mailto:adoniakasango@gmail.com" class="text-slate-400 hover:text-white transition text-xs sm:text-sm">Support</a>
-                </div>
-                <div class="flex items-center space-x-3 text-slate-400 pt-1">
-                    <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition" title="WhatsApp">
-                        <i class="fab fa-whatsapp text-lg text-emerald-500"></i>
-                    </a>
-                    <a href="tel:+256751522766" class="hover:text-blue-400 transition" title="Call">
-                        <i class="fas fa-phone-alt text-sm text-blue-400"></i>
-                    </a>
-                </div>
-            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
         </div>
-        <div class="border-t border-slate-800/80 pt-6 text-center text-xs text-slate-500 space-y-1">
+        <div class="bm-site-footer__bottom">
             <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
             <p>Building and strengthening faith communities together.</p>
         </div>
@@ -117,6 +114,7 @@
 
 <script>
     let loggedInUser = null;
+    let loggedInProfile = null;
 
     async function initCounseling() {
         let attempts = 0;
@@ -137,101 +135,123 @@
         }
         loggedInUser = user;
 
-        // Pre-fill email from user object if available
-        document.getElementById('member_email').value = user.email || '';
-
-        // Fetch user profile to check admin status or prefill name
-        const { data: profile } = await window.sbClient
+        // Load only the signed-in user's own counseling profile.
+        const { data: profile, error: profileError } = await window.sbClient
             .from('profiles')
-            .select('*')
+            .select('full_name,email,church_id,role,status,is_blocked')
             .eq('id', user.id)
             .maybeSingle();
 
-        if (profile) {
-            if (profile.full_name) {
-                document.getElementById('member_name').value = profile.full_name;
-            }
-            if (profile.role === 'admin' || profile.role === 'super_admin') {
-                const adminLink = document.getElementById('admin-nav-link');
-                if (adminLink) adminLink.classList.remove('hidden');
-                const adminLinkMob = document.getElementById('admin-nav-link-mobile');
-                if (adminLinkMob) adminLinkMob.classList.remove('hidden');
-            }
+        const counselingForm = document.getElementById('counseling-form');
+
+        if (profileError || !profile) {
+            console.error('Unable to load counseling profile:', profileError);
+            alert('Your profile could not be verified. Please try again or contact support.');
+            counselingForm.querySelectorAll('input, textarea, button').forEach(
+                field => field.disabled = true
+            );
+            return;
         }
 
+        if (
+            profile.status !== 'active' ||
+            profile.is_blocked === true ||
+            !profile.church_id
+        ) {
+            alert('Counseling requests require an active, unblocked profile linked to a church.');
+            counselingForm.querySelectorAll('input, textarea, button').forEach(
+                field => field.disabled = true
+            );
+            return;
+        }
+
+        loggedInProfile = profile;
+
+        // Identity is displayed from the account profile and cannot be edited here.
+        const memberNameInput = document.getElementById('member_name');
+        const memberEmailInput = document.getElementById('member_email');
+
+        memberNameInput.value = profile.full_name || '';
+        memberNameInput.readOnly = true;
+
+        memberEmailInput.value = profile.email || user.email || '';
+        memberEmailInput.readOnly = true;
+
+        if (
+            profile.role === 'admin' ||
+            profile.role === 'super_admin' ||
+            profile.role === 'church_admin'
+        ) {
+            const adminLink = document.getElementById('admin-nav-link');
+            if (adminLink) adminLink.classList.remove('hidden');
+
+            const adminLinkMob = document.getElementById('admin-nav-link-mobile');
+            if (adminLinkMob) adminLinkMob.classList.remove('hidden');
+        }
         document.getElementById('counseling-form').addEventListener('submit', handleFormSubmit);
         loadUserAppointments();
     }
 
     async function handleFormSubmit(e) {
         e.preventDefault();
+
         const submitBtn = document.getElementById('submit-btn');
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Submitting...";
+        const counselingForm = document.getElementById('counseling-form');
 
-        const memberName = document.getElementById('member_name').value.trim();
-        const memberEmail = document.getElementById('member_email').value.trim();
-        const appointmentDate = document.getElementById('appointment_date').value;
-        const appointmentTime = document.getElementById('appointment_time').value;
-        const reason = document.getElementById('reason').value.trim();
-
-        const { data: { user } } = await window.sbClient.auth.getUser();
-        if (!user) {
-            alert("Session expired. Please log in again.");
+        if (!loggedInUser || !loggedInUser.id || !loggedInProfile) {
+            alert('Your session or profile could not be verified. Please log in again.');
             window.location.replace('login.html');
             return;
         }
 
-        const { error } = await window.sbClient
-            .from('counseling_appointments')
-            .insert([{
-                user_id: user.id,
-                member_name: memberName,
-                member_email: memberEmail,
-                appointment_date: appointmentDate,
-                appointment_time: appointmentTime,
-                reason: reason,
-                status: 'Pending'
-            }]);
+        const appointmentDate = document.getElementById('appointment_date').value;
+        const appointmentTime = document.getElementById('appointment_time').value;
+        const reason = document.getElementById('reason').value.trim();
 
-        if (error) {
-            alert("Error scheduling appointment: " + error.message);
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>✨</span> Submit Appointment Request';
-        } else {
-            alert("Counseling appointment booked successfully! The pastor or admin will review your request.");
-            
-            // Notify church admins / super admins about the new counseling request
-            try {
-                let churchId = loggedInUser?.church_id;
-                let adminQuery = window.sbClient.from('profiles').select('id').or('role.eq.admin,role.eq.super_admin,role.eq.super-admin');
-                if (churchId && churchId !== 'global-fellowship') {
-                    adminQuery = adminQuery.eq('church_id', churchId);
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Submitting...';
+
+        try {
+            const { data, error } = await window.sbClient.rpc(
+                'submit_counseling_appointment',
+                {
+                    p_appointment_date: appointmentDate,
+                    p_appointment_time: appointmentTime,
+                    p_reason: reason
                 }
-                const { data: admins } = await adminQuery;
-                if (admins && admins.length > 0) {
-                    for (const admin of admins) {
-                        await window.sbClient.from('notifications').insert([{
-                            user_id: admin.id,
-                            title: 'New Counseling Request',
-                            message: `${memberName || 'A member'} requested a counseling session for ${appointmentDate}.`,
-                            link: '/admin-counseling.html',
-                            is_read: false
-                        }]);
-                    }
-                }
-            } catch (notifErr) {
-                console.error("Error triggering notification for counseling request:", notifErr);
+            );
+
+            if (error) throw error;
+
+            if (
+                !data ||
+                !data.appointment_id ||
+                data.notification_created !== true
+            ) {
+                throw new Error('The appointment submission confirmation was incomplete.');
             }
 
-            document.getElementById('counseling-form').reset();
-            document.getElementById('member_email').value = user.email || '';
+            alert('Counseling appointment requested successfully. Your church administrator will review it.');
+
+            counselingForm.reset();
+
+            // Restore the account identity fields after resetting the form.
+            document.getElementById('member_name').value =
+                loggedInProfile.full_name || '';
+
+            document.getElementById('member_email').value =
+                loggedInProfile.email || loggedInUser.email || '';
+
+            loadUserAppointments();
+
+        } catch (error) {
+            console.error('Counseling appointment submission failed:', error);
+            alert('Error scheduling appointment: ' + (error.message || 'Please try again.'));
+        } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span>✨</span> Submit Appointment Request';
-            loadUserAppointments();
         }
     }
-
     async function loadUserAppointments() {
         const container = document.getElementById('user-appointments-container');
         if (!container || !loggedInUser) return;

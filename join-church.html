@@ -95,6 +95,11 @@
             }
         })();
     </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 
 <body
@@ -182,7 +187,7 @@
                             Password
                         </label>
 
-                        <input
+                        <div class="relative"><input
                             type="password"
                             id="password"
                             name="password"
@@ -190,17 +195,43 @@
                             minlength="10"
                             maxlength="128"
                             required
-                            class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
-                            placeholder="At least 10 characters"
-                        >
+                            class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 pr-12"
+                            placeholder="10+ characters with mixed characters"
+                        ><button type="button" onclick="togglePasswordVisibility('password', this)" aria-label="Show password" title="Show password" class="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-gray-500 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-r-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
 
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Use at least 10 characters.
-                        </p>
+                                                <div id="password-strength" class="mt-2 space-y-2" aria-live="polite">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-gray-600 dark:text-gray-300">Password requirements</span>
+                                <span id="password-strength-label" class="font-semibold text-gray-500">Not set</span>
+                            </div>
+                            <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
+                                <div id="password-strength-bar" class="h-2 w-0 rounded-full bg-rose-500 transition-all duration-200"></div>
+                            </div>
+                            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                <li id="password-check-length">○ 10–128 characters</li>
+                                <li id="password-check-lower">○ Lowercase letter (a–z)</li>
+                                <li id="password-check-upper">○ Uppercase letter (A–Z)</li>
+                                <li id="password-check-number">○ At least one number</li>
+                                <li id="password-check-special">○ At least one special character</li>
+                            </ul>
+                        </div>
                     </div>
 
                 </div>
-
+                <div>
+                    <label for="confirm-password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Confirm Password</label>
+                    <div class="relative"><input
+                        type="password"
+                        id="confirm-password"
+                        name="confirmPassword"
+                        autocomplete="new-password"
+                        maxlength="128"
+                        required
+                        class="rounded-lg block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 pr-12"
+                        placeholder="Re-enter your password"
+                    ><button type="button" onclick="togglePasswordVisibility('confirm-password', this)" aria-label="Show password" title="Show password" class="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-gray-500 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-r-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+                    <p id="confirm-password-message" class="hidden mt-1 text-xs" aria-live="polite"></p>
+                </div>
                 <!-- Church join code -->
                 <div>
                     <label for="church-id-input" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -257,12 +288,29 @@
         </div>
     </main>
 
-    <footer class="border-t border-white/10 mt-auto py-6 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-200">
-            &copy; 2026 BelieversMeet. All rights reserved.
-            Building and strengthening faith communities together.
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
         </div>
-    </footer>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
     <script>
         let turnstileWidgetId = null;
@@ -545,10 +593,25 @@
                     throw new Error('Please enter your full name.');
                 }
 
-                if (password.length < 10 || password.length > 128) {
+                                const confirmPassword =
+                    document.getElementById('confirm-password').value;
+
+                const passwordChecks = [
+                    password.length >= 10 && password.length <= 128,
+                    /[a-z]/.test(password),
+                    /[A-Z]/.test(password),
+                    /[0-9]/.test(password),
+                    /[^A-Za-z0-9]/.test(password)
+                ];
+
+                if (!passwordChecks.every(Boolean)) {
                     throw new Error(
-                        'Your password must be between 10 and 128 characters.'
+                        'Password must be 10–128 characters and include uppercase, lowercase, a number, and a special character.'
                     );
+                }
+
+                if (password !== confirmPassword) {
+                    throw new Error('Your passwords do not match.');
                 }
 
                 // Create the member account through the protected Edge Function.
@@ -629,6 +692,66 @@
         });
 
         // Initialize the form according to the current login state.
+        const passwordEyeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        const passwordEyeOffIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17.5 17.5 0 0 1-3.1 3.9"></path><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 4-.8"></path></svg>';
+
+        function togglePasswordVisibility(fieldId, button) {
+            const inputField = document.getElementById(fieldId);
+            if (!inputField || !button) return;
+
+            const showing = inputField.type === 'password';
+            inputField.type = showing ? 'text' : 'password';
+            button.innerHTML = showing ? passwordEyeOffIcon : passwordEyeIcon;
+            button.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+            button.setAttribute('title', showing ? 'Hide password' : 'Show password');
+        }
+        // Live password strength and confirmation feedback.
+        const joinPasswordInput = document.getElementById('password');
+        const joinConfirmInput = document.getElementById('confirm-password');
+
+        function updateJoinPasswordFeedback() {
+            const value = joinPasswordInput.value;
+            const checks = [
+                ['password-check-length', value.length >= 10 && value.length <= 128, '10–128 characters'],
+                ['password-check-lower', /[a-z]/.test(value), 'Lowercase letter (a–z)'],
+                ['password-check-upper', /[A-Z]/.test(value), 'Uppercase letter (A–Z)'],
+                ['password-check-number', /[0-9]/.test(value), 'At least one number'],
+                ['password-check-special', /[^A-Za-z0-9]/.test(value), 'At least one special character']
+            ];
+
+            let passed = 0;
+            checks.forEach(([id, valid, label]) => {
+                const item = document.getElementById(id);
+                item.textContent = `${valid ? '✓' : '○'} ${label}`;
+                item.classList.toggle('text-emerald-600', valid);
+                item.classList.toggle('text-gray-500', !valid);
+                passed += valid ? 1 : 0;
+            });
+
+            const bar = document.getElementById('password-strength-bar');
+            const strengthLabel = document.getElementById('password-strength-label');
+            bar.style.width = `${passed * 20}%`;
+            bar.className = 'h-2 rounded-full transition-all duration-200 ' +
+                (passed === 5 ? 'bg-emerald-500' : passed >= 3 ? 'bg-amber-500' : 'bg-rose-500');
+            strengthLabel.textContent = value ? `${passed}/5 requirements met` : 'Not set';
+
+            const message = document.getElementById('confirm-password-message');
+            if (!joinConfirmInput.value) {
+                message.classList.add('hidden');
+                message.textContent = '';
+            } else {
+                message.classList.remove('hidden');
+                message.textContent = joinConfirmInput.value === value
+                    ? 'Passwords match.'
+                    : 'Passwords do not match.';
+                message.className = 'mt-1 text-xs ' +
+                    (joinConfirmInput.value === value ? 'text-emerald-600' : 'text-rose-600');
+            }
+        }
+
+        joinPasswordInput.addEventListener('input', updateJoinPasswordFeedback);
+        joinConfirmInput.addEventListener('input', updateJoinPasswordFeedback);
+        updateJoinPasswordFeedback();
         (async function initializePage() {
             try {
                 const client = await waitForSupabase();

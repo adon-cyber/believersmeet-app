@@ -43,20 +43,31 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body style="display: none; background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white">
 
     <!-- Navigation Header Container -->
     <div id="navbar"></div>
-    <script src="js/nav.js"></script>
+    <script src="js/nav.js?v=20261109-v2"></script>
 
 <!-- Main Container -->
-<main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-12 col-lg-10 col-xl-9 space-y-6">
+<main class="bg-light max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full" style="min-height: calc(100vh - 150px);">
+  <div class="w-full">
+    <div class="w-full">
+      <div class="w-full space-y-6">
     
-    <!-- Banner Header -->
+        <div class="mb-5">
+        <button type="button" onclick="window.goBack()"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition text-sm font-semibold">
+            <i class="fas fa-arrow-left"></i> Go Back
+        </button>
+    </div>
+<!-- Banner Header -->
     <div class="bm-card mb-4 text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);">
         <h2 class="bm-page-heading text-white mb-2"><i class="bi bi-calendar-event me-2"></i> Small Groups</h2>
         <p class="bm-page-subheading text-white-50">Find a local home group to connect, pray, and grow with believers in your neighborhood during the week.</p>
@@ -147,10 +158,28 @@
 </div>
 
 <!-- Footer -->
-<footer class="bg-white border-t border-gray-200 mt-auto py-6">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-    &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
-  </div>
+<footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
+        </div>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
 </footer>
 
 <script>
@@ -684,5 +713,6 @@ async function leaveGroup(groupId) {
     initApp();
 </script>
   <script src="js/notifications.js"></script>
+<script src="js/go-back.js"></script>
 </body>
 </html>

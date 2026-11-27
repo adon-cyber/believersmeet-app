@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Team & Roles | BelieversMeet</title>
+    <link rel="icon" href="images/BELIEVERS.LOGO.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/all-features.css?v=20261109-v2">
+    <link rel="stylesheet" href="css/believersmeet-brand.css">
+    <style>
+        body { font-family: Inter, sans-serif; }
+        .bm-role-card { border: 1px solid rgb(51 65 85); background: rgba(15, 23, 42, .72); }
+        .bm-form-control { width:100%; border:1px solid rgb(71 85 105); border-radius:.75rem; background:rgb(2 6 23); color:#f8fafc; padding:.7rem .85rem; }
+        .bm-form-control:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgb(59 130 246 / .2); }
+        .bm-btn-primary { background:#2563eb; color:white; border-radius:.75rem; padding:.7rem 1rem; font-weight:700; }
+        .bm-btn-primary:hover { background:#1d4ed8; }
+        .bm-btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+    </style>
+</head>
+<body class="min-h-full bg-slate-950 text-slate-100">
+<header class="sticky top-0 z-30 border-b border-slate-800 bg-gradient-to-r from-blue-950 to-indigo-950 shadow-lg">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <a href="admin.html" class="inline-flex items-center gap-3 text-sm font-semibold text-white hover:text-blue-200">
+            <img src="images/BELIEVERS.LOGO.png" alt="BelieversMeet" class="h-10 w-10 rounded-full border border-white/20 object-cover">
+            <span>BelieversMeet <span class="block text-xs font-medium text-blue-200">Church Admin Console</span></span>
+        </a>
+        <a href="admin.html" class="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10">Back to Admin Console</a>
+    </div>
+</header>
+<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <section class="mb-8 rounded-3xl border border-blue-900/60 bg-gradient-to-br from-blue-950/90 via-slate-900 to-slate-900 p-6 shadow-xl sm:p-8">
+        <p class="mb-2 text-xs font-bold uppercase tracking-[.18em] text-blue-300">Accounting & budgeting access</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Finance Team & Roles</h1>
+        <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-300">As Church Admin, you decide which active members receive accounting and budgeting access. Assign only the responsibilities each person needs. Every assignment and removal requires a reason and is recorded in the audit history.</p>
+        <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+            <span class="rounded-full border border-blue-700/70 bg-blue-900/40 px-3 py-1.5 text-blue-200">Church Admin controls access</span>
+            <span class="rounded-full border border-slate-700 bg-slate-800/70 px-3 py-1.5 text-slate-300">Finance roles cannot manage other users</span>
+        </div>
+    </section>
+
+    <div id="finance-team-loading" class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-300" role="status">Verifying Church Admin access…</div>
+    <section id="finance-team-denied" class="hidden rounded-2xl border border-rose-800 bg-rose-950/30 p-6" role="alert">
+        <h2 class="font-bold text-rose-200">Access unavailable</h2>
+        <p id="finance-team-denied-message" class="mt-2 text-sm leading-6 text-rose-100">This page is only available to the active Church Admin of an approved church.</p>
+        <a href="admin.html" class="mt-4 inline-flex rounded-lg border border-rose-700 px-4 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-900/40">Return to Admin Console</a>
+    </section>
+
+    <div id="finance-team-content" class="hidden space-y-8">
+        <div id="finance-team-message" class="hidden rounded-xl border px-4 py-3 text-sm" role="status" aria-live="polite"></div>
+
+        <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg sm:p-6">
+                <div class="mb-5">
+                    <h2 class="text-lg font-bold text-white">Assign a financial role</h2>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">Choose an active member and give only the access required for their duties. You cannot assign a role to your own account.</p>
+                </div>
+                <form id="finance-role-assign-form" class="space-y-4">
+                    <label class="block text-sm font-semibold text-slate-200" for="finance-role-member">Church member
+                        <select id="finance-role-member" class="bm-form-control mt-2" required>
+                            <option value="">Loading active members…</option>
+                        </select>
+                    </label>
+                    <label class="block text-sm font-semibold text-slate-200" for="finance-role-code">Financial role
+                        <select id="finance-role-code" class="bm-form-control mt-2" required>
+                            <option value="">Loading available roles…</option>
+                        </select>
+                    </label>
+                    <div id="finance-role-description" class="rounded-xl border border-blue-900/70 bg-blue-950/30 p-3 text-sm leading-6 text-blue-100">Choose a role to read what it allows.</div>
+                    <label class="block text-sm font-semibold text-slate-200" for="finance-role-reason">Reason for granting access
+                        <textarea id="finance-role-reason" class="bm-form-control mt-2" rows="3" minlength="10" maxlength="500" required placeholder="Example: Appointed to prepare the church's annual budget."></textarea>
+                        <span class="mt-1 block text-xs font-normal text-slate-500">10–500 characters. This reason is retained in the audit record.</span>
+                    </label>
+                    <button id="finance-role-assign-button" class="bm-btn-primary w-full" type="submit">Assign Role</button>
+                </form>
+            </article>
+
+            <article class="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg sm:p-6">
+                <h2 class="text-lg font-bold text-white">What each role does</h2>
+                <p class="mt-1 text-sm text-slate-400">These are separate duties, not ranks. A member should receive only the role needed for their work.</p>
+                <div id="finance-role-catalogue" class="mt-4 grid gap-3 sm:grid-cols-2">
+                    <p class="text-sm text-slate-500">Loading role descriptions…</p>
+                </div>
+            </article>
+        </section>
+
+        <section class="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg sm:p-6">
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Current financial access</h2>
+                    <p class="mt-1 text-sm text-slate-400">Review who currently has finance permissions. Removing a role is audited and does not delete accounting records.</p>
+                </div>
+                <button id="finance-role-refresh" type="button" class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800">Refresh</button>
+            </div>
+            <div id="finance-role-assignments" class="overflow-x-auto">
+                <p class="py-5 text-sm text-slate-500">Loading role assignments…</p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script>
+(() => {
+    'use strict';
+
+    const state = { client: null, user: null, churchId: null, roles: [], members: [], busy: false };
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[character]);
+    }
+
+    function setMessage(message, kind = 'info') {
+        const element = $('finance-team-message');
+        if (!message) { element.className = 'hidden'; element.textContent = ''; return; }
+        const colours = kind === 'error'
+            ? 'border-rose-800 bg-rose-950/30 text-rose-100'
+            : kind === 'success'
+                ? 'border-emerald-800 bg-emerald-950/30 text-emerald-100'
+                : 'border-blue-800 bg-blue-950/30 text-blue-100';
+        element.className = `rounded-xl border px-4 py-3 text-sm ${colours}`;
+        element.textContent = message;
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showDenied(message) {
+        $('finance-team-loading').classList.add('hidden');
+        $('finance-team-content').classList.add('hidden');
+        $('finance-team-denied-message').textContent = message;
+        $('finance-team-denied').classList.remove('hidden');
+    }
+
+    async function getClient() {
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+            const client = window.sbClient || window.supabaseClient;
+            if (client?.auth && typeof client.rpc === 'function') return client;
+            await new Promise((resolve) => window.setTimeout(resolve, 100));
+        }
+        throw new Error('Supabase did not initialize. Check js/supabase-config.js.');
+    }
+
+    function formatDate(value) {
+        if (!value) return '—';
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat(undefined, {
+            day: 'numeric', month: 'short', year: 'numeric'
+        }).format(date);
+    }
+
+    function setBusy(busy) {
+        state.busy = busy;
+        document.querySelectorAll('#finance-team-content button, #finance-team-content select, #finance-team-content textarea').forEach((element) => {
+            if (element.id === 'finance-role-refresh') return;
+            if (busy) {
+                element.dataset.disabledBeforeBusy = element.disabled ? 'true' : 'false';
+                element.disabled = true;
+            } else {
+                element.disabled = element.dataset.disabledBeforeBusy === 'true';
+                delete element.dataset.disabledBeforeBusy;
+            }
+        });
+        $('finance-role-assign-button').textContent = busy ? 'Please wait…' : 'Assign Role';
+    }
+
+    function renderRoleCatalogue() {
+        const container = $('finance-role-catalogue');
+        container.innerHTML = state.roles.map((role) => `
+            <article class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                <h3 class="text-sm font-bold text-blue-200">${escapeHtml(role.display_name)}</h3>
+                <p class="mt-1 text-xs leading-5 text-slate-400">${escapeHtml(role.description)}</p>
+            </article>
+        `).join('');
+
+        $('finance-role-code').innerHTML = '<option value="">Select a role…</option>' + state.roles.map((role) =>
+            `<option value="${escapeHtml(role.role_code)}">${escapeHtml(role.display_name)}</option>`
+        ).join('');
+    }
+
+    function updateSelectedRoleDescription() {
+        const role = state.roles.find((item) => item.role_code === $('finance-role-code').value);
+        $('finance-role-description').textContent = role
+            ? role.description
+            : 'Choose a role to read what it allows.';
+    }
+
+    function renderRoster(rows) {
+        const byMember = new Map();
+        rows.forEach((row) => {
+            if (!byMember.has(row.profile_id)) {
+                byMember.set(row.profile_id, {
+                    id: row.profile_id,
+                    fullName: row.full_name || 'Unnamed member',
+                    profileRole: row.profile_role,
+                    assignments: []
+                });
+            }
+            if (row.assignment_id) {
+                byMember.get(row.profile_id).assignments.push(row);
+            }
+        });
+        state.members = Array.from(byMember.values()).sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+        const memberSelect = $('finance-role-member');
+        const assignable = state.members.filter((member) => member.id !== state.user.id);
+        memberSelect.innerHTML = assignable.length
+            ? '<option value="">Select a church member…</option>' + assignable.map((member) =>
+                `<option value="${escapeHtml(member.id)}">${escapeHtml(member.fullName)}</option>`
+            ).join('')
+            : '<option value="">No other active members are available</option>';
+        memberSelect.disabled = assignable.length === 0;
+
+        const assignments = state.members.flatMap((member) => member.assignments.map((assignment) => ({ member, assignment })));
+        const container = $('finance-role-assignments');
+        if (!assignments.length) {
+            container.innerHTML = '<p class="py-6 text-sm text-slate-400">No financial roles have been assigned yet. Choose an active member above to begin.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="w-full min-w-[760px] text-left text-sm">
+                <thead><tr class="border-b border-slate-700 text-xs uppercase tracking-wide text-slate-400">
+                    <th class="px-3 py-3">Member</th><th class="px-3 py-3">Financial role</th><th class="px-3 py-3">Assigned</th><th class="px-3 py-3">Grant reason</th><th class="px-3 py-3 text-right">Action</th>
+                </tr></thead>
+                <tbody>${assignments.map(({ member, assignment }) => `
+                    <tr class="border-b border-slate-800/80 align-top">
+                        <td class="px-3 py-4 font-semibold text-slate-100">${escapeHtml(member.fullName)}</td>
+                        <td class="px-3 py-4"><span class="inline-flex rounded-full border border-blue-800 bg-blue-950/60 px-2.5 py-1 text-xs font-semibold text-blue-200">${escapeHtml(assignment.financial_role_name)}</span></td>
+                        <td class="px-3 py-4 whitespace-nowrap text-slate-300">${escapeHtml(formatDate(assignment.granted_at))}</td>
+                        <td class="max-w-xs px-3 py-4 text-xs leading-5 text-slate-400">${escapeHtml(assignment.grant_reason)}</td>
+                        <td class="px-3 py-4 text-right"><button type="button" data-revoke-assignment="${escapeHtml(assignment.assignment_id)}" class="rounded-lg border border-rose-800/80 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-950/50">Remove role</button></td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>
+        `;
+    }
+
+    async function refreshRoster() {
+        const { data, error } = await state.client.rpc('get_church_financial_role_management_data', {
+            p_church_id: state.churchId
+        });
+        if (error) throw new Error(`Could not load financial role assignments: ${error.message}`);
+        renderRoster(data || []);
+    }
+
+    async function loadRoleData() {
+        const [roleResult, rosterResult] = await Promise.all([
+            state.client.from('church_financial_roles')
+                .select('role_code, display_name, description')
+                .eq('is_active', true)
+                .order('display_name', { ascending: true }),
+            state.client.rpc('get_church_financial_role_management_data', {
+                p_church_id: state.churchId
+            })
+        ]);
+        if (roleResult.error) throw new Error(`Could not load financial role catalogue: ${roleResult.error.message}`);
+        if (rosterResult.error) throw new Error(`Could not load church members and role assignments: ${rosterResult.error.message}`);
+        state.roles = roleResult.data || [];
+        if (!state.roles.length) throw new Error('No active financial roles are configured. Ask your system administrator to review the accounting role catalogue.');
+        renderRoleCatalogue();
+        updateSelectedRoleDescription();
+        renderRoster(rosterResult.data || []);
+    }
+
+    async function handleAssign(event) {
+        event.preventDefault();
+        if (state.busy) return;
+        const userId = $('finance-role-member').value;
+        const roleCode = $('finance-role-code').value;
+        const reason = $('finance-role-reason').value.trim();
+        if (!userId || !roleCode) { setMessage('Choose a church member and a financial role.', 'error'); return; }
+        if (userId === state.user.id) { setMessage('For separation of duties, you cannot assign a financial role to your own account.', 'error'); return; }
+        if (reason.length < 10 || reason.length > 500) { setMessage('The reason must contain between 10 and 500 characters.', 'error'); return; }
+
+        setBusy(true);
+        try {
+            const { error } = await state.client.rpc('assign_church_financial_role', {
+                p_church_id: state.churchId,
+                p_user_id: userId,
+                p_role_code: roleCode,
+                p_reason: reason
+            });
+            if (error) throw error;
+            $('finance-role-reason').value = '';
+            $('finance-role-code').value = '';
+            updateSelectedRoleDescription();
+            await refreshRoster();
+            setMessage('Financial role assigned successfully. The assignment has been recorded in the audit history.', 'success');
+        } catch (error) {
+            console.error('Financial role assignment failed:', error);
+            setMessage(error.message || 'The financial role could not be assigned.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function handleRevoke(event) {
+        const button = event.target.closest('[data-revoke-assignment]');
+        if (!button || state.busy) return;
+        const assignmentId = button.dataset.revokeAssignment;
+        const reason = window.prompt('Why are you removing this financial role? Enter at least 10 characters.');
+        if (reason === null) return;
+        const trimmedReason = reason.trim();
+        if (trimmedReason.length < 10 || trimmedReason.length > 500) {
+            setMessage('The reason must contain between 10 and 500 characters.', 'error');
+            return;
+        }
+        if (!window.confirm('Remove this member’s financial role? Their accounting records will remain unchanged.')) return;
+
+        setBusy(true);
+        try {
+            const { error } = await state.client.rpc('revoke_church_financial_role', {
+                p_assignment_id: assignmentId,
+                p_reason: trimmedReason
+            });
+            if (error) throw error;
+            await refreshRoster();
+            setMessage('Financial role removed. The revocation has been recorded in the audit history.', 'success');
+        } catch (error) {
+            console.error('Financial role revocation failed:', error);
+            setMessage(error.message || 'The financial role could not be removed.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function init() {
+        try {
+            state.client = await getClient();
+            const { data: authData, error: authError } = await state.client.auth.getUser();
+            if (authError || !authData?.user) { window.location.replace('login.html'); return; }
+            state.user = authData.user;
+
+            const { data: profile, error: profileError } = await state.client.from('profiles')
+                .select('id, role, church_id, status, is_blocked')
+                .eq('id', state.user.id)
+                .maybeSingle();
+            if (profileError) throw new Error(`Could not verify your church profile: ${profileError.message}`);
+            if (!profile || profile.role !== 'church_admin' || profile.status !== 'active' || profile.is_blocked !== false || !profile.church_id) {
+                showDenied('Only an active, unblocked Church Admin can assign or remove financial roles for their approved church.');
+                return;
+            }
+            state.churchId = profile.church_id;
+
+            const { data: allowed, error: accessError } = await state.client.rpc('can_manage_church_financial_roles', {
+                p_church_id: state.churchId
+            });
+            if (accessError) throw new Error(`The server could not verify financial role-management authority: ${accessError.message}`);
+            if (allowed !== true) {
+                showDenied('The server did not authorize financial role management for this church. Check that the church is approved and your Church Admin account is active.');
+                return;
+            }
+
+            $('finance-team-loading').classList.add('hidden');
+            $('finance-team-content').classList.remove('hidden');
+            await loadRoleData();
+            $('finance-role-assign-form').addEventListener('submit', handleAssign);
+            $('finance-role-code').addEventListener('change', updateSelectedRoleDescription);
+            $('finance-role-assignments').addEventListener('click', handleRevoke);
+            $('finance-role-refresh').addEventListener('click', async () => {
+                try { await refreshRoster(); setMessage('Financial role roster refreshed.', 'success'); }
+                catch (error) { setMessage(error.message || 'Could not refresh the roster.', 'error'); }
+            });
+        } catch (error) {
+            console.error('Finance Team page initialization failed:', error);
+            showDenied(error.message || 'Could not initialize the Finance Team page.');
+        }
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>

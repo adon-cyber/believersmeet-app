@@ -1,4 +1,4 @@
-﻿/**
+/**
  * js/notifications.js
  * In-App Notification System
  * - Real-time fetching from `notifications` table (id, user_id, title, message, is_read, created_at)
@@ -264,7 +264,7 @@
         let targetContainer = null;
 
         // Strategy 1: Look for the right-side icons container (contains profile link or logout button)
-        const logoutBtns = document.querySelectorAll('button[onclick*="logout"], a[href*="profile.html"], button[title*="Logout"]');
+        const logoutBtns = document.querySelectorAll('button[onclick*="logout"], button[title*="Logout"], button[title*="Log out"], button[aria-label*="Log out"], button[onclick*="auth.signOut"]');
         for (const btn of logoutBtns) {
             const container = btn.closest('div');
             if (container && (container.classList.contains('flex') || container.classList.contains('items-center'))) {
@@ -273,6 +273,18 @@
             }
         }
 
+        // Fallback to profile links outside navigation dropdowns.
+        if (!targetContainer) {
+            const profileLinks = document.querySelectorAll('a[href*="profile.html"]');
+            for (const profileLink of profileLinks) {
+                if (profileLink.closest('#all-features-dropdown-menu, .bm-dropdown-menu')) continue;
+                const container = profileLink.closest('div.flex');
+                if (container) {
+                    targetContainer = container;
+                    break;
+                }
+            }
+        }
         // Strategy 2: Fallback to theme toggles if any exist
         if (!targetContainer) {
             const themeToggles = document.querySelectorAll('button[onclick*="toggleTheme"], button[onclick*="window.toggleTheme"]');
@@ -293,7 +305,24 @@
             }
         }
 
-        if (!targetContainer) return;
+        if (!targetContainer) {
+            // Feed navigation is rendered asynchronously by js/nav.js.
+            const sharedNavbar = document.getElementById('navbar');
+
+            if (sharedNavbar && !sharedNavbar.querySelector('nav')) {
+                const observer = new MutationObserver(() => {
+                    if (sharedNavbar.querySelector('nav')) {
+                        observer.disconnect();
+                        injectNotificationBellUI();
+                    }
+                });
+
+                observer.observe(sharedNavbar, { childList: true, subtree: true });
+                setTimeout(() => observer.disconnect(), 10000);
+            }
+
+            return;
+        }
 
         const bellWrapper = document.createElement('div');
         bellWrapper.id = 'notification-bell-container';
@@ -325,7 +354,7 @@
         `;
 
         // Insert before logout button if present and a valid child of targetContainer, otherwise append
-        const logoutBtn = targetContainer.querySelector('button[onclick*="logout"], button[title*="Logout"]');
+        const logoutBtn = targetContainer.querySelector('button[onclick*="logout"], button[title*="Logout"], button[title*="Log out"], button[aria-label*="Log out"], button[onclick*="auth.signOut"]');
         if (logoutBtn && logoutBtn.parentNode === targetContainer) {
             targetContainer.insertBefore(bellWrapper, logoutBtn);
         } else {
@@ -375,27 +404,6 @@
             // Also update live badge counter whenever notifications are loaded / fetched
             await updateNotificationCount();
 
-            // 2. Fetch unread chat messages
-            const { data: chatMsgs, error: chatErr } = await sbClient
-                .from('messages')
-                .select('id, content, created_at, sender_id')
-                .eq('recipient_id', currentUser.id)
-                .order('created_at', { ascending: false })
-                .limit(10);
-
-            if (!chatErr && chatMsgs && chatMsgs.length > 0) {
-                chatMsgs.forEach(msg => {
-                    aggregated.push({
-                        id: 'chat-' + msg.id,
-                        user_id: currentUser.id,
-                        title: 'New Chat Message',
-                        message: msg.content ? (msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : '')) : 'You received a new message.',
-                        is_read: false,
-                        created_at: msg.created_at,
-                        type: 'chat'
-                    });
-                });
-            }
 
             // 3. If user is admin/leader, check for pending ministry / prayer requests
             const { data: profile } = await sbClient
@@ -428,12 +436,10 @@
                         });
                     }
 
-                    const { data: pendingPrayers } = await sbClient
-                        .from('prayer_requests')
-                        .select('id, full_name, created_at')
-                        .eq('church_id', churchId)
-                        .eq('status', 'pending')
-                        .limit(5);
+                    const { data: pendingPrayers, error: prayerNotificationError } = await sbClient
+                        .rpc('get_church_pending_prayer_notifications');
+
+                    if (prayerNotificationError) throw prayerNotificationError;
 
                     if (pendingPrayers && pendingPrayers.length > 0) {
                         pendingPrayers.forEach(p => {
@@ -756,12 +762,12 @@
     }
 
     function escapeHtml(str) {
-        if (!str) return '';
-        return str
-            .replace(/&/g, '&')
-            .replace(/</g, '<')
-            .replace(/>/g, '>')
-            .replace(/"/g, '"')
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
 

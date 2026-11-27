@@ -9,36 +9,162 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style id="super-admin-nav-style">
+
+        .super-admin-nav-dropdown > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .super-admin-nav-dropdown > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .super-admin-dropdown-menu {
+            z-index: 1100;
+            min-width: 15rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .super-admin-dropdown-menu a {
+            display: block;
+            padding: 0.7rem 1rem;
+            color: #1f2937;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .super-admin-dropdown-menu a:hover,
+        .super-admin-dropdown-menu a:focus {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        #super-admin-dashboard,
+        #super-admin-billing-section,
+        #super-admin-churches-section,
+        #super-admin-users-section,
+        #super-admin-announcements-section,
+        #super-admin-moderation-section {
+            scroll-margin-top: 7rem;
+        }
+
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="bg-slate-900 bg-cover bg-center bg-fixed min-h-screen text-slate-200" 
       style="background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1920&q=80');">
-    <!-- Navigation Bar matching floating pill-button design -->
-    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <!-- Super Admin navigation: public website navigation intentionally hidden -->
+    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md"
+         aria-label="Super Admin navigation"
+         style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000;">
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-                <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                    <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors relative inline-flex items-center gap-1" style="color: #ffffff !important;">
-                        Inbox
-                        <span id="inbox-count-badge" class="hidden bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+
+            <div class="flex flex-wrap items-center justify-between min-h-16 py-2 gap-3">
+
+                <!-- Brand -->
+                <a href="#super-admin-dashboard"
+                   class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0">
+                    BelieversMeet
+                </a>
+
+                <!-- Main Super Admin Navigation -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+
+                    <!-- Dashboard -->
+                    <a href="#super-admin-dashboard"
+                       id="super-admin-nav-link"
+                       class="text-sm font-semibold text-white hover:text-blue-200 px-3 py-2 rounded-lg transition-colors">
+
+                        Dashboard
                     </a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                    <a href="super-admin.html" id="super-admin-nav-link" class="text-xs sm:text-sm font-bold text-white bg-indigo-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">🛡️ Developer Control Center</a>
-                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
+
+                    <!-- Administration Dropdown -->
+                    <details class="super-admin-nav-dropdown relative">
+
+                        <summary
+                            class="text-sm font-semibold text-white bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
+
+                            Administration
+
+                            <i class="fas fa-chevron-down text-xs"
+                               aria-hidden="true"></i>
+                        </summary>
+
+                        <div class="super-admin-dropdown-menu absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-xl border border-gray-200 py-2">
+
+                            <!-- Billing -->
+                            <a href="#super-admin-billing-section"
+                               onclick="this.closest('details').open = false">
+
+                                <i class="fas fa-file-invoice-dollar mr-2 text-indigo-600"></i>
+                                Subscription & Billing
+                            </a>
+
+                            <!-- Church Approvals -->
+                            <a href="#super-admin-churches-section"
+                               onclick="this.closest('details').open = false">
+
+                                <i class="fas fa-church mr-2 text-indigo-600"></i>
+                                Church Approvals
+                            </a>
+
+                            <!-- Platform Users -->
+                            <a href="#super-admin-users-section"
+                               onclick="this.closest('details').open = false">
+
+                                <i class="fas fa-users mr-2 text-indigo-600"></i>
+                                Platform Users
+                            </a>
+
+                            <!-- Announcements -->
+                            <a href="#super-admin-announcements-section"
+                               onclick="this.closest('details').open = false">
+
+                                <i class="fas fa-bullhorn mr-2 text-indigo-600"></i>
+                                Announcements
+                            </a>
+
+                            <!-- Moderation -->
+                            <a href="#super-admin-moderation-section"
+                               onclick="this.closest('details').open = false">
+
+                                <i class="fas fa-shield-alt mr-2 text-indigo-600"></i>
+                                Moderation
+                            </a>
+
+                        </div>
+                    </details>
+
+                    <!-- Logout -->
+                    <a href="#"
+                       onclick="logoutSuperAdmin(event)"
+                       class="text-sm font-semibold text-red-100 hover:text-white px-3 py-2 rounded-lg transition-colors">
+
+                        Logout
+                    </a>
+
                 </div>
+
+                <!-- Retained for existing notification-script compatibility.
+                     It is intentionally not displayed in this navbar. -->
+                <span id="inbox-count-badge"
+                      class="hidden"
+                      style="display: none !important;"
+                      aria-hidden="true">0</span>
+
             </div>
         </div>
     </nav>
 
     <!-- Main Content Area -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full">
+    <main id="super-admin-dashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex-grow w-full">
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-indigo-700 text-white p-8 rounded-xl shadow-md my-6 gap-4">
             <div>
@@ -94,8 +220,244 @@
             </div>
         </div>
 
+        <!-- Super Admin Billing and Subscription Reporting -->
+        <section id="super-admin-billing-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
+
+            <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-file-invoice-dollar text-indigo-600"></i>
+                        Subscription and Billing Management
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Read-only reporting for church subscriptions, invoices, payments and platform revenue.
+                    </p>
+                    <p id="billing-load-status" class="text-xs text-gray-500 mt-2">
+                        Waiting for secure billing reports...
+                    </p>
+                    <p id="billing-last-updated" class="text-xs text-gray-400 mt-1">
+                        Not yet refreshed
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    id="billing-refresh-btn"
+                    onclick="window.loadSuperAdminBillingDashboard()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh Billing
+                </button>
+            </div>
+
+            <div class="p-6 space-y-8">
+
+                <!-- Billing Statistics -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                        <p class="text-sm font-medium text-gray-500">Total Subscriptions</p>
+                        <h3 id="billing-stat-subscriptions" class="text-3xl font-bold text-gray-900 mt-2">-</h3>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-5">
+                        <p class="text-sm font-medium text-blue-700">Active Trials</p>
+                        <h3 id="billing-stat-trials" class="text-3xl font-bold text-blue-900 mt-2">-</h3>
+                    </div>
+
+                    <div class="bg-green-50 border border-green-100 rounded-xl p-5">
+                        <p class="text-sm font-medium text-green-700">Active Subscriptions</p>
+                        <h3 id="billing-stat-active" class="text-3xl font-bold text-green-900 mt-2">-</h3>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-5">
+                        <p class="text-sm font-medium text-amber-700">Past Due Subscriptions</p>
+                        <h3 id="billing-stat-past-due" class="text-3xl font-bold text-amber-900 mt-2">-</h3>
+                    </div>
+
+                    <div class="bg-orange-50 border border-orange-100 rounded-xl p-5">
+                        <p class="text-sm font-medium text-orange-700">Open Invoices</p>
+                        <h3 id="billing-stat-open-invoices" class="text-3xl font-bold text-orange-900 mt-2">-</h3>
+                    </div>
+
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+                        <p class="text-sm font-medium text-emerald-700">Completed Payments</p>
+                        <h3 id="billing-stat-completed-payments" class="text-3xl font-bold text-emerald-900 mt-2">-</h3>
+                    </div>
+
+                </div>
+
+                <!-- Revenue Summary -->
+                <div class="bg-white border border-gray-200 rounded-xl p-6">
+                    <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-3">
+                        <i class="fas fa-chart-line text-green-600"></i>
+                        Completed Subscription Revenue
+                    </h4>
+
+                    <p class="text-xs text-gray-500 mb-3">
+                        Revenue is grouped by currency. Different currencies are never combined.
+                    </p>
+
+                    <div id="billing-revenue-summary">
+                        <p class="text-sm text-gray-500 py-2">
+                            Billing revenue will appear after reports load.
+                        </p>
+                    </div>
+
+                    <p id="billing-test-record-note" class="text-xs text-gray-400 mt-4">
+                        Internal test record information will appear here.
+                    </p>
+                </div>
+
+                <!-- Subscription Records -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                    <div class="p-5 border-b border-gray-200">
+                        <h4 class="text-lg font-bold text-gray-900">
+                            <i class="fas fa-church text-indigo-600 mr-2"></i>
+                            Church Subscriptions
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Plans, member pricing, trial dates and subscription periods.
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Church</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Plan</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Pricing</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Trial Ends</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Period Ends</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Environment</th>
+                                    <th id="billing-subscription-actions-header" class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="billing-subscriptions-tbody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">
+                                        Billing subscriptions will load here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                                <!-- Manual Trial Extension History -->
+                <div id="billing-trial-extension-history" class="border border-gray-200 rounded-xl overflow-hidden mt-6">
+                    <div class="p-5 border-b border-gray-200">
+                        <h4 class="text-lg font-bold text-gray-900">
+                            <i class="fas fa-history text-indigo-600 mr-2"></i>
+                            Recent Trial Extensions
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Administrative history of manual church trial extensions.
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Church</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Previous Expiry</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">New Expiry</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Reason</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Administrator</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Extended On</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="billing-trial-extensions-tbody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="6" class="px-5 py-6 text-center text-sm text-gray-500">
+                                        Trial extension history will appear here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Invoice Records -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                    <div class="p-5 border-b border-gray-200">
+                        <h4 class="text-lg font-bold text-gray-900">
+                            <i class="fas fa-file-invoice text-blue-600 mr-2"></i>
+                            Church Invoices
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Original pricing, annual discounts, invoice totals and grace periods.
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Invoice / Church</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Interval</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Total</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Discount Details</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Issued / Due</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Grace / Paid</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Environment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="billing-invoices-tbody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">
+                                        Billing invoices will load here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payment Records -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                    <div class="p-5 border-b border-gray-200">
+                        <h4 class="text-lg font-bold text-gray-900">
+                            <i class="fas fa-credit-card text-green-600 mr-2"></i>
+                            Subscription Payments
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Payment provider information and verification status. Sensitive provider transaction identifiers are not displayed.
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Church / Invoice</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Provider</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Method</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Verification</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Environment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="billing-payments-tbody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="7" class="px-5 py-8 text-center text-sm text-gray-500">
+                                        Billing payments will load here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
         <!-- Church Registrations & Approvals Section -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
+        <div id="super-admin-churches-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
             <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -134,7 +496,7 @@
         </div>
 
         <!-- User Management Table Section -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
+        <div id="super-admin-users-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
             <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -181,7 +543,7 @@
         <!-- Super Admin Messaging Center & Violation Reports Sections -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <!-- Messaging Center Broadcast Panel -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div id="super-admin-announcements-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                 <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
                     <i class="fas fa-bullhorn text-blue-600"></i> Super Admin Messaging & Broadcast Center
                 </h3>
@@ -241,7 +603,7 @@
         </div>
 
         <!-- Super Admin Violations Table Section -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
+        <div id="super-admin-moderation-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-12">
             <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -276,17 +638,167 @@
                 </table>
             </div>
         </div>
+            <!-- Super Admin Manual Trial Extension Dialog -->
+        <div id="trial-extension-modal"
+             class="hidden fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center p-4"
+             style="z-index: 1200;"
+             aria-hidden="true">
+
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-screen overflow-y-auto"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="trial-extension-title">
+
+                <div class="p-6 border-b border-gray-200 flex justify-between items-start gap-4">
+                    <div>
+                        <h2 id="trial-extension-title" class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-calendar-plus text-indigo-600 mr-2"></i>
+                            Extend Church Trial
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Extend the selected church trial with a recorded administrative reason.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            data-close-trial-extension
+                            class="text-gray-400 hover:text-gray-700 text-xl"
+                            aria-label="Close dialog">&times;</button>
+                </div>
+
+                <form id="trial-extension-form" class="p-6 space-y-5">
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Church</label>
+                        <p id="trial-extension-church-name" class="text-base font-bold text-gray-900">—</p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Current Trial Expiry</p>
+                        <p id="trial-extension-current-expiry" class="text-sm font-semibold text-gray-900">—</p>
+                    </div>
+
+                    <div>
+                        <label for="trial-extension-mode" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Extension Method
+                        </label>
+                        <select id="trial-extension-mode"
+                                class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                                required>
+                            <option value="days">Add a number of days</option>
+                            <option value="date">Choose a new expiry date and time</option>
+                        </select>
+                    </div>
+
+                    <div id="trial-extension-days-container">
+                        <label for="trial-extension-days" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Number of Additional Days
+                        </label>
+                        <input id="trial-extension-days"
+                               type="number"
+                               min="1"
+                               max="3650"
+                               step="1"
+                               value="30"
+                               required
+                               class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <p class="text-xs text-gray-500 mt-1">
+                            Days are added to the later of the current trial expiry or today.
+                        </p>
+                    </div>
+
+                    <div id="trial-extension-date-container" class="hidden">
+                        <label for="trial-extension-new-date" class="block text-sm font-semibold text-gray-700 mb-2">
+                            New Trial Expiry
+                        </label>
+                        <input id="trial-extension-new-date"
+                               type="datetime-local"
+                               step="60"
+                               disabled
+                               class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <p class="text-xs text-gray-500 mt-1">
+                            Enter the date and time in Kampala time (Africa/Kampala, UTC+03:00).
+                        </p>
+                    </div>
+
+                    <div class="border border-indigo-100 bg-indigo-50 rounded-xl p-4 space-y-2">
+                        <p class="text-xs font-bold text-indigo-800 uppercase">Proposed Trial Expiry</p>
+                        <p id="trial-extension-preview" class="text-lg font-bold text-indigo-900">—</p>
+                        <p id="trial-extension-preview-help" class="text-xs text-indigo-700">
+                            Review this date before confirming.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="trial-extension-reason" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Reason for Extension
+                        </label>
+                        <textarea id="trial-extension-reason"
+                                  rows="4"
+                                  minlength="10"
+                                  maxlength="500"
+                                  required
+                                  placeholder="Explain why this church is receiving additional trial time..."
+                                  class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Required. Enter between 10 and 500 characters.
+                        </p>
+                    </div>
+
+                    <div id="trial-extension-status"
+                         class="hidden text-sm rounded-lg p-3"
+                         role="status"
+                         aria-live="polite"></div>
+
+                    <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+                        <button type="button"
+                                data-close-trial-extension
+                                class="px-5 py-3 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+
+                        <button id="trial-extension-submit"
+                                type="button"
+                                disabled
+                                title="Trial extension submission will be enabled after the secure RPC is connected."
+                                class="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow opacity-60 cursor-not-allowed">
+                            Secure Extension — Pending Connection
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-        &copy; 2026 BelieversMeet Developer Control Center. Secured Super Administrator Portal.
-      </div>
-    </footer>
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+                    <p class="bm-site-footer__note">BelieversMeet Developer Control Center - Secured Super Administrator Portal.</p>            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
+        </div>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
     <!-- Script Logic -->
     <script src="js/super-admin.js"></script>
+    <script src="js/super-admin-billing.js"></script>
   <script src="js/notifications.js"></script>
 </body>
 </html>

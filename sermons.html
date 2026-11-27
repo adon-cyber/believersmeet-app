@@ -12,20 +12,30 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
     <!-- Navigation Header Container -->
     <div id="navbar"></div>
-    <script src="js/nav.js"></script>
+    <script src="js/nav.js?v=20261109-v2"></script>
 
     <!-- Main Container -->
-    <main class="bg-light py-4 py-md-5" style="min-height: calc(100vh - 150px);">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-12 col-lg-10 col-xl-9 space-y-6">
+    <main class="bg-light max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full" style="min-height: calc(100vh - 150px);">
+      <div class="w-full">
+        <div class="w-full">
+          <div class="w-full space-y-6">
         
-        <!-- Banner & Upload Button Header -->
+                <div class="mb-5">
+            <button type="button" onclick="window.goBack()"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition text-sm font-semibold">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </button>
+        </div>
+<!-- Banner & Upload Button Header -->
         <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -244,45 +254,29 @@
     <audio id="global-audio-element" class="hidden"></audio>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800/80 py-12 text-slate-400 font-sans mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-            <!-- Top Footer Section: Rich Responsive Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center md:text-left">
-                <!-- Left: Logo, Tagline, & Mission -->
-                <div class="space-y-3">
-                    <div class="flex items-center justify-center md:justify-start space-x-2">
-                        <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border border-white/20 shadow">
-                        <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-                    </div>
-                    <p class="text-slate-400 text-xs sm:text-sm">Connecting believers, empowering churches, and strengthening faith communities worldwide.</p>
-                </div>
-
-
-
-                <!-- Right: Support / Terms & Social / Contact Links -->
-                <div class="flex flex-col items-center md:items-end space-y-2 text-sm">
-                    <div class="flex items-center space-x-4">
-                        <a href="about-developer.html" class="text-slate-400 hover:text-blue-400 transition text-xs sm:text-sm underline">About Developer</a>
-                        <a href="mailto:adoniakasango@gmail.com" class="text-slate-400 hover:text-white transition text-xs sm:text-sm">Support</a>
-                    </div>
-                    <div class="flex items-center space-x-3 text-slate-400 pt-1">
-                        <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition" title="WhatsApp">
-                            <i class="fab fa-whatsapp text-lg text-emerald-500"></i>
-                        </a>
-                        <a href="tel:+256751522766" class="hover:text-blue-400 transition" title="Call">
-                            <i class="fas fa-phone-alt text-sm text-blue-400"></i>
-                        </a>
-                    </div>
-                </div>
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
             </div>
-
-            <!-- Bottom Bar: Standardized Copyright Row -->
-            <div class="border-t border-slate-800/80 pt-6 text-center text-xs text-slate-500 space-y-1">
-                <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
-                <p>Building and strengthening faith communities together.</p>
-            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
         </div>
-    </footer>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1394,5 +1388,6 @@
             };
         }
     </script>
+<script src="js/go-back.js"></script>
 </body>
 </html>

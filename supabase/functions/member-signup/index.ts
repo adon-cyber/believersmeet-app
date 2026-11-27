@@ -8,6 +8,7 @@ const RATE_LIMIT_SALT = Deno.env.get("MEMBER_SIGNUP_RATE_LIMIT_SALT") ?? "";
 const ALLOWED_ORIGINS = new Set<string>([
   "https://believersmeet-app.vercel.app",
   "https://believersmeet-app-git-staging-adoniakasango-3522s-projects.vercel.app",
+  "https://believersmeet-1w17pvh9q-adoniakasango-3522s-projects.vercel.app",
   "http://127.0.0.1:5500",
   "http://localhost:5500",
 ]);
@@ -212,7 +213,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
     if (fullName.length < 2 || fullName.length > 100) {
       return jsonResponse(
         origin,
-        { error: "Enter your full name (2–100 characters)." },
+        { error: "Enter your full name (2â€“100 characters)." },
         400,
       );
     }

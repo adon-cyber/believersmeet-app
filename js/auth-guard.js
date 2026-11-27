@@ -152,8 +152,19 @@ const isAuthEntryPage =
             ['admin', 'church_admin'].includes(profileRole) ||
             isPlatformAdmin
         );
+        // Finance is a separate, permission-gated workspace, not a Church Admin role.
+        const isFinanceAccount = Boolean(profile) &&
+            profileRole === 'finance' &&
+            !isPlatformAdmin;
 
         if (isAuthEntryPage) {
+            // Route legacy Finance profiles to accounting. The accounting page
+            // verifies active financial-role permissions through the database.
+            if (isFinanceAccount) {
+                window.location.replace('accounting.html');
+                return;
+            }
+
             // Logged in users shouldn't be on index/login.
             if (isAdmin) {
                 if (!profile.church_id) {
@@ -178,10 +189,8 @@ const isAuthEntryPage =
                             const isTrialExpired = trialEndsAt && trialEndsAt < now;
 
                             if (status === 'pending_trial') {
-                                if (!currentPath.endsWith('activate-trial.html')) {
-                                    window.location.replace('activate-trial.html');
-                                    return;
-                                }
+                                window.location.replace('church-status.html');
+                                return;
                             } else if (status === 'trial') {
                                 if (isTrialExpired) {
                                     if (!currentPath.endsWith('subscription-expired.html')) {
@@ -210,7 +219,7 @@ const isAuthEntryPage =
                 }
 
                 // Fallback default redirect if subscription check didn't redirect
-                if (!currentPath.endsWith('admin.html') && !currentPath.endsWith('activate-trial.html') && !currentPath.endsWith('subscription-expired.html')) {
+                if (!currentPath.endsWith('admin.html') && !currentPath.endsWith('subscription-expired.html')) {
                     window.location.replace('admin.html');
                 }
             } else {

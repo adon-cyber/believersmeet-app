@@ -110,8 +110,30 @@ async function registerPesapalIpn(token, ipnUrl, baseUrl) {
     });
 
     const data = await readPesapalJson(response, 'Pesapal IPN registration');
-    if (!data.ipn_id) throw new Error('Pesapal IPN registration did not return an IPN ID.');
-    return data.ipn_id;
+    if (typeof data.ipn_id !== 'string' || !data.ipn_id.trim()) {
+        throw new Error('Pesapal IPN registration did not return an IPN ID.');
+    }
+    if (Number(data.ipn_status) !== 1 || (data.error !== null && data.error !== undefined)) {
+        throw new Error('Pesapal returned an IPN registration that is not active.');
+    }
+
+    let returnedUrl;
+    let requestedUrl;
+    try {
+        returnedUrl = new URL(data.url);
+        requestedUrl = new URL(ipnUrl);
+    } catch {
+        throw new Error('Pesapal returned an invalid IPN registration URL.');
+    }
+    if (
+        returnedUrl.origin !== requestedUrl.origin ||
+        returnedUrl.pathname.replace(/\/+$/, '') !== requestedUrl.pathname.replace(/\/+$/, '') ||
+        returnedUrl.search !== requestedUrl.search
+    ) {
+        throw new Error('Pesapal returned an IPN registration for a different notification URL.');
+    }
+
+    return data.ipn_id.trim();
 }
 
 async function getRegisteredPesapalIpns(token, baseUrl) {
@@ -221,6 +243,18 @@ export default async function handler(req, res) {
 
         const ipnUrl = requireHttpsUrl(process.env.PESAPAL_IPN_URL, 'PESAPAL_IPN_URL');
         const callbackUrl = requireHttpsUrl(process.env.PESAPAL_CALLBACK_URL, 'PESAPAL_CALLBACK_URL');
+        const parsedIpnUrl = new URL(ipnUrl);
+        const parsedCallbackUrl = new URL(callbackUrl);
+
+        if (
+            parsedIpnUrl.pathname.replace(/\/+$/, '') !== '/api/pesapal-ipn' ||
+            parsedIpnUrl.search ||
+            parsedCallbackUrl.pathname.replace(/\/+$/, '') !== '/giving.html' ||
+            parsedCallbackUrl.search ||
+            parsedIpnUrl.origin !== parsedCallbackUrl.origin
+        ) {
+            throw new Error('Pesapal callback/IPN server URLs must use this same deployment: /giving.html and /api/pesapal-ipn.');
+        }
 
         supabaseAdmin = getSupabaseAdmin();
 
@@ -315,106 +349,74 @@ if (authenticatedUser) {
             baseUrl
         );
 
-        let ipnId = church.pesapal_ipn_id;
+        // Validate the saved notification ID against the current merchant and exact server URL.
+        // This prevents an ID from an old Consumer Key/Secret or environment being reused.
+        const registeredIpns = await getRegisteredPesapalIpns(token, baseUrl);
+        const expectedUrl = new URL(ipnUrl);
 
-        if (!ipnId) {
-            const registeredIpns = await getRegisteredPesapalIpns(token, baseUrl);
-            const expectedUrl = new URL(ipnUrl);
+        const matchingIpns = registeredIpns.filter((entry) => {
+            const responseStatus = String(entry?.status ?? '');
+            const ipnStatus = entry?.ipn_status;
+            const acceptedResponseStatus = responseStatus === '200' ||
+                (responseStatus === '1' && Number(ipnStatus) === 1);
+            const acceptedIpnStatus = ipnStatus === null ||
+                ipnStatus === undefined || Number(ipnStatus) === 1;
 
-            const matchingIpns = registeredIpns.filter((entry) => {
-                const entryResponseStatus = String(entry?.status ?? '');
-                const entryIpnStatus = entry?.ipn_status;
-                // Support the observed Sandbox response only when its IPN is explicitly Active.
-                const acceptedListEntryStatus =
-                    entryResponseStatus === '200' ||
-                    (entryResponseStatus === '1' && Number(entryIpnStatus) === 1);
-                const activeIpnStatus =
-                    entryIpnStatus === null ||
-                    entryIpnStatus === undefined ||
-                    Number(entryIpnStatus) === 1;
-                if (
-                    !acceptedListEntryStatus ||
-                    !activeIpnStatus ||
-                    (entry?.error !== null && entry?.error !== undefined) ||
-                    typeof entry?.url !== 'string' ||
-                    typeof entry?.ipn_id !== 'string' ||
-                    !entry.ipn_id.trim()
-                ) {
-                    return false;
-                }
-
-                try {
-                    const candidateUrl = new URL(entry.url);
-
-                    return (
-                        candidateUrl.origin === expectedUrl.origin &&
-                        candidateUrl.pathname.replace(/\/+$/, '') ===
-                            expectedUrl.pathname.replace(/\/+$/, '') &&
-                        candidateUrl.search === expectedUrl.search
-                    );
-                } catch {
-                    return false;
-                }
-            });
-
-            if (matchingIpns.length !== 1) {
-                const urlMatchCandidates = registeredIpns.filter((entry) => {
-                    if (typeof entry?.url !== 'string') return false;
-                    try {
-                        const candidateUrl = new URL(entry.url);
-                        return (
-                            candidateUrl.origin === expectedUrl.origin &&
-                            candidateUrl.pathname.replace(/\/+$/, '') ===
-                                expectedUrl.pathname.replace(/\/+$/, '') &&
-                            candidateUrl.search === expectedUrl.search
-                        );
-                    } catch {
-                        return false;
-                    }
-                });
-
-                const statusCounts = {};
-                for (const entry of registeredIpns) {
-                    const status = String(entry?.status ?? '<missing>');
-                    statusCounts[status] = (statusCounts[status] || 0) + 1;
-                }
-
-                const matchingCandidates = urlMatchCandidates.slice(0, 10).map((entry) => ({
-                    status: entry?.status ?? null,
-                    ipn_status: entry?.ipn_status ?? null,
-                    ipn_status_description: entry?.ipn_status_description ?? null,
-                    has_ipn_id: typeof entry?.ipn_id === 'string' && Boolean(entry.ipn_id.trim()),
-                    has_error: entry?.error !== null && entry?.error !== undefined
-                }));
-
-                const diagnosticError = new Error(
-                    matchingIpns.length === 0
-                        ? 'No matching Pesapal IPN registration was found. No new IPN was created. Manual review is required.'
-                        : 'Multiple Pesapal IPN registrations match this URL. Manual review is required.'
-                );
-
-                if ((process.env.VERCEL_ENV || '').toLowerCase() === 'preview') {
-                    diagnosticError.previewDiagnostic = {
-                        stage: 'ipn_list',
-                        expected_url: expectedUrl.origin + expectedUrl.pathname,
-                        returned_count: registeredIpns.length,
-                        matching_count: matchingIpns.length,
-                        url_match_count: urlMatchCandidates.length,
-                        candidate_count: matchingCandidates.length,
-                        candidates_truncated: urlMatchCandidates.length > matchingCandidates.length,
-                        status_counts: statusCounts,
-                        candidates: matchingCandidates
-                    };
-                }
-
-                throw diagnosticError;
+            if (
+                !acceptedResponseStatus ||
+                !acceptedIpnStatus ||
+                (entry?.error !== null && entry?.error !== undefined) ||
+                typeof entry?.url !== 'string' ||
+                typeof entry?.ipn_id !== 'string' ||
+                !entry.ipn_id.trim()
+            ) {
+                return false;
             }
+
+            try {
+                const candidateUrl = new URL(entry.url);
+                return candidateUrl.origin === expectedUrl.origin &&
+                    candidateUrl.pathname.replace(/\/+$/, '') === expectedUrl.pathname.replace(/\/+$/, '') &&
+                    candidateUrl.search === expectedUrl.search;
+            } catch {
+                return false;
+            }
+        });
+
+        const savedIpnId = String(church.pesapal_ipn_id || '').trim();
+        const savedIpnMatch = savedIpnId
+            ? matchingIpns.find((entry) => entry.ipn_id.trim() === savedIpnId)
+            : null;
+
+        let ipnId;
+        let createdIpn = false;
+
+        if (savedIpnMatch) {
+            ipnId = savedIpnMatch.ipn_id.trim();
+        } else if (matchingIpns.length === 1) {
             ipnId = matchingIpns[0].ipn_id.trim();
-
-            console.log(
-                '[pesapal-checkout] Reusing the existing Pesapal IPN registration.'
+        } else if (matchingIpns.length > 1) {
+            const diagnosticError = new Error(
+                'Multiple active Pesapal IPN registrations match this URL. Manual review is required.'
             );
+            if ((process.env.VERCEL_ENV || '').toLowerCase() === 'preview') {
+                diagnosticError.previewDiagnostic = {
+                    stage: 'ipn_list',
+                    returned_count: registeredIpns.length,
+                    matching_count: matchingIpns.length,
+                    has_saved_ipn_id: Boolean(savedIpnId),
+                    saved_ipn_id_matches: false
+                };
+            }
+            throw diagnosticError;
+        } else {
+            // Initial setup and stale/deleted registrations are repaired automatically.
+            ipnId = await registerPesapalIpn(token, ipnUrl, baseUrl);
+            createdIpn = true;
+            console.log('[pesapal-checkout] Registered a new Pesapal IPN endpoint for this merchant.');
+        }
 
+        if (ipnId !== savedIpnId) {
             const { data: savedIpnRow, error: ipnSaveError } = await supabaseAdmin
                 .from('churches')
                 .update({ pesapal_ipn_id: ipnId })
@@ -427,12 +429,14 @@ if (authenticatedUser) {
                     code: ipnSaveError?.code || null,
                     message: ipnSaveError?.message || 'Church row was not updated.'
                 });
-
                 throw new Error(
-                    'Pesapal IPN recovery succeeded, but saving its ID failed. Manual review is required.'
+                    createdIpn
+                        ? 'Pesapal registered the notification endpoint, but BelieversMeet could not save its ID. Retry checkout; the existing registration will be recovered.'
+                        : 'Pesapal IPN recovery succeeded, but saving its ID failed. Please retry.'
                 );
             }
         }
+
         const merchantReference = `BM-GIVE-${randomUUID()}`;
         const description = `BelieversMeet Giving - ${category}`.slice(0, 100);
         const { first_name: firstName, last_name: lastName } = splitDonorName(payerName);

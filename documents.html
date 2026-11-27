@@ -28,6 +28,11 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="min-h-screen flex flex-col font-sans text-slate-100 bg-slate-950">
     <script src="js/notifications.js"></script>
@@ -82,11 +87,29 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500 space-y-2">
-        <div>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</div>
-      </div>
-    </footer>
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
+        </div>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
     <!-- Script Logic -->
     <script>
@@ -136,22 +159,40 @@
                     .from('important_documents')
                     .select('*')
                     .order('created_at', { ascending: false });
-
                 if (error) throw error;
 
                 if (!docs || docs.length === 0) {
                     container.innerHTML = `
                         <div class="col-span-full bg-slate-900/60 border border-slate-800 rounded-3xl p-12 text-center space-y-3 shadow-xl">
-                            <div class="text-4xl">📁</div>
+                            <div class="text-4xl">📄</div>
                             <h3 class="text-lg font-bold text-slate-200">No Documents Available</h3>
                             <p class="text-slate-400 text-sm max-w-md mx-auto">There are no important documents published in the resource library yet. Check back later!</p>
-                        </div>
-                    `;
+                        </div>`;
                     return;
                 }
 
-                container.innerHTML = docs.map(doc => {
-                    const dateFormatted = doc.created_at ? new Date(doc.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+                const rows = await Promise.all(docs.map(async (doc) => {
+                    let signedUrl = '';
+                    if (doc.file_path) {
+                        const { data, error: signedUrlError } = await window.sbClient.storage
+                            .from('documents')
+                            .createSignedUrl(doc.file_path, 600);
+                        if (signedUrlError) {
+                            console.warn('Could not create document signed URL:', doc.id, signedUrlError.message);
+                        } else {
+                            signedUrl = data?.signedUrl || '';
+                        }
+                    }
+                    return { doc, signedUrl };
+                }));
+
+                container.innerHTML = rows.map(({ doc, signedUrl }) => {
+                    const dateFormatted = doc.created_at
+                        ? new Date(doc.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                        : 'N/A';
+                    const fileAction = signedUrl
+                        ? `<a href="${escapeHTML(signedUrl)}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all"><i class="fas fa-download"></i> Download / View File</a>`
+                        : '<span class="w-full text-center text-xs text-amber-400">File unavailable</span>';
                     return `
                         <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-blue-500/50 transition-all group">
                             <div class="space-y-3">
@@ -164,25 +205,17 @@
                                 <h3 class="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors">${escapeHTML(doc.title)}</h3>
                                 <p class="text-sm text-slate-400 line-clamp-3">${escapeHTML(doc.description || 'No description provided.')}</p>
                             </div>
-                            <div class="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
-                                <a href="${doc.file_url}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all">
-                                    <i class="fas fa-download"></i> Download / View File
-                                </a>
-                            </div>
-                        </div>
-                    `;
+                            <div class="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">${fileAction}</div>
+                        </div>`;
                 }).join('');
-
             } catch (err) {
-                console.error("Error loading resource library documents:", err);
+                console.error('Error loading resource library documents:', err);
                 container.innerHTML = `
                     <div class="col-span-full bg-red-950/20 border border-red-500/30 rounded-3xl p-8 text-center text-red-400 text-sm">
                         Failed to load resource library: ${escapeHTML(err.message)}
-                    </div>
-                `;
+                    </div>`;
             }
         }
-
         initPage();
     </script>
 </body>

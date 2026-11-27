@@ -9,6 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="bg-[url('images/meet2.jpg')] bg-cover bg-center bg-no-repeat bg-fixed min-h-screen flex flex-col justify-between font-sans antialiased text-gray-900 relative">
 
@@ -81,7 +86,7 @@
                         <span class="text-gray-500 font-medium">Date Submitted:</span>
                         <span id="result-date" class="text-gray-700 dark:text-gray-300 font-medium">--</span>
                     </div>
-                    
+
 
                 <!-- Superadmin Feedback / Next Steps Box -->
                 <div id="feedback-box" class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-xl p-4 text-sm space-y-2">
@@ -103,17 +108,35 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white/90 backdrop-blur-md border-t border-gray-200 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-        &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
-      </div>
-    </footer>
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
+        </div>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
     <!-- Script -->
     <script>
         async function waitForSupabase() {
             let attempts = 0;
-    
+
             while (
                 !window.supabaseClient &&
                 !window.supabase &&
@@ -123,25 +146,25 @@
                 await new Promise(resolve => setTimeout(resolve, 50));
                 attempts++;
             }
-    
+
             return window.supabaseClient || window.supabase || window.sbClient;
         }
-    
+
         function showStatusError(message) {
             const errorBox = document.getElementById('error-message');
             const successBox = document.getElementById('success-message');
-    
+
             errorBox.textContent = message;
             errorBox.classList.remove('hidden');
             successBox.classList.add('hidden');
-    
+
             document.getElementById('status-result-card').classList.add('hidden');
         }
-    
+
         function setStatusBadge(status) {
             const badge = document.getElementById('result-status-badge');
             const icon = document.getElementById('status-icon-container');
-    
+
             const styles = {
                 approved: {
                     badge: 'bg-green-100 text-green-800',
@@ -168,33 +191,33 @@
                     label: 'Pending Review'
                 }
             };
-    
+
             const style = styles[status] || styles.pending;
-    
+
             badge.className =
                 `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${style.badge}`;
-    
+
             badge.textContent = style.label;
-    
+
             icon.className =
                 `w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 ${style.icon}`;
-    
+
             icon.textContent = style.symbol;
         }
-    
+
         function displayApplicationStatus(application) {
             const status = String(
                 application.application_status || 'pending'
             ).trim().toLowerCase().replace(/_/g, ' ');
-    
+
             document.getElementById('result-church-name').textContent =
                 application.church_name || 'Church application';
-    
+
             document.getElementById('result-church-location').textContent =
                 application.church_location ||
                 application.church_address ||
                 'Location not specified';
-    
+
             document.getElementById('result-date').textContent =
                 application.submitted_at
                     ? new Date(application.submitted_at).toLocaleDateString(
@@ -206,66 +229,59 @@
                         }
                     )
                     : 'Date unavailable';
-    
+
             setStatusBadge(status);
-    
+
             const feedback = document.getElementById('result-feedback');
             const actionContainer =
                 document.getElementById('status-action-container');
-    
+
             const adminFeedback = application.admin_feedback?.trim();
-    
+
             actionContainer.replaceChildren();
-    
+
             if (status === 'approved') {
                 feedback.textContent =
                     adminFeedback ||
                     'Your church application has been approved. Your 60-day free trial has started and your account has been assigned Church Admin access.';
-    
+
                 const dashboardLink = document.createElement('a');
                 dashboardLink.href = 'admin.html';
                 dashboardLink.className =
                     'w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition shadow-md';
                 dashboardLink.innerHTML =
                     '<i class="fas fa-tachometer-alt"></i> Open Church Admin Dashboard';
-    
+
                 actionContainer.appendChild(dashboardLink);
-    
+
             } else if (status === 'rejected') {
-                feedback.textContent =
-                    adminFeedback ||
-                    'Your church application was not approved. Please contact support if you need clarification or wish to discuss the decision.';
-    
-                const contactLink = document.createElement('a');
-                contactLink.href =
-                    'mailto:adoniakasango@gmail.com?subject=Church%20Application%20Appeal';
-                contactLink.className =
-                    'w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-medium text-indigo-700 bg-white border border-indigo-300 hover:bg-indigo-50 transition';
-                contactLink.innerHTML =
-                    '<i class="fas fa-envelope"></i> Contact Support';
-    
-                actionContainer.appendChild(contactLink);
-    
+                feedback.textContent = `${adminFeedback || 'Your church application was not approved.'} You may revise the details and submit the application for another review. Your previous decision remains in BelieversMeet review records.`;
+                const reapplyLink = document.createElement('a');
+                reapplyLink.href = 'register-church.html?resume=1';
+                reapplyLink.className =
+                    'w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition';
+                reapplyLink.innerHTML =
+                    '<i class="fas fa-edit"></i> Revise and Resubmit Application';
+                actionContainer.appendChild(reapplyLink);
+
             } else if (status === 'changes requested') {
                 feedback.textContent =
                     adminFeedback ||
-                    'The review team has requested additional information. Please contact support for instructions on how to update your application.';
-    
-                const contactLink = document.createElement('a');
-                contactLink.href =
-                    'mailto:adoniakasango@gmail.com?subject=Church%20Application%20Changes';
-                contactLink.className =
-                    'w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 transition';
-                contactLink.innerHTML =
-                    '<i class="fas fa-envelope"></i> Contact Support About Requested Changes';
-    
-                actionContainer.appendChild(contactLink);
-    
+                    'The review team has requested additional information. Select Update Application Details to revise and resubmit your existing application.';
+
+                const editLink = document.createElement('a');
+                editLink.href = 'register-church.html?resume=1';
+                editLink.className =
+                    'w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 transition';
+                editLink.innerHTML =
+                    '<i class="fas fa-edit"></i> Update Application Details';
+                actionContainer.appendChild(editLink);
+
             } else {
                 feedback.textContent =
                     adminFeedback ||
                     'Your church application is awaiting review. You can refresh this page to check for an update.';
-    
+
                 const refreshNote = document.createElement('p');
                 refreshNote.className =
                     'text-xs text-gray-600 dark:text-gray-300';
@@ -273,10 +289,10 @@
                     'Your application details remain linked to your account.';
                 actionContainer.appendChild(refreshNote);
             }
-    
+
             document.getElementById('status-result-card').classList.remove('hidden');
         }
-    
+
         async function loadApplicationStatus() {
             const errorBox = document.getElementById('error-message');
             const successBox = document.getElementById('success-message');
@@ -286,75 +302,75 @@
                 document.getElementById('status-login-link');
             const refreshButton =
                 document.getElementById('refresh-status-btn');
-    
+
             errorBox.classList.add('hidden');
             successBox.classList.add('hidden');
             loginLink.classList.add('hidden');
-    
+
             document.getElementById('status-result-card').classList.add('hidden');
-    
+
             refreshButton.disabled = true;
             refreshButton.innerHTML =
                 '<i class="fas fa-spinner fa-spin mr-2"></i> Checking Status...';
-    
+
             try {
                 const client = await waitForSupabase();
-    
+
                 if (!client) {
                     throw new Error('Supabase could not be initialized. Please refresh the page.');
                 }
-    
+
                 // Verify the actual signed-in user with Supabase Auth.
                 const { data: userData, error: userError } =
                     await client.auth.getUser();
-    
+
                 if (userError) throw userError;
-    
+
                 if (!userData?.user) {
                     statusMessage.textContent =
                         'Please sign in with the account you used to submit your church application.';
-    
+
                     loginLink.classList.remove('hidden');
                     refreshButton.classList.add('hidden');
                     return;
                 }
-    
+
                 refreshButton.classList.remove('hidden');
-    
+
                 // The backend derives the applicant and church from auth.uid().
                 const { data, error: statusError } = await client.rpc(
                     'get_my_church_application_status'
                 );
-    
+
                 if (statusError) throw statusError;
-    
+
                 const application = Array.isArray(data) ? data[0] : data;
-    
+
                 if (!application?.church_id) {
                     statusMessage.textContent =
                         'No church application is linked to this account. Please sign in using the account that submitted the application.';
-    
+
                     loginLink.classList.remove('hidden');
                     return;
                 }
-    
+
                 statusMessage.textContent =
                     'Your application is securely linked to your signed-in account.';
-    
+
                 displayApplicationStatus(application);
-    
+
                 successBox.textContent =
                     'Your application status was retrieved successfully.';
                 successBox.classList.remove('hidden');
-    
+
             } catch (error) {
                 console.error('Church application status error:', error);
-    
+
                 showStatusError(
                     error.message ||
                     'Unable to retrieve your application status. Please try again.'
                 );
-    
+
                 statusMessage.textContent =
                     'We could not retrieve your application status.';
             } finally {
@@ -363,12 +379,12 @@
                     '<i class="fas fa-sync-alt mr-2"></i> Refresh Application Status';
             }
         }
-    
+
         document.addEventListener('DOMContentLoaded', () => {
             document
                 .getElementById('refresh-status-btn')
                 .addEventListener('click', loadApplicationStatus);
-    
+
             loadApplicationStatus();
         });
     </script>

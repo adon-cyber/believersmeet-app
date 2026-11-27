@@ -1,0 +1,185 @@
+/* BelieversMeet — shared All Features navigation */
+
+/* Button placement and appearance */
+#all-features-dropdown-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+#all-features-menu-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+#all-features-menu-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+#all-features-menu-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* One consistent dropdown panel */
+#all-features-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: auto;
+    transform: none;
+    width: 300px;
+    max-width: 90vw;
+    min-width: 0;
+    max-height: 75vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.5rem;
+    color: #374151;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    z-index: 100000;
+}
+
+#all-features-dropdown-menu.show {
+    display: block;
+    animation: bmAllFeaturesFade 0.15s ease-out forwards;
+}
+
+@keyframes bmAllFeaturesFade {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Consistent menu links and Go Back entry */
+#all-features-dropdown-menu a,
+#all-features-dropdown-menu button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    border: 0;
+    border-radius: 0.65rem;
+    color: #374151;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#all-features-dropdown-menu a i,
+#all-features-dropdown-menu button i {
+    flex: 0 0 1.1rem;
+    width: 1.1rem;
+    color: #4f46e5;
+    text-align: center;
+}
+
+#all-features-dropdown-menu a:hover,
+#all-features-dropdown-menu button:hover {
+    color: #3730a3;
+    background: #eef2ff;
+}
+
+/* Same active-page highlight on every page */
+#all-features-dropdown-menu a.active,
+#all-features-dropdown-menu a.bm-feature-active,
+#all-features-dropdown-menu a[aria-current="page"] {
+    color: #3730a3;
+    background: #eef2ff;
+    font-weight: 700;
+}
+
+#all-features-dropdown-menu a.active i,
+#all-features-dropdown-menu a.bm-feature-active i,
+#all-features-dropdown-menu a[aria-current="page"] i {
+    color: #3730a3;
+}
+
+/* Keep the dropdown inside the screen on mobile */
+@media (max-width: 767px) {
+    #all-features-dropdown-menu {
+        left: auto;
+        right: 0;
+        width: 300px;
+        max-width: 90vw;
+    }
+}
+
+/* Shared navigation: center the trigger between brand and account controls */
+.bm-shared-nav-inner,
+header > .max-w-7xl {
+    position: relative;
+}
+
+@media (min-width: 768px) {
+    .bm-shared-nav #all-features-dropdown-container,
+    header > .max-w-7xl > #all-features-dropdown-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        margin: 0;
+        transform: translate(-50%, -50%);
+        z-index: 1001;
+    }
+}
+
+/* Center dropdown beneath its trigger */
+#all-features-dropdown-menu {
+    left: 50%;
+    right: auto;
+    margin-left: -150px;
+    transform: none;
+}
+
+@media (max-width: 767px) {
+    #all-features-dropdown-menu {
+        left: auto;
+        right: 0;
+        margin-left: 0;
+        width: 300px;
+        max-width: 90vw;
+    }
+}
+
+/* Single-scrollbar fix: outer dropdown owns scrolling */
+#all-features-dropdown-menu > div {
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}

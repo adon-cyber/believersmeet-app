@@ -9,6 +9,11 @@
     <style>
         .section-box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body>
 
@@ -49,10 +54,24 @@
         // Fetch User Profile
         const { data: profile } = await window.sbClient
             .from('profiles')
-            .select('church_id')
+            .select('church_id, role, status, is_blocked')
             .eq('id', user.id)
             .single();
         
+        if (!profile || !profile.church_id || profile.status !== 'active' || profile.is_blocked === true) {
+            alert('An active church account is required.');
+            return window.location.replace('feed.html');
+        }
+
+        // This database RPC checks the actual church-admin/Super Admin policy.
+        const { data: canManage, error: permissionError } = await window.sbClient.rpc(
+            'can_manage_church_content', { p_church_id: profile.church_id }
+        );
+        if (permissionError || canManage !== true) {
+            alert('You do not have permission to manage this church.');
+            return window.location.replace('feed.html');
+        }
+
         currentUserProfile = profile;
         loadChurchData(); // Fetch the church details to fill the fields
     }
@@ -73,6 +92,10 @@
 
     // 3. Save Profile Function
     async function saveChurchProfile() {
+        if (!currentUserProfile?.church_id) {
+            alert('Church management access has not been verified.');
+            return;
+        }
         const { error } = await window.sbClient
             .from('churches')
             .update({ 
@@ -101,6 +124,10 @@
 
     // 4. Bulletin Upload Function
     async function postBulletin() {
+        if (!currentUserProfile?.church_id) {
+            alert('Church management access has not been verified.');
+            return;
+        }
         const title = document.getElementById('bulletin-title').value;
         const file = document.getElementById('bulletin-file').files[0];
         if (!title || !file) return alert("Please add a title and a file.");

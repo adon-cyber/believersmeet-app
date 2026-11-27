@@ -22,7 +22,68 @@
             background-color: #1e40af !important;
             color: #ffffff !important;
         }
+            .admin-features-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + .65rem);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            max-height: 75vh;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,.18);
+            padding: .5rem;
+            z-index: 99999;
+        }
+        .admin-features-menu.show {
+            display: block;
+            animation: adminMenuFade .15s ease-out;
+        }
+        .admin-features-menu a {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .7rem .85rem;
+            border-radius: .65rem;
+            color: #374151;
+            font-size: .875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background .15s, color .15s;
+        }
+        .admin-features-menu a i {
+            width: 1.1rem;
+            text-align: center;
+            color: #4f46e5;
+        }
+        .admin-features-menu a:hover,
+        .admin-features-menu a.active {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+        @keyframes adminMenuFade {
+            from { opacity: 0; transform: translate(-50%, -5px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @media (max-width: 767px) {
+            .admin-features-menu {
+                left: auto;
+                right: 0;
+                transform: none;
+                width: 280px;
+                max-width: 90vw;
+            }
+        }
     </style>
+    <link rel="stylesheet" href="css/all-features.css?v=20261109-v2" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-hero-v1">
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col" style="display: block !important;">
     <!-- Navigation Header -->
@@ -30,29 +91,35 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3 shrink-0">
                 <a href="index.html" class="flex items-center space-x-2">
-                    <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
+                    <img data-bm-church-logo src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
                     <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
                 </a>
             </div>
-            <!-- Desktop Navigation Links -->
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
-                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
-                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
-                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
-                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
-                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-white bg-blue-700/80 px-3 py-1.5 rounded-lg shadow transition whitespace-nowrap">Admin Console</a>
-            </nav>
-            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
-            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
-                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
-                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
-                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
-                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
-                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
-                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-white bg-blue-700/80 px-2.5 py-1 rounded-md shadow transition whitespace-nowrap shrink-0">Admin Console</a>
-            </div>
-            <div class="flex items-center space-x-3 shrink-0">
+            <!-- All Features Dropdown -->
+            <div id="all-features-dropdown-container" class="relative shrink-0">
+                <button type="button" id="all-features-menu-btn"
+                    onclick="toggleAdminFeaturesDropdown(event)"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition">
+                    <i class="fas fa-th-large"></i>
+                    <span>All Features</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </button>
+                <div id="all-features-dropdown-menu" class="admin-features-menu">
+                    <a href="feed.html"><i class="fas fa-home"></i> Feed</a>
+                    <a href="events.html"><i class="fas fa-calendar"></i> Events</a>
+                    <a href="groups.html"><i class="fas fa-users"></i> Groups</a>
+                    <a href="sermons.html"><i class="fas fa-book-open"></i> Sermons & Media</a>
+                    <a href="giving.html"><i class="fas fa-hand-holding-heart"></i> Giving</a>
+                    <a href="chat.html"><i class="fas fa-comments"></i> Messages</a>
+                    <a href="directory.html"><i class="fas fa-church"></i> Directory</a>
+                    <a href="prayer-wall.html"><i class="fas fa-praying-hands"></i> Prayer Wall</a>
+                    <a href="testimonies.html"><i class="fas fa-heart"></i> Testimonies</a>
+                    <a href="volunteer.html"><i class="fas fa-hands-helping"></i> Volunteer</a>
+                    <a href="gallery.html"><i class="fas fa-images"></i> Gallery</a>
+                    <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+                    <a href="admin.html" class="active"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+                </div>
+            </div><div class="flex items-center space-x-3 shrink-0">
                 <button id="nav-super-admin" onclick="window.location.href='super-admin.html'" class="hidden px-3 py-1.5 rounded-lg bg-purple-600/50 text-white text-xs font-semibold hover:bg-purple-600 transition border border-white/20 shadow">
                     Super Admin
                 </button>
@@ -65,52 +132,88 @@
             </div>
         </div>
     </header>
+<script>
+function toggleAdminFeaturesDropdown(event) {
+    if (event) event.stopPropagation();
+    const menu = document.getElementById('all-features-dropdown-menu');
+    if (menu) menu.classList.toggle('show');
+}
+
+document.addEventListener('click', function (event) {
+    const container = document.getElementById('all-features-dropdown-container');
+    const menu = document.getElementById('all-features-dropdown-menu');
+    if (container && menu && !container.contains(event.target)) {
+        menu.classList.remove('show');
+    }
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+        const menu = document.getElementById('all-features-dropdown-menu');
+        if (menu) menu.classList.remove('show');
+    }
+});
+</script>
 
     <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
-        <!-- Hero Banner -->
-        <div class="bm-card bg-gradient-to-r from-blue-950/90 to-slate-900/90 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-white">
-            <div>
-                <h1 class="bm-page-heading mb-2">
-                    <i class="fas fa-cog text-blue-400"></i> Admin Console
-                </h1>
-                <p class="bm-page-subheading">Manage church members, events, content, and system settings.</p>
-            </div>
+        <div class="mb-5">
+            <button type="button" onclick="window.goBack()"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition text-sm font-semibold">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </button>
         </div>
+        <!-- Admin Console Page Hero -->
+        <section class="bm-page-hero bm-page-hero--admin mb-8" aria-labelledby="admin-console-heading">
+            <div class="bm-page-hero__icon" aria-hidden="true">
+                <i class="fas fa-cog"></i>
+            </div>
+            <div class="bm-page-hero__content">
+                <span class="bm-page-hero__eyebrow">CHURCH MANAGEMENT</span>
+                <h1 id="admin-console-heading" class="bm-page-hero__title">Admin Console</h1>
+                <p class="bm-page-hero__subtitle">Manage church members, events, content, and system settings.</p>
+            </div>
+        </section>
         
 
         
+        <div id="church-financial-roles-entry" class="hidden mb-6">
+            <a href="accounting-team.html" class="inline-flex items-center gap-2 rounded-xl border border-blue-700/70 bg-blue-950/60 px-4 py-3 text-sm font-bold text-blue-200 shadow-sm transition hover:bg-blue-900/70">
+                <i class="fas fa-user-shield"></i> Finance Team &amp; Roles
+            </a>
+            <p class="mt-2 text-xs text-slate-400">Assign or remove accounting and budgeting access for your church. Only the Church Admin controls these roles.</p>
+        </div>
         <!-- 1. TAB NAVIGATION -->
         <div id="admin-tabs" class="flex border-b border-slate-800 mb-6 hidden overflow-x-auto whitespace-nowrap pb-2 w-full max-w-full scroll-smooth no-scrollbar">
             <button id="tab-btn-global" onclick="switchAdminTab('global')" class="py-2.5 px-5 text-sm font-bold border-b-2 focus:outline-none transition border-blue-500 text-blue-400 shrink-0">
-                🌐 Global System Admin
+                &#x1F310; Global System Admin
             </button>
             <button id="tab-btn-dashboard" onclick="switchAdminTab('dashboard')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                ⛪ Church Dashboard
+                &#x26EA; Church Dashboard
             </button>
             <button id="tab-btn-counseling" onclick="switchAdminTab('counseling')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                💬 Counseling Requests
+                &#x1F4AC; Counseling Requests
             </button>
             <button id="tab-btn-documents" onclick="switchAdminTab('documents')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                📁 Document Manager
+                &#x1F4C1; Document Manager
             </button>
             <button id="tab-btn-roster" onclick="switchAdminTab('roster')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                🤝 Volunteer Roster
+                &#x1F91D; Volunteer Roster
             </button>
             <button id="tab-btn-pesapal" onclick="switchAdminTab('pesapal')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                💳 Pesapal Settings
+                &#x1F4B3; Pesapal Settings
             </button>
             <button id="tab-btn-prayer" onclick="switchAdminTab('prayer')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                🙏 Prayer & Ministry Requests
+                &#x1F64F; Prayer & Ministry Requests
             </button>
             <button id="tab-btn-businesses" onclick="switchAdminTab('businesses')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                🏢 Business Approvals
+                &#x1F3E2; Business Approvals
             </button>
             <button id="tab-btn-finance" onclick="switchAdminTab('finance')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                💰 Finance & Giving
+                &#x1F4B0; Finance & Giving
             </button>
             <button id="tab-btn-registrations" onclick="switchAdminTab('registrations')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                🎟️ Event Registrations
+                &#x1F39F;&#xFE0F; Event Registrations
             </button>
         </div>
 
@@ -669,20 +772,20 @@
                     <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                         <i class="fas fa-file-alt text-blue-400"></i> Document Manager - Upload Important Document
                     </h3>
-                    <form id="document-upload-form" class="space-y-5">
+                    <form id="document-upload-form-legacy-unused" class="space-y-5">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-2">Document Title</label>
-                            <input type="text" id="doc-title-input" placeholder="Enter document title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
+                            <input type="text" id="doc-title-input-legacy-unused" placeholder="Enter document title..." required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
-                            <textarea id="doc-description-input" rows="3" placeholder="Enter document description..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm resize-y"></textarea>
+                            <textarea id="doc-description-input-legacy-unused" rows="3" placeholder="Enter document description..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-sm resize-y"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-2">File Upload</label>
-                            <input type="file" id="doc-file-input" required class="w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 file:cursor-pointer transition">
+                            <input type="file" id="doc-file-input-legacy-unused" required class="w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 file:cursor-pointer transition">
                         </div>
-                        <button id="document-upload-btn" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
+                        <button id="document-upload-btn-legacy-unused" type="submit" class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 border border-blue-400/20 flex items-center justify-center space-x-2 text-sm">
                             <span><i class="fas fa-cloud-upload-alt mr-1"></i> Upload & Publish Document</span>
                         </button>
                     </form>
@@ -698,7 +801,7 @@
                             🔄 Refresh List
                         </button>
                     </div>
-                    <div id="admin-documents-container" class="overflow-x-auto">
+                    <div id="admin-documents-container-legacy-unused" class="overflow-x-auto">
                         <div class="text-center py-8 text-slate-500 text-sm">Loading documents...</div>
                     </div>
                 </div>
@@ -809,23 +912,29 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800 mt-auto py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500 space-y-2">
-        <div>&copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.</div>
-        <div>
-          <a href="https://wa.me/256777778443" 
-             target="_blank" 
-             rel="noopener noreferrer" 
-             class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-400 transition-colors duration-200 font-medium"
-             title="Chat with Developer on WhatsApp">
-              <svg class="w-4 h-4 fill-current text-emerald-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-              </svg>
-              <span>Developer: +256777778443</span>
-          </a>
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
         </div>
-      </div>
-    </footer>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
     <!-- Script Logic -->
     <script>
@@ -1354,6 +1463,22 @@ if (prayerContainer) {
         };
 
         window.switchAdminTab = function(tab) {
+            if (tab === 'counseling') {
+                const profile = currentUserProfile;
+                const canManageCounseling =
+                    !isSuperAdmin &&
+                    profile?.role === 'church_admin' &&
+                    profile?.status === 'active' &&
+                    profile?.is_blocked !== true &&
+                    typeof profile?.church_id === 'string' &&
+                    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profile.church_id.trim());
+
+                if (!canManageCounseling) {
+                    alert('Counseling requests are available only to an active, unblocked Church Admin assigned to a church.');
+                    return;
+                }
+            }
+
             const globalView = document.getElementById('global-admin-view');
             const dashboardView = document.getElementById('church-dashboard-view');
             const counselingView = document.getElementById('counseling-content');
@@ -1570,7 +1695,7 @@ if (prayerContainer) {
             // Read only the profile fields this dashboard needs.
             const { data: profile, error: profileError } = await window.sbClient
                 .from('profiles')
-                .select('id,email,role,church_id,full_name')
+                .select('id,email,role,church_id,full_name,status,is_blocked')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -1604,6 +1729,13 @@ Hint: ${profileError.hint || 'Not provided'}`
                 currentUserProfile = profile;
             }
 
+            // Legacy Finance profiles belong in the Accounting workspace, not the Church Admin Console.
+            // accounting.html performs the authoritative, per-permission database checks.
+            if (!isSuperAdmin && currentUserProfile?.role === 'finance') {
+                window.location.replace('accounting.html');
+                return;
+            }
+
             // Store adminChurchId
             const isValidChurchUuid = value =>
     typeof value === 'string' &&
@@ -1615,6 +1747,15 @@ let adminChurchId = isSuperAdmin
         ? currentUserProfile.church_id.trim()
         : null);
 
+            const financeRolesEntry = document.getElementById('church-financial-roles-entry');
+            const canManageFinancialRoles =
+                !isSuperAdmin &&
+                currentUserProfile?.role === 'church_admin' &&
+                currentUserProfile?.status === 'active' &&
+                currentUserProfile?.is_blocked === false &&
+                typeof adminChurchId === 'string' &&
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminChurchId);
+            financeRolesEntry?.classList.toggle('hidden', !canManageFinancialRoles);
             // 3. Update the UI - Display badge with church name
             const churchNameEl = document.getElementById('admin-church-name');
             if (churchNameEl) {
@@ -1629,19 +1770,29 @@ let adminChurchId = isSuperAdmin
 
             if (
     isSuperAdmin ||
-    currentUserProfile.role === 'church_admin' ||
-    currentUserProfile.role === 'finance'
+    currentUserProfile.role === 'church_admin'
 )  {
                 
     if (
     isSuperAdmin ||
-    currentUserProfile.role === 'church_admin' ||
-    currentUserProfile.role === 'finance'
+    currentUserProfile.role === 'church_admin'
 ) {
     const tabsEl = document.getElementById('admin-tabs');
 
     if (tabsEl) {
         tabsEl.classList.remove('hidden');
+
+        // Counseling is reserved for active, unblocked Church Admins.
+        const counselingTab = document.getElementById('tab-btn-counseling');
+        const canManageCounselingTab =
+            !isSuperAdmin &&
+            currentUserProfile?.role === 'church_admin' &&
+            currentUserProfile?.status === 'active' &&
+            currentUserProfile?.is_blocked !== true &&
+            typeof currentUserProfile?.church_id === 'string' &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentUserProfile.church_id.trim());
+
+        counselingTab?.classList.toggle('hidden', !canManageCounselingTab);
 
         // Church Admins must not see Super Admin or Finance tabs.
         if (!isSuperAdmin && currentUserProfile.role === 'church_admin') {
@@ -1655,23 +1806,6 @@ let adminChurchId = isSuperAdmin
     }
 }
                 
-                if (currentUserProfile.role === 'finance') {
-    // Open the finance tab first
-    switchAdminTab('finance');
-
-    // Finance users should only see the Finance & Giving tab
-    const tabsEl = document.getElementById('admin-tabs');
-
-    if (tabsEl) {
-        tabsEl.querySelectorAll('button').forEach(button => {
-            if (button.id === 'tab-btn-finance') {
-                button.classList.remove('hidden');
-            } else {
-                button.classList.add('hidden');
-            }
-        });
-    }
-}
                 if (
     isSuperAdmin ||
     currentUserProfile.role === 'church_admin' ||
@@ -1703,24 +1837,7 @@ let adminChurchId = isSuperAdmin
                 const overrideChurchId = urlParams.get('church_id');
                 const initialTab = urlParams.get('tab');
 
-                if (!isSuperAdmin && currentUserProfile?.role === 'finance') {
-
-activeDashboardChurchId = adminChurchId;
-
-switchAdminTab('finance');
-
-const tabsEl = document.getElementById('admin-tabs');
-
-if (tabsEl) {
-    tabsEl.querySelectorAll('button').forEach(button => {
-        button.classList.toggle(
-            'hidden',
-            button.id !== 'tab-btn-finance'
-        );
-    });
-}
-
-} else if (overrideChurchId && isSuperAdmin) {
+                if (overrideChurchId && isSuperAdmin) {
 
 activeDashboardChurchId = overrideChurchId;
 switchAdminTab('dashboard');
@@ -1883,7 +2000,7 @@ const church = churchDetails?.[0] || null;
                     trialBannerContainer.innerHTML = `
                         <div id="trial-info-banner" class="${bannerClasses}">
                             <div class="flex items-center gap-3">
-                                <span class="${iconBg}">⏳</span>
+                                <span class="${iconBg}">&#x23F3;</span>
                                 <div>
                                     <span class="font-semibold text-slate-100">${titleText}</span>
                                     <p class="text-xs text-slate-500">Expires on <strong class="text-slate-200">${formattedExpiry}</strong> (${diffDays > 0 ? diffDays + ' days remaining' : 'Expired'})</p>
@@ -2002,22 +2119,126 @@ const church = churchDetails?.[0] || null;
         async function loadChurchMembers(churchId) {
             const container = document.getElementById('member-list');
             if (!container) return;
-            const { data: members, error } = await window.sbClient
-                .from('profiles')
-                .select('id, full_name, role')
-                .eq('church_id', churchId);
 
-            if (error) {
-                container.innerHTML = `<p class="text-red-400 py-3">Error loading members: ${escapeHTML(error.message)}</p>`;
+            container.innerHTML =
+                '<p class="text-slate-400 py-3">Loading church members...</p>';
+
+            let members = [];
+            let error = null;
+
+            const isChurchAdmin =
+                !isSuperAdmin && currentUserProfile?.role === 'church_admin';
+
+            if (isChurchAdmin) {
+                const result = await window.sbClient.rpc(
+                    'get_church_members_for_admin'
+                );
+
+                members = (result.data || []).map(member => ({
+                    id: member.profile_id,
+                    full_name: member.full_name,
+                    role: member.role
+                }));
+
+                error = result.error;
+            } else if (isSuperAdmin) {
+                const result = await window.sbClient
+                    .from('profiles')
+                    .select('id, full_name, role')
+                    .eq('church_id', churchId);
+
+                members = result.data || [];
+                error = result.error;
+            } else {
+                container.innerHTML =
+                    '<p class="text-red-400 py-3">You are not authorized to manage church members.</p>';
                 return;
             }
 
-            container.innerHTML = members && members.length > 0 ? members.map(m => `
-                <div class="py-3 flex items-center justify-between">
-                    <span class="text-sm font-medium text-slate-100">${escapeHTML(m.full_name || 'Anonymous Member')}</span>
-                    <span class="px-2.5 py-1 text-xs rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 font-medium">${escapeHTML(m.role || 'member')}</span>
+            if (error) {
+                container.innerHTML =
+                    `<p class="text-red-400 py-3">Error loading members: ${escapeHTML(error.message)}</p>`;
+                return;
+            }
+
+            if (!members.length) {
+                container.innerHTML =
+                    '<p class="text-slate-500 py-3">No members joined your church yet.</p>';
+                return;
+            }
+
+            const allowedRoles = ['member', 'finance', 'pastor'];
+
+            container.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-left">
+                                <th class="py-3 pr-3">Member</th>
+                                <th class="py-3 pr-3">Current Role</th>
+                                ${isChurchAdmin ? '<th class="py-3">Manage Role</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${members.map(member => {
+                                const role = member.role || 'member';
+                                const supportedRole = allowedRoles.includes(role);
+
+                                const canManage =
+                                    isChurchAdmin &&
+                                    !currentUserProfile.missing_profile &&
+                                    member.id !== currentUserProfile.id &&
+                                    supportedRole;
+
+                                const roleOptions = supportedRole
+                                    ? allowedRoles
+                                    : [role];
+
+                                return `
+                                    <tr class="border-b border-slate-800">
+                                        <td class="py-3 pr-3 font-medium text-slate-100">
+                                            ${escapeHTML(member.full_name || 'Unnamed Member')}
+                                        </td>
+
+                                        <td class="py-3 pr-3">
+                                            <span class="px-2.5 py-1 text-xs rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                                                ${escapeHTML(role.replace(/_/g, ' '))}
+                                            </span>
+                                        </td>
+
+                                        ${isChurchAdmin ? `
+                                            <td class="py-3">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <select
+                                                        id="role-select-${member.id}"
+                                                        class="form-select form-select-sm bg-slate-950 text-slate-100 border border-slate-700 rounded-lg"
+                                                        ${canManage ? '' : 'disabled'}>
+                                                        ${!supportedRole
+                                                            ? `<option value="${escapeHTML(role)}">Read only: ${escapeHTML(role)}</option>`
+                                                            : roleOptions.map(option => `
+                                                                <option value="${option}" ${role === option ? 'selected' : ''}>
+                                                                    ${option.replace(/_/g, ' ')}
+                                                                </option>
+                                                            `).join('')}
+                                                    </select>
+
+                                                    <button
+                                                        type="button"
+                                                        onclick="updateUserRole('${member.id}')"
+                                                        class="px-3 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        ${canManage ? '' : 'disabled'}>
+                                                        Update
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        ` : ''}
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
                 </div>
-            `).join('') : '<p class="text-slate-500 py-3">No members joined your church yet.</p>';
+            `;
         }
 
         async function updateLocation() {
@@ -2356,76 +2577,144 @@ try {
                 if (error) throw error;
 
                 showNotification("User role updated successfully!", "success");
-                await loadAllMembers();
+                if (isSuperAdmin) {
+                    await loadAllMembers(activeDashboardChurchId, true);
+                } else {
+                    await loadChurchMembers(activeDashboardChurchId);
+                }
             } catch (err) {
                 showNotification("Failed to update role: " + err.message, "error");
             }
         }
 
-        // --- DOCUMENT UPLOAD HANDLER ---
-        document.getElementById('document-upload-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('document-upload-btn');
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading Document...`;
-
-            try {
-                const titleInput = document.getElementById('doc-title-input');
-                const descInput = document.getElementById('doc-description-input');
-                const fileInput = document.getElementById('doc-file-input');
-
-                if (!fileInput.files || fileInput.files.length === 0) {
-                    throw new Error("Please select a file to upload.");
+        // --- DOCUMENT UPLOAD HANDLER (PRIVATE STORAGE + SERVER-SIDE PUBLISH) ---
+        const activeDocumentUploadForm = document.getElementById('document-upload-form');
+        if (activeDocumentUploadForm) {
+            activeDocumentUploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const btn = form.querySelector('#document-upload-btn');
+                const originalHTML = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = 'Uploading Document...';
                 }
 
-                const file = fileInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-                const filePath = `${fileName}`;
+                let documentId = null;
+                let filePath = null;
+                let metadataInserted = false;
+                let fileUploaded = false;
+                let published = false;
+                let cleanupWarning = '';
 
-                const { data: uploadData, error: uploadError } = await window.sbClient.storage
-                    .from('documents')
-                    .upload(filePath, file);
+                try {
+                    const titleInput = form.querySelector('#doc-title-input');
+                    const descInput = form.querySelector('#doc-description-input');
+                    const fileInput = form.querySelector('#doc-file-input');
+                    const title = titleInput?.value?.trim();
+                    const file = fileInput?.files?.[0];
 
-                if (uploadError) {
-                    throw new Error("Storage upload failed: " + uploadError.message);
+                    if (!title) throw new Error('Please enter a document title.');
+                    if (!file) throw new Error('Please select a file to upload.');
+
+                    const churchId = isSuperAdmin
+                        ? activeDashboardChurchId
+                        : (currentUserProfile?.church_id || activeDashboardChurchId);
+                    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                    if (typeof churchId !== 'string' || !uuidPattern.test(churchId.trim())) {
+                        throw new Error('Select your church in the admin dashboard before uploading a document.');
+                    }
+
+                    const { data: authData, error: authError } = await window.sbClient.auth.getUser();
+                    if (authError) throw authError;
+                    const user = authData?.user;
+                    if (!user) throw new Error('Admin user not authenticated.');
+
+                    documentId = window.crypto.randomUUID();
+                    const originalName = (file.name || 'document').split(/[\\/]/).pop();
+                    const safeName = originalName
+                        .replace(/[^A-Za-z0-9._-]/g, '_')
+                        .replace(/^\.+/, '')
+                        .slice(-120) || 'document';
+                    filePath = `${churchId.trim()}/${documentId}/${safeName}`;
+
+                    // Create the unpublished metadata row first. Storage INSERT policy
+                    // verifies this row and its church-scoped file_path.
+                    const insertPayload = {
+                        id: documentId,
+                        church_id: churchId.trim(),
+                        title,
+                        description: descInput?.value?.trim() || null,
+                        file_path: filePath,
+                        uploaded_by: user.id,
+                        is_published: false,
+                        audience_all_members: true,
+                        audience_leadership: false
+                    };
+
+                    const { error: insertError } = await window.sbClient
+                        .from('important_documents')
+                        .insert([insertPayload]);
+                    if (insertError) throw insertError;
+                    metadataInserted = true;
+
+                    const { error: uploadError } = await window.sbClient.storage
+                        .from('documents')
+                        .upload(filePath, file, {
+                            cacheControl: '3600',
+                            upsert: false,
+                            contentType: file.type || 'application/octet-stream'
+                        });
+                    if (uploadError) throw new Error('Storage upload failed: ' + uploadError.message);
+                    fileUploaded = true;
+
+                    // This narrowly scoped RPC publishes only the current user's own
+                    // document after confirming church-management permission and file existence.
+                    const { error: publishError } = await window.sbClient.rpc(
+                        'publish_important_document',
+                        { p_document_id: documentId }
+                    );
+                    if (publishError) throw new Error('File uploaded, but publishing failed: ' + publishError.message);
+                    published = true;
+
+                    showNotification('Document uploaded and published successfully!', 'success');
+                    form.reset();
+                    await loadAdminDocuments();
+                } catch (err) {
+                    console.error('Document upload error:', err);
+
+                    if (metadataInserted && !published) {
+                        if (fileUploaded && filePath) {
+                            const { error: removeError } = await window.sbClient.storage
+                                .from('documents')
+                                .remove([filePath]);
+                            if (removeError) {
+                                cleanupWarning = ' The unpublished document record and uploaded file were retained because Storage cleanup failed: ' + removeError.message;
+                            } else {
+                                fileUploaded = false;
+                            }
+                        }
+
+                        if (!fileUploaded && documentId) {
+                            const { error: cleanupError } = await window.sbClient
+                                .from('important_documents')
+                                .delete()
+                                .eq('id', documentId);
+                            if (cleanupError) {
+                                cleanupWarning = ' The temporary metadata row could not be removed: ' + cleanupError.message;
+                            }
+                        }
+                    }
+
+                    showNotification((err.message || 'Failed to upload document.') + cleanupWarning, 'error');
+                } finally {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                    }
                 }
-
-                const { data: { publicUrl } } = window.sbClient.storage
-                    .from('documents')
-                    .getPublicUrl(filePath);
-
-                const { data: authData } = await window.sbClient.auth.getUser();
-                const user = authData?.user;
-                if (!user) {
-                    throw new Error("Admin user not authenticated.");
-                }
-
-                const insertPayload = {
-                    title: titleInput.value.trim(),
-                    description: descInput.value.trim(),
-                    file_url: publicUrl,
-                    uploaded_by: user.id
-                };
-
-                const { error: dbError } = await window.sbClient.from('important_documents').insert([insertPayload]);
-
-                if (dbError) throw dbError;
-
-                showNotification("Document uploaded and saved successfully!", "success");
-                e.target.reset();
-                loadAdminDocuments();
-            } catch (err) {
-                console.error("Document upload error:", err);
-                let errorMessage = err.message || "Failed to upload document.";
-                showNotification(errorMessage, "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-            }
-        });
-
+            });
+        }
         function toggleMediaInputType() {
             const mediaType = document.getElementById('media-type-input').value;
             const fileContainer = document.getElementById('file-upload-container');
@@ -2656,76 +2945,75 @@ try {
             const tbody = document.getElementById('finance-transactions-tbody');
             if (!tbody) return;
 
+            // Clear previously cached records before checking access.
+            window._recentTransactions = [];
+
+            // Super Admin must never retrieve donation or transaction records.
+            if (isSuperAdmin || currentUserProfile?.role === 'super_admin') {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-slate-500 text-sm">
+                            Donation records are available only to the relevant church administrator.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            const adminChurchId = currentUserProfile?.church_id || null;
+
+            if (currentUserProfile?.role !== 'church_admin' || !adminChurchId) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-slate-500 text-sm">
+                            Finance records are available only to an authorized church administrator.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
             tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Loading transactions...</td></tr>`;
 
             try {
-                const adminChurchId = isSuperAdmin
-    ? (activeDashboardChurchId || null)
-    : (currentUserProfile?.church_id || null);
+                const { data, error } = await window.sbClient
+                    .from('transactions')
+                    .select('id, church_id, user_id, merchant_reference, pesapal_tracking_id, amount, currency, payment_type, payment_method, status, payer_name, payer_email, payer_phone, description, created_at')
+                    .eq('church_id', adminChurchId)
+                    .order('created_at', { ascending: false });
 
-if (!isSuperAdmin && !adminChurchId) {
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="6" class="text-center py-8 text-red-400">
-                Your assigned church could not be determined.
-            </td>
-        </tr>`;
-    return;
-}
+                if (error) throw error;
 
-let transactions = [];
+                const transactions = data || [];
 
-if (adminChurchId) {
-    const { data: churchProfiles, error: profilesError } =
-        await window.sbClient
-            .from('profiles')
-            .select('id')
-            .eq('church_id', adminChurchId);
-
-    if (profilesError) throw profilesError;
-
-    const memberIds = (churchProfiles || [])
-        .map(profile => profile.id)
-        .filter(Boolean);
-
-    if (memberIds.length > 0) {
-        const { data, error } = await window.sbClient
-            .from('donations')
-            .select('*')
-            .in('user_id', memberIds)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        transactions = data || [];
-    }
-} else {
-    const { data, error } = await window.sbClient
-        .from('donations')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    transactions = data || [];
-}
-                if (!transactions || transactions.length === 0) {
+                if (transactions.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">No recent transactions found.</td></tr>`;
                     return;
                 }
 
-                // Store transactions list in memory or attach data directly to button click
                 window._recentTransactions = transactions;
 
                 tbody.innerHTML = transactions.map((tx, index) => {
-                    const dateStr = tx.created_at ? new Date(tx.created_at).toLocaleString() : 'N/A';
-                    const userEmail = tx.user_email || tx.email || tx.donor_email || 'Anonymous Donor';
-                    const txType = tx.giving_type || tx.type || tx.category || 'Tithe/Offering';
-                    const amount = tx.amount ? `${tx.currency || '$'} ${Number(tx.amount).toLocaleString()}` : '$0.00';
-                    const rawStatus = (tx.status || 'Completed').toLowerCase();
+                    const dateStr = tx.created_at
+                        ? new Date(tx.created_at).toLocaleString()
+                        : 'N/A';
+
+                    const donorLabel = tx.payer_name
+                        ? `${tx.payer_name}${tx.payer_email ? ` (${tx.payer_email})` : ''}`
+                        : (tx.payer_email || 'Guest Donor');
+
+                    const txType = tx.payment_type || tx.description || 'Donation';
+                    const numericAmount = Number(tx.amount);
+
+                    const amount = tx.amount !== null &&
+                        tx.amount !== undefined &&
+                        Number.isFinite(numericAmount)
+                        ? `${tx.currency || 'UGX'} ${numericAmount.toLocaleString()}`
+                        : 'Ã¢â‚¬â€';
+
+                    const rawStatus = String(tx.status || 'pending').toLowerCase();
 
                     let statusBadge = '';
-                    if (rawStatus === 'completed' || rawStatus === 'success' || rawStatus === 'paid') {
+
+                    if (['completed', 'success', 'paid'].includes(rawStatus)) {
                         statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Completed</span>`;
                     } else if (rawStatus === 'pending') {
                         statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">Pending</span>`;
@@ -2733,18 +3021,16 @@ if (adminChurchId) {
                         statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">Failed</span>`;
                     }
 
-                    // Serialize transaction object safely for the inline click event
-                    const txJson = JSON.stringify(tx).replace(/"/g, '&quot;');
-
+                    // Pass only a numeric index through the inline event handler.
                     return `
-                        <tr class="hover:bg-slate-800/50 transition cursor-pointer" onclick="populateAndShowReceipt(${txJson})">
+                        <tr class="hover:bg-slate-800/50 transition cursor-pointer" onclick="populateAndShowReceipt(window._recentTransactions[${index}])">
                             <td class="p-3.5 align-middle whitespace-nowrap text-slate-300 text-xs">${escapeHTML(dateStr)}</td>
-                            <td class="p-3.5 align-middle font-medium text-white">${escapeHTML(userEmail)}</td>
+                            <td class="p-3.5 align-middle font-medium text-white">${escapeHTML(donorLabel)}</td>
                             <td class="p-3.5 align-middle text-slate-300"><span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20">${escapeHTML(txType)}</span></td>
                             <td class="p-3.5 align-middle font-bold text-emerald-400">${escapeHTML(amount)}</td>
                             <td class="p-3.5 align-middle whitespace-nowrap">${statusBadge}</td>
                             <td class="p-3.5 align-middle text-right whitespace-nowrap" onclick="event.stopPropagation()">
-                                <button onclick="populateAndShowReceipt(${txJson})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 shadow" title="View Receipt">
+                                <button onclick="populateAndShowReceipt(window._recentTransactions[${index}])" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1.5 shadow" title="View Receipt">
                                     <i class="fas fa-receipt text-sky-400"></i> Receipt
                                 </button>
                             </td>
@@ -2754,6 +3040,7 @@ if (adminChurchId) {
 
             } catch (err) {
                 console.error("Error loading finance transactions:", err);
+                window._recentTransactions = [];
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400 text-sm">Error loading transactions: ${escapeHTML(err.message)}</td></tr>`;
             }
         }
@@ -2831,39 +3118,42 @@ if (adminChurchId) {
             if (!container) return;
 
             container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">Loading requests...</div>';
-            const adminChurchId = isSuperAdmin
-    ? (activeDashboardChurchId || null)
-    : (currentUserProfile?.church_id || null);
 
-if (!isSuperAdmin && !adminChurchId) {
-    container.innerHTML = `
-        <div class="text-center py-8 text-red-400">
-            Your assigned church could not be determined.
-        </div>`;
-    return;
-}
-let query = window.sbClient
-    .from('donations')
-    .select(`
-        *,
-        profiles!inner (
-            church_id
-        )
-    `);
+            const profile = currentUserProfile;
+            const adminChurchId = typeof profile?.church_id === 'string'
+                ? profile.church_id.trim()
+                : '';
 
-if (adminChurchId) {
-    query = query.eq('profiles.church_id', adminChurchId);
-} 
+            // Counseling is restricted to active, unblocked church admins.
+            // Super Admin and finance users must not access this panel.
+            if (
+                isSuperAdmin ||
+                profile?.role !== 'church_admin' ||
+                profile?.status !== 'active' ||
+                profile?.is_blocked === true ||
+                !adminChurchId
+            ) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        Counseling requests are available only to an active,
+                        unblocked church administrator with an assigned church.
+                    </div>`;
+                return;
+            }
 
-            const { data, error } = await query.order('appointment_date', { ascending: true });
+            // RLS determines which requests belong to this administrator's church.
+            const { data, error } = await window.sbClient
+                .from('counseling_appointments')
+                .select('id,user_id,member_name,member_email,appointment_date,appointment_time,reason,status')
+                .order('appointment_date', { ascending: true });
 
             if (error) {
-                container.innerHTML = `<div class="bg-red-950 text-red-200 p-4 rounded-xl text-center text-sm font-medium border border-red-800">Error loading appointments: ${escapeHTML(error.message)}</div>`;
+                container.innerHTML = `<div class="bg-red-950 text-red-200 p-4 rounded-xl text-center text-sm font-medium border border-red-800">Error loading counseling requests: ${escapeHTML(error.message)}</div>`;
                 return;
             }
 
             if (!data || data.length === 0) {
-                container.innerHTML = `<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No counseling requests found.</div>`;
+                container.innerHTML = '<div class="bg-slate-800/40 p-8 rounded-xl text-center text-slate-400 text-sm">No counseling requests found.</div>';
                 return;
             }
 
@@ -2880,26 +3170,37 @@ if (adminChurchId) {
                     </thead>
                     <tbody class="divide-y divide-slate-800 text-sm">
                         ${data.map(app => {
-                            const statusColor = app.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : app.status === 'Declined' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold';
+                            const statusColor = app.status === 'Approved'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : app.status === 'Declined'
+                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold';
+
+                            const actions = app.status === 'Pending'
+                                ? `
+                                    <button onclick="updateCounselingStatus('${app.id}', 'Approved')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow">Approve</button>
+                                    <button onclick="updateCounselingStatus('${app.id}', 'Declined')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow">Decline</button>
+                                `
+                                : '<span class="text-xs text-slate-500">No action needed</span>';
+
                             return `
                                 <tr class="hover:bg-slate-800/50 transition">
                                     <td class="p-3 align-top">
-                                        <div class="font-bold text-white">${escapeHTML(app.member_name)}</div>
-                                        <div class="text-xs text-slate-400">${escapeHTML(app.member_email)}</div>
+                                        <div class="font-bold text-white">${escapeHTML(app.member_name || '')}</div>
+                                        <div class="text-xs text-slate-400">${escapeHTML(app.member_email || '')}</div>
                                     </td>
                                     <td class="p-3 align-top whitespace-nowrap">
-                                        <div class="font-medium text-white">${escapeHTML(app.appointment_date)}</div>
-                                        <div class="text-xs text-slate-400">${escapeHTML(app.appointment_time)}</div>
+                                        <div class="font-medium text-white">${escapeHTML(app.appointment_date || '')}</div>
+                                        <div class="text-xs text-slate-400">${escapeHTML(app.appointment_time || '')}</div>
                                     </td>
                                     <td class="p-3 align-top max-w-xs text-slate-300">
-                                        <p class="truncate">${escapeHTML(app.reason)}</p>
+                                        <p class="truncate">${escapeHTML(app.reason || '')}</p>
                                     </td>
                                     <td class="p-3 align-top whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded-full text-xs ${statusColor}">${escapeHTML(app.status)}</span>
+                                        <span class="px-2.5 py-1 rounded-full text-xs ${statusColor}">${escapeHTML(app.status || '')}</span>
                                     </td>
                                     <td class="p-3 align-top text-right whitespace-nowrap space-x-2">
-                                        <button onclick="updateCounselingStatus('${app.id}', 'Approved')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow">Approve</button>
-                                        <button onclick="updateCounselingStatus('${app.id}', 'Declined')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow">Decline</button>
+                                        ${actions}
                                     </td>
                                 </tr>
                             `;
@@ -2910,38 +3211,45 @@ if (adminChurchId) {
         }
 
         async function updateCounselingStatus(id, newStatus) {
-            const { data: appData, error: fetchErr } = await window.sbClient
-                .from('counseling_appointments')
-                .select('*')
-                .eq('id', id)
-                .single();
+            if (!['Approved', 'Declined'].includes(newStatus)) {
+                showNotification('Invalid counseling status.', 'error');
+                return;
+            }
 
-            const { error } = await window.sbClient
-                .from('counseling_appointments')
-                .update({ status: newStatus })
-                .eq('id', id);
+            const profile = currentUserProfile;
 
-            if (error) {
-                showNotification("Failed to update status: " + error.message, "error");
-            } else {
-                showNotification(`Appointment status updated to ${newStatus}.`, "success");
+            if (
+                isSuperAdmin ||
+                profile?.role !== 'church_admin' ||
+                profile?.status !== 'active' ||
+                profile?.is_blocked === true ||
+                !profile?.church_id
+            ) {
+                showNotification('You are not authorized to update counseling requests.', 'error');
+                return;
+            }
 
-                if (appData && appData.user_id) {
-                    const title = `Counseling Request ${newStatus}`;
-                    const message = `Your counseling appointment request for ${appData.appointment_date || 'scheduled date'} has been ${newStatus.toLowerCase()}.`;
-                    await window.sbClient.from('notifications').insert([{
-                        user_id: appData.user_id,
-                        title: title,
-                        message: message,
-                        link: '/counseling.html',
-                        is_read: false
-                    }]);
+            try {
+                const { data, error } = await window.sbClient.rpc(
+                    'update_counseling_appointment_status',
+                    {
+                        p_appointment_id: id,
+                        p_new_status: newStatus
+                    }
+                );
+
+                if (error) throw error;
+
+                if (!data || data.notification_created !== true) {
+                    throw new Error('Counseling update confirmation was incomplete.');
                 }
 
-                loadAdminAppointments();
+                showNotification(`Appointment status updated to ${newStatus}.`, 'success');
+                await loadAdminAppointments();
+            } catch (error) {
+                showNotification('Failed to update counseling status: ' + error.message, 'error');
             }
         }
-
         async function loadAdminRosterSlots() {
             const container = document.getElementById('admin-roster-container');
             if (!container) return;
@@ -3125,19 +3433,34 @@ if (!isSuperAdmin && !adminChurchId) {
         async function loadAdminDocuments() {
             const container = document.getElementById('admin-documents-container');
             if (!container) return;
+            container.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">Loading documents...</div>';
 
             try {
                 const { data: docs, error } = await window.sbClient
                     .from('important_documents')
                     .select('*')
                     .order('created_at', { ascending: false });
-
                 if (error) throw error;
 
                 if (!docs || docs.length === 0) {
-                    container.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">No important documents uploaded yet.</div>`;
+                    container.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">No important documents uploaded yet.</div>';
                     return;
                 }
+
+                const rows = await Promise.all(docs.map(async (doc) => {
+                    let signedUrl = '';
+                    if (doc.file_path) {
+                        const { data, error: signedUrlError } = await window.sbClient.storage
+                            .from('documents')
+                            .createSignedUrl(doc.file_path, 600);
+                        if (signedUrlError) {
+                            console.warn('Could not create document signed URL:', doc.id, signedUrlError.message);
+                        } else {
+                            signedUrl = data?.signedUrl || '';
+                        }
+                    }
+                    return { doc, signedUrl };
+                }));
 
                 container.innerHTML = `
                     <table class="w-full text-left border-collapse">
@@ -3150,69 +3473,74 @@ if (!isSuperAdmin && !adminChurchId) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800 text-sm">
-                            ${docs.map(doc => {
+                            ${rows.map(({ doc, signedUrl }) => {
                                 const dateStr = doc.created_at ? new Date(doc.created_at).toLocaleString() : 'N/A';
+                                const fileLink = signedUrl
+                                    ? `<a href="${escapeHTML(signedUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-xs font-semibold transition border border-blue-500/30"><i class="fas fa-external-link-alt"></i> View File</a>`
+                                    : '<span class="text-xs text-amber-400">File unavailable</span>';
                                 return `
                                     <tr class="hover:bg-slate-800/40 transition">
                                         <td class="p-3 align-top">
                                             <div class="font-bold text-slate-100">${escapeHTML(doc.title)}</div>
                                             <div class="text-xs text-slate-400 mt-0.5">${escapeHTML(doc.description || 'No description')}</div>
                                         </td>
-                                        <td class="p-3 align-top text-slate-300 whitespace-nowrap text-xs">
-                                            ${escapeHTML(dateStr)}
-                                        </td>
-                                        <td class="p-3 align-top whitespace-nowrap">
-                                            <a href="${doc.file_url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-xs font-semibold transition border border-blue-500/30">
-                                                <i class="fas fa-external-link-alt"></i> View File
-                                            </a>
-                                        </td>
+                                        <td class="p-3 align-top text-slate-300 whitespace-nowrap text-xs">${escapeHTML(dateStr)}</td>
+                                        <td class="p-3 align-top whitespace-nowrap">${fileLink}</td>
                                         <td class="p-3 align-top text-right whitespace-nowrap">
-                                            <button onclick="deleteImportantDocument('${doc.id}', '${doc.file_url}')" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-xs font-bold transition border border-red-500/30 flex items-center gap-1 ml-auto">
+                                            <button type="button" data-delete-document="true" data-doc-id="${escapeHTML(doc.id)}" data-file-path="${escapeHTML(doc.file_path || '')}" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-xs font-bold transition border border-red-500/30 flex items-center gap-1 ml-auto">
                                                 <i class="fas fa-trash-alt"></i> Delete
                                             </button>
                                         </td>
-                                    </tr>
-                                `;
+                                    </tr>`;
                             }).join('')}
                         </tbody>
-                    </table>
-                `;
+                    </table>`;
+
+                container.querySelectorAll('[data-delete-document="true"]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        deleteImportantDocument(
+                            button.getAttribute('data-doc-id'),
+                            button.getAttribute('data-file-path')
+                        );
+                    });
+                });
             } catch (err) {
-                console.error("Error loading documents:", err);
+                console.error('Error loading documents:', err);
                 container.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Failed to load documents: ${escapeHTML(err.message)}</div>`;
             }
         }
 
-        async function deleteImportantDocument(docId, fileUrl) {
-            if (!confirm("Are you sure you want to delete this document? This will remove the database record and delete the file from storage.")) {
+        async function deleteImportantDocument(docId, filePath) {
+            if (!confirm('Are you sure you want to delete this document? This will remove its private Storage file and database record.')) return;
+            if (!docId || !filePath) {
+                showNotification('Document ID or private file path is missing; nothing was deleted.', 'error');
                 return;
             }
 
             try {
-                // Delete from DB first
+                // Storage DELETE policy needs the metadata row to exist for its authorization check.
+                const { error: storageError } = await window.sbClient.storage
+                    .from('documents')
+                    .remove([filePath]);
+                if (storageError) {
+                    throw new Error('Storage file was not removed; the database record was preserved: ' + storageError.message);
+                }
+
                 const { error: dbError } = await window.sbClient
                     .from('important_documents')
                     .delete()
                     .eq('id', docId);
-
-                if (dbError) throw dbError;
-
-                // Attempt to delete from storage bucket if fileUrl is valid storage URL
-                if (fileUrl && fileUrl.includes('/storage/v1/object/public/documents/')) {
-                    const filePath = fileUrl.split('/storage/v1/object/public/documents/').pop();
-                    if (filePath) {
-                        await window.sbClient.storage.from('documents').remove([filePath]);
-                    }
+                if (dbError) {
+                    throw new Error('Storage file was removed, but its database record could not be deleted: ' + dbError.message);
                 }
 
-                showNotification("Document deleted successfully!", "success");
-                loadAdminDocuments();
+                showNotification('Document deleted successfully!', 'success');
+                await loadAdminDocuments();
             } catch (err) {
-                console.error("Delete document error:", err);
-                showNotification("Failed to delete document: " + err.message, "error");
+                console.error('Delete document error:', err);
+                showNotification('Failed to delete document: ' + err.message, 'error');
             }
         }
-
         async function loadChurchJoinCode(churchIdOverride) {
     const codeDisplay = document.getElementById('church-join-code');
     if (!codeDisplay) return;
@@ -3471,8 +3799,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await navigator.clipboard.writeText(codeText);
 
         if (btnText) {
-            btnText.innerText = '✓ Copied!';
-
+            btnText.innerText = 'Copied!';
             setTimeout(() => {
                 btnText.innerText = 'Copy Join Code';
             }, 2500);
@@ -3557,7 +3884,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <p class="line-clamp-2">${escapeHTML(b.description || 'No description')}</p>
                                         <div class="mt-1 text-[11px] text-slate-400">
                                             ${b.phone ? `<div>📞 ${escapeHTML(b.phone)}</div>` : ''}
-                                            ${b.email ? `<div>✉️ ${escapeHTML(b.email)}</div>` : ''}
+                        ${b.email ? `<div>✉️ ${escapeHTML(b.email)}</div>` : ''}
                                             ${b.website_url ? `<div>🌐 <a href="${escapeHTML(b.website_url)}" target="_blank" class="text-blue-400 hover:underline truncate">${escapeHTML(b.website_url)}</a></div>` : ''}
                                         </div>
                                     </td>
@@ -3587,7 +3914,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Map status and approval fields correctly for RPC
             const isApproved = newStatus === 'approved';
 
-            const { data, error } = await db.rpc('moderate_business_listing', {
+            const { error } = await db.rpc('moderate_business_listing', {
                 p_business_id: businessId,
                 p_status: newStatus,
                 p_is_approved: isApproved
@@ -3598,24 +3925,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 alert(`Business ${newStatus === 'approved' ? 'approved' : 'declined'} successfully!`);
                 
-                // Fetch record to notify owner if user_id exists
-                const businessData = data && data[0] ? data[0] : null;
-                if (businessData && businessData.user_id) {
-                    try {
-                        await db.from('notifications').insert([{
-                            user_id: businessData.user_id,
-                            church_id: businessData.church_id || activeDashboardChurchId || currentUserProfile?.church_id,
-                            title: newStatus === 'approved' ? 'Business Approved! 🎉' : 'Business Submission Declined ❌',
-                            message: newStatus === 'approved' 
-                                ? 'Your business has been approved and is now live in the directory.' 
-                                : 'Your business submission was declined by the administrator.',
-                            type: 'business_approval',
-                            is_read: false
-                        }]);
-                    } catch (notifErr) {
-                        console.error('Error sending business approval notification:', notifErr);
-                    }
-                }
+                // Owner notification is created atomically by the moderation RPC.
 
                 // Remove item from UI list
                 const row = document.getElementById(`biz-row-${businessId}`);
@@ -3811,6 +4121,8 @@ function renderVolunteerList(signups, container) {
         initPage();
     </script>
     <script src="js/admin-events.js"></script>
+    <script src="js/church-branding.js"></script>
     <script src="js/notifications.js"></script>
+<script src="js/go-back.js"></script>
 </body>
 </html>

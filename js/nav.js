@@ -6,8 +6,18 @@
             return;
         }
 
+        // Load the shared All Features design.
+        const featuresStylesheetId = 'bm-all-features-stylesheet';
+        if (!document.getElementById(featuresStylesheetId)) {
+            const featuresStylesheet = document.createElement('link');
+            featuresStylesheet.id = featuresStylesheetId;
+            featuresStylesheet.rel = 'stylesheet';
+            featuresStylesheet.href = 'css/all-features.css?v=20261122-v1';
+            document.head.appendChild(featuresStylesheet);
+        }
         let isSuperAdmin = false;
-        let isAdminOrLeader = false;
+        let canAccessAdminPanel = false;
+        let currentChurchId = null;
         try {
             let attempts = 0;
             while (!window.sbClient && attempts < 15) {
@@ -17,41 +27,31 @@
             if (window.sbClient) {
                 const { data: { user } } = await window.sbClient.auth.getUser();
                 if (user) {
-                    isSuperAdmin = user.email === 'adonstance@gmail.com';
+                    const { data: platformAdminResult, error: platformAdminError } =
+                        await window.sbClient.rpc('is_super_admin');
+
+                    if (platformAdminError) {
+                        console.warn('Platform administrator navigation check failed:', platformAdminError);
+                    } else {
+                        isSuperAdmin = platformAdminResult === true;
+                    }
                     const { data: profile } = await window.sbClient
                         .from('profiles')
-                        .select('role, church_id')
+                        .select('role, church_id, status, is_blocked')
                         .eq('id', user.id)
                         .maybeSingle();
-                    
-                    const currentPath = window.location.pathname.split('/').pop() || 'feed.html';
-                    const isJoinPage = currentPath === 'join-church.html' || currentPath === 'register-church.html';
 
-                    if (
-                        !isSuperAdmin &&
-                        profile &&
-                        profile.role !== 'super_admin' &&
-                        profile.role !== 'super-admin' &&
-                        !profile.church_id &&
-                        !isJoinPage &&
-                        !currentPath.includes('login') &&
-                        !currentPath.includes('signup') &&
-                        !currentPath.includes('giving.html') &&
-                        !currentPath.includes('public-church.html')
-                    ) {
-                        window.location.replace('join-church.html');
-                        return;
-                    }
+                    const profileRole = profile && typeof profile.role === 'string'
+                        ? profile.role.trim().toLowerCase()
+                        : '';
+                    const accountActive = profile?.status === 'active' && profile?.is_blocked !== true;
+                    currentChurchId = profile?.church_id || null;
 
-                    if (isSuperAdmin || (profile && (
-                        profile.role === 'church_admin' ||
-                        profile.role === 'admin' ||
-                        profile.role === 'super_admin' ||
-                        profile.role === 'super-admin' ||
-                        profile.role === 'leader'
-                    ))) {
-                        isAdminOrLeader = true;
-                    }
+                    // Match the roles supported by admin.html. Church-level admin
+                    // links require an active, unblocked profile. Platform-admin
+                    // access comes only from the database allowlist RPC, never an email check.
+                    canAccessAdminPanel = isSuperAdmin || (accountActive &&
+                        ['church_admin', 'admin', 'finance', 'super_admin', 'super-admin'].includes(profileRole));
                 }
             }
         } catch (err) {
@@ -61,6 +61,7 @@
         const options = [
             { href: 'feed.html', label: 'Feed', icon: 'fa-newspaper' },
             { href: 'events.html', label: 'Events', icon: 'fa-calendar-alt' },
+            { href: 'events.html?category=Singles%20Meetup', activeFile: 'events.html', label: 'Singles Corner', icon: 'fa-heart' },
             { href: 'groups.html', label: 'Groups', icon: 'fa-users' },
             { href: 'sermons.html', label: 'Sermons', icon: 'fa-bible' },
             { href: 'giving.html', label: 'Giving', icon: 'fa-hand-holding-heart' },
@@ -76,56 +77,19 @@
         if (isSuperAdmin) {
             options.push({ href: 'super-admin.html', label: 'Super Admin', icon: 'fa-shield-alt' });
         }
-        if (isAdminOrLeader) {
+        if (canAccessAdminPanel) {
             options.push({ href: 'admin.html', label: 'Admin Panel', icon: 'fa-cog' });
         }
 
         const currentFilename = window.location.pathname.split('/').pop() || 'feed.html';
 
         navbarContainer.innerHTML = `
-            <style>
-                /* All Features Dropdown Styles */
-                .bm-dropdown-menu {
-                    display: none;
-                    position: absolute;
-                    top: calc(100% + 0.5rem);
-                    left: 0;
-                    min-width: 260px;
-                    background-color: white;
-                    border-radius: 1rem;
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                    border: 1px solid #e5e7eb;
-                    z-index: 99999;
-                    padding: 0.5rem;
-                }
-                .dark .bm-dropdown-menu {
-                    background-color: #1f2937;
-                    border-color: #374151;
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-                }
-                .bm-dropdown-menu.show {
-                    display: block;
-                    animation: bmDropdownFade 0.15s ease-out forwards;
-                }
-                @keyframes bmDropdownFade {
-                    from { opacity: 0; transform: translateY(-8px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @media (max-width: 768px) {
-                    .bm-dropdown-menu {
-                        left: auto;
-                        right: 0;
-                        max-width: 90vw;
-                        width: 280px;
-                    }
-                }
-            </style>
-            <nav class="sticky top-0 z-50 py-3 px-4 bg-slate-900/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-800 dark:border-gray-800 transition-colors duration-300 shadow-sm text-white" style="position: sticky; top: 0; z-index: 1000; width: 100%; background-color: #0f172a !important; border-bottom: 1px solid #1e293b !important;">
-                <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+            <nav class="sticky top-0 z-50 py-3 px-4 bg-slate-900/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-800 dark:border-gray-800 transition-colors duration-300 shadow-sm text-white bm-shared-nav" style="position: sticky; top: 0; z-index: 1000; width: 100%; background-color: #0f172a !important; border-bottom: 1px solid #1e293b !important;">
+                <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 bm-shared-nav-inner">
                     <div class="flex flex-col md:flex-row justify-between items-center py-2 gap-3">
                         <div class="flex items-center justify-between w-full md:w-auto gap-4">
                             <a href="feed.html" class="flex items-center gap-2 text-xl font-bold text-white hover:text-blue-400 dark:hover:text-blue-400 flex-shrink-0">
-                                <img src="images/BELIEVERS.LOGO.png" alt="BelieversMeet Logo" class="w-8 h-8 rounded-full object-cover border border-slate-700">
+                                <img src="images/BELIEVERS.LOGO.png" data-bm-church-logo alt="BelieversMeet Logo" class="w-8 h-8 rounded-full object-cover border border-slate-700">
                                 <span>BelieversMeet</span>
                             </a>
                             
@@ -133,22 +97,23 @@
                             <div class="relative inline-block text-left" id="all-features-dropdown-container">
                                 <button type="button" id="all-features-menu-btn" onclick="toggleAllFeaturesDropdown(event)" 
                                         class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-indigo-900 hover:bg-indigo-800 text-white shadow-md transition-all cursor-pointer">
-                                    <span>☰</span>
+                                    <i class="fas fa-th-large"></i>
                                     <span>All Features</span>
                                     <svg class="w-4 h-4 ml-0.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 
                                 <!-- Dropdown Panel -->
                                 <div id="all-features-dropdown-menu" class="bm-dropdown-menu">
-                                    <div class="py-1 max-h-[75vh] overflow-y-auto no-scrollbar space-y-1">
+                                    <div class="py-1 space-y-1">
                                         <div class="px-3 py-1.5 text-xs font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Member Navigation</div>
                                         ${options.map(opt => {
-                                            const isActive = currentFilename === opt.href;
+                                            const activeFile = opt.activeFile || opt.href.split('?')[0];
+                                            const isActive = currentFilename === activeFile;
                                             const activeClasses = isActive 
                                                 ? 'bg-blue-600 text-white font-bold shadow-sm' 
                                                 : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 font-medium';
                                             return `
-                                                <a href="${opt.href}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all ${activeClasses}">
+                                                <a href="${opt.href}" ${isActive ? 'aria-current="page"' : ''} class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all ${activeClasses}">
                                                     <i class="fas ${opt.icon || 'fa-circle'} w-4 text-center pointer-events-none"></i>
                                                     <span class="pointer-events-none">${opt.label}</span>
                                                 </a>
@@ -173,6 +138,34 @@
                 </div>
             </nav>
         `;
+
+        // Apply the authenticated member's church logo to the shared navigation.
+        // The homepage and public church profile use their own explicit branding.
+        const sharedBrandImage = navbarContainer.querySelector('[data-bm-church-logo]');
+        if (sharedBrandImage) {
+            sharedBrandImage.onerror = function () {
+                this.onerror = null;
+                this.src = 'images/BELIEVERS.LOGO.png';
+            };
+            if (currentChurchId && window.sbClient) {
+                try {
+                    const { data: church, error: churchError } = await window.sbClient
+                        .from('churches')
+                        .select('logo_url, name')
+                        .eq('id', currentChurchId)
+                        .maybeSingle();
+                    if (!churchError && church?.logo_url) {
+                        const logoUrl = new URL(church.logo_url, window.location.href);
+                        if (['https:', 'http:'].includes(logoUrl.protocol)) {
+                            sharedBrandImage.src = logoUrl.href;
+                            sharedBrandImage.alt = `${church.name || 'Church'} logo`;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Church navigation logo unavailable; using BelieversMeet logo.', error);
+                }
+            }
+        }
 
         // Global Dropdown Handlers
         window.toggleAllFeaturesDropdown = function(event) {

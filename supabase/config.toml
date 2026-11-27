@@ -13,3 +13,8 @@ entrypoint = "./functions/agora-token/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/member-signup/index.ts"
+[functions.group-agora-token]
+enabled = true
+verify_jwt = true
+import_map = "./functions/group-agora-token/deno.json"
+entrypoint = "./functions/group-agora-token/index.ts"

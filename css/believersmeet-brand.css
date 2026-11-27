@@ -1,0 +1,488 @@
+/* BelieversMeet Unified Brand System v1.0
+   Shared typography and primary-action palette for all active application pages.
+   Keep role/status colors (success, warning, danger) semantic and distinct.
+*/
+:root {
+  --bm-font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --bm-color-primary-deep: #1e3a8a;
+  --bm-color-primary-indigo: #312e81;
+  --bm-color-primary-brand: #2563eb;
+  --bm-color-interactive-hover: #1d4ed8;
+  --bm-color-interactive-light-hover: #eff6ff;
+
+  --bm-color-bg-neutral: #f9fafb;
+  --bm-color-surface-card: #ffffff;
+  --bm-color-text-main: #111827;
+  --bm-color-text-muted: #6b7280;
+  --bm-color-border: #e5e7eb;
+
+  --bm-radius-card: 1rem;
+  --bm-radius-button: 0.75rem;
+}
+
+html,
+body {
+  font-family: var(--bm-font-family);
+}
+
+/* Tailwind's font-sans utility must resolve to the same family on every page. */
+.font-sans {
+  font-family: var(--bm-font-family) !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* One primary-action blue across Tailwind blue and legacy indigo button styles. */
+.bg-blue-600,
+.bg-indigo-600 {
+  background-color: var(--bm-color-primary-brand) !important;
+}
+
+.hover\:bg-blue-700:hover,
+.hover\:bg-indigo-700:hover,
+.hover\:bg-indigo-500:hover {
+  background-color: var(--bm-color-interactive-hover) !important;
+}
+
+.text-indigo-600 {
+  color: var(--bm-color-primary-brand) !important;
+}
+
+.border-indigo-600 {
+  border-color: var(--bm-color-primary-brand) !important;
+}
+
+.focus\:ring-blue-500:focus,
+.focus\:ring-indigo-500:focus {
+  --tw-ring-color: var(--bm-color-primary-brand) !important;
+}
+
+.focus\:border-blue-500:focus,
+.focus\:border-indigo-500:focus {
+  border-color: var(--bm-color-primary-brand) !important;
+}
+
+/* Bootstrap pages use the same primary action color as Tailwind pages. */
+.btn-primary,
+.btn-primary:visited {
+  background-color: var(--bm-color-primary-brand) !important;
+  border-color: var(--bm-color-primary-brand) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--bm-color-interactive-hover) !important;
+  border-color: var(--bm-color-interactive-hover) !important;
+}
+
+.btn-outline-primary {
+  color: var(--bm-color-primary-brand) !important;
+  border-color: var(--bm-color-primary-brand) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  color: #ffffff !important;
+  background-color: var(--bm-color-primary-brand) !important;
+  border-color: var(--bm-color-primary-brand) !important;
+}
+
+:where(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--bm-color-primary-brand) !important;
+  outline-offset: 2px !important;
+}
+
+/* === BelieversMeet Page Hero Polish v1 === */
+.bm-page-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 9.25rem;
+  padding: clamp(1.35rem, 2.8vw, 2rem);
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+}
+
+.bm-page-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -5.25rem;
+  right: -2.5rem;
+  width: 16rem;
+  height: 16rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.015) 68%, transparent 70%);
+  pointer-events: none;
+}
+
+.bm-page-hero--feed {
+  background: linear-gradient(118deg, #1e3a8a 0%, #2563eb 54%, #312e81 100%);
+}
+
+.bm-page-hero--admin {
+  background: linear-gradient(118deg, #0f172a 0%, #172554 48%, #1e3a8a 100%);
+  border-color: rgba(147, 197, 253, 0.24);
+  box-shadow: 0 16px 36px rgba(2, 6, 23, 0.24);
+}
+
+.bm-page-hero__icon {
+  display: inline-flex;
+  flex: 0 0 3.75rem;
+  align-items: center;
+  justify-content: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  color: #fff;
+  font-size: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 16px rgba(15, 23, 42, 0.10);
+  backdrop-filter: blur(8px);
+}
+
+.bm-page-hero__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.bm-page-hero__eyebrow {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: rgba(219, 234, 254, 0.88);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bm-page-hero__title {
+  margin: 0;
+  color: #fff !important;
+  font-size: clamp(1.55rem, 2.35vw, 1.95rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+}
+
+.bm-page-hero__subtitle {
+  max-width: 54rem;
+  margin: 0.45rem 0 0;
+  color: rgba(239, 246, 255, 0.88) !important;
+  font-size: clamp(0.88rem, 1.2vw, 0.98rem);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .bm-page-hero {
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-height: 0;
+    padding: 1.2rem;
+    border-radius: 1rem;
+  }
+
+  .bm-page-hero__icon {
+    flex-basis: 3rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.9rem;
+    font-size: 1.15rem;
+  }
+
+  .bm-page-hero__eyebrow {
+    font-size: 0.62rem;
+  }
+
+  .bm-page-hero__title {
+    font-size: 1.45rem;
+  }
+
+  .bm-page-hero__subtitle {
+    margin-top: 0.35rem;
+    font-size: 0.84rem;
+  }
+
+  .bm-page-hero::after {
+    top: -6rem;
+    right: -7rem;
+  }
+}
+
+/* === End BelieversMeet Page Hero Polish v1 === */
+
+
+/* BelieversMeet Unified Footer System v1.0
+   Shared, page-level footer appearance. Keeps each page's existing footer content and layout.
+   Intentionally targets body-level site footers only; inline accounting disclosure footers are not restyled.
+*/
+:root {
+  --bm-footer-bg-start: #10182B;
+  --bm-footer-bg-end: #172554;
+  --bm-footer-text: #CBD5E1;
+  --bm-footer-muted: #94A3B8;
+  --bm-footer-link: #BFDBFE;
+  --bm-footer-link-hover: #FFFFFF;
+  --bm-footer-border: rgba(148, 163, 184, 0.22);
+}
+
+body > footer {
+  box-sizing: border-box;
+  width: 100%;
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 1;
+  margin-top: auto !important;
+  padding: clamp(1.5rem, 3vw, 2.75rem) clamp(1rem, 3vw, 1.5rem) !important;
+  background: linear-gradient(125deg, var(--bm-footer-bg-start) 0%, #14213D 52%, var(--bm-footer-bg-end) 100%) !important;
+  color: var(--bm-footer-text) !important;
+  border-top: 1px solid var(--bm-footer-border) !important;
+  box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.07);
+  font-family: var(--bm-font-family) !important;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+body > footer > :first-child {
+  width: 100%;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body > footer h1,
+body > footer h2,
+body > footer h3,
+body > footer h4,
+body > footer h5,
+body > footer h6 {
+  color: #FFFFFF !important;
+}
+
+body > footer p,
+body > footer li,
+body > footer small,
+body > footer .text-slate-400,
+body > footer .text-slate-500,
+body > footer .text-gray-400,
+body > footer .text-gray-500,
+body > footer .text-gray-600 {
+  color: var(--bm-footer-text) !important;
+}
+
+body > footer a,
+body > footer a:visited {
+  color: var(--bm-footer-link) !important;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+body > footer a:hover,
+body > footer a:focus-visible {
+  color: var(--bm-footer-link-hover) !important;
+  text-decoration: underline;
+}
+
+body > footer .border-t,
+body > footer hr {
+  border-color: var(--bm-footer-border) !important;
+}
+
+body > footer img {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  body > footer {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+    font-size: 0.8125rem;
+  }
+
+  body > footer .flex {
+    row-gap: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body > footer a {
+    transition: none;
+  }
+}
+
+/* === BelieversMeet Unified Branded Footer v2 === */
+:root {
+  --bm-footer-v2-bg: #10182b;
+  --bm-footer-v2-bg-mid: #14213d;
+  --bm-footer-v2-bg-end: #172554;
+  --bm-footer-v2-text: #cbd5e1;
+  --bm-footer-v2-muted: #94a3b8;
+  --bm-footer-v2-link: #bfdbfe;
+  --bm-footer-v2-link-hover: #ffffff;
+  --bm-footer-v2-border: rgba(148, 163, 184, 0.22);
+}
+
+footer.bm-site-footer {
+  box-sizing: border-box;
+  width: 100%;
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 1;
+  margin-top: auto !important;
+  padding: clamp(2rem, 4vw, 3rem) clamp(1rem, 3vw, 1.5rem) 1.25rem !important;
+  color: var(--bm-footer-v2-text) !important;
+  background: linear-gradient(125deg, var(--bm-footer-v2-bg) 0%, var(--bm-footer-v2-bg-mid) 56%, var(--bm-footer-v2-bg-end) 100%) !important;
+  border-top: 1px solid var(--bm-footer-v2-border) !important;
+  box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.09);
+  font-family: var(--bm-font-family) !important;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.bm-site-footer__inner {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.bm-site-footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  padding-bottom: 2rem;
+}
+
+.bm-site-footer__brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
+.bm-site-footer__logo {
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 9999px;
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+
+.bm-site-footer__brand-name {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.bm-site-footer__description {
+  max-width: 38rem;
+  margin: 0.9rem 0 0;
+  color: var(--bm-footer-v2-text) !important;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.bm-site-footer__note {
+  margin: 0.55rem 0 0;
+  color: var(--bm-footer-v2-muted) !important;
+  font-size: 0.78rem;
+}
+
+.bm-site-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem 1.4rem;
+}
+
+.bm-site-footer__nav a,
+.bm-site-footer__nav a:visited {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  color: var(--bm-footer-v2-link) !important;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  text-underline-offset: 4px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.bm-site-footer__nav a:hover,
+.bm-site-footer__nav a:focus-visible {
+  color: var(--bm-footer-v2-link-hover) !important;
+  text-decoration: underline !important;
+}
+
+.bm-site-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--bm-footer-v2-border);
+  color: var(--bm-footer-v2-muted);
+  font-size: 0.78rem;
+}
+
+.bm-site-footer__bottom p {
+  margin: 0;
+  color: var(--bm-footer-v2-muted) !important;
+}
+
+.bm-site-footer__context {
+  margin: 0.65rem 0 0;
+  color: var(--bm-footer-v2-muted) !important;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 700px) {
+  .bm-site-footer__top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .bm-site-footer__nav {
+    justify-content: flex-start;
+    gap: 0.35rem 1.15rem;
+  }
+
+  .bm-site-footer__bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bm-site-footer__nav a {
+    transition: none;
+  }
+}
+/* === End BelieversMeet Unified Branded Footer v2 === */

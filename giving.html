@@ -44,12 +44,17 @@
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body style="background-color: #f8f9fa !important;" class="min-h-screen flex flex-col font-sans text-slate-800 bg-light antialiased selection:bg-blue-500 selection:text-white"></body>
 
     <!-- Navigation Header Container -->
     <div id="navbar"></div>
-    <script src="js/nav.js"></script>
+    <script src="js/nav.js?v=20261122-v1"></script>
 
 
 <!-- Main Content Area -->
@@ -406,7 +411,7 @@
             If you encounter any issues with bank transfers or mobile money transactions, or if you would like to receive an annual giving statement for your records, please reach out directly to our finance team or Church administration.
         </p>
         <button id="contactFinanceBtn" style="display: none;" onclick="contactFinanceTeam()" class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors shadow-sm w-full sm:w-auto">
-            <span>Contact Finance Department</span>
+            <span>Need Financial Assistance? Contact Finance</span>
             <i class="fas fa-arrow-right text-xs ml-2"></i>
         </button>
     </div>
@@ -483,10 +488,28 @@
 </div>
 
 <!-- Footer -->
-<footer class="bg-white border-t border-gray-200 mt-auto py-6">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-    &copy; 2026 BelieversMeet. All rights reserved. Building and strengthening faith communities together.
-  </div>
+<footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
+                </a>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
+        </div>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/intlTelInput.min.js"></script>
@@ -564,6 +587,11 @@ if (donorPhoneInput && profile?.phone) {
     }
 
     currentGivingProfile = profile;
+
+    const financeAssistanceButton = document.getElementById('contactFinanceBtn');
+    if (financeAssistanceButton) {
+        financeAssistanceButton.style.display = user ? 'block' : 'none';
+    }
 
     if (user) {
         const { data: superAdminResult, error: superAdminError } =
@@ -1338,109 +1366,40 @@ if (donorPhoneInput && profile?.phone) {
     async function contactFinanceTeam() {
         try {
             if (!window.sbClient || !loggedInUser) {
-                throw new Error("User not authenticated or Supabase not initialized");
+                throw new Error("Please sign in to contact your church finance team.");
             }
 
-            const { data: userProfile, error: profileError } = await window.sbClient
-                .from('profiles')
-                .select('church_id')
-                .eq('id', loggedInUser.id)
-                .maybeSingle();
+            const { data: financeContacts, error } = await window.sbClient.rpc(
+                'get_my_church_finance_contact'
+            );
 
-            if (profileError || !userProfile || !userProfile.church_id) {
-                alert("Your account is not linked to a local church yet. Please join a church first.");
-                window.location.href = 'join-church.html';
+            if (error) throw error;
+
+            const financeContact = financeContacts?.[0];
+
+            if (!financeContact?.id) {
+                alert("No active finance contact is currently assigned to your approved church. Please contact your church administration.");
                 return;
             }
 
-            const userChurchId = userProfile.church_id;
-            let financeUser = null;
-            
-            const { data: financeProfiles, error: financeError } = await window.sbClient
-                .from('profiles')
-                .select('id, role, full_name, email, church_id')
-                .eq('role', 'finance')
-                .eq('church_id', userChurchId)
-                .limit(1);
+            const presetMessage =
+                "Hello, I need assistance with a financial matter. Could someone from the finance team please help me?";
 
-            if (!financeError && financeProfiles && financeProfiles.length > 0) {
-                financeUser = financeProfiles[0];
-            } else {
-                const { data: churchAdmins, error: churchAdminError } = await window.sbClient
-                    .from('profiles')
-                    .select('id, role, full_name, email, church_id')
-                    .eq('role', 'church_admin')
-                    .eq('church_id', userChurchId)
-                    .eq('status', 'active')
-                    .eq('is_blocked', false)
-                    .limit(1);
+            const params = new URLSearchParams({
+                user: financeContact.id,
+                department: 'finance',
+                prefill: presetMessage
+            });
 
-                if (!churchAdminError && churchAdmins && churchAdmins.length > 0) {
-                    financeUser = churchAdmins[0];
-                }
-            }
-
-            if (!financeUser) {
-                alert("The finance department for your local church has not been assigned yet. Please contact your church administration.");
-                return;
-            }
-
-            const financeUserId = financeUser.id;
-
-            const { data: existingMessages, error: msgError } = await window.sbClient
-                .from('messages')
-                .select('id')
-                .or(`and(sender_id.eq.${loggedInUser.id},or(receiver_id.eq.${financeUserId},recipient_id.eq.${financeUserId})),and(or(sender_id.eq.${financeUserId},receiver_id.eq.${financeUserId},recipient_id.eq.${financeUserId}),receiver_id.eq.${loggedInUser.id}))`)
-                .limit(1);
-
-            if (msgError) {
-                console.warn("Error checking existing conversation:", msgError.message);
-            }
-
-            if (!existingMessages || existingMessages.length === 0) {
-                const { error: insertError } = await window.sbClient
-                    .from('messages')
-                    .insert([{
-                        sender_id: loggedInUser.id,
-                        receiver_id: financeUserId,
-                        recipient_id: financeUserId,
-                        content: "Hello, I am reaching out regarding church giving and finance inquiries.",
-                        church_id: userChurchId
-                    }]);
-
-                if (insertError) {
-                    console.warn("Could not auto-create initial message thread:", insertError.message);
-                } else {
-                    // Trigger notification for finance team / admin
-                    try {
-                        await window.sbClient.from('notifications').insert([{
-                            user_id: financeUserId,
-                            title: 'New Finance Inquiry',
-                            message: 'A member sent a giving or finance inquiry message.',
-                            link: '/chat.html?department=finance',
-                            is_read: false
-                        }]);
-                    } catch (notifErr) {
-                        console.error('Failed to insert finance inquiry notification:', notifErr);
-                    }
-                }
-            }
-
-            showSuccessToast("Your message has been securely sent to your local church's finance team.");
-
-            setTimeout(() => {
-                const prefillMsg = encodeURIComponent("Hello Finance Team, I need assistance with my giving/transaction.");
-                window.location.href = `chat.html?department=finance&prefill=${prefillMsg}&autoSend=true`;
-            }, 1200);
+            // Open the conversation. The member reviews and presses Send.
+            window.location.assign(`chat.html?${params.toString()}`);
 
         } catch (err) {
-            console.error("Error in contactFinanceTeam:", err);
-            alert("The finance department has not been assigned yet. Please contact system administration.");
+            console.error("Error opening church finance conversation:", err);
+            alert(err.message || "Could not open your church finance conversation. Please try again.");
         }
     }
-
     initializeGivingPage();
 </script>
 </body>
 </html>
-

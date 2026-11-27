@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-slate-950 scroll-smooth">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BelieversMeet | Connect with Your Church Family</title>
     <!-- Tailwind CSS CDN -->
@@ -46,30 +46,31 @@
     <script src="js/supabase-config.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/auth-guard.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
 </head>
 <body class="min-h-screen flex flex-col font-sans text-slate-100 bg-community-hero antialiased selection:bg-blue-500 selection:text-white">
 
     <!-- Navigation Bar -->
     <header class="bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center gap-2">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center gap-2">
             <a href="index.html" class="flex items-center gap-2 shrink-0 group">
                 <img src="images/BELIEVERS.LOGO.png" alt="Logo" class="h-11 w-auto object-contain transform group-hover:scale-105 transition duration-300">
                 <span class="text-xl sm:text-2xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent truncate">BelieversMeet</span>
             </a>
-            <div class="flex items-center gap-3 sm:space-x-4" id="nav-auth-section">
-
-
-                <a href="system-flow.html" class="text-sm font-medium text-slate-300 hover:text-white transition">
+            <nav class="flex items-center gap-3 sm:gap-5" id="nav-auth-section" aria-label="Main navigation">
+                <a href="system-flow.html" class="hidden sm:inline-flex text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition whitespace-nowrap">
                     How It Works
                 </a>
-                <a href="public-church.html" class="text-sm font-medium text-blue-400 hover:text-blue-300 transition flex items-center gap-1.5">
-                    <i class="fas fa-church"></i> Connect with Church
+                <a href="login.html" id="main-nav-auth-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap">
+                    Login
                 </a>
-                <a href="login.html" id="main-nav-auth-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg transition-all shadow-md">
-                    Login / Register
-                </a>
-            </div>
+            </nav>
         </div>
     </header>
 
@@ -101,22 +102,26 @@
                             Connect with your <span class="bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">Church Family</span> in Unity
                         </h1>
                         <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                            Share daily testimonies, present your prayer requests on the interactive prayer wall, stay updated with announcements, and experience genuine spiritual fellowship.
+                            Find a church community, share prayer requests and testimonies, join groups and events, follow sermons and live broadcasts, and stay connected through member messaging and video calls.
                         </p>
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+                            <a href="#features" class="inline-flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition">Explore Features</a>
+                            <a href="signup.html" class="inline-flex items-center justify-center rounded-xl border border-slate-600 bg-slate-900/60 hover:bg-slate-800 px-6 py-3 text-sm font-semibold text-white transition">Create an Account</a>
+                        </div>
 
-                        <!-- Stats row -->
-                        <div class="pt-8 grid grid-cols-3 gap-6 border-t border-slate-800/80 max-w-lg mx-auto lg:mx-0">
+                        <!-- Platform journey highlights -->
+                        <div class="pt-8 grid grid-cols-3 gap-4 border-t border-slate-800/80 max-w-lg mx-auto lg:mx-0">
                             <div>
-                                <h4 class="text-2xl font-black text-white">100%</h4>
-                                <p class="text-xs text-slate-400 font-medium">Faith Focused</p>
+                                <h4 class="text-lg sm:text-xl font-black text-white">Discover</h4>
+                                <p class="text-xs text-slate-400 font-medium">Church communities</p>
                             </div>
                             <div>
-                                <h4 class="text-2xl font-black text-white">Global</h4>
-                                <p class="text-xs text-slate-400 font-medium">Church Network</p>
+                                <h4 class="text-lg sm:text-xl font-black text-white">Connect</h4>
+                                <p class="text-xs text-slate-400 font-medium">People and groups</p>
                             </div>
                             <div>
-                                <h4 class="text-2xl font-black text-white">24/7</h4>
-                                <p class="text-xs text-slate-400 font-medium">Prayer & Support</p>
+                                <h4 class="text-lg sm:text-xl font-black text-white">Grow</h4>
+                                <p class="text-xs text-slate-400 font-medium">Faith and service</p>
                             </div>
                         </div>
                     </div>
@@ -210,144 +215,142 @@
             </div>
         </section>
 
-        <!-- Features Grid Section -->
-        <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 bg-slate-950">
-            <div class="text-center max-w-3xl mx-auto mb-16 space-y-4" data-aos="fade-up">
-                <span class="text-xs uppercase tracking-widest text-blue-400 font-bold bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Core Features</span>
-                <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">Everything You Need to Stay Connected</h2>
-                <p class="text-slate-400 text-base sm:text-lg">Designed specifically for vibrant churches and spiritual communities.</p>
+        <!-- Current Platform Features -->
+        <section id="features" class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 bg-slate-950">
+            <div class="text-center max-w-3xl mx-auto mb-12 space-y-4" data-aos="fade-up">
+                <span class="text-xs uppercase tracking-widest text-blue-400 font-bold bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">What You Can Do</span>
+                <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">A connected place for church life</h2>
+                <p class="text-slate-400 text-base sm:text-lg">Explore the features currently available on BelieversMeet. Some areas require an account, church membership or a specific role.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1: Daily Scripture & Bible Reader -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-blue-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col" data-aos="fade-up" data-aos-delay="100">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&w=1000&q=80" alt="Hands holding an open leather-bound Bible bathed in sunlight" class="w-full object-cover aspect-[16/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-blue-500/30">
-                                📖
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Daily Scripture & Bible Reader</h3>
-                            <p class="text-slate-400 leading-relaxed">Search and read scripture instantly with integrated tools, Verse of the Day, and automatic scripture linking across posts.</p>
-                        </div>
-                    </div>
+            <div class="mt-12 first:mt-0">
+                <div class="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <h3 class="text-2xl font-extrabold text-white">Discover</h3>
+                    <p class="text-sm text-slate-500">Find churches, explore gatherings and follow church content.</p>
                 </div>
-
-                <!-- Feature 2: Worship Music Player -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-indigo-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col" data-aos="fade-up" data-aos-delay="200">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80" alt="A worship team and choir on a stage with warm, modern lighting" class="w-full object-cover aspect-[16/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-indigo-500/30">
-                                🎵
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Worship Music Player</h3>
-                            <p class="text-slate-400 leading-relaxed">Stream community worship tracks, listen to inspiring playlists, and find uplifting music directly within the platform.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 3: Community Feed & Wall -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-emerald-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col" data-aos="fade-up" data-aos-delay="300">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80" alt="People smiling and interacting while using their phones in a modern church foyer" class="w-full object-cover aspect-[16/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-emerald-600/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-emerald-500/30">
-                                💬
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Community Feed & Wall</h3>
-                            <p class="text-slate-400 leading-relaxed">Share encouragements, prayer requests, and testimonies with the church family on an interactive feed.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 4: Private Leadership Chat -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-purple-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col" data-aos="fade-up" data-aos-delay="400">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=80" alt="A respectful, quiet conversation, perhaps looking at a screen together" class="w-full object-cover aspect-[16/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-purple-600/20 text-purple-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-purple-500/30">
-                                ✉️
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Private Leadership Chat</h3>
-                            <p class="text-slate-400 leading-relaxed">Connect directly with church leadership through a secure, private messaging channel (<a href="chat.html" class="text-blue-400 hover:underline">chat.html</a>).</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 5: Fellowship Connect & Groups -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-rose-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col" data-aos="fade-up" data-aos-delay="500">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1000&q=80" alt="A diverse small group gathered in a warm living room, sharing and smiling" class="w-full object-cover aspect-[16/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-rose-600/20 text-rose-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-rose-500/30">
-                                🤝
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Fellowship Connect & Groups</h3>
-                            <p class="text-slate-400 leading-relaxed">Discover and connect with local home cells, small groups, and community members.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 6: Gallery Memories & Events -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-amber-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col" data-aos="fade-up" data-aos-delay="600">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80" alt="An uplifting, beautifully captured photo from a recent event or worship night" class="w-full object-cover aspect-[16/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-amber-600/20 text-amber-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-amber-500/30">
-                                🖼️
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Gallery Memories & Events</h3>
-                            <p class="text-slate-400 leading-relaxed">Share photos from gatherings, find upcoming events, and read church announcements.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 7: Admin Moderation & Management -->
-                <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-cyan-500/50 shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col md:col-span-2 lg:col-span-3" data-aos="fade-up" data-aos-delay="700">
-                    <div class="w-full overflow-hidden relative">
-                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80" alt="Church leadership team collaborating around a modern table" class="w-full object-cover aspect-[21/9] transform group-hover:scale-105 transition duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                    </div>
-                    <div class="p-8 flex-grow flex flex-col justify-between">
-                        <div>
-                            <div class="w-14 h-14 bg-cyan-600/20 text-cyan-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner border border-cyan-500/30">
-                                🛡️
-                            </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">Admin Moderation & Management</h3>
-                            <p class="text-slate-400 leading-relaxed max-w-3xl">Empower church leaders with tools to upload music, publish announcements, manage events, and moderate content.</p>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <a href="public-church.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-blue-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">⛪</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-blue-300">Find a Church</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Explore church profiles, service information, programmes, leadership and ways to connect.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-blue-400">Explore churches →</span>
+                </a>
+                <a href="events.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-cyan-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">📅</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-cyan-300">Events & Gatherings</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Discover church events, register for gatherings and access event coupons.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-cyan-400">Browse events →</span>
+                </a>
+                <a href="programmes.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-sky-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🗓️</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-sky-300">Church Programmes</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">See upcoming church programmes and scheduled activities.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-sky-400">View programmes →</span>
+                </a>
+                <a href="sermons.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-indigo-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🎙️</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-indigo-300">Sermons & Live Broadcasts</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Access sermon media, live church broadcasts, YouTube search and personal sermon notes.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-indigo-400">Explore media →</span>
+                </a>
+                <a href="gallery.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-yellow-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🖼️</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-yellow-300">Church Gallery</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">View photos and memories shared from church gatherings and fellowship.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-yellow-400">View gallery →</span>
+                </a>
                 </div>
             </div>
-        </section>
 
-        <!-- Call to Action Banner -->
-        <section class="py-20 bg-gradient-to-r from-blue-950 via-indigo-950 to-purple-950 border-t border-slate-800 relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1500&q=80')] opacity-10 bg-cover bg-center"></div>
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6" data-aos="zoom-in">
-                <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">Ready to Join the Community?</h2>
-                <p class="text-slate-300 text-lg max-w-2xl mx-auto">Connect with your local church or global believers today. It takes less than a minute to get started.</p>
+            <div class="mt-12 first:mt-0">
+                <div class="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <h3 class="text-2xl font-extrabold text-white">Connect</h3>
+                    <p class="text-sm text-slate-500">Stay involved with people and communities across your church.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <a href="feed.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-emerald-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">💬</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-emerald-300">Community Feed</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Share updates, encouragement and discover what is happening in your community.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-emerald-400">Visit the feed →</span>
+                </a>
+                <a href="groups.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-rose-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🤝</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-rose-300">Small Groups</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Find and participate in church fellowships, home cells and small groups.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-rose-400">Explore groups →</span>
+                </a>
+                <a href="chat.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-purple-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">✉️</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-purple-300">Member Messaging</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Message fellow members and continue conversations in church communities.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-purple-400">Open messages →</span>
+                </a>
+                <a href="events.html?category=Singles%20Meetup" class="group rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 to-slate-900/80 p-6 hover:border-rose-400/70 hover:from-rose-950/60 transition focus:outline-none focus:ring-2 focus:ring-rose-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">💗</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-rose-200">Singles Corner</h3>
+                    <p class="text-sm text-slate-300 leading-relaxed">Discover church-hosted Singles Meetup events and opportunities to connect in a faith-centred setting.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-rose-300">Explore Singles Meetups →</span>
+                    <span class="block mt-2 text-xs text-slate-500">Currently offered through the Events category.</span>
+                </a>
+                </div>
+            </div>
+
+            <div class="mt-12 first:mt-0">
+                <div class="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <h3 class="text-2xl font-extrabold text-white">Faith & Service</h3>
+                    <p class="text-sm text-slate-500">Share, support others, give and serve through your church community.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <a href="prayer-wall.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🙏</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-violet-300">Prayer Wall</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Submit prayer requests and support others through prayer.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-violet-400">Open prayer wall →</span>
+                </a>
+                <a href="testimonies.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-amber-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">✨</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-amber-300">Testimonies</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Share stories of gratitude, answered prayer and God's faithfulness.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-amber-400">Read testimonies →</span>
+                </a>
+                <a href="giving.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-green-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">💝</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-green-300">Giving</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Access the church giving page and available online and assisted giving methods.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-green-400">Visit giving →</span>
+                </a>
+                <a href="counseling.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-teal-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">💙</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-teal-300">Pastoral Counselling</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Send a counselling appointment request to your church pastor.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-teal-400">Request counselling →</span>
+                </a>
+                <a href="volunteer.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-orange-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🙌</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-orange-300">Volunteer & Serve</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Explore available serving roles and sign up for ministry opportunities.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-orange-400">Find ways to serve →</span>
+                </a>
+                <a href="directory.html" class="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:border-lime-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div class="text-3xl mb-4" aria-hidden="true">🧰</div>
+                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-lime-300">Business & Skills Directory</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Discover services, skills and businesses within church communities.</p>
+                    <span class="inline-block mt-4 text-sm font-semibold text-lime-400">Explore directory →</span>
+                </a>
+                </div>
+            </div>
+
+            <div id="church-tools" class="mt-14 scroll-mt-24 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <div>
+                    <p class="mb-2 text-xs font-bold uppercase tracking-widest text-blue-400">For churches</p>
+                    <h3 class="text-xl font-bold text-white">Tools for churches and ministry teams</h3>
+                    <p class="text-sm text-slate-400 mt-2 max-w-2xl">Church leaders can manage their church profile, members, programmes, events and ministry content through role-restricted administration areas.</p>
+                </div>
+                <a href="register-church.html" class="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-500 px-5 py-3 text-sm font-bold text-white transition">Register a Church</a>
             </div>
         </section>
+
     </main>
 
     <!-- AOS Initialization -->
@@ -371,25 +374,25 @@
                 }
                 if (session) {
                     if (authBtn) {
-                        authBtn.href = "admin.html";
-                        authBtn.textContent = "Go to Dashboard";
+                        authBtn.href = "member-menu.html";
+                        authBtn.textContent = "Open BelieversMeet";
                     }
                 } else {
                     if (authBtn) {
                         authBtn.href = "login.html";
-                        authBtn.textContent = "Login / Register";
+                        authBtn.textContent = "Login";
                     }
                     window.sbClient.auth.onAuthStateChange((event, session) => {
                         try {
                             if (session) {
                                 if (authBtn) {
-                                    authBtn.href = "admin.html";
-                                    authBtn.textContent = "Go to Dashboard";
+                                    authBtn.href = "member-menu.html";
+                                    authBtn.textContent = "Open BelieversMeet";
                                 }
                             } else {
                                 if (authBtn) {
                                     authBtn.href = "login.html";
-                                    authBtn.textContent = "Login / Register";
+                                    authBtn.textContent = "Login";
                                 }
                             }
                         } catch (e) {
@@ -409,32 +412,29 @@
     </script>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800/80 py-12 text-slate-400 font-sans">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 text-sm">
-            <p class="text-slate-300 font-medium">&copy; 2026 BelieversMeet | All Rights Reserved</p>
-            <p class="text-slate-400">Built with ❤️ by <a href="about-developer.html" class="text-white font-semibold hover:underline">Adonia Kasango</a> (<a href="about-developer.html" class="text-blue-400 hover:text-blue-300 hover:underline">About the Developer</a>)</p>
-            <p class="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-slate-400">
-                <span>Contact:</span> 
-                <a href="tel:+25777778443" class="text-slate-300 hover:text-white transition font-medium hover:underline">+257 77 778 443</a> / 
-                <a href="tel:+256751522766" class="text-slate-300 hover:text-white transition font-medium hover:underline">+256 75 152 766</a> | 
-                <a href="mailto:adoniakasango@gmail.com" class="text-blue-400 hover:text-blue-300 hover:underline font-semibold transition">Contact Developer</a> |
-                <a href="https://wa.me/256777778443" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors duration-200"
-                   title="Chat with Developer on WhatsApp">
-                    <!-- WhatsApp SVG Icon -->
-                    <svg class="w-5 h-5 fill-current text-emerald-500" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                    </svg>
-                    <span>Developer: +256777778443</span>
+    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
+    <div class="bm-site-footer__inner">
+        <div class="bm-site-footer__top">
+            <div class="bm-site-footer__brand">
+                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
+                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
+                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
                 </a>
-                <a href="about-developer.html" class="text-sm text-slate-400 hover:text-blue-400 transition-colors ml-4 underline underline-offset-2">
-                    About the Developer
-                </a>
-            </p>
+                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
+                    <p class="bm-site-footer__note">Built with care by <a href="about-developer.html">Adonia Kasango</a> - Additional contact: <a href="tel:+25777778443">+257 77 778 443</a>.</p>            </div>
+            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
+                <a href="about-developer.html">About the Developer</a>
+                <a href="mailto:adoniakasango@gmail.com">Support</a>
+                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
+                <a href="tel:+256751522766">Call us</a>
+            </nav>
         </div>
-    </footer>
+        <div class="bm-site-footer__bottom">
+            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
+            <p>Building and strengthening faith communities together.</p>
+        </div>
+    </div>
+</footer>
 
   <script src="js/notifications.js"></script>
 </body>

@@ -305,13 +305,15 @@ async function enforceLoginAndLoad() {
             }
         }
     } else {
-        console.warn("Public profile row missing. Utilizing safe global fallback.");
-        currentUserProfile = {
-            id: user.id,
-            role: 'user',
-            church_id: 'global-fellowship',
-            full_name: user.email ? user.email.split('@')[0] : 'A Believer'
-        };
+        console.error("Public profile row missing. Feed initialization stopped.");
+
+        const stream = document.getElementById('feed-wall-stream');
+        if (stream) {
+            stream.innerHTML =
+                '<p class="text-center text-red-500 py-8">Your member profile could not be loaded. Please contact support.</p>';
+        }
+
+        return;
     }
 
     // Decouple all widget initializations using Promise.allSettled and independent try...catch blocks
@@ -591,35 +593,70 @@ async function loadAnnouncements() {
 
 async function fetchAndRenderWallTimeline() {
     const stream = document.getElementById('feed-wall-stream');
+
     if (!currentUserProfile || !currentUserProfile.church_id) return;
-    
+
     try {
         let query = window.sbClient
             .from('posts')
-            .select('*, profiles:user_id(full_name), comments(id, content, profiles:user_id(full_name))');
+            .select('id,user_id,content,created_at,bible_link,amen_count,category,church_id,comments(id,content,post_id,user_id)');
 
-        if (currentUserProfile.church_id !== 'global-fellowship') {
+        if (
+            currentUserProfile.role !== 'super_admin' &&
+            currentUserProfile.church_id !== 'global-fellowship'
+        ) {
             query = query.eq('church_id', currentUserProfile.church_id);
         }
 
-        const { data: posts, error } = await query.order('created_at', { ascending: false });
+        const { data: posts, error } = await query
+            .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error("Error fetching wall timeline:", error.message);
-            if (stream) {
-                stream.innerHTML = '<p class="text-center text-red-500 text-sm py-8">Unable to load feed posts</p>';
-            }
-            return;
+        if (error) throw error;
+
+        const authorIds = [
+            ...(posts || []).map(post => post.user_id),
+            ...(posts || []).flatMap(post =>
+                (post.comments || []).map(comment => comment.user_id)
+            )
+        ];
+
+        const uniqueAuthorIds = [...new Set(authorIds.filter(Boolean))];
+        let authorNames = new Map();
+
+        if (uniqueAuthorIds.length > 0) {
+            const { data: authors, error: authorError } =
+                await window.sbClient.rpc('get_feed_author_profiles', {
+                    p_user_ids: uniqueAuthorIds
+                });
+
+            if (authorError) throw authorError;
+
+            authorNames = new Map(
+                (authors || []).map(author => [author.id, author.full_name])
+            );
         }
 
-        if (posts) {
-            cachedPosts = posts; 
-            renderDataToStream(); 
-        }
+        cachedPosts = (posts || []).map(post => ({
+            ...post,
+            profiles: {
+                full_name: authorNames.get(post.user_id) || 'A Believer'
+            },
+            comments: (post.comments || []).map(comment => ({
+                ...comment,
+                profiles: {
+                    full_name: authorNames.get(comment.user_id) || 'A Believer'
+                }
+            }))
+        }));
+
+        renderDataToStream();
+
     } catch (err) {
-        console.error("Exception fetching wall timeline:", err);
+        console.error("Error fetching secure wall timeline:", err);
+
         if (stream) {
-            stream.innerHTML = '<p class="text-center text-red-500 text-sm py-8">Unable to load feed posts</p>';
+            stream.innerHTML =
+                '<p class="text-center text-red-500 text-sm py-8">Unable to load feed posts</p>';
         }
     }
 }
@@ -698,10 +735,22 @@ function filterTimeline(category, buttonElement) {
 }
 
 async function handleAmenSubmit(postId) {
-    const currentPost = cachedPosts.find(p => p.id === postId);
-    const currentCount = currentPost ? (currentPost.amen_count || 0) : 0;
-    const { error } = await window.sbClient.from('posts').update({ amen_count: currentCount + 1 }).eq('id', postId);
-    if (error) alert("Error saving Amen: " + error.message);
+    const { data: newCount, error } = await window.sbClient.rpc(
+        'increment_post_amen',
+        { p_post_id: postId }
+    );
+
+    if (error) {
+        alert("Error saving Amen: " + error.message);
+        return;
+    }
+
+    const currentPost = cachedPosts.find(post => post.id === postId);
+
+    if (currentPost) {
+        currentPost.amen_count = newCount;
+        renderDataToStream();
+    }
 }
 
 async function handleOutboundPostSubmit(e) {
@@ -1186,33 +1235,23 @@ async function fetchMinistryRequests() {
             }
         }
 
-        // 2. Fetch Prayer Requests (avoid hard inner joins, query pending explicitly or filter in memory)
+        // 2. Fetch Prayer Requests through the secure moderation RPC
         const { data: prayerData, error: prayerError } = await window.sbClient
-            .from('prayer_requests')
-            .select('*')
-            .eq('church_id', churchId)
-            .order('created_at', { ascending: false });
+            .rpc('get_church_prayer_moderation', { p_church_id: churchId });
 
         if (prayerError) throw prayerError;
 
         if (prayerTbody) {
-            const pendingPrayers = (prayerData || []).filter(req => req.status === 'pending' || req.status === null || req.status === undefined || req.status === '');
+            const pendingPrayers = prayerData || [];
 
             if (pendingPrayers.length === 0) {
                 prayerTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No pending prayer requests at this time.</td></tr>`;
             } else {
                 prayerTbody.innerHTML = pendingPrayers.map(req => {
                     const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-                    
-                    const postContent = req.content || req.prayer_request || req.message || req.details || req.testimony || 'No content provided';
-                    const authorName = req.full_name || req.name || req.display_name || req.contact_info || (req.profiles ? req.profiles.full_name : 'Anonymous Guest');
+                    const postContent = req.content || req.prayer_request || req.message || req.details || 'No content provided';
+                    const authorName = req.full_name || req.name || 'Anonymous Guest';
                     const contact = req.email || req.phone || req.contact_info || 'No contact provided';
-
-                    const statusBadge = (req.status === 'pending' || req.status === null || req.status === undefined || req.status === '')
-                        ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Pending</span>'
-                        : (req.status === 'approved' || req.status === 'contacted'
-                            ? '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>'
-                            : '<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>');
 
                     return `
                         <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
@@ -1226,9 +1265,9 @@ async function fetchMinistryRequests() {
                             <td class="py-3 px-4 text-xs text-gray-700 max-w-xs truncate" title="${escapeHTML(postContent)}">${escapeHTML(postContent)}</td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
-                                    ${statusBadge}
-                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'approved')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Approve">Approve</button>
-                                    <button onclick="updateMinistryRequestStatus('prayer_requests', '${req.id}', 'rejected')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow transition" title="Reject">Reject</button>
+                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Pending</span>
+                                    <button onclick="updateChurchPrayerRequestStatus('${req.id}', 'approved')" class="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition" title="Approve">Approve</button>
+                                    <button onclick="updateChurchPrayerRequestStatus('${req.id}', 'rejected')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow transition" title="Reject">Reject</button>
                                 </div>
                             </td>
                         </tr>
@@ -1236,7 +1275,6 @@ async function fetchMinistryRequests() {
                 }).join('');
             }
         }
-
     } catch (err) {
         console.error("Error fetching ministry requests:", err);
         if (conversionTbody) conversionTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-500 text-xs">Error loading conversion requests: ${escapeHTML(err.message)}</td></tr>`;
@@ -1244,6 +1282,35 @@ async function fetchMinistryRequests() {
     }
 }
 
+async function updateChurchPrayerRequestStatus(requestId, newStatus) {
+    const allowedStatuses = ['approved', 'rejected'];
+
+    if (!allowedStatuses.includes(newStatus)) {
+        alert('Invalid prayer request status.');
+        return;
+    }
+
+    try {
+        const { error } = await window.sbClient.rpc(
+            'update_church_prayer_request_status',
+            {
+                p_request_id: requestId,
+                p_new_status: newStatus
+            }
+        );
+
+        if (error) throw error;
+
+        if (typeof showNotification === 'function') {
+            showNotification('Prayer request status updated successfully!', 'success');
+        }
+
+        await fetchMinistryRequests();
+    } catch (err) {
+        console.error('Error updating prayer request status:', err);
+        alert('Failed to update prayer request: ' + err.message);
+    }
+}
 async function updateMinistryRequestStatus(tableName, recordId, newStatus) {
     try {
         const { error } = await window.sbClient
@@ -1828,16 +1895,11 @@ async function loadCommunityNeeds(categoryFilter = 'All') {
     }
 
     try {
-        let query = db
+        const { data, error } = await db
             .from('community_needs')
-            .select('*')
-            .eq('status', 'open');
-
-        if (currentUserProfile && currentUserProfile.church_id && currentUserProfile.church_id !== 'global-fellowship') {
-            query = query.eq('church_id', currentUserProfile.church_id);
-        }
-
-        const { data, error } = await query.order('created_at', { ascending: false });
+            .select('id,user_id,category,title,description,contact_info,status,created_at,church_id')
+            .eq('status', 'open')
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
