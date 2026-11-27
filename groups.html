@@ -188,6 +188,8 @@
     let joinedGroupIds = new Set();
     let pendingGroupIds = new Set();
     let editingGroupId = null;
+    // Set only after the database confirms group-management permission.
+    let canManageChurchGroups = false;
 
     async function initApp() {
         let attempts = 0;
@@ -213,14 +215,34 @@
         
         currentUserProfile = profile;
 
-        if (profile) {
-            if (profile.role === 'admin' || profile.role === 'church_admin' || profile.role === 'super_admin') {
-                const adminLink = document.getElementById('admin-nav-link');
-                if (adminLink) adminLink.classList.remove('hidden');
+        // Keep the general Admin Console link behavior separate from group-management access.
+        if (profile && (profile.role === 'admin' || profile.role === 'church_admin' || profile.role === 'super_admin')) {
+            const adminLink = document.getElementById('admin-nav-link');
+            if (adminLink) adminLink.classList.remove('hidden');
+        }
 
-                document.getElementById('admin-panel').classList.remove('hidden');
-                loadChurchGroups(profile.church_id);
-            }
+        // The database is authoritative for group management. A failed or unexpected
+        // permission response keeps management controls hidden (fail closed).
+        let canManageError = null;
+        try {
+            const { data: canManageResult, error } =
+                await window.sbClient.rpc('can_manage_church_content', {
+                    p_church_id: currentUserProfile?.church_id ?? null
+                });
+            canManageError = error;
+            canManageChurchGroups = !error && canManageResult === true;
+        } catch (permissionCheckError) {
+            canManageError = permissionCheckError;
+            canManageChurchGroups = false;
+        }
+
+        const adminPanel = document.getElementById('admin-panel');
+        if (adminPanel) adminPanel.classList.toggle('hidden', !canManageChurchGroups);
+
+        if (canManageChurchGroups) {
+            await loadChurchGroups(currentUserProfile?.church_id || null);
+        } else if (canManageError) {
+            console.warn('Group-management permission check failed; hiding management controls:', canManageError);
         }
 
         await fetchUserMemberships();
@@ -331,7 +353,7 @@ async function leaveGroup(groupId) {
             return;
         }
 
-        const isAdmin = currentUserProfile && (currentUserProfile.role === 'admin' || currentUserProfile.role === 'church_admin' || currentUserProfile.role === 'super_admin');
+        const isAdmin = canManageChurchGroups;
 
         container.innerHTML = (await Promise.all(groups.map(async group => {
             const statusBadge = group.allow_instant_join
@@ -492,6 +514,10 @@ async function leaveGroup(groupId) {
     }
 
     async function reviewGroupRequest(groupId, userId, decision) {
+        if (!canManageChurchGroups) {
+            alert('You do not have permission to review group membership requests.');
+            return;
+        }
         const action = decision === 'approved' ? 'approve' : 'reject';
         if (!confirm(`Are you sure you want to ${action} this membership request?`)) return;
 
@@ -520,6 +546,10 @@ async function leaveGroup(groupId) {
     async function loadChurchGroups(churchId) {
         const container = document.getElementById('church-groups-list');
         if (!container) return;
+        if (!canManageChurchGroups) {
+            container.innerHTML = '';
+            return;
+        }
         try {
             let groupQuery = window.sbClient.from('groups').select('*').order('created_at', { ascending: false });
             if (churchId) groupQuery = groupQuery.eq('church_id', churchId);
@@ -552,6 +582,10 @@ async function leaveGroup(groupId) {
     document.addEventListener('submit', async (e) => {
         if (e.target && e.target.id === 'church-info-form') {
             e.preventDefault();
+            if (!canManageChurchGroups) {
+                alert('You do not have permission to change church settings.');
+                return;
+            }
             const btn = document.getElementById('save-church-info-btn');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
@@ -579,6 +613,10 @@ async function leaveGroup(groupId) {
 
     document.getElementById('group-creation-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!canManageChurchGroups) {
+            alert('You do not have permission to create church groups.');
+            return;
+        }
         const groupNameInput = document.getElementById('group-name-input');
         const groupName = groupNameInput ? groupNameInput.value : '';
         const currentChurchId = currentUserProfile ? currentUserProfile.church_id : null;
@@ -611,6 +649,10 @@ async function leaveGroup(groupId) {
     });
 
     async function deleteGroup(id, groupName) {
+        if (!canManageChurchGroups) {
+            alert('You do not have permission to delete church groups.');
+            return;
+        }
         const confirmation = confirm(`Remove this structural fellowship group "${groupName}"?`);
         if (!confirmation) return;
         const { error } = await window.sbClient.from('groups').delete().eq('id', id);
@@ -624,6 +666,10 @@ async function leaveGroup(groupId) {
     }
 
     async function openEditGroupModal(id) {
+        if (!canManageChurchGroups) {
+            alert('You do not have permission to edit church groups.');
+            return;
+        }
         editingGroupId = id;
         const modal = document.getElementById('edit-group-modal');
         if (!modal) return;
@@ -657,6 +703,10 @@ async function leaveGroup(groupId) {
 
     document.getElementById('edit-group-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!canManageChurchGroups) {
+            alert('You do not have permission to update church groups.');
+            return;
+        }
         if (!editingGroupId) return;
 
         const btn = document.getElementById('save-edit-group-btn');
