@@ -31,6 +31,12 @@ async function readPesapalJson(response, label) {
     try {
         payload = JSON.parse(responseText);
     } catch {
+        console.error('Pesapal upstream returned non-JSON:', {
+            label,
+            httpStatus: response.status,
+            contentType: response.headers.get('content-type') || null
+        });
+
         throw new Error(`${label} returned an unreadable response.`);
     }
 
@@ -40,7 +46,21 @@ async function readPesapalJson(response, label) {
             payload?.message ||
             `${label} request failed.`;
 
-        throw new Error(message);
+        const safeMessage = String(message)
+            .replace(
+                /(consumer[_ ]?(?:key|secret)|access[_ ]?token|authorization)\s*[:=]\s*[^,\s}]+/gi,
+                '$1=[REDACTED]'
+            )
+            .slice(0, 180);
+
+        console.error('Pesapal upstream rejected request:', {
+            label,
+            httpStatus: response.status,
+            pesapalStatus: payload?.status ?? null,
+            message: safeMessage
+        });
+
+        throw new Error(`${label}: ${safeMessage}`);
     }
 
     return payload;
@@ -95,6 +115,7 @@ function mapPesapalStatus(value) {
 }
 
 export default async function handler(req, res) {
+    let diagnosticStage = 'request_validation';
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
 
@@ -135,8 +156,10 @@ export default async function handler(req, res) {
             });
         }
 
+        diagnosticStage = 'supabase_admin_initialization';
         const supabaseAdmin = getSupabaseAdmin();
 
+        diagnosticStage = 'transaction_lookup';
         const { data: transaction, error: transactionError } =
             await supabaseAdmin
                 .from('transactions')
@@ -172,6 +195,7 @@ export default async function handler(req, res) {
             });
         }
 
+        diagnosticStage = 'church_credentials_lookup';
         const { data: church, error: churchError } = await supabaseAdmin
             .from('churches')
             .select(
@@ -201,6 +225,7 @@ export default async function handler(req, res) {
 
         const baseUrl = getPesapalBaseUrl((process.env.VERCEL_ENV || '').toLowerCase() === 'preview' ? 'sandbox' : (church.pesapal_env || 'sandbox'));
 
+        diagnosticStage = 'pesapal_authentication';
         const token = await getPesapalToken(
             church.pesapal_consumer_key.trim(),
             church.pesapal_consumer_secret.trim(),
@@ -213,6 +238,7 @@ export default async function handler(req, res) {
 
         statusUrl.searchParams.set('orderTrackingId', orderTrackingId);
 
+        diagnosticStage = 'pesapal_status_request';
         const statusResponse = await fetch(statusUrl.toString(), {
             method: 'GET',
             headers: {
@@ -222,6 +248,7 @@ export default async function handler(req, res) {
             }
         });
 
+        diagnosticStage = 'pesapal_status_response';
         const statusData = await readPesapalJson(
             statusResponse,
             'Pesapal transaction status'
@@ -315,6 +342,7 @@ export default async function handler(req, res) {
             nextStatus = 'REVERSED';
         }
 
+        diagnosticStage = 'transaction_status_update';
         const { error: updateError } = await supabaseAdmin
             .from('transactions')
             .update({
@@ -340,6 +368,7 @@ export default async function handler(req, res) {
             let accountingResult;
 
             try {
+                diagnosticStage = 'accounting_capture';
                 const { data, error } = await supabaseAdmin.rpc(
                     'accounting_process_pesapal_transaction',
                     {
@@ -390,7 +419,11 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Pesapal verification error:', error.message);
+        console.error('Pesapal verification error:', {
+            stage: diagnosticStage,
+            name: error?.name || 'Error',
+            message: error?.message || 'Unknown error'
+        });
 
         return res.status(500).json({
             success: false,
