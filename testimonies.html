@@ -6,7 +6,7 @@
     <title>Testimonies & Praise Reports | BelieversMeet</title>
     <link rel="icon" href="images/BELIEVERS.LOGO.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -89,58 +89,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
+<link rel="stylesheet" href="css/workspace-nav.css?v=20261128-v2">
 </head>
 <body style="display: none;" class="bg-gray-50 min-h-screen flex flex-col text-gray-900 antialiased selection:bg-blue-600 selection:text-white">
 
     <!-- Navigation Header -->
-    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3 shrink-0">
-                <a href="index.html" class="flex items-center space-x-2">
-                    <img data-bm-church-logo src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
-                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-                </a>
-            </div>
-            <!-- All Features Dropdown -->
-            <div id="all-features-dropdown-container" class="relative shrink-0">
-                <button
-                    type="button"
-                    id="all-features-menu-btn"
-                    onclick="toggleTestimoniesFeaturesDropdown(event)"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition">
-                    <i class="fas fa-th-large"></i>
-                    <span>All Features</span>
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </button>
-
-                <div id="all-features-dropdown-menu" class="testimonies-features-menu">
-                    <a href="feed.html"><i class="fas fa-home"></i> Feed</a>
-                    <a href="events.html"><i class="fas fa-calendar"></i> Events</a>
-                    <a href="groups.html"><i class="fas fa-users"></i> Groups</a>
-                    <a href="sermons.html"><i class="fas fa-book-open"></i> Sermons & Media</a>
-                    <a href="giving.html"><i class="fas fa-hand-holding-heart"></i> Giving</a>
-                    <a href="chat.html"><i class="fas fa-comments"></i> Messages</a>
-                    <a href="directory.html"><i class="fas fa-church"></i> Directory</a>
-                    <a href="prayer-wall.html"><i class="fas fa-praying-hands"></i> Prayer Wall</a>
-                    <a href="testimonies.html" class="active"><i class="fas fa-heart"></i> Testimonies</a>
-                    <a href="volunteer.html"><i class="fas fa-hands-helping"></i> Volunteer</a>
-                    <a href="gallery.html"><i class="fas fa-images"></i> Gallery</a>
-                    <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
-                    <a href="admin.html" id="testimonies-admin-menu-link" class="admin-menu-link hidden">
-                        <i class="fas fa-shield-alt"></i> Admin Panel
-                    </a>
-                </div>
-            </div>
-            <div class="flex items-center space-x-3 shrink-0">
-                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
-                    <i class="fas fa-user"></i>
-                </a>
-                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
-        </div>
-    </header>
+    <div id="navbar"></div>
+<script src="js/workspace-nav.js?v=20261128-v2"></script>
 
     <script>
         function toggleTestimoniesFeaturesDropdown(event) {

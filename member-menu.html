@@ -11,35 +11,20 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
+<link rel="stylesheet" href="css/workspace-nav.css?v=20261128-v2">
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col antialiased">
     
     <!-- Top Header Banner -->
-    <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <a href="feed.html" class="flex items-center space-x-2">
-                    <img src="images/BELIEVERS.LOGO.png" data-bm-church-logo alt="Logo" class="w-9 h-9 rounded-full object-cover border-2 border-white/20 shadow">
-                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-                </a>
-            </div>
-            <div class="flex items-center space-x-3">
-                <a href="feed.html" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition shadow flex items-center gap-1.5">
-                    <i class="fas fa-home"></i> Feed
-                </a>
-                <button onclick="logoutUser(event)" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-red-900/50 text-red-300 border border-slate-700 transition flex items-center gap-1.5" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </div>
-        </div>
-    </header>
+    <div id="navbar"></div>
+<script src="js/workspace-nav.js?v=20261128-v2"></script>
 
     <!-- Main Central Menu Container -->
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 flex-grow w-full space-y-8">

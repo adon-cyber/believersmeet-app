@@ -1,6 +1,6 @@
 /* BelieversMeet shared church branding.
  * Reads the church_id from the authenticated user's profile (never localStorage).
- * The public homepage and public-church.html intentionally use their own branding.
+ * Public homepage and public-church.html intentionally use their own branding.
  */
 (function () {
     'use strict';
@@ -20,16 +20,37 @@
         }
     }
 
+    function setFallbackVisible(img, visible) {
+        const fallback = img?.parentElement?.querySelector('.bm-workspace-logo-fallback');
+        if (fallback) fallback.classList.toggle('is-visible', !!visible);
+    }
+
     function setImages(url, churchName) {
         document.querySelectorAll('img[data-bm-church-logo]').forEach((img) => {
-            img.src = url || DEFAULT_LOGO;
-            img.alt = churchName ? `${churchName} logo` : 'BelieversMeet logo';
-            img.classList.remove('hidden');
-            img.onerror = function () {
-                this.onerror = null;
-                this.src = DEFAULT_LOGO;
-                this.alt = 'BelieversMeet logo';
+            const candidate = safeHttpUrl(url) || DEFAULT_LOGO;
+            img.classList.remove('bm-logo-image-failed');
+            img.dataset.bmOriginalSrc = candidate;
+            img.dataset.bmFallbackAttempted = 'false';
+            setFallbackVisible(img, false);
+
+            img.onload = function () {
+                this.classList.remove('bm-logo-image-failed');
+                setFallbackVisible(this, false);
             };
+            img.onerror = function () {
+                if (this.dataset.bmFallbackAttempted !== 'true' && this.dataset.bmOriginalSrc !== DEFAULT_LOGO) {
+                    this.dataset.bmFallbackAttempted = 'true';
+                    this.alt = 'BelieversMeet logo';
+                    this.src = DEFAULT_LOGO;
+                    return;
+                }
+                this.classList.add('bm-logo-image-failed');
+                this.alt = '';
+                setFallbackVisible(this, true);
+            };
+
+            img.alt = churchName ? `${churchName} logo` : 'BelieversMeet logo';
+            img.src = candidate;
         });
     }
 

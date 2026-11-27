@@ -7,36 +7,19 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
+<link rel="stylesheet" href="css/workspace-nav.css?v=20261128-v2">
+<script src="js/church-branding.js?v=20261128-v2"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Navigation Bar -->
-    <nav class="bg-blue-600 sticky top-0 z-50 shadow-md" style="background-color: #2563eb !important; border-bottom: 1px solid #1d4ed8 !important; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="feed.html" class="text-xl font-bold text-white hover:text-blue-200 flex-shrink-0 mr-4" style="color: #ffffff !important;">BelieversMeet</a>
-                <div class="flex overflow-x-auto whitespace-nowrap space-x-2 sm:space-x-4 py-2 px-4 w-full scroll-smooth [-webkit-overflow-scrolling:touch]">
-                    <a href="feed.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">My Feed</a>
-                    <a href="giving.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Giving</a>
-                    <a href="sermons.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Sermons</a>
-                    <a href="groups.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Small Groups</a>
-                    <a href="prayer-wall.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Prayer Wall</a>
-                    <a href="testimonies.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Testimonies</a>
-                    <a href="chat.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Inbox</a>
-                    <a href="admin-counseling.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Counseling</a>
-                    <a href="events.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Events</a>
-                    <a href="profile.html" class="text-xs sm:text-sm font-medium text-white hover:text-blue-200 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">Profile</a>
-                    <a href="admin.html" class="text-xs sm:text-sm font-bold text-white bg-blue-700 px-2 py-1 rounded-md transition-colors" style="color: #ffffff !important;">⚙️ Admin Panel</a>
-                    <a href="#" onclick="logoutUser(event)" class="text-xs sm:text-sm font-medium text-red-200 hover:text-white px-2 py-1 rounded-md transition-colors" style="color: #fecaca !important;">Logout</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div id="navbar"></div>
+<script src="js/workspace-nav.js?v=20261128-v2"></script>
 
     <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">

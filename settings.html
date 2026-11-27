@@ -9,52 +9,20 @@
     <script src="js/app-utils.js"></script>
     <script src="js/theme.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
+<link rel="stylesheet" href="css/workspace-nav.css?v=20261128-v2">
+<script src="js/church-branding.js?v=20261128-v2"></script>
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col" style="display: block !important;">
     <!-- Navigation Header -->
-    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3 shrink-0">
-                <a href="index.html" class="flex items-center space-x-2">
-                    <img data-bm-church-logo src="images/BELIEVERS.LOGO.png" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
-                    <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-                </a>
-            </div>
-            <!-- Desktop Navigation Links -->
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="feed.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Feed</a>
-                <a href="events.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Events</a>
-                <a href="sermons.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Sermons & Media</a>
-                <a href="giving.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Giving</a>
-                <a href="groups.html" class="text-sm font-medium text-white/80 hover:text-white transition whitespace-nowrap">Groups</a>
-                <a href="admin.html" id="admin-nav-link" class="text-sm font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap">Admin Console</a>
-            </nav>
-            <!-- Mobile Navigation Container (Horizontal Scrollable) -->
-            <div class="flex md:hidden overflow-x-auto whitespace-nowrap scrollbar-none items-center space-x-3 py-2 px-2 flex-grow mx-3 [-webkit-overflow-scrolling:touch] no-scrollbar">
-                <a href="feed.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Feed</a>
-                <a href="events.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Events</a>
-                <a href="sermons.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Sermons & Media</a>
-                <a href="giving.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Giving</a>
-                <a href="groups.html" class="text-xs font-medium text-white/80 hover:text-white transition whitespace-nowrap shrink-0">Groups</a>
-                <a href="admin.html" id="admin-nav-link-mobile" class="text-xs font-medium text-amber-300 hover:text-amber-200 transition hidden whitespace-nowrap shrink-0">Admin Console</a>
-            </div>
-            <div class="flex items-center space-x-3 shrink-0">
-                <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
-                    <i class="fas fa-user"></i>
-                </a>
-                <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
-        </div>
-    </header>
+    <div id="navbar"></div>
+<script src="js/workspace-nav.js?v=20261128-v2"></script>
 
     <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex-grow w-full">
         <div class="bm-card">
