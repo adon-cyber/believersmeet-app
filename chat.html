@@ -14,55 +14,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none !important; }
-        /* Chat page All Features dropdown */
-        .bm-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + .5rem);
-            left: 0;
-            min-width: 260px;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 1rem;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
-            z-index: 99999;
-            padding: .5rem;
-        }
-        .bm-dropdown-menu.show {
-            display: block;
-            animation: bmDropdownFade .15s ease-out forwards;
-        }
-        @keyframes bmDropdownFade {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .bm-feature-link {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            padding: .5rem .75rem;
-            border-radius: .75rem;
-            color: #374151;
-            font-size: .875rem;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .bm-feature-link i { width: 1rem; text-align: center; }
-        .bm-feature-link:hover { background: #eff6ff; color: #2563eb; }
-        .bm-feature-link.bm-feature-active {
-            background: #2563eb;
-            color: white;
-            font-weight: 700;
-        }
-        @media (max-width: 768px) {
-            .bm-dropdown-menu {
-                left: auto;
-                right: 0;
-                width: 280px;
-                max-width: 90vw;
-            }
-        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             /* Chat page visual refinements - existing colour palette preserved */
@@ -162,144 +113,28 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/all-features.css?v=20261109-v2" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
+    <link rel="stylesheet" href="css/workspace-nav.css?v=20261128-v1">
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col overflow-x-hidden text-gray-800">
+<body class="bg-gray-50 min-h-screen flex flex-col overflow-x-hidden text-gray-800 bm-workspace-shell">
 
-<!-- Navigation Header -->
-<header class="bg-gradient-to-r from-blue-900 to-indigo-900 shadow-lg sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center space-x-3 shrink-0">
-            <a href="feed.html" class="flex items-center space-x-2">
-                <div id="church-logo-container" class="flex items-center space-x-2">
-                    <img id="church-logo-img" data-bm-church-logo src="images/BELIEVERS.LOGO.png" alt="Church Logo" class="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow">
-                    <span id="church-logo-placeholder" class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs font-bold border border-white/20 shadow">BM</span>
-                </div>
-                <span class="text-white font-bold text-lg tracking-tight">BelieversMeet</span>
-            </a>
-        </div>
-        <!-- All Features Navigation -->
-        <div class="relative inline-block text-left shrink-0" id="all-features-dropdown-container">
-            <button type="button" id="all-features-menu-btn"
-                    onclick="toggleAllFeaturesDropdown(event)"
-                    aria-expanded="false" aria-controls="all-features-dropdown-menu"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-indigo-900 hover:bg-indigo-800 text-white shadow-md transition-all">
-                <i class="fas fa-th-large"></i>
-                <span>All Features</span>
-                <i class="fas fa-chevron-down text-xs"></i>
-            </button>
-            <div id="all-features-dropdown-menu" class="bm-dropdown-menu">
-                <div class="py-1 space-y-1">
-                    <div class="px-3 py-1.5 text-xs font-extrabold text-gray-400 uppercase tracking-wider">Member Navigation</div>
-                    <a href="feed.html" class="bm-feature-link"><i class="fas fa-newspaper"></i> Feed</a>
-                    <a href="events.html" class="bm-feature-link"><i class="fas fa-calendar-alt"></i> Events</a>
-                    <a href="groups.html" class="bm-feature-link"><i class="fas fa-users"></i> Groups</a>
-                    <a href="sermons.html" class="bm-feature-link"><i class="fas fa-bible"></i> Sermons</a>
-                    <a href="giving.html" class="bm-feature-link"><i class="fas fa-hand-holding-heart"></i> Giving</a>
-                    <a href="chat.html" class="bm-feature-link bm-feature-active"><i class="fas fa-comments"></i> Messages</a>
-                    <a href="directory.html" class="bm-feature-link"><i class="fas fa-address-book"></i> Directory</a>
-                    <a href="prayer-wall.html" class="bm-feature-link"><i class="fas fa-pray"></i> Prayer Wall</a>
-                    <a href="testimonies.html" class="bm-feature-link"><i class="fas fa-heart"></i> Testimonies</a>
-                    <a href="volunteer.html" class="bm-feature-link"><i class="fas fa-hands-helping"></i> Volunteer</a>
-                    <a href="gallery.html" class="bm-feature-link"><i class="fas fa-images"></i> Gallery</a>
-                    <a href="profile.html" class="bm-feature-link"><i class="fas fa-user"></i> My Profile</a>
-                    <div id="bm-admin-feature-links" class="hidden">
-                        <div class="border-t border-gray-200 my-2"></div>
-                        <a href="admin.html" class="bm-feature-link"><i class="fas fa-cog"></i> Admin Panel</a>
-                    </div>
-                    <div id="bm-super-admin-feature-link" class="hidden">
-                        <a href="super-admin.html" class="bm-feature-link"><i class="fas fa-shield-alt"></i> Super Admin</a>
-                    </div>
-                    <div class="border-t border-gray-200 my-2"></div>
-                    <button type="button" onclick="window.goBack()" class="bm-feature-link w-full text-left">
-                        <i class="fas fa-arrow-left"></i> Go Back
-                    </button>
-                </div>
-            </div>
-        </div>
-<div class="flex items-center space-x-3 shrink-0">
-            <a href="profile.html" class="w-9 h-9 rounded-full bg-blue-700/50 text-white flex items-center justify-center font-bold text-sm border border-white/20 shadow">
-                <i class="fas fa-user"></i>
-            </a>
-            <button onclick="logoutUser(event)" class="text-white/80 hover:text-white p-2 rounded-lg transition" title="Logout">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </div>
+<!-- Shared BelieversMeet workspace navigation -->
+<div id="navbar"></div>
+<script src="js/workspace-nav.js?v=20261128-v1"></script>
+
+<!-- Inbox workspace heading -->
+<div class="bm-workspace-page-heading">
+    <div>
+        <h1>Inbox</h1>
+        <p>Stay connected with your church community.</p>
     </div>
-<script>
-(function () {
-    const container = document.getElementById('all-features-dropdown-container');
-    const menu = document.getElementById('all-features-dropdown-menu');
-    const button = document.getElementById('all-features-menu-btn');
-
-    window.toggleAllFeaturesDropdown = function (event) {
-        if (event) event.stopPropagation();
-        if (!menu || !button) return;
-        const open = menu.classList.toggle('show');
-        button.setAttribute('aria-expanded', String(open));
-    };
-
-    document.addEventListener('click', function (event) {
-        if (container && menu && !container.contains(event.target)) {
-            menu.classList.remove('show');
-            button.setAttribute('aria-expanded', 'false');
-        }
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && menu) {
-            menu.classList.remove('show');
-            button.setAttribute('aria-expanded', 'false');
-            button.focus();
-        }
-    });
-
-    async function loadRoleLinks() {
-        try {
-            if (!window.sbClient) return;
-            const { data: { user } } = await window.sbClient.auth.getUser();
-            if (!user) return;
-
-            const { data: platformAdminResult, error: platformAdminError } =
-                await window.sbClient.rpc('is_super_admin');
-            const isSuperAdmin = !platformAdminError && platformAdminResult === true;
-
-            if (platformAdminError) {
-                console.warn('Could not verify platform administrator navigation:', platformAdminError);
-            }
-
-            const { data: profile } = await window.sbClient
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .maybeSingle();
-
-            const role = profile?.role;
-            const isAdminOrLeader = isSuperAdmin ||
-                ['church_admin', 'admin', 'super_admin', 'super-admin', 'leader'].includes(role);
-
-            if (isAdminOrLeader) {
-                document.getElementById('bm-admin-feature-links')?.classList.remove('hidden');
-            }
-            if (isSuperAdmin) {
-                document.getElementById('bm-super-admin-feature-link')?.classList.remove('hidden');
-            }
-        } catch (error) {
-            console.warn('Could not load navigation role links:', error);
-        }
-    }
-
-    loadRoleLinks();
-})();
-</script>
-</header>
+</div>
 
 <!-- Main Unified Split-Screen Container -->
-<main class="flex flex-col md:flex-row w-full max-w-7xl mx-auto h-[calc(100vh-4rem)] overflow-hidden shadow-xl bg-white rounded-none md:rounded-2xl border border-gray-200">
+<main id="bm-chat-main" class="flex flex-col md:flex-row overflow-hidden bg-white border border-gray-200">
     
     <!-- Left Sidebar (The Inbox List) -->
     <div id="left-sidebar" class="w-full md:w-1/3 md:max-w-sm flex flex-col bg-white border-r border-gray-200 h-full flex-shrink-0">
@@ -420,12 +255,42 @@
     let activeChannel = null;
 
     async function loadChurchLogo() {
-        const img = document.getElementById('church-logo-img');
+        let img = document.getElementById('church-logo-img');
+
+        // The workspace shell renders after its asynchronous auth/profile checks.
+        // Wait for its logo element so the church logo loader cannot run too early.
+        if (!img) {
+            const navbar = document.getElementById('navbar');
+            if (navbar) {
+                img = await new Promise(resolve => {
+                    let timeoutId = null;
+                    const observer = new MutationObserver(() => {
+                        const found = document.getElementById('church-logo-img');
+                        if (found) {
+                            observer.disconnect();
+                            if (timeoutId !== null) window.clearTimeout(timeoutId);
+                            resolve(found);
+                        }
+                    });
+
+                    observer.observe(navbar, { childList: true, subtree: true });
+                    timeoutId = window.setTimeout(() => {
+                        observer.disconnect();
+                        resolve(document.getElementById('church-logo-img'));
+                    }, 10000);
+                });
+            }
+        }
+
         const placeholder = document.getElementById('church-logo-placeholder');
-        if (!img) return;
+        if (!img) {
+            console.warn('Workspace logo element did not become available; keeping the default page branding.');
+            return;
+        }
 
         // BelieversMeet remains the safe fallback if the member has no church logo.
         img.src = 'images/BELIEVERS.LOGO.png';
+        img.alt = 'BelieversMeet logo';
         img.classList.remove('hidden');
         if (placeholder) placeholder.classList.add('hidden');
 
