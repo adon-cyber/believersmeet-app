@@ -95,9 +95,13 @@
 
         if (canSeeAdmin || canManageChurchContent || isPlatformAdmin) {
             const adminItems = [];
+            if (canSeeAdmin || canManageChurchContent) {
+                adminItems.push(
+                    { href: 'admin.html', label: 'Admin Panel', icon: 'fa-screwdriver-wrench' }
+                );
+            }
             if (canSeeAdmin) {
                 adminItems.push(
-                    { href: 'admin.html', label: 'Admin Panel', icon: 'fa-screwdriver-wrench' },
                     { href: 'admin-events.html', label: 'Event Management', icon: 'fa-calendar-plus' },
                     { href: 'admin-counseling.html', label: 'Counseling Requests', icon: 'fa-hands-helping' }
                 );
