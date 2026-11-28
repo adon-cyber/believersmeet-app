@@ -396,7 +396,7 @@
                 if (user) {
                     const [{ data: profileData, error: profileError }, { data: adminResult, error: adminError }] = await Promise.all([
                         client.from('profiles')
-                            .select('role, church_id, status, is_blocked, display_name, full_name, avatar_url, profile_picture')
+                            .select('role, church_id, status, is_blocked, display_name, full_name, avatar_url')
                             .eq('id', user.id)
                             .maybeSingle(),
                         client.rpc('is_super_admin')
