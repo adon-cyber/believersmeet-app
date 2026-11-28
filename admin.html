@@ -77,6 +77,7 @@
                 max-width: 90vw;
             }
         }
+
     </style>
     <link rel="stylesheet" href="css/all-features.css?v=20261109-v2" />
 
@@ -171,7 +172,7 @@ document.addEventListener('keydown', function (event) {
                 &#x1F4B0; Finance & Giving
             </button>
             <button id="tab-btn-registrations" onclick="switchAdminTab('registrations')" class="py-2.5 px-5 text-sm font-medium focus:outline-none transition text-slate-500 hover:text-slate-300 shrink-0">
-                &#x1F39F;&#xFE0F; Event Registrations
+                &#x1F39F;&#xFE0F; Events &amp; Invitations
             </button>
         </div>
 
@@ -470,6 +471,22 @@ document.addEventListener('keydown', function (event) {
                     </div>
                 </div>
             </div>
+            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fas fa-envelope-open-text text-blue-400"></i> Invite-only Event Access
+                        </h3>
+                        <p class="text-slate-400 text-sm mt-1">Invite other churches or specific members, review existing invitations, and manage attendee access.</p>
+                    </div>
+                    <button type="button" onclick="refreshAdminEventInvitations()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt"></i> Refresh Invitations
+                    </button>
+                </div>
+                <div id="admin-events-list" class="space-y-6">
+                    <div class="text-center py-6 text-slate-400 text-sm">Open Events &amp; Invitations to load managed events.</div>
+                </div>
+            </div>
         </div>
 
         <!-- Receipt Modal Container & Elements -->
@@ -480,7 +497,7 @@ document.addEventListener('keydown', function (event) {
                 </button>
                 <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
                     <h2 class="text-xl font-bold text-sky-400 flex items-center gap-2">
-                        <span>⛪</span> Official Giving Receipt
+                        <span>Γ¢¬</span> Official Giving Receipt
                     </h2>
                     <span id="receipt-badge" class="px-3 py-1 text-xs font-semibold rounded-full border bg-green-500/10 text-green-400 border-green-500/30">Verified</span>
                 </div>
@@ -765,10 +782,10 @@ document.addEventListener('keydown', function (event) {
                 </div>
             </div>
 
-            <!-- Active Board Bulletins -->
-            <div class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
+            <!-- Existing announcements UI is mounted in the Church Dashboard for church admins. -->
+            <div id="church-announcements-panel" class="bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-8 shadow-xl">
                 <h3 class="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
-                    <i class="fas fa-clipboard-list text-blue-400"></i> Active Board Bulletins
+                    <i class="fas fa-clipboard-list text-blue-400"></i> Church Announcements
                 </h3>
                 <div id="announcements-container" class="mt-4 space-y-3"><p class="text-slate-500 italic text-sm">Loading...</p></div>
             </div>
@@ -787,6 +804,33 @@ document.addEventListener('keydown', function (event) {
             </div>
 
             <div id="trial-banner-container" class="mb-6"></div>
+
+            <section id="church-profile-editor" class="hidden bg-slate-800/60 backdrop-blur-md border border-slate-700/70 rounded-2xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2"><i class="fas fa-church text-blue-400"></i> Church Profile</h3>
+                        <p class="text-xs text-slate-400 mt-1">Update the church name and location shown across BelieversMeet.</p>
+                    </div>
+                    <span id="church-profile-status" class="text-xs text-slate-400" aria-live="polite">Loading church details...</span>
+                </div>
+                <form id="church-profile-editor-form" onsubmit="saveChurchProfile(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="church-name" class="block text-sm font-medium text-slate-300 mb-2">Church Name</label>
+                        <input type="text" id="church-name" maxlength="160" required class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="church-location" class="block text-sm font-medium text-slate-300 mb-2">Church Location</label>
+                        <input type="text" id="church-location" maxlength="255" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div class="md:col-span-2 flex justify-end">
+                        <button type="submit" id="save-church-profile-btn" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition">
+                            <i class="fas fa-save"></i> Save Church Details
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <div id="church-announcements-workspace" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"></div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
@@ -1609,6 +1653,7 @@ if (prayerContainer) {
                 if (financeView) { financeView.classList.add('hidden'); financeView.classList.remove('block'); }
                 if (btnRegistrations) btnRegistrations.className = "py-2.5 px-5 text-sm font-bold text-blue-400 border-b-2 border-blue-500 focus:outline-none transition";
                 if (typeof loadAdminEventRegistrationsSection === 'function') loadAdminEventRegistrationsSection();
+                refreshAdminEventInvitations();
             }
 
             const superAdminNav = document.getElementById('nav-super-admin');
@@ -1780,9 +1825,11 @@ let adminChurchId = isSuperAdmin
                         loadJoinChurchRequests(adminChurchId, isSuperAdmin);
                     }
                     loadChurchJoinCode(adminChurchId);
-                    if (typeof loadAdminEvents === 'function') loadAdminEvents(adminChurchId, isSuperAdmin);
                     if (typeof loadChurchVolunteerSlots === 'function') loadChurchVolunteerSlots(adminChurchId);
                 }
+
+                // Keep the existing announcements form and list inside the Church Dashboard workspace.
+                mountChurchAnnouncementsWorkspace();
 
                 // Global profile management is restricted to verified platform admins.
                 if (isSuperAdmin) {
@@ -1796,11 +1843,15 @@ let adminChurchId = isSuperAdmin
                 const initialTab = urlParams.get('tab');
 
                 if (overrideChurchId && isSuperAdmin) {
-
-activeDashboardChurchId = overrideChurchId;
-switchAdminTab('dashboard');
-
-} else if (initialTab === 'dashboard') {
+                    activeDashboardChurchId = overrideChurchId;
+                    switchAdminTab(initialTab === 'registrations' ? 'registrations' : 'dashboard');
+                } else if (initialTab === 'registrations' && (adminChurchId || isSuperAdmin)) {
+                    if (!isSuperAdmin) activeDashboardChurchId = adminChurchId;
+                    switchAdminTab('registrations');
+                } else if (initialTab === 'counseling' && !isSuperAdmin && currentUserProfile?.role === 'church_admin') {
+                    activeDashboardChurchId = adminChurchId;
+                    switchAdminTab('counseling');
+                } else if (initialTab === 'dashboard') {
 
 switchAdminTab('dashboard');
 
@@ -1836,6 +1887,122 @@ await loadChurchesDropdown();
             }
         }
 
+        function canEditAssignedChurchProfile(churchId) {
+            const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            return !isSuperAdmin &&
+                currentUserProfile?.role === 'church_admin' &&
+                currentUserProfile?.status === 'active' &&
+                currentUserProfile?.is_blocked !== true &&
+                typeof churchId === 'string' &&
+                uuidPattern.test(churchId.trim()) &&
+                currentUserProfile?.church_id === churchId;
+        }
+
+        async function loadChurchProfileEditor(churchId) {
+            const section = document.getElementById('church-profile-editor');
+            const status = document.getElementById('church-profile-status');
+            if (!section || !canEditAssignedChurchProfile(churchId)) {
+                section?.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            if (status) status.textContent = 'Verifying church-management permission...';
+
+            try {
+                const { data: canManage, error: permissionError } = await window.sbClient.rpc(
+                    'can_manage_church_content', { p_church_id: churchId }
+                );
+                if (permissionError) throw permissionError;
+                if (canManage !== true) throw new Error('Your church-management permission could not be verified.');
+
+                const { data: church, error } = await window.sbClient
+                    .from('churches')
+                    .select('name, location')
+                    .eq('id', churchId)
+                    .single();
+                if (error) throw error;
+                if (!church) throw new Error('Church details were not returned.');
+
+                document.getElementById('church-name').value = church.name || '';
+                document.getElementById('church-location').value = church.location || '';
+                if (status) status.textContent = 'Church details loaded.';
+            } catch (error) {
+                console.error('Church profile editor could not load:', error);
+                if (status) status.textContent = 'Unable to load church details: ' + (error.message || 'Unknown error');
+            }
+        }
+
+        async function saveChurchProfile(event) {
+            if (event) event.preventDefault();
+            const churchId = currentUserProfile?.church_id;
+            if (!canEditAssignedChurchProfile(churchId) || activeDashboardChurchId !== churchId) {
+                showNotification('Church profile editing is available only to the active Church Admin for their assigned church.', 'error');
+                return;
+            }
+
+            const name = String(document.getElementById('church-name')?.value || '').trim();
+            const location = String(document.getElementById('church-location')?.value || '').trim();
+            if (!name) {
+                showNotification('Please enter the church name.', 'error');
+                return;
+            }
+
+            const button = document.getElementById('save-church-profile-btn');
+            const originalLabel = button?.innerHTML;
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
+
+            try {
+                // The database RPC performs the authoritative permission check and
+                // updates only the church name and location under its SECURITY DEFINER boundary.
+                const { data: updated, error } = await window.sbClient.rpc(
+                    'update_church_profile',
+                    {
+                        p_church_id: churchId,
+                        p_name: name,
+                        p_location: location || null
+                    }
+                );
+                if (error) throw error;
+                if (updated !== true) {
+                    throw new Error('The database did not confirm the church profile update.');
+                }
+
+                const churchNameEl = document.getElementById('admin-church-name');
+                if (churchNameEl) churchNameEl.textContent = name;
+                const status = document.getElementById('church-profile-status');
+                if (status) status.textContent = 'Saved successfully.';
+                showNotification('Church details updated successfully.', 'success');
+            } catch (error) {
+                console.error('Church profile update failed:', error);
+                showNotification('Unable to save church details: ' + (error.message || 'Unknown error'), 'error');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalLabel || '<i class="fas fa-save"></i> Save Church Details';
+                }
+            }
+        }
+
+        function mountChurchAnnouncementsWorkspace() {
+            const host = document.getElementById('church-announcements-workspace');
+            if (!host) return;
+            const publishForm = document.getElementById('publish-section');
+            const announcementsPanel = document.getElementById('church-announcements-panel');
+            [publishForm, announcementsPanel].forEach(element => {
+                if (element && element.parentElement !== host) host.appendChild(element);
+            });
+        }
+
+        function refreshAdminEventInvitations() {
+            if (typeof loadAdminEvents === 'function') {
+                loadAdminEvents(isSuperAdmin ? activeDashboardChurchId : currentUserProfile?.church_id, isSuperAdmin);
+            }
+        }
+
         async function initChurchDashboardView() {
             if (isSuperAdmin) {
                 const selectorContainer = document.getElementById('super-admin-church-selector');
@@ -1846,6 +2013,11 @@ await loadChurchesDropdown();
             }
 
             if (activeDashboardChurchId) {
+                if (canEditAssignedChurchProfile(activeDashboardChurchId)) {
+                    await loadChurchProfileEditor(activeDashboardChurchId);
+                } else {
+                    document.getElementById('church-profile-editor')?.classList.add('hidden');
+                }
                 loadChurchDetails(activeDashboardChurchId);
                 loadChurchMembers(activeDashboardChurchId);
                 loadChurchProgrammes(activeDashboardChurchId);

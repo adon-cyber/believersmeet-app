@@ -1,10 +1,6 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    if (!window.sbClient) {
-        console.error('Supabase client not initialized');
-        return;
-    }
-    await loadAdminEvents();
-});
+
+let adminEventsChurchScopeId = null;
+let adminEventsIsSuperAdmin = false;
 
 async function inviteChurchToEvent(eventId, targetChurchId) {
     if (!eventId || !targetChurchId) {
@@ -163,7 +159,7 @@ async function openAttendeesModal(eventId) {
     `;
 }
 
-async function loadAdminEvents() {
+async function loadAdminEvents(churchId = adminEventsChurchScopeId, isSuperAdmin = adminEventsIsSuperAdmin) {
     const container =
         document.getElementById('admin-events-list') ||
         document.getElementById('admin-events-container');
@@ -173,10 +169,17 @@ async function loadAdminEvents() {
     container.innerHTML =
         '<div class="text-center py-6 text-gray-500">Loading events...</div>';
 
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    adminEventsChurchScopeId = typeof churchId === 'string' && uuidPattern.test(churchId.trim())
+        ? churchId.trim()
+        : null;
+    adminEventsIsSuperAdmin = isSuperAdmin === true;
+    const eventChurchScope = adminEventsIsSuperAdmin ? adminEventsChurchScopeId : null;
+
     try {
         const { data: events, error: eventsError } =
             await window.sbClient.rpc('get_managed_events', {
-                p_church_id: null
+                p_church_id: eventChurchScope
             });
 
         if (eventsError) throw eventsError;

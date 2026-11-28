@@ -100,11 +100,7 @@
                     { href: 'admin.html', label: 'Admin Panel', icon: 'fa-screwdriver-wrench' }
                 );
             }
-            if (canSeeAdmin) {
-                adminItems.push({ href: 'admin-events.html', label: 'Event Management', icon: 'fa-calendar-plus' });
-            }
-
-            if (isPlatformAdmin) {
+if (isPlatformAdmin) {
                 adminItems.push({ href: 'super-admin.html', label: 'Super Admin', icon: 'fa-shield-halved' });
             }
             if (adminItems.length) {

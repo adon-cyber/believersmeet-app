@@ -3,72 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Event Management | BelieversMeet</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/believersmeet-brand.css?v=20261127-v2">
-<link rel="stylesheet" href="css/workspace-nav.css?v=20261128-v2">
-<script src="js/church-branding.js?v=20261128-v2"></script>
+    <meta http-equiv="refresh" content="0;url=admin.html?tab=registrations">
+    <title>Events & Invitations | BelieversMeet</title>
+    <script>
+        window.location.replace('admin.html?tab=registrations');
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-    <!-- Navigation Bar -->
-    <div id="navbar"></div>
-<script src="js/workspace-nav.js?v=20261128-v2"></script>
-
-    <!-- Main Content Area -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 flex-grow w-full">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-600 text-white p-8 rounded-xl shadow-md my-6 max-w-4xl mx-auto gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-white mb-2">Admin Event Management</h1>
-                <p class="text-blue-100 text-base">Manage church events and invite members to exclusive invite-only events.</p>
-            </div>
-            <a href="admin.html" class="bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition-all flex items-center gap-2">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
-
-        <!-- Events List Container -->
-        <div class="max-w-4xl mx-auto space-y-6">
-            <div id="admin-events-container" class="space-y-6">
-                <div class="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500 shadow-sm">Loading events...</div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bm-site-footer" data-bm-footer-version="2" role="contentinfo">
-    <div class="bm-site-footer__inner">
-        <div class="bm-site-footer__top">
-            <div class="bm-site-footer__brand">
-                <a class="bm-site-footer__brand-link" href="index.html" aria-label="BelieversMeet home">
-                    <img class="bm-site-footer__logo" src="images/BELIEVERS.LOGO.png" alt="BelieversMeet logo" loading="lazy">
-                    <span class="bm-site-footer__brand-name">BelieversMeet</span>
-                </a>
-                <p class="bm-site-footer__description">Connecting believers, empowering churches, and strengthening faith communities.</p>
-            </div>
-            <nav class="bm-site-footer__nav" aria-label="Footer navigation">
-                <a href="about-developer.html">About the Developer</a>
-                <a href="mailto:adoniakasango@gmail.com">Support</a>
-                <a href="https://wa.me/256777778443" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
-                <a href="tel:+256751522766">Call us</a>
-            </nav>
-        </div>
-        <div class="bm-site-footer__bottom">
-            <p>&copy; 2026 BelieversMeet. All rights reserved.</p>
-            <p>Building and strengthening faith communities together.</p>
-        </div>
-    </div>
-</footer>
-
-    <script src="js/auth-guard.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/admin-events.js"></script>
-  <script src="js/notifications.js"></script>
+<body>
+    <p>Opening Events & Invitations in the Admin Console...</p>
+    <p><a href="admin.html?tab=registrations">Continue to the Admin Console</a></p>
 </body>
 </html>
