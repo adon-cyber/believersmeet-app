@@ -101,14 +101,9 @@
                 );
             }
             if (canSeeAdmin) {
-                adminItems.push(
-                    { href: 'admin-events.html', label: 'Event Management', icon: 'fa-calendar-plus' },
-                    { href: 'admin-counseling.html', label: 'Counseling Requests', icon: 'fa-hands-helping' }
-                );
+                adminItems.push({ href: 'admin-events.html', label: 'Event Management', icon: 'fa-calendar-plus' });
             }
-            if (canManageChurchContent) {
-                adminItems.push({ href: 'admin-bulletins.html', label: 'Church Bulletins', icon: 'fa-bullhorn' });
-            }
+
             if (isPlatformAdmin) {
                 adminItems.push({ href: 'super-admin.html', label: 'Super Admin', icon: 'fa-shield-halved' });
             }
